@@ -1,0 +1,751 @@
+// Qumo — purchase loyalty, from the scan to the ledger row.
+//
+// This schema was carved out of CIOS's rather than written fresh, and the
+// models kept their names deliberately. The extraction is a move with no
+// behaviour change, so that if something breaks it is obvious which commit
+// did it; renaming Campaign to Promotion — which it wants, because in CIOS
+// a campaign meant a product-feedback campaign and here it means a
+// promotion — is a second pass where each rename stands on its own.
+//
+// What did not come: everything WhatsApp and everything product feedback.
+// No Product, no CheckIn, no CampaignProduct, no journey templates, no
+// notifications. Person keeps a first name and drops gender, age band and
+// suburb — those were collected by a conversational profile flow that has
+// no counterpart on the web, and carrying columns nothing writes to would
+// be inventing a promise about data we do not hold.
+//
+// Design note kept from CIOS, because it still decides the shape here:
+// identity and brand relationship are split. Person is one row per real
+// human, brand-agnostic, holding the PII. BrandMembership is the join row
+// and the tenant boundary — a brand only ever reaches a Person through a
+// membership it is authorised to see, and never lists that person's other
+// memberships. On a brand-scoped site that is not just a privacy control,
+// it is the product: a shopper on chickenlicken.qumo.co.za sees Chicken
+// Licken and nothing else.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Brand {
+  id                    String   @id @default(cuid())
+  name                  String
+  slug                  String   @unique
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  users              User[]
+  brandMemberships   BrandMembership[]
+  pointsTransactions PointsTransaction[]
+  campaigns          Campaign[]
+  rewards            Reward[]
+  coupons            Coupon[]
+  couponFraudEvents  CouponFraudEvent[]
+  packBatches        PackBatch[]
+  packCodes          PackCode[]
+  earnRules          EarnRule[]
+  walletSpends       WalletSpend[]
+  stores             Store[]
+  purchaseScans      PurchaseScan[]
+}
+
+enum Role {
+  OWNER // full access, incl. user management
+  ADMIN // full access to brand data, not user management
+  MARKETING // campaigns, products, reporting
+  QUALITY // packaging/product intelligence only
+}
+
+model User {
+  id           String   @id @default(cuid())
+  brandId      String
+  brand        Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role
+  // Soft-deactivation, not delete: a hard delete would SetNull every
+  // Coupon.statusChangedByUserId this person ever touched, blanking out
+  // "who redeemed/cancelled this" from the audit trail. Blocks login
+  // (lib/auth/config.ts) without losing that history.
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  couponStatusChanges Coupon[]
+  couponFraudEvents   CouponFraudEvent[]
+  packBatches         PackBatch[]
+  walletSpends        WalletSpend[]
+
+  @@index([brandId])
+}
+
+// A one-time passcode for shopper login. Like PasswordResetToken, this is
+// deliberately not tenant-scoped: it is looked up by the phone number
+// alone, before any brand context exists — a shopper's Qumo account is
+// platform-wide, and which brands they have a membership with is a
+// consequence of logging in, never a precondition of it.
+//
+// codeHash is an HMAC (lib/security/crypto.ts#hashOtpCode), NOT the plain
+// SHA-256 that PasswordResetToken uses. That difference is the point: a
+// reset token is 256 bits of randomness, so an unkeyed digest is already
+// unguessable, but a 6-digit OTP has only a million possible values and a
+// plain digest of one falls to a wordlist in milliseconds. Keying it with
+// a secret that lives only in the environment means a stolen database
+// yields nothing. The phone hash is mixed into the message as well, so a
+// code hash from one account can never be replayed against another.
+model PhoneOtp {
+  id         String    @id @default(cuid())
+  phoneHash  String
+  codeHash   String
+  expiresAt  DateTime
+  // Every failed guess burns one, capped in lib/consumer/otp.ts. Without
+  // this, a million-value keyspace is walkable regardless of how the code
+  // is stored.
+  attempts   Int       @default(0)
+  // Set on successful verification, and also on every older outstanding
+  // code when a new one is requested — a superseded code must stop working
+  // the moment its replacement is sent.
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([phoneHash])
+  @@index([expiresAt])
+}
+
+enum ShopperSessionRevokeReason {
+  SIGNED_OUT
+  SIGNED_OUT_EVERYWHERE
+}
+
+// A signed-in shopper, one row per device.
+//
+// Replaces a stateless signed cookie. That cookie was honest about its
+// trade-off — no server-side revocation, so a stolen one stayed valid for
+// its full 30 days — and explicitly said it should be revisited before a
+// session could spend a wallet balance. It then became able to, so this is
+// that revisit: a row that can be revoked, checked on every request.
+//
+// tokenHash, never the token. sha256 unkeyed is right here for the same
+// reason it is right for PasswordResetToken and wrong for an OTP: the
+// token is 32 random bytes, so there is no keyspace to walk. A database
+// dump yields no usable session.
+//
+// Deliberately stores no IP address and no user-agent. Both would make the
+// "which device is this?" screen friendlier, and both are personal data
+// this product's privacy notice does not currently say it keeps. Adding
+// silent device fingerprinting to a table whose whole purpose is the
+// shopper's own safety would be a poor trade; createdAt is enough for
+// someone to recognise a session they did not start.
+model ShopperSession {
+  id        String @id @default(cuid())
+  personId  String
+  person    Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  // Unique so a lookup by token is an index hit and a collision is a
+  // database error rather than two people sharing a session.
+  tokenHash String @unique
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Revocation is a stamp, not a delete: "this session was ended
+  // deliberately at 14:05" and "this session never existed" are different
+  // answers, and only one of them is useful when a shopper reports a
+  // stolen phone. Swept once the row is well past its expiry.
+  revokedAt     DateTime?
+  revokedReason ShopperSessionRevokeReason?
+
+  @@index([personId])
+  @@index([expiresAt])
+}
+
+// Brand-agnostic identity, and the reason a shopper who has scanned a
+// Chicken Licken slip is recognised at a Campari sticker without
+// registering twice.
+//
+// phoneHash is a deterministic HMAC, so a sign-in or an inbound SMS resolves
+// to a row by index without decrypting anything. phoneEncrypted is the
+// reversible ciphertext, read only where the real number is genuinely needed
+// — sending a passcode, and answering a data export. The plaintext number
+// and a key that reverses it never sit beside each other outside
+// lib/security/crypto.ts.
+model Person {
+  id             String    @id @default(cuid())
+  phoneHash      String    @unique
+  phoneEncrypted String
+  firstName      String?
+  suburb         String?
+  consentGivenAt DateTime?
+  consentVersion String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  brandMemberships BrandMembership[]
+  shopperSessions  ShopperSession[]
+}
+
+// The tenant-scoped relationship a brand actually sees and queries.
+model BrandMembership {
+  id       String   @id @default(cuid())
+  brandId  String
+  brand    Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  personId String
+  person   Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  joinedAt DateTime @default(now())
+
+  // Withdrawal from this brand's programme, which the privacy notice
+  // promises and nothing implemented.
+  //
+  // Set on the membership rather than the Person, because opting out of
+  // one brand says nothing about the others — that is the whole point of a
+  // brand-scoped programme. While set, the accrual path refuses; the
+  // ledger is left exactly as it was, so a shopper who opts back in finds
+  // their balance where they left it and an audit can still explain every
+  // row. Erasure is a different, slower request.
+  optedOutAt DateTime?
+
+  pointsTransactions PointsTransaction[]
+  coupons            Coupon[]
+  packCodes          PackCode[]
+  walletSpends       WalletSpend[]
+  purchaseScans      PurchaseScan[]
+
+  @@unique([brandId, personId])
+  @@index([brandId])
+}
+
+enum PointsReason {
+  // A share of a purchase, from a scanned till slip. The Chicken Licken
+  // path: the brand owns the point of sale, so the receipt can carry what
+  // was actually spent and the award scales with it.
+  PURCHASE_ACCRUAL
+  // A closed-loop wallet balance spent at the till. Negative amount, and
+  // written only when a cashier confirms — see lib/wallet/spend.ts.
+  WALLET_SPENT
+  // A code under a pack label, scanned by a shopper. The Campari path:
+  // the brand owns no till, so the award is a flat amount configured on
+  // the campaign's EarnRule rather than a share of any purchase.
+  PACK_SCAN_AWARDED
+  // Deducting the threshold when a coupon is issued is a transaction, not a
+  // special case — the "balance = sum of transactions" invariant holds
+  // without modification. Negative amount.
+  COUPON_UNLOCKED
+}
+
+// What one ledger row counts. The ledger deliberately carries three
+// different things rather than three tables, because they are the same
+// mechanism: an immutable row per event, balance derived by summing.
+//   POINTS — the engagement currency Phase 1-3 already award for check-ins.
+//   CENTS  — a closed-loop wallet balance, in whole cents. Integer, never a
+//            float or Decimal: a wallet balance is a sum of ledger rows, and
+//            that sum has to be exact. R4.25 is 425.
+//   STAMPS — a punch-card count ("buy 10, get the 10th free"). One row per
+//            stamp; how many a member has is a sum, never a column.
+// A balance is only ever meaningful for one (membership, unit) pair —
+// summing across units would be adding cents to stamps.
+enum LedgerUnit {
+  POINTS
+  CENTS
+  STAMPS
+}
+
+model PointsTransaction {
+  id                String          @id @default(cuid())
+  brandId           String
+  brand             Brand           @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brandMembershipId String
+  brandMembership   BrandMembership @relation(fields: [brandMembershipId], references: [id], onDelete: Cascade)
+  amount            Int
+  // Defaulted rather than required so the column backfills every existing
+  // row correctly: everything written before Qumo was points, and still
+  // is. New accrual paths must pass this explicitly.
+  unit              LedgerUnit      @default(POINTS)
+  reason            PointsReason
+  // Which campaign produced this row. Nullable because rows written before
+  // it existed genuinely do not record one, and a backfilled guess would be
+  // worse than an honest null.
+  //
+  // Added for the liability ceiling: "how much has this campaign issued?"
+  // is the question a brand's finance director asks first, and without this
+  // column the ledger could not answer it at all.
+  campaignId        String?
+  campaign          Campaign?       @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  createdAt         DateTime        @default(now())
+
+  @@index([brandId])
+  @@index([brandMembershipId])
+  // The liability ceiling sums every positive row for a campaign.
+  @@index([campaignId])
+  // The per-person daily ceiling scans one membership's recent rows. Without
+  // the composite the window query degrades to reading a member's whole
+  // history on every single scan.
+  @@index([brandMembershipId, createdAt])
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+model Campaign {
+  id              String            @id @default(cuid())
+  brandId         String
+  brand           Brand             @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  status          CampaignStatus    @default(DRAFT)
+  startDate       DateTime?
+  endDate         DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  reward           Reward?
+  coupons          Coupon[]
+  packBatches      PackBatch[]
+  packCodes        PackCode[]
+  earnRule         EarnRule?
+  purchaseScans    PurchaseScan[]
+
+  @@index([brandId])
+  pointsTransactions PointsTransaction[]
+}
+
+// Purely changes the copy shown to the member/staff about what's being
+// earned — every value here issues a coupon through the exact same
+// mechanism (a unique per-member single-use code). Only meaningful when a
+// coupon is actually configured (couponThresholdPoints set), same as every
+// other "coupon fields null together" rule on this model.
+enum RewardType {
+  DIGITAL_COUPON
+  FREE_PRODUCT
+  DISCOUNT_VOUCHER
+  BUY_ONE_GET_ONE
+  COMPETITION_ENTRY
+  GIFT
+  EXCLUSIVE_EXPERIENCE
+  SAMPLE_PRODUCT
+  RECOGNITION_BADGE
+  CUSTOM_REWARD
+}
+
+// One-to-one with Campaign. couponThresholdPoints/couponName/maxCoupons are
+// null together for a points-only reward (no coupon offered). maxCoupons is
+// a hard cap enforced by the conversation engine before every issuance —
+// the budget guardrail, not just a UI validation.
+// What a completed stamp card hands over.
+//
+// Trimmed on the way across. Three gates that asked about check-in
+// behaviour — a minimum number of check-ins, a photo, a packaging concern —
+// went with the conversation that could answer them. pointsPerCheckIn and
+// couponThresholdPoints went too: EarnRule.amount and EarnRule.completesAt
+// say the same things for a scan, and two places to configure "how much,
+// and how much completes a card" is one place too many.
+model Reward {
+  id                    String   @id @default(cuid())
+  brandId               String
+  brand                 Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  campaignId            String   @unique
+  campaign              Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  couponName            String?
+  maxCoupons            Int?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // What the member is told they've earned — distinct from couponName,
+  // which is the internal/staff-facing label on the coupon itself.
+  rewardName        String     @default("")
+  rewardDescription String?
+  rewardType        RewardType @default(DIGITAL_COUPON)
+  // Rand value of one reward instance — drives the budget math below and
+  // the member-facing confirmation message.
+  rewardValueRand   Decimal?   @db.Decimal(10, 2)
+
+  couponDescription String?
+  // e.g. "FC" — generateCouponCode() prepends it when set. Real formatting
+  // control, not a decorative selector.
+  codePrefix        String?
+  // Copied onto Coupon.expiresAt at issuance time (lib/ledger/accrue.ts).
+  couponExpiryDate  DateTime?
+  // Free-form retailer tags, shown in the coupon terms text — where a
+  // shopper can actually redeem this.
+  retailers         String[]  @default([])
+
+  // Total rand cap for this reward. rewardValueRand * maxCoupons (the
+  // committed liability if every coupon is redeemed) must not exceed this
+  // — validated at wizard Budget step and again at Publish. maxCoupons
+  // already caps issuance count at runtime, so no separate runtime check
+  // is needed once creation-time validation passes.
+  budgetRand Decimal? @db.Decimal(10, 2)
+
+
+  coupons Coupon[]
+
+  @@index([brandId])
+}
+
+enum CouponStatus {
+  ISSUED
+  REDEEMED
+  EXPIRED
+  CANCELLED
+}
+
+model Coupon {
+  id                String          @id @default(cuid())
+  brandId           String
+  brand             Brand           @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  campaignId        String
+  campaign          Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  rewardId          String
+  reward            Reward          @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  brandMembershipId String
+  brandMembership   BrandMembership @relation(fields: [brandMembershipId], references: [id], onDelete: Cascade)
+  code              String          @unique
+  // REDEEMED/CANCELLED are now reachable via manual staff action
+  // (lib/coupons/manage.ts) — real till-side POS integration is still the
+  // mockup's own "Future Integration" placeholder, not built here.
+  status            CouponStatus    @default(ISSUED)
+  issuedAt          DateTime        @default(now())
+  expiresAt         DateTime?
+
+  // Who moved this coupon out of ISSUED, and when — one pair covers both
+  // REDEEMED and CANCELLED since status is already exclusive, no need for
+  // two separate audit pairs.
+  statusChangedAt       DateTime?
+  statusChangedByUserId String?
+  statusChangedByUser   User?     @relation(fields: [statusChangedByUserId], references: [id], onDelete: SetNull)
+
+  fraudEvents CouponFraudEvent[]
+
+  @@index([brandId])
+  @@index([brandMembershipId])
+  @@index([campaignId])
+}
+
+enum CouponFraudReason {
+  ALREADY_REDEEMED
+  ALREADY_CANCELLED
+  EXPIRED
+  NOT_FOUND
+}
+
+// One row per rejected redemption/cancel attempt — same "don't cache what
+// you can count" philosophy as VelocityBlock. couponId is nullable and
+// SetNull on delete: a NOT_FOUND attempt never resolves to a real Coupon
+// row, and a resolved one shouldn't disappear from the audit trail if the
+// coupon itself is ever removed.
+model CouponFraudEvent {
+  id                String            @id @default(cuid())
+  brandId           String
+  brand             Brand             @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  couponCode        String
+  couponId          String?
+  coupon            Coupon?           @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  reason            CouponFraudReason
+  // SetNull, not Cascade — same reasoning as Coupon.statusChangedByUserId:
+  // a deactivated/removed staff account shouldn't blank out this audit
+  // trail.
+  attemptedByUserId String?
+  attemptedByUser   User?             @relation(fields: [attemptedByUserId], references: [id], onDelete: SetNull)
+  attemptedAt       DateTime          @default(now())
+
+  @@index([brandId])
+  @@index([couponId])
+}
+
+enum PackCodeStatus {
+  UNSCANNED
+  SCANNED
+  // Printed but must never award — a misprinted run, a batch that went
+  // missing in transit, codes recalled after a campaign was pulled. A
+  // separate state from SCANNED because "someone claimed this" and "we
+  // withdrew this" are different facts, and a fraud investigation needs to
+  // tell them apart.
+  VOID
+}
+
+// One printing run. Exists so a brand can say "batch 4 went to the
+// Gauteng run" and, if that pallet is stolen, void exactly those codes
+// without touching any other.
+model PackBatch {
+  id              String   @id @default(cuid())
+  brandId         String
+  brand           Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  campaignId      String
+  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  label           String
+  quantity        Int
+  // SetNull, not Cascade — same reasoning as Coupon.statusChangedByUserId:
+  // a staff member leaving must not erase who ordered a print run.
+  createdByUserId String?
+  createdByUser   User?    @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdAt       DateTime @default(now())
+
+  packCodes PackCode[]
+
+  @@index([brandId])
+  @@index([campaignId])
+}
+
+model PackCode {
+  id         String         @id @default(cuid())
+  brandId    String
+  brand      Brand          @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  campaignId String
+  campaign   Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  batchId    String
+  batch      PackBatch      @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  // Globally unique, not unique-per-brand: a scan arrives as nothing but
+  // this string in a URL, so it has to identify the row on its own before
+  // any brand context exists. That makes lookup-by-code the same narrow,
+  // login-by-email path already are.
+  code       String         @unique
+  status     PackCodeStatus @default(UNSCANNED)
+
+  scannedAt             DateTime?
+  // Who claimed it. A membership rather than a Person: this is the
+  // brand-scoped side of the relationship, and it is what a brand's staff
+  // are allowed to see.
+  scannedByMembershipId String?
+  scannedByMembership   BrandMembership? @relation(fields: [scannedByMembershipId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([brandId])
+  @@index([batchId])
+  @@index([campaignId])
+  // Answers "how much of this batch has been claimed" without scanning
+  // every row in it.
+  @@index([batchId, status])
+}
+
+enum EarnRuleType {
+  // A fixed award per scan, whatever the shopper spent. The only rule a
+  // brand without a till can run — and, usefully, also the right rule for
+  // a pre-printed sticker on a box, where the value is decided when the
+  // sticker is printed rather than when the basket is rung up.
+  FLAT_PER_SCAN
+  // A share of what was actually spent, read from a scanned till slip.
+  // Requires a Store to attribute the purchase to.
+  PERCENT_OF_SPEND
+}
+
+// How a campaign turns a scan into ledger movement. One per campaign, and
+// separate from Reward: Reward describes what a member is *given* once
+// they cross a threshold, this describes what each individual scan is
+// worth on the way there.
+model EarnRule {
+  id            String       @id @default(cuid())
+  brandId       String
+  brand         Brand        @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  campaignId    String       @unique
+  campaign      Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  type          EarnRuleType @default(FLAT_PER_SCAN)
+  // Which ledger currency this campaign accrues. A points campaign and a
+  // stamp-card campaign differ only here.
+  unit          LedgerUnit   @default(POINTS)
+  // In the unit above: 50 points, or 1 stamp, or 425 cents. Always an
+  // integer, for the same reason the ledger is.
+  amount        Int
+  // For PERCENT_OF_SPEND: the share of the basket, in basis points, so it
+  // stays an integer like everything else on this ledger. 500 = 5%.
+  basisPoints   Int?
+  // Baskets below this never accrue. Lets a brand exclude a R6 coffee from
+  // a campaign meant for full meals without running a second campaign.
+  minSpendCents Int?
+  // Stamp-card size: how much of `unit` completes a card and issues the
+  // campaign's coupon ("buy 10, get the 10th free" is completesAt = 10).
+  // Null means the campaign only accrues — the balance grows and the
+  // shopper spends it some other way, which is what a wallet campaign
+  // does. Completion writes a negative ledger entry for exactly this
+  // amount rather than resetting a counter, so "balance is the sum of the
+  // rows" survives it and the shopper's history explains where the stamps
+  // went.
+  completesAt   Int?
+
+  // ---- Ceilings ----
+  //
+  // Three of them, because they stop three different things and any one
+  // alone is walkable.
+  //
+  // The reason they exist at all: a store whose point of sale cannot sign
+  // its slips has nothing binding a payload to the till that printed it.
+  // The unique constraint on (storeId, externalTxnId) stops a slip being
+  // *reused*, not invented — a shopper who has seen one of their own
+  // receipts knows the store code, and every other field is theirs to
+  // choose. See tests/receipt-forgery.test.ts, which is the attack rather
+  // than a hypothetical. Signed stores get these too: a compromised till
+  // or a colluding cashier is the same shape of problem.
+  //
+  // All three are checked inside the same serializable transaction that
+  // writes the ledger row (lib/ledger/accrue.ts). Checked outside it, two
+  // concurrent scans each read a total below the ceiling and both write.
+  //
+  // Null means uncapped, which is the honest default for a stamp card
+  // where the reward is already bounded by maxCoupons. A percent-of-spend
+  // campaign should not ship without at least maxTotalAmount set.
+
+  /// Value in `unit` one person may accrue from this campaign per rolling day.
+  maxPerPersonPerDay      Int?
+  /// Accrual events per person per rolling day. Caps many-small-slips,
+  /// which a value ceiling alone does not.
+  maxScansPerPersonPerDay Int?
+  /// Total value in `unit` this campaign may ever issue. The answer to
+  /// "what is our maximum exposure?", which had none before.
+  maxTotalAmount          Int?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([brandId])
+}
+
+enum WalletSpendStatus {
+  // Created by the shopper, waiting for a cashier. Nothing has been
+  // debited yet.
+  PENDING
+  // A cashier confirmed it. This — and only this — writes the ledger row.
+  CONFIRMED
+  // Lapsed unconfirmed. Nothing to release, because nothing was held.
+  EXPIRED
+  // The shopper abandoned it, or started a new one.
+  CANCELLED
+}
+
+// A shopper's request to spend part of their closed-loop balance, and the
+// cashier's confirmation of it, as two separate steps.
+//
+// The split is the whole point. Debiting when the shopper generates the
+// code would mean that a code the cashier never honours — the queue moved
+// on, the app was closed, the phone died — silently destroys real money
+// belonging to a real person, with nothing to point at afterwards. So the
+// PENDING row is a promise, not a hold, and the ledger only moves when
+// someone at the till confirms the shopper actually got their discount.
+//
+// The consequence to watch: because nothing is held, a balance is only
+// checked against the ledger at confirmation time. That check, the status
+// transition and the ledger write all happen in one Serializable
+// transaction (lib/wallet/spend.ts) — otherwise two tills confirming at
+// once could each see enough balance and overdraw between them.
+model WalletSpend {
+  id                String            @id @default(cuid())
+  brandId           String
+  brand             Brand             @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brandMembershipId String
+  brandMembership   BrandMembership   @relation(fields: [brandMembershipId], references: [id], onDelete: Cascade)
+  // Always positive here; the ledger row written on confirmation is the
+  // negative of it. Storing it positive keeps "how much did they ask for"
+  // readable without knowing the sign convention.
+  amountCents       Int
+  // Short enough for a cashier to type off a shopper's screen while a
+  // queue waits. Globally unique, because it is looked up by itself.
+  code              String            @unique
+  status            WalletSpendStatus @default(PENDING)
+  expiresAt         DateTime
+
+  confirmedAt       DateTime?
+  // SetNull, not Cascade — a staff member leaving must not erase who
+  // authorised a discount, same reasoning as Coupon.statusChangedByUserId.
+  confirmedByUserId String?
+  confirmedByUser   User?     @relation(fields: [confirmedByUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([brandId])
+  @@index([brandMembershipId])
+  // "Is there a live request for this member" — the query behind both the
+  // shopper's screen and the one-at-a-time rule.
+  @@index([brandMembershipId, status])
+}
+
+// One outlet. Exists because a till slip has to be attributed to somewhere
+// — for analytics, and because the signing secret below is per store, so a
+// leak at one franchise doesn't forge receipts for the whole estate.
+model Store {
+  id      String @id @default(cuid())
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  name    String
+  // Globally unique, not unique per brand, for the same reason PackCode.code
+  // is: a scanned receipt arrives carrying this and nothing else, and has to
+  // resolve to a store before any brand context exists.
+  code    String @unique
+
+  // AES-GCM ciphertext of the store's HMAC key, or null.
+  //
+  // Null is a real, supported mode, not a not-yet-configured one. Whether a
+  // point-of-sale vendor can compute an HMAC inside a receipt template is
+  // genuinely unknown until each one is asked, and a design that assumes
+  // yes would have no answer when a brand says no. So a signed store gets
+  // forgery protection, an unsigned store still gets accept-once-per-
+  // transaction replay protection, and lib/stores/receipt.ts treats the two
+  // as one code path with one column different. The dashboard shows which
+  // mode a store is in, because the difference matters to the brand and
+  // should never be silent.
+  signingSecretEncrypted String?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  purchaseScans PurchaseScan[]
+
+  @@index([brandId])
+}
+
+// One verified till slip. The row exists to be unique: the constraint on
+// (storeId, externalTxnId) is what makes a receipt single-use, and it lives
+// in the database rather than in an `if` because two phones scanning the
+// same photographed slip at the same instant would sail straight past an
+// application-level check.
+model PurchaseScan {
+  id                String          @id @default(cuid())
+  brandId           String
+  brand             Brand           @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  storeId           String
+  store             Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  brandMembershipId String
+  brandMembership   BrandMembership @relation(fields: [brandMembershipId], references: [id], onDelete: Cascade)
+  campaignId        String
+  campaign          Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  // The till's own transaction identifier, exactly as printed. Opaque to
+  // us — its only job is to be different for every sale at a store.
+  externalTxnId String
+  // What the basket came to, in cents. Integer for the same reason the
+  // ledger is: this number is multiplied and summed, and a float would
+  // start disagreeing with itself.
+  amountCents   Int
+  // When the till says the sale happened, distinct from when the shopper
+  // got round to scanning it.
+  purchasedAt   DateTime
+  scannedAt     DateTime @default(now())
+  // Whether the payload carried a valid signature, recorded per scan
+  // rather than inferred from the store's current setting — a store that
+  // is signed today may have been unsigned when this slip was scanned, and
+  // a fraud investigation needs to know which.
+  wasSigned     Boolean
+
+  // What this slip actually gave, recorded on the scan rather than left to
+  // be recomputed. Two reasons, and the second is the one that matters:
+  //
+  //  - a scan record that cannot say what it awarded is incomplete, and any
+  //    brand-facing report on campaign performance has to reconstruct it;
+  //  - re-opening a scanned slip has to show the shopper what they earned,
+  //    not an error. The earn rule may have changed since, so recomputing
+  //    would quietly answer a different question than "what did I get?".
+  //
+  // Nullable because the columns arrive after the first rows did.
+  awardedAmount Int?
+  awardedUnit   LedgerUnit?
+
+  @@unique([storeId, externalTxnId])
+  @@index([brandId])
+  @@index([brandMembershipId])
+  @@index([campaignId])
+}

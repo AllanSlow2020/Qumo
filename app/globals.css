@@ -1,0 +1,39 @@
+/* Deliberately almost empty.
+ *
+ * CIOS's globals.css carried a staff portal's whole identity — navy, orange,
+ * a condensed display face. None of that came across, and nothing here should
+ * replace it: every shopper-facing style lives under `.sc` in
+ * app/(shopper)/shopper.css, and per-brand theming (Phase D) resolves on top
+ * of that from the subdomain.
+ *
+ * What is left is the reset and the one thing a scoped stylesheet cannot do
+ * for itself: paint the page behind it. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  /* The shopper surface owns its own ground under `.sc`; this is the colour
+     behind it, so an unstyled or errored page is never a bright white flash
+     in a dark theme. */
+  background: #ffffff;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) html,
+  :root:not([data-theme="light"]) body {
+    background: #121212;
+  }
+}
+
+:root[data-theme="dark"] html,
+:root[data-theme="dark"] body {
+  background: #121212;
+}

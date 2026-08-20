@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Every shopper and brand route in Qumo, what is built versus planned, and the four mechanisms the build turns on.">
+<title>Qumo Route Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+</head>
+<body>
+<style>
+  :root {
+    --ground: #fcfcfd;
+    --raised: #f4f5f8;
+    --sunk: #eceef3;
+    --ink: #14181f;
+    --ink-mid: #4b5462;
+    --ink-soft: #6f7887;
+    --rule: #dfe3e9;
+    --rule-firm: #c6ccd6;
+    --accent: #a76d13;
+    --accent-soft: #f6ecd9;
+    --built: #2f6f52;
+    --built-soft: #e2efe8;
+    --risk: #cc5442;
+    --risk-soft: #f8e7e4;
+
+    --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+    --body: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #101318;
+      --raised: #181d24;
+      --sunk: #1e242c;
+      --ink: #e8ebf0;
+      --ink-mid: #a8b1bf;
+      --ink-soft: #828c9b;
+      --rule: #282f39;
+      --rule-firm: #3a434f;
+      --accent: #e2a93f;
+      --accent-soft: #2c2415;
+      --built: #6cbf95;
+      --built-soft: #16281f;
+      --risk: #e08272;
+      --risk-soft: #2c1a17;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #101318;
+    --raised: #181d24;
+    --sunk: #1e242c;
+    --ink: #e8ebf0;
+    --ink-mid: #a8b1bf;
+    --ink-soft: #828c9b;
+    --rule: #282f39;
+    --rule-firm: #3a434f;
+    --accent: #e2a93f;
+    --accent-soft: #2c2415;
+    --built: #6cbf95;
+    --built-soft: #16281f;
+    --risk: #e08272;
+    --risk-soft: #2c1a17;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0 24px 96px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .prose { max-width: 68ch; }
+
+  /* ---------- masthead ---------- */
+
+  header.mast {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 64px 0 32px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .mark {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(38px, 7vw, 60px);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-size: 17px;
+    color: var(--ink-mid);
+    margin: 0;
+    max-width: 60ch;
+  }
+
+  .meta {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    margin-top: 4px;
+  }
+
+  /* ---------- sections ---------- */
+
+  section { display: flex; flex-direction: column; gap: 18px; }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 27px;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: 18px;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0;
+  }
+
+  p { margin: 0; }
+  .prose p + p { margin-top: 14px; }
+
+  a { color: var(--ink); text-decoration-color: var(--rule-firm); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--sunk);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  strong { font-weight: 600; }
+
+  /* ---------- status pills ---------- */
+
+  .pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .pill.built   { background: var(--built-soft);  color: var(--built);  border-color: var(--built); }
+  .pill.planned { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .pill.parked  { background: var(--sunk);        color: var(--ink-soft); border-color: var(--rule-firm); }
+  .pill.rework  { background: var(--risk-soft);   color: var(--risk);   border-color: var(--risk); }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    align-items: center;
+    padding: 14px 16px;
+    background: var(--raised);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+  }
+  .legend span.note { font-size: 13px; color: var(--ink-mid); }
+
+  /* ---------- tables ---------- */
+
+  .scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 640px;
+  }
+
+  thead th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding: 11px 14px;
+    background: var(--raised);
+    border-bottom: 1px solid var(--rule-firm);
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+
+  td.route { font-family: var(--mono); font-size: 13px; white-space: nowrap; font-weight: 500; }
+  td.st { width: 1%; }
+  td.what { color: var(--ink-mid); }
+
+  /* ---------- figures ---------- */
+
+  figure {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .figbox {
+    overflow-x: auto;
+    background: var(--raised);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 22px 20px;
+  }
+
+  figure svg { display: block; max-width: 100%; height: auto; min-width: 520px; margin: 0 auto; }
+
+  figcaption {
+    font-size: 13.5px;
+    color: var(--ink-mid);
+    max-width: 68ch;
+  }
+
+  /* ---------- callout ---------- */
+
+  .note {
+    border-left: 3px solid var(--accent);
+    background: var(--raised);
+    padding: 16px 20px;
+    border-radius: 0 6px 6px 0;
+    font-size: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .note.risk { border-left-color: var(--risk); }
+  .note h3 { font-size: 16px; }
+
+  /* ---------- phase list ---------- */
+
+  ol.phases {
+    list-style: none;
+    counter-reset: ph;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  ol.phases li {
+    display: grid;
+    grid-template-columns: 46px 1fr;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: start;
+  }
+  ol.phases li:last-child { border-bottom: none; }
+  ol.phases li::before {
+    counter-increment: ph;
+    content: counter(ph, upper-alpha);
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1.25;
+    color: var(--accent);
+  }
+  ol.phases .ph-body { display: flex; flex-direction: column; gap: 4px; }
+  ol.phases .ph-title { font-weight: 600; }
+  ol.phases .ph-what { font-size: 14px; color: var(--ink-mid); }
+
+  ul.plain { margin: 0; padding-left: 20px; color: var(--ink-mid); font-size: 15px; }
+  ul.plain li { margin-bottom: 5px; }
+  ul.plain strong { color: var(--ink); }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 22px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    max-width: 68ch;
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 0 16px 64px; }
+    header.mast { padding-top: 44px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <p class="eyebrow">Reference · pre-build</p>
+    <h1 class="mark">Qumo Route Map</h1>
+    <p class="standfirst">
+      Every door a shopper can come through, every screen a brand can open, and where each of them
+      lands in the engine. Written before Phase&nbsp;B so the build has something to disagree with.
+    </p>
+    <div class="meta">
+      <span>Pilot: Chicken Licken (slip)</span>
+      <span>Then: Campari (sticker)</span>
+      <span>Identity: phone, brand-scoped</span>
+      <span>Routing: subdomain per brand</span>
+    </div>
+  </header>
+
+  <div class="legend">
+    <span class="pill built">Built</span>
+    <span class="pill rework">Built · reworks</span>
+    <span class="pill planned">Planned</span>
+    <span class="pill parked">Parked</span>
+    <span class="note">Status is against the target architecture, not against the current repo — several routes exist today but under the wrong shell.</span>
+  </div>
+
+  <!-- ============ 1. THREE DOORS ============ -->
+  <section>
+    <p class="eyebrow">The shape</p>
+    <h2>Three doors, one accrual path</h2>
+    <div class="prose">
+      <p>
+        A shopper reaches Qumo three ways, and only two of them can award anything. The distinction
+        matters more than it looks: a <strong>poster</strong> is one static code that anyone walking
+        past can scan, so it proves no purchase and must never carry value. A <strong>slip</strong>
+        or <strong>sticker</strong> is unique per transaction, which is what makes earning safe.
+      </p>
+      <p>
+        Both earning doors converge on <code>applyAccrual()</code> — one function, one ledger write,
+        one place where caps and stamp-card completion live. Adding SMS adds an adapter, not a second
+        set of rules.
+      </p>
+    </div>
+
+    <figure>
+      <div class="figbox">
+        <svg viewBox="0 0 820 300" role="img" aria-label="Poster QR leads only to account creation and opt-in with no value awarded, while slip QR and SMS both pass through verification into a single shared accrual function that writes the ledger.">
+          <defs>
+            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+            </marker>
+            <marker id="ar-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#a76d13"/>
+            </marker>
+          </defs>
+
+          <g fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="14" y="26" width="150" height="54" rx="4"/>
+            <rect x="14" y="123" width="150" height="54" rx="4"/>
+            <rect x="14" y="220" width="150" height="54" rx="4"/>
+            <rect x="228" y="26" width="164" height="54" rx="4"/>
+            <rect x="228" y="123" width="164" height="54" rx="4"/>
+            <rect x="228" y="220" width="164" height="54" rx="4"/>
+            <rect x="456" y="26" width="150" height="54" rx="4"/>
+            <rect x="456" y="123" width="150" height="54" rx="4"/>
+            <rect x="456" y="220" width="150" height="54" rx="4"/>
+          </g>
+
+          <rect x="662" y="123" width="146" height="54" rx="4" fill="none" stroke="#a76d13" stroke-width="2"/>
+
+          <g font-family="IBM Plex Mono, monospace" font-size="12" fill="currentColor" text-anchor="middle">
+            <text x="89" y="49" font-size="13" font-weight="500">Poster QR</text>
+            <text x="89" y="146" font-size="13" font-weight="500">Slip QR</text>
+            <text x="89" y="243" font-size="13" font-weight="500">SMS</text>
+            <text x="310" y="49">/join?c=…</text>
+            <text x="310" y="146">/r?s&amp;t&amp;c&amp;d&amp;g</text>
+            <text x="310" y="243">/api/sms/inbound</text>
+          </g>
+
+          <g font-family="Public Sans, sans-serif" font-size="11" fill="#6f7887" text-anchor="middle">
+            <text x="89" y="66">one static code</text>
+            <text x="89" y="163">unique per txn</text>
+            <text x="89" y="260">keyword or code</text>
+            <text x="310" y="66">explain · sign up</text>
+            <text x="310" y="163">verify signature</text>
+            <text x="310" y="260">verify MSISDN</text>
+          </g>
+
+          <g font-family="Public Sans, sans-serif" font-size="12.5" fill="currentColor" text-anchor="middle">
+            <text x="531" y="49">Account + opt in</text>
+            <text x="531" y="146">Gates (fig. 3)</text>
+            <text x="531" y="243">Gates (fig. 3)</text>
+          </g>
+          <g font-family="Public Sans, sans-serif" font-size="11" fill="#6f7887" text-anchor="middle">
+            <text x="531" y="66">no value awarded</text>
+          </g>
+
+          <g font-family="IBM Plex Mono, monospace" font-size="12" font-weight="500" fill="#a76d13" text-anchor="middle">
+            <text x="735" y="145">applyAccrual()</text>
+          </g>
+          <text x="735" y="163" font-family="Public Sans, sans-serif" font-size="11" fill="#6f7887" text-anchor="middle">one ledger row</text>
+
+          <g stroke="currentColor" stroke-width="1.5" marker-end="url(#ar)" fill="none">
+            <line x1="164" y1="53" x2="222" y2="53"/>
+            <line x1="164" y1="150" x2="222" y2="150"/>
+            <line x1="164" y1="247" x2="222" y2="247"/>
+            <line x1="392" y1="53" x2="450" y2="53"/>
+            <line x1="392" y1="150" x2="450" y2="150"/>
+            <line x1="392" y1="247" x2="450" y2="247"/>
+          </g>
+
+          <g stroke="#a76d13" stroke-width="1.75" fill="none" marker-end="url(#ar-acc)">
+            <line x1="606" y1="150" x2="656" y2="150"/>
+            <path d="M 606 247 L 634 247 L 634 160 L 656 160"/>
+          </g>
+
+          <line x1="606" y1="53" x2="640" y2="53" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 4"/>
+          <text x="672" y="49" font-family="Public Sans, sans-serif" font-size="11" fill="#6f7887" text-anchor="start">stops here</text>
+        </svg>
+      </div>
+      <figcaption>
+        <strong>Fig 1.</strong> The poster path terminates at opt-in. Only the two purchase-proving
+        doors reach <code>applyAccrual()</code>, and they reach the same one — so a cap or a
+        stamp-card rule written once applies to both.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ 2. SHOPPER STATE ============ -->
+  <section>
+    <p class="eyebrow">Consumer</p>
+    <h2>What a shopper moves through</h2>
+    <div class="prose">
+      <p>
+        Four states, and the transitions are what the routes exist to serve. Consent is captured
+        <em>before</em> any personal detail is asked for, and withdrawal is a first-class transition
+        rather than a support request — which is the gap in what exists today.
+      </p>
+    </div>
+
+    <figure>
+      <div class="figbox">
+        <svg viewBox="0 0 820 220" role="img" aria-label="A shopper moves from unknown to phone-verified via one-time passcode, to opted in by accepting the programme terms, to earning on their first qualifying scan; earning loops on repeat scans, and opting out returns them to verified.">
+          <defs>
+            <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+            </marker>
+            <marker id="ar2r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#a76d13"/>
+            </marker>
+          </defs>
+
+          <g fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="14" y="52" width="150" height="52" rx="26"/>
+            <rect x="222" y="52" width="150" height="52" rx="26"/>
+            <rect x="430" y="52" width="150" height="52" rx="26"/>
+          </g>
+          <rect x="638" y="52" width="150" height="52" rx="26" fill="none" stroke="#a76d13" stroke-width="2"/>
+
+          <g font-family="Public Sans, sans-serif" font-size="13.5" font-weight="500" fill="currentColor" text-anchor="middle">
+            <text x="89" y="83">Unknown</text>
+            <text x="297" y="83">Verified</text>
+            <text x="505" y="83">Opted in</text>
+          </g>
+          <text x="713" y="83" font-family="Public Sans, sans-serif" font-size="13.5" font-weight="600" fill="#a76d13" text-anchor="middle">Earning</text>
+
+          <g stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ar2)">
+            <line x1="164" y1="78" x2="216" y2="78"/>
+            <line x1="372" y1="78" x2="424" y2="78"/>
+          </g>
+          <line x1="580" y1="78" x2="632" y2="78" stroke="#a76d13" stroke-width="1.75" fill="none" marker-end="url(#ar2r)"/>
+
+          <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#6f7887" text-anchor="middle">
+            <text x="190" y="42">phone + OTP</text>
+            <text x="398" y="42">accepts terms</text>
+            <text x="606" y="42">first scan</text>
+          </g>
+
+          <path d="M 745 105 C 772 150, 654 150, 681 108" fill="none" stroke="#a76d13" stroke-width="1.5" marker-end="url(#ar2r)"/>
+          <text x="713" y="168" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#6f7887" text-anchor="middle">repeat scans</text>
+
+          <path d="M 505 104 L 505 178 L 297 178 L 297 110" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#ar2)"/>
+          <text x="401" y="196" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#6f7887" text-anchor="middle">opts out — balance frozen, identity kept</text>
+        </svg>
+      </div>
+      <figcaption>
+        <strong>Fig 2.</strong> Opting out returns a shopper to <em>Verified</em>, not to
+        <em>Unknown</em> — the account survives so they can opt back in, and so the ledger they
+        already earned stays auditable. Full erasure is a separate, slower request.
+      </figcaption>
+    </figure>
+
+    <h3>Consumer web · <code>{brand}.qumo.app</code></h3>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Route</th><th>What it does</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="route">/</td><td class="what">Brand-themed landing. The promotion in plain words, and a way in.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">/join</td><td class="what">Poster QR entry. Explains the promotion, registers, records opt-in. Awards nothing.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">/r</td><td class="what">Slip QR. Verifies and earns. <code>?s=store&amp;t=txn&amp;c=cents&amp;d=unix&amp;g=sig</code></td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/s/[code]</td><td class="what">Sticker or pack code. Single-use, earns. Campari's path.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/login</td><td class="what">Phone + one-time passcode. No password, no SSO.</td><td class="st"><span class="pill rework">Built · moves</span></td></tr>
+          <tr><td class="route">/balance</td><td class="what">This brand's balance and history. Currently cross-brand and must become scoped.</td><td class="st"><span class="pill rework">Built · reworks</span></td></tr>
+          <tr><td class="route">/me</td><td class="what">Signed-in devices, opt out, request my data, delete account.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">/legal/privacy</td><td class="what">The notice linked from the consent tick box. Rendered from the same constants that were agreed to.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/legal/terms</td><td class="what">Programme terms, including what happens if the brand cancels.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>SMS channel · no data required</h3>
+    <div class="prose">
+      <p>
+        Keywords, not URLs — an aggregator's short code posts each inbound message to
+        <code>/api/sms/inbound</code> and we return the reply. <strong>Read and earn only:</strong>
+        a network-supplied number identifies a person but does not prove consent, so nothing here
+        spends a balance or changes a setting.
+      </p>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Message in</th><th>What happens</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="route">BALANCE</td><td class="what">Replies with this brand's balance. Unknown number gets a join instruction instead.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">CL 8842315</td><td class="what">Store code and transaction number off the slip. Same verification as the QR, same accrual.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">YES</td><td class="what">Accepts the terms sent in the previous message. Consent in the shopper's own words.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">STOP</td><td class="what">Opt out. The one write this channel is allowed, because refusing it is worse than the risk.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 3. GATES ============ -->
+  <section>
+    <p class="eyebrow">Earning</p>
+    <h2>What a slip has to survive</h2>
+    <div class="prose">
+      <p>
+        Nine checks between a scanned slip and a ledger row. Seven exist. The two that don't are the
+        reason unsigned stores can't ship yet — without a per-person cap, a shopper at a store whose
+        POS can't sign controls every field of the URL and the single-use constraint only stops them
+        reusing a transaction number, not choosing a fresh one.
+      </p>
+    </div>
+
+    <figure>
+      <div class="figbox">
+        <svg viewBox="0 0 820 470" role="img" aria-label="A scanned slip passes nine sequential checks before a ledger row is written: payload parses, store known and active, signature valid, within thirty days, transaction not seen before, campaign live, basket above minimum, per-person velocity cap, and campaign liability cap. The last two are not yet built.">
+          <defs>
+            <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#a76d13"/>
+            </marker>
+          </defs>
+
+          <line x1="40" y1="26" x2="40" y2="392" stroke="currentColor" stroke-width="1.25" opacity="0.35"/>
+
+          <g font-family="Public Sans, sans-serif" font-size="13" fill="currentColor">
+            <circle cx="40" cy="30" r="5.5" fill="currentColor"/>
+            <text x="62" y="35">Payload parses</text>
+
+            <circle cx="40" cy="70" r="5.5" fill="currentColor"/>
+            <text x="62" y="75">Store known, and active</text>
+
+            <circle cx="40" cy="110" r="5.5" fill="currentColor"/>
+            <text x="62" y="115">Signature valid — <tspan fill="#6f7887">if the store signs at all</tspan></text>
+
+            <circle cx="40" cy="150" r="5.5" fill="currentColor"/>
+            <text x="62" y="155">Slip is under 30 days old</text>
+
+            <circle cx="40" cy="190" r="5.5" fill="currentColor"/>
+            <text x="62" y="195">Transaction never seen before</text>
+
+            <circle cx="40" cy="230" r="5.5" fill="currentColor"/>
+            <text x="62" y="235">A percent-of-spend campaign is live</text>
+
+            <circle cx="40" cy="270" r="5.5" fill="currentColor"/>
+            <text x="62" y="275">Basket clears the minimum</text>
+          </g>
+
+          <g font-family="Public Sans, sans-serif" font-size="13">
+            <circle cx="40" cy="312" r="5.5" fill="none" stroke="#cc5442" stroke-width="2"/>
+            <text x="62" y="317" fill="#cc5442" font-weight="600">Per-person velocity cap</text>
+            <text x="62" y="333" fill="#6f7887" font-size="11">not built — this is the hole</text>
+
+            <circle cx="40" cy="360" r="5.5" fill="none" stroke="#cc5442" stroke-width="2"/>
+            <text x="62" y="365" fill="#cc5442" font-weight="600">Campaign liability cap</text>
+            <text x="62" y="381" fill="#6f7887" font-size="11">not built — unbounded exposure</text>
+          </g>
+
+          <line x1="40" y1="392" x2="40" y2="418" stroke="#a76d13" stroke-width="1.75" marker-end="url(#ar3)"/>
+          <rect x="14" y="424" width="250" height="34" rx="4" fill="none" stroke="#a76d13" stroke-width="2"/>
+          <text x="139" y="446" font-family="IBM Plex Mono, monospace" font-size="12" font-weight="500" fill="#a76d13" text-anchor="middle">applyAccrual() → ledger</text>
+
+          <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#6f7887">
+            <text x="800" y="35" text-anchor="end">shape</text>
+            <text x="800" y="75" text-anchor="end">tenancy</text>
+            <text x="800" y="115" text-anchor="end">integrity</text>
+            <text x="800" y="155" text-anchor="end">freshness</text>
+            <text x="800" y="195" text-anchor="end">replay</text>
+            <text x="800" y="235" text-anchor="end">eligibility</text>
+            <text x="800" y="275" text-anchor="end">eligibility</text>
+          </g>
+          <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#cc5442">
+            <text x="800" y="317" text-anchor="end">abuse</text>
+            <text x="800" y="365" text-anchor="end">liability</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption>
+        <strong>Fig 3.</strong> The two unbuilt gates are the whole of Phase B. Both belong inside
+        the same serializable transaction that writes the row — checked outside it, two concurrent
+        scans each pass and both write.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ 4. BRAND CONSOLE ============ -->
+  <section>
+    <p class="eyebrow">Brand</p>
+    <h2>What a brand opens</h2>
+    <div class="prose">
+      <p>
+        A separate application on its own domain, with its own login. Three of these pages exist
+        today inside the CIOS portal and carry CIOS navigation and CIOS branding — they move, they
+        don't get linked to.
+      </p>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Route</th><th>What it does</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="route">/login</td><td class="what">Staff email and password. Own instance, own user table.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">/</td><td class="what">Scans, value issued, value redeemed, active members. The answer to "is this working?"</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">/promotions</td><td class="what">Earn rules: percent of spend, or stamp card. Caps, minimum basket, campaign window.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">/stores</td><td class="what">Store codes and receipt signing keys. Names the exposure where a POS can't sign.</td><td class="st"><span class="pill rework">Built · moves</span></td></tr>
+          <tr><td class="route">/codes</td><td class="what">Poster codes and sticker batches. CSV export for the printer.</td><td class="st"><span class="pill rework">Built · moves</span></td></tr>
+          <tr><td class="route">/analytics</td><td class="what">Campaign performance. Their own members only — the tenant guard makes that structural.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">/billing</td><td class="what">Subscription, invoices, cancel. Cancelling freezes earning and honours redemption 60 days.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">/settings</td><td class="what">Logo, colours, subdomain, staff users. This is the reskin.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">/till</td><td class="what">Cashier confirms a spend code. Needs a logged-in device at every counter.</td><td class="st"><span class="pill parked">Parked</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Scheduled and machine routes</h3>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Route</th><th>What it does</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="route">/api/sms/inbound</td><td class="what">Aggregator webhook. One adapter over the same engine calls the web uses.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">/api/cron/sweep-sessions</td><td class="what">Daily. Deletes session rows 90 days past expiry.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/api/codes/[batch].csv</td><td class="what">Sticker batch export, scan URLs built from the request origin.</td><td class="st"><span class="pill rework">Built · moves</span></td></tr>
+          <tr><td class="route">/api/cron/close-lapsed</td><td class="what">Daily. Ends programmes whose 60-day redemption grace has run out.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 5. TOPOLOGY ============ -->
+  <section>
+    <p class="eyebrow">Deployment</p>
+    <h2>Where it all runs</h2>
+    <div class="prose">
+      <p>
+        One engine, three adapters, one database — and no runtime connection to CIOS at all. That
+        last part is the change: the earlier plan had Qumo sharing CIOS's database so a shopper's
+        WhatsApp check-ins and their scans could land in one balance. Brand-scoped loyalty removes
+        the reason, and sharing was expensive — seven of Qumo's eight tables held foreign keys into
+        CIOS-owned ones.
+      </p>
+    </div>
+
+    <figure>
+      <div class="figbox">
+        <svg viewBox="0 0 820 300" role="img" aria-label="Brand subdomains, the brand console, and an SMS short code all talk to a single Qumo engine backed by one Qumo database. CIOS and its own database sit on the other side of a hard separation with no connection between them.">
+          <defs>
+            <marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+            </marker>
+          </defs>
+
+          <g fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="14" y="20" width="180" height="46" rx="4"/>
+            <rect x="14" y="86" width="180" height="46" rx="4"/>
+            <rect x="14" y="152" width="180" height="46" rx="4"/>
+          </g>
+          <g font-family="IBM Plex Mono, monospace" font-size="11.5" fill="currentColor" text-anchor="middle">
+            <text x="104" y="41">{brand}.qumo.app</text>
+            <text x="104" y="107">app.qumo.app</text>
+            <text x="104" y="173">SMS short code</text>
+          </g>
+          <g font-family="Public Sans, sans-serif" font-size="10.5" fill="#6f7887" text-anchor="middle">
+            <text x="104" y="57">shoppers</text>
+            <text x="104" y="123">brand staff</text>
+            <text x="104" y="189">no data needed</text>
+          </g>
+
+          <rect x="272" y="72" width="164" height="74" rx="4" fill="none" stroke="#a76d13" stroke-width="2"/>
+          <text x="354" y="103" font-family="Public Sans, sans-serif" font-size="14" font-weight="600" fill="#a76d13" text-anchor="middle">Qumo engine</text>
+          <text x="354" y="122" font-family="Public Sans, sans-serif" font-size="10.5" fill="#a76d13" text-anchor="middle">ledger · tenancy · accrual</text>
+
+          <rect x="514" y="72" width="140" height="74" rx="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="584" y="103" font-family="Public Sans, sans-serif" font-size="13.5" font-weight="500" fill="currentColor" text-anchor="middle">Qumo DB</text>
+          <text x="584" y="122" font-family="Public Sans, sans-serif" font-size="10.5" fill="#6f7887" text-anchor="middle">own instance</text>
+
+          <g stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ar4)">
+            <path d="M 194 43 L 232 43 L 232 96 L 266 96"/>
+            <line x1="194" y1="109" x2="266" y2="109"/>
+            <path d="M 194 175 L 232 175 L 232 122 L 266 122"/>
+            <line x1="436" y1="109" x2="508" y2="109"/>
+          </g>
+
+          <line x1="700" y1="14" x2="700" y2="286" stroke="currentColor" stroke-width="1.25" stroke-dasharray="6 5" opacity="0.5"/>
+          <text x="684" y="200" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#6f7887" text-anchor="middle" transform="rotate(-90 684 200)">no shared runtime</text>
+
+          <g fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55">
+            <rect x="726" y="72" width="80" height="34" rx="4"/>
+            <rect x="726" y="118" width="80" height="34" rx="4"/>
+            <line x1="766" y1="106" x2="766" y2="112" marker-end="url(#ar4)"/>
+          </g>
+          <g font-family="Public Sans, sans-serif" font-size="11.5" fill="currentColor" text-anchor="middle" opacity="0.7">
+            <text x="766" y="94">CIOS</text>
+            <text x="766" y="140">CIOS DB</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption>
+        <strong>Fig 4.</strong> The dashed line is the point of the diagram. Nothing crosses it —
+        no shared tables, no shared deployment, no shared user table. A shopper's Qumo balance and
+        their CIOS check-ins are simply different things.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ 6. PHASES ============ -->
+  <section>
+    <p class="eyebrow">Sequence</p>
+    <h2>Order of work</h2>
+    <div class="prose">
+      <p>
+        Lettered because it is genuinely a sequence — each phase depends on the one before it. The
+        security work sits before extraction deliberately: those fixes travel with the engine, and
+        fixing them once beats fixing them in two repos.
+      </p>
+    </div>
+
+    <ol class="phases">
+      <li><div class="ph-body"><span class="ph-title">Decide and document</span><span class="ph-what">This page, plus the architecture note, committed to the repo. No code.</span></div></li>
+      <li><div class="ph-body"><span class="ph-title">Engine hardening</span><span class="ph-what">The two missing gates from Fig 3. Opt-out. Data export. Slip path first, since Chicken Licken is the pilot.</span></div></li>
+      <li><div class="ph-body"><span class="ph-title">Extraction</span><span class="ph-what">New repo, new database. Copy the engine, drop everything CIOS-shaped.</span></div></li>
+      <li><div class="ph-body"><span class="ph-title">Brand identity layer</span><span class="ph-what">Subdomain resolution, theme fields, and inverting the shell so the brand leads and Qumo is the footer.</span></div></li>
+      <li><div class="ph-body"><span class="ph-title">Brand console</span><span class="ph-what">Own app, own auth, own navigation. Promotions, codes, stores, analytics.</span></div></li>
+      <li><div class="ph-body"><span class="ph-title">Subscription lifecycle</span><span class="ph-what">Billing, and the freeze-earning-honour-redemption rule enforced in the engine rather than the UI.</span></div></li>
+      <li><div class="ph-body"><span class="ph-title">SMS channel</span><span class="ph-what">Balance lookup and SMS-to-earn over a rented short code. USSD only if the pilot shows demand.</span></div></li>
+    </ol>
+  </section>
+
+  <!-- ============ 7. OPEN ============ -->
+  <section>
+    <p class="eyebrow">Unresolved</p>
+    <h2>Blocking, and not yet answered</h2>
+
+    <div class="note risk">
+      <h3>The domain is load-bearing now</h3>
+      <p>
+        <code>qumo.app</code> resolves to an address held by someone else, and so does
+        <code>qumo.com</code>. When it was one wallet domain that was cosmetic. With a subdomain per
+        brand it is what goes on a Chicken Licken poster — and a poster cannot carry a hostname we
+        do not control. This blocks Phase D, not Phase B.
+      </p>
+    </div>
+
+    <div class="note">
+      <h3>Operator or responsible party</h3>
+      <p>
+        Brand-specific sites with per-brand opt-in make "the brand is responsible party, Qumo is the
+        operator" the natural reading — but that is a lawyer's confirmation, and it has to land
+        before the first real shopper registers. Retrofitting consent onto people who already signed
+        up is materially harder than getting it right once.
+      </p>
+    </div>
+
+    <div class="note">
+      <h3>An aggregator account</h3>
+      <p>
+        The same account serves both the login passcodes Phase B already depends on and the Phase G
+        balance channel. Worth pricing reverse-billed against standard-rated early: that number sets
+        the per-brand monthly cap, and this is the first feature whose cost scales with engagement
+        rather than staying flat.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    Status reflects the branch <code>claude/new-product-idea-dnr9ve</code> at the point this was
+    written. Routes marked <em>built</em> exist and are tested; routes marked <em>moves</em> exist
+    but under the wrong shell and are not linked from anything a shopper or brand should see.
+  </footer>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,374 @@
+/* Qumo shopper surface.
+ *
+ * Deliberately its own stylesheet, scoped under `.sc`, rather than more
+ * tokens in globals.css. The portal is a staff tool with an established
+ * navy-and-orange identity ported from the brand mockups; this is a
+ * consumer app someone opens once at a shelf. They are different products
+ * with different jobs, and the scoping means restyling one can never
+ * silently restyle the other.
+ *
+ * The direction is Uber's: a white ground, true black type, hairline rules
+ * instead of card chrome, one enormous number per screen, and a single
+ * full-width black button that says what happens. Dark mode reverses it
+ * onto grey rather than pure black — #000 on an OLED phone at night reads
+ * as a hole in the screen, and the surfaces need somewhere to sit.
+ */
+
+.sc {
+  --sc-bg: #ffffff;
+  --sc-raised: #f6f6f6;
+  --sc-ink: #000000;
+  --sc-ink-2: #545454;
+  --sc-ink-3: #757575;
+  --sc-line: #e2e2e2;
+  --sc-line-soft: #eeeeee;
+  --sc-btn: #000000;
+  --sc-btn-ink: #ffffff;
+  --sc-pos: #05944f;
+  --sc-pos-bg: #edf7f1;
+  --sc-neg: #e11900;
+  --sc-focus: #276ef1;
+}
+
+/* System setting, no explicit choice stamped — the state most viewers are
+   in. Guarded so an explicit "light" still wins over a dark OS. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .sc {
+    --sc-bg: #121212;
+    --sc-raised: #1f1f1f;
+    --sc-ink: #ffffff;
+    --sc-ink-2: #afafaf;
+    --sc-ink-3: #8c8c8c;
+    --sc-line: #2e2e2e;
+    --sc-line-soft: #242424;
+    --sc-btn: #ffffff;
+    --sc-btn-ink: #000000;
+    --sc-pos: #3fcf7f;
+    --sc-pos-bg: #14291f;
+    --sc-neg: #ff6b5e;
+    --sc-focus: #5b91f5;
+  }
+}
+
+/* Explicit choice from the toggle, so it wins in both directions. */
+:root[data-theme="dark"] .sc {
+  --sc-bg: #121212;
+  --sc-raised: #1f1f1f;
+  --sc-ink: #ffffff;
+  --sc-ink-2: #afafaf;
+  --sc-ink-3: #8c8c8c;
+  --sc-line: #2e2e2e;
+  --sc-line-soft: #242424;
+  --sc-btn: #ffffff;
+  --sc-btn-ink: #000000;
+  --sc-pos: #3fcf7f;
+  --sc-pos-bg: #14291f;
+  --sc-neg: #ff6b5e;
+  --sc-focus: #5b91f5;
+}
+
+.sc {
+  background: var(--sc-bg);
+  color: var(--sc-ink);
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.sc-shell {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px 20px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ---------- head ---------- */
+
+.sc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sc-mark {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  color: var(--sc-ink);
+}
+
+.sc-mark-sub {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--sc-ink-3);
+  letter-spacing: -0.006em;
+  margin-top: 4px;
+}
+
+/* ---------- type ---------- */
+
+.sc-h1 {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.032em;
+  line-height: 1.12;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.sc-h2 {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.016em;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.sc-body {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--sc-ink-2);
+  letter-spacing: -0.006em;
+  margin: 0;
+}
+
+.sc-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--sc-ink-3);
+  letter-spacing: 0;
+  margin: 0;
+}
+
+/* The one enormous number per screen. Tabular so a balance doesn't
+   shuffle sideways as it changes. */
+.sc-figure {
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+
+.sc-figure-sm {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+
+.sc-pos { color: var(--sc-pos); }
+
+/* ---------- surfaces ---------- */
+
+.sc-card {
+  background: var(--sc-bg);
+  border: 1px solid var(--sc-line);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sc-tile {
+  background: var(--sc-raised);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sc-tile-pos { background: var(--sc-pos-bg); }
+
+/* ---------- balances ---------- */
+
+.sc-balances {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px 32px;
+}
+
+.sc-balance { display: flex; flex-direction: column; gap: 2px; }
+
+/* ---------- rows ---------- */
+
+.sc-rows { display: flex; flex-direction: column; }
+
+.sc-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--sc-line-soft);
+}
+
+.sc-row:last-child { border-bottom: 0; }
+.sc-row-main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.sc-row-amt {
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- controls ---------- */
+
+.sc-btn {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  padding: 16px 20px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.011em;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--sc-btn);
+  color: var(--sc-btn-ink);
+  transition: opacity 120ms ease;
+}
+
+.sc-btn:hover { opacity: 0.85; }
+.sc-btn:disabled { opacity: 0.32; cursor: not-allowed; }
+
+.sc-btn-ghost {
+  background: var(--sc-raised);
+  color: var(--sc-ink);
+}
+
+.sc-btn-quiet {
+  background: transparent;
+  color: var(--sc-ink-2);
+  border: 1px solid var(--sc-line);
+}
+
+.sc-field { display: flex; flex-direction: column; gap: 8px; }
+
+.sc-field label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--sc-ink-2);
+  letter-spacing: -0.006em;
+}
+
+.sc-input {
+  width: 100%;
+  font: inherit;
+  font-size: 17px;
+  letter-spacing: -0.011em;
+  padding: 15px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--sc-line);
+  background: var(--sc-bg);
+  color: var(--sc-ink);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.sc-input::placeholder { color: var(--sc-ink-3); }
+.sc-input:focus { outline: none; border-color: var(--sc-ink); }
+
+.sc-input-code {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-align: center;
+  padding: 16px;
+}
+
+.sc-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  cursor: pointer;
+}
+
+.sc-check input {
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  flex-shrink: 0;
+  accent-color: var(--sc-ink);
+  cursor: pointer;
+}
+
+.sc-check span {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--sc-ink-2);
+  letter-spacing: -0.003em;
+}
+
+.sc-err {
+  font-size: 14px;
+  color: var(--sc-neg);
+  margin: 0;
+  letter-spacing: -0.006em;
+}
+
+/* Excludes buttons deliberately. This rule sits after .sc-btn and outranks
+   it on specificity (0,1,1 against 0,1,0), so without the :not() an anchor
+   styled as a button renders ink-on-ink — invisible text on a solid block.
+   The ghost variants survived it only because they happen to set the same
+   colour, which is why it stayed hidden until the first primary link-button. */
+.sc a:not(.sc-btn) { color: var(--sc-ink); text-underline-offset: 2px; }
+
+/* One visible focus treatment for everything reachable by keyboard. */
+.sc :focus-visible {
+  outline: 2px solid var(--sc-focus);
+  outline-offset: 2px;
+}
+
+/* ---------- theme toggle ---------- */
+
+.sc-theme {
+  border: 1px solid var(--sc-line);
+  background: transparent;
+  color: var(--sc-ink-2);
+  border-radius: 999px;
+  padding: 7px 13px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sc-theme:hover { color: var(--sc-ink); border-color: var(--sc-ink); }
+
+/* ---------- code display ---------- */
+
+.sc-code {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+
+.sc-code-sm {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc * { transition: none !important; }
+}
