@@ -1,0 +1,315 @@
+/* Qumo brand console.
+ *
+ * Scoped under `.cn`, its own tokens, its own stylesheet — the same
+ * separation the shopper surface has, and for the same reason: these are two
+ * products with two jobs, and restyling one must never reach the other.
+ *
+ * The shopper surface is a narrow column someone opens once at a till, so it
+ * is one enormous number and one full-width button. This is the opposite: a
+ * desk tool, opened for twenty minutes, read across a wide screen. Dense
+ * rows, real tables, numbers aligned so they can be compared down a column
+ * rather than admired one at a time.
+ *
+ * Note what is NOT here: any brand theming. The console is Qumo's product,
+ * used by a brand's staff, and it looks like Qumo. Only the shopper surface
+ * wears the brand, because only the shopper is being asked to believe they
+ * are dealing with one.
+ */
+
+.cn {
+  --cn-bg: #fbfbfa;
+  --cn-surface: #ffffff;
+  --cn-ink: #16181d;
+  --cn-ink-2: #5a6069;
+  --cn-ink-3: #868d97;
+  --cn-line: #e4e6e9;
+  --cn-line-soft: #eff0f2;
+  --cn-accent: #1f5fd0;
+  --cn-accent-ink: #ffffff;
+  --cn-pos: #0a7d47;
+  --cn-warn: #9a6100;
+  --cn-warn-bg: #fdf6e6;
+  --cn-neg: #c8271b;
+
+  background: var(--cn-bg);
+  color: var(--cn-ink);
+  min-height: 100vh;
+  font-feature-settings: "tnum" 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .cn {
+    --cn-bg: #101216;
+    --cn-surface: #171a1f;
+    --cn-ink: #f2f4f6;
+    --cn-ink-2: #a5adb8;
+    --cn-ink-3: #7b838e;
+    --cn-line: #282c33;
+    --cn-line-soft: #1f2329;
+    --cn-accent: #5b91f5;
+    --cn-accent-ink: #0b1220;
+    --cn-pos: #3fbf7f;
+    --cn-warn: #e0a83a;
+    --cn-warn-bg: #2a2313;
+    --cn-neg: #ff6b5e;
+  }
+}
+
+:root[data-theme="dark"] .cn {
+  --cn-bg: #101216;
+  --cn-surface: #171a1f;
+  --cn-ink: #f2f4f6;
+  --cn-ink-2: #a5adb8;
+  --cn-ink-3: #7b838e;
+  --cn-line: #282c33;
+  --cn-line-soft: #1f2329;
+  --cn-accent: #5b91f5;
+  --cn-accent-ink: #0b1220;
+  --cn-pos: #3fbf7f;
+  --cn-warn: #e0a83a;
+  --cn-warn-bg: #2a2313;
+  --cn-neg: #ff6b5e;
+}
+
+/* ---------- chrome ---------- */
+
+.cn-top {
+  border-bottom: 1px solid var(--cn-line);
+  background: var(--cn-surface);
+}
+
+.cn-top-in {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 56px;
+  flex-wrap: wrap;
+}
+
+.cn-mark {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--cn-ink);
+}
+
+.cn-mark span {
+  color: var(--cn-ink-3);
+  font-weight: 500;
+}
+
+.cn-nav {
+  display: flex;
+  gap: 4px;
+  margin-right: auto;
+  flex-wrap: wrap;
+}
+
+.cn-nav a {
+  color: var(--cn-ink-2);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.cn-nav a:hover {
+  color: var(--cn-ink);
+  background: var(--cn-line-soft);
+}
+
+.cn-who {
+  font-size: 13px;
+  color: var(--cn-ink-3);
+  text-align: right;
+  line-height: 1.35;
+}
+
+.cn-main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ---------- type ---------- */
+
+.cn-h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+.cn-h2 { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
+.cn-body { font-size: 14px; line-height: 1.55; color: var(--cn-ink-2); margin: 0; }
+.cn-label { font-size: 12px; color: var(--cn-ink-3); margin: 0; }
+
+/* ---------- metrics ---------- */
+
+.cn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.cn-metric {
+  background: var(--cn-surface);
+  border: 1px solid var(--cn-line);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cn-metric-v {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  /* Tabular figures so two metrics side by side line up rather than
+     wandering — the whole reason these are in a grid is comparison. */
+  font-variant-numeric: tabular-nums;
+}
+
+.cn-metric-k { font-size: 12px; color: var(--cn-ink-3); }
+.cn-metric-note { font-size: 12px; color: var(--cn-ink-2); }
+.cn-warn-note { color: var(--cn-warn); }
+
+/* ---------- panels and tables ---------- */
+
+.cn-panel {
+  background: var(--cn-surface);
+  border: 1px solid var(--cn-line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.cn-panel-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--cn-line);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Wide content scrolls inside its own box; the page itself never scrolls
+   sideways. */
+.cn-scroll { overflow-x: auto; }
+
+.cn-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 640px;
+}
+
+.cn-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cn-ink-3);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--cn-line);
+  white-space: nowrap;
+}
+
+.cn-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--cn-line-soft);
+  vertical-align: top;
+}
+
+.cn-table tr:last-child td { border-bottom: 0; }
+.cn-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cn-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+
+.cn-empty { padding: 28px 16px; text-align: center; color: var(--cn-ink-3); font-size: 14px; }
+
+/* ---------- pills ---------- */
+
+.cn-pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--cn-line);
+  color: var(--cn-ink-2);
+  white-space: nowrap;
+}
+
+.cn-pill-ok { color: var(--cn-pos); border-color: color-mix(in srgb, var(--cn-pos) 40%, transparent); }
+.cn-pill-warn { color: var(--cn-warn); border-color: color-mix(in srgb, var(--cn-warn) 45%, transparent); background: var(--cn-warn-bg); }
+.cn-pill-off { color: var(--cn-ink-3); }
+
+/* ---------- forms ---------- */
+
+.cn-form { display: flex; flex-direction: column; gap: 16px; }
+
+.cn-field { display: flex; flex-direction: column; gap: 6px; }
+.cn-field label { font-size: 13px; font-weight: 600; }
+
+.cn-input {
+  font: inherit;
+  font-size: 15px;
+  padding: 10px 12px;
+  border: 1px solid var(--cn-line);
+  border-radius: 8px;
+  background: var(--cn-surface);
+  color: var(--cn-ink);
+  width: 100%;
+}
+
+.cn-input:focus-visible { outline: 2px solid var(--cn-accent); outline-offset: 1px; border-color: transparent; }
+
+.cn-btn {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: var(--cn-accent);
+  color: var(--cn-accent-ink);
+  cursor: pointer;
+}
+
+.cn-btn:disabled { opacity: 0.5; cursor: default; }
+
+.cn-btn-quiet {
+  background: transparent;
+  color: var(--cn-ink-2);
+  border-color: var(--cn-line);
+}
+
+.cn-btn-quiet:hover { color: var(--cn-ink); border-color: var(--cn-ink-3); }
+
+.cn-err {
+  font-size: 13px;
+  color: var(--cn-neg);
+  margin: 0;
+}
+
+/* ---------- login ---------- */
+
+.cn-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.cn-login-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--cn-surface);
+  border: 1px solid var(--cn-line);
+  border-radius: 12px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}

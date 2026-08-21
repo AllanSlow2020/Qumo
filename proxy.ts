@@ -1,20 +1,22 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { CONSUMER_SESSION_COOKIE } from "@/lib/consumer/session-cookie";
-import { BRAND_HEADER, brandSlugFromHost } from "@/lib/brand/host";
+import { BRAND_HEADER, brandSlugFromHost, isConsoleHost } from "@/lib/brand/host";
+import { STAFF_SESSION_COOKIE } from "@/lib/staff/session-cookie";
 
 /**
  * Edge routing for the shopper surface.
  *
- * Much smaller than CIOS's, and for a reason worth stating: that one wrapped
- * NextAuth because it guarded a staff portal, and every path had to be
- * classified as staff, shopper, or public. Qumo has no staff surface yet —
- * the brand console arrives in its own phase with its own auth — so there is
- * exactly one principal here and the rules collapse to "signed in, or not".
+ * Two principals, and the first thing this file does is decide which one it
+ * is looking at — by hostname, before anything else. `app.{root}` is the
+ * brand console; `{slug}.{root}` is a brand's shopper surface; anything else
+ * is neither.
  *
- * When the console lands it gets its own matcher and its own session; it
- * must never share this cookie. Two principals through one mechanism is how
- * one decoding mistake presents a shopper as brand staff.
+ * The split is total and runs in both directions. A brand host cannot reach
+ * a console route and a console host cannot reach a shopper route, so the
+ * two never share a cookie, a session table, or a code path. That is
+ * deliberate rather than tidy: two principals through one mechanism is how a
+ * single decoding mistake presents a shopper as brand staff.
  */
 
 // Reachable with no session at all, and each for a specific reason.
@@ -34,7 +36,13 @@ const RECEIPT_ROOT = "/r";
 // readable by someone who has agreed to nothing.
 const LEGAL_ROOT = "/legal";
 
-const RATE_LIMITED = [SHOPPER_LOGIN];
+// The console lives under this prefix in the app directory, and never in a
+// URL a person types: on the console host every path is rewritten into it.
+const CONSOLE_ROOT = "/console";
+// What a staff member actually types, on app.{root}.
+const CONSOLE_LOGIN = "/login";
+
+const RATE_LIMITED = [SHOPPER_LOGIN, CONSOLE_LOGIN];
 const RATE_LIMIT_MAX = 20;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 
@@ -76,9 +84,46 @@ function brandHeaders(req: NextRequest): { headers: Headers; slug: string | null
   return { headers, slug };
 }
 
+/**
+ * The console: `app.{root}`, one principal, its own cookie.
+ *
+ * Every path is rewritten under /console, so a staff member types
+ * app.qumo.co.za/stores and the app directory keeps its routes namespaced.
+ * The namespace is what makes the guard on the other side cheap — a brand
+ * host asking for /console/anything is asking for something no brand URL
+ * ever produces, so it can be refused without a list of console routes to
+ * keep in step.
+ */
+function consoleRoute(req: NextRequest, pathname: string): NextResponse {
+  // The brand header is never set on this surface, and is stripped like
+  // everywhere else. The console's tenant comes from the signed-in user's
+  // row, not from a hostname — a console that read its brand from the
+  // address bar would let staff of one brand reach another's data by
+  // editing it.
+  const headers = new Headers(req.headers);
+  headers.delete(BRAND_HEADER);
+
+  // Cron and any other machine-called route keep their own paths and their
+  // own authentication.
+  if (pathname.startsWith("/api")) {
+    return NextResponse.next({ request: { headers } });
+  }
+
+  // Presence only, for the same reason as the shopper side: verifying means
+  // a database read and this runs in the Edge runtime. The real check is
+  // getStaffSession() in the layout, which also refuses a revoked session
+  // and a deactivated account.
+  if (pathname !== CONSOLE_LOGIN && !req.cookies.get(STAFF_SESSION_COOKIE)) {
+    return NextResponse.redirect(new URL(CONSOLE_LOGIN, req.nextUrl.origin));
+  }
+
+  const url = req.nextUrl.clone();
+  url.pathname = pathname === "/" ? CONSOLE_ROOT : `${CONSOLE_ROOT}${pathname}`;
+  return NextResponse.rewrite(url, { request: { headers } });
+}
+
 export function proxy(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
-  const { headers, slug } = brandHeaders(req);
 
   if (RATE_LIMITED.includes(pathname)) {
     // Per-process and honest about it: on a serverless deployment the
@@ -92,6 +137,24 @@ export function proxy(req: NextRequest): NextResponse {
     if (!allowed) {
       return new NextResponse("Too many requests", { status: 429 });
     }
+  }
+
+  // Which surface, decided by hostname and nothing else, before any question
+  // about who is signed in.
+  if (isConsoleHost(req.headers.get("host"))) {
+    return consoleRoute(req, pathname);
+  }
+
+  const { headers, slug } = brandHeaders(req);
+
+  // The other direction of the same split. A console route reached on a
+  // brand host would render with no staff session and no brand header, which
+  // is a strange enough state to be worth refusing outright rather than
+  // reasoning about.
+  if (underRoot(pathname, CONSOLE_ROOT)) {
+    const url = req.nextUrl.clone();
+    url.pathname = NO_BRAND;
+    return NextResponse.rewrite(url, { request: { headers } });
   }
 
   // The brand decision comes before the session one, and the order matters.

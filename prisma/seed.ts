@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { encryptSecret } from "../lib/security/crypto";
 import { buildReceiptUrl } from "../lib/stores/payload";
+import { hashPassword } from "../lib/staff/password";
 
 /**
  * A demo brand a shopper can actually earn against, so the app can be run
@@ -119,6 +120,22 @@ async function main() {
   // The brand's own host, not the apex. A slip URL that pointed at
   // localhost:3000 would land on the no-brand page, which is exactly the
   // failure this seed should not be teaching people to expect.
+  // Somebody to sign into the console with. Weak on purpose and only ever
+  // here — the seed prints it, which is exactly what should never happen
+  // with a real credential.
+  const staffPassword = "qumo-dev-password";
+  await prisma.user.upsert({
+    where: { email: "owner@chicken-licken.example" },
+    update: { passwordHash: await hashPassword(staffPassword), isActive: true },
+    create: {
+      brandId: brand.id,
+      email: "owner@chicken-licken.example",
+      name: "Thandi Mokoena",
+      role: "OWNER",
+      passwordHash: await hashPassword(staffPassword),
+    },
+  });
+
   const origin = `http://${brand.slug}.localhost:3000`;
   const now = new Date();
   const stamp = Date.now();
@@ -142,7 +159,9 @@ async function main() {
   }
   console.log("\n  Each is single-use. Re-run the seed for fresh ones.");
   console.log(`\n  The other brand, for comparing the skin: http://${second.slug}.localhost:3000/wallet`);
-  console.log("  The apex, which names no brand:            http://localhost:3000/wallet\n");
+  console.log("  The apex, which names no brand:            http://localhost:3000/wallet");
+  console.log("\n  Brand console:  http://app.localhost:3000");
+  console.log(`    owner@chicken-licken.example / ${staffPassword}\n`);
 }
 
 main()

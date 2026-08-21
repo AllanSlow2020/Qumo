@@ -1,0 +1,79 @@
+import type { LedgerUnit } from "@prisma/client";
+import { forBrand } from "@/lib/db/tenant";
+
+/**
+ * The numbers a brand opens the console to see.
+ *
+ * Every one of them is derived — there is no reporting table, no nightly
+ * rollup, no cached total. At this size that is simply correct: the ledger
+ * is the truth and a summary that can disagree with it is worse than no
+ * summary. When a brand's ledger is large enough for this to hurt, the fix
+ * is a materialised view with an explicit refresh, not a column somebody
+ * updates in application code.
+ *
+ * Scoped through forBrand() throughout, so a console bug cannot show one
+ * brand another's figures even if a brandId were wrong.
+ */
+
+export type BrandOverview = {
+  /**
+   * What the brand still owes its shoppers, per unit, right now.
+   *
+   * The one number a finance director asks for and the plan named as
+   * missing: "a brand running 5% cashback has unbounded exposure and no
+   * answer for their finance director." This is the answer. It is the sum of
+   * every ledger row, so redemptions net it down automatically and it can
+   * never drift from the rows behind it.
+   */
+  outstanding: { unit: LedgerUnit; amount: number }[];
+  /** Total ever issued, before anything was spent — the gross cost so far. */
+  issued: { unit: LedgerUnit; amount: number }[];
+  members: number;
+  optedOut: number;
+  activeCampaigns: number;
+  stores: number;
+  /** Stores whose point of sale cannot sign a slip. The exposure, counted. */
+  unsignedStores: number;
+  scansLast7Days: number;
+  newMembersLast7Days: number;
+};
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+export async function getBrandOverview(brandId: string, now: Date = new Date()): Promise<BrandOverview> {
+  const scoped = forBrand(brandId);
+  const since = new Date(now.getTime() - WEEK_MS);
+
+  const [balances, credits, members, optedOut, activeCampaigns, stores, unsignedStores, scans, newMembers] =
+    await Promise.all([
+      scoped.pointsTransaction.groupBy({ by: ["unit"], _sum: { amount: true } }),
+      // Credits only, so "issued" means what was handed out rather than what
+      // is left after spending. Two different questions, and a brand asks
+      // both — one is a cost, the other is a liability.
+      scoped.pointsTransaction.groupBy({ by: ["unit"], where: { amount: { gt: 0 } }, _sum: { amount: true } }),
+      scoped.brandMembership.count(),
+      scoped.brandMembership.count({ where: { optedOutAt: { not: null } } }),
+      scoped.campaign.count({ where: { status: "ACTIVE" } }),
+      scoped.store.count(),
+      scoped.store.count({ where: { signingSecretEncrypted: null } }),
+      scoped.purchaseScan.count({ where: { scannedAt: { gte: since } } }),
+      scoped.brandMembership.count({ where: { joinedAt: { gte: since } } }),
+    ]);
+
+  const toRows = (rows: { unit: LedgerUnit; _sum: { amount: number | null } }[]) =>
+    rows
+      .map((row) => ({ unit: row.unit, amount: row._sum.amount ?? 0 }))
+      .sort((a, b) => a.unit.localeCompare(b.unit));
+
+  return {
+    outstanding: toRows(balances),
+    issued: toRows(credits),
+    members,
+    optedOut,
+    activeCampaigns,
+    stores,
+    unsignedStores,
+    scansLast7Days: scans,
+    newMembersLast7Days: newMembers,
+  };
+}

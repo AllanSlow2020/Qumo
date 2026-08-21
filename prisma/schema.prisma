@@ -124,6 +124,7 @@ model User {
   couponFraudEvents   CouponFraudEvent[]
   packBatches         PackBatch[]
   walletSpends        WalletSpend[]
+  staffSessions       StaffSession[]
 
   @@index([brandId])
 }
@@ -185,6 +186,49 @@ enum ShopperSessionRevokeReason {
 // silent device fingerprinting to a table whose whole purpose is the
 // shopper's own safety would be a poor trade; createdAt is enough for
 // someone to recognise a session they did not start.
+enum StaffSessionRevokeReason {
+  SIGNED_OUT
+  SIGNED_OUT_EVERYWHERE
+  PASSWORD_CHANGED
+  DEACTIVATED
+}
+
+/// A signed-in member of a brand's staff.
+///
+/// Its own table rather than a nullable column on ShopperSession, and that
+/// is the whole point. One sessions table serving both principals means one
+/// row shape where `personId` and `userId` are both nullable, and a single
+/// confused lookup — or a single missing `AND userId IS NOT NULL` — turns a
+/// shopper into a brand administrator. Two tables make that mistake
+/// impossible to write rather than merely unlikely, and the cost is one
+/// model.
+///
+/// The two also want different lifetimes and different revocation triggers,
+/// which is the usual sign that they are different things wearing the same
+/// noun.
+model StaffSession {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Unique, so a lookup is an index hit and a collision is a database error
+  /// rather than two people sharing a session.
+  tokenHash String @unique
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  /// Revocation is a stamp, not a delete — same reasoning as ShopperSession,
+  /// with two extra triggers that only apply to staff: changing a password
+  /// and deactivating an account must both end every session that account
+  /// holds, or "I've removed their access" is not true until they log out.
+  revokedAt     DateTime?
+  revokedReason StaffSessionRevokeReason?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 model ShopperSession {
   id        String @id @default(cuid())
   personId  String

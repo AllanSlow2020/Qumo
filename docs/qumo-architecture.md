@@ -95,6 +95,9 @@ them different jobs: **poster = join and opt in; slip or sticker = earn.**
 captured and versioned; there is no path to withdraw it.
 
 **g) No brand analytics.** Nothing shows a brand how a campaign is performing.
+*Partly addressed in Phase E:* the console overview now carries members,
+scans, active promotions, unsigned-store exposure, and the outstanding
+liability. Per-campaign and per-store performance over time is still missing.
 
 **h) No subscription anything.** No tier, no status, no cancellation
 behaviour.
@@ -368,7 +371,11 @@ Found during the review, unchanged by any of the above.
    by neither Qumo scan path.
 2. **No liability ceiling on issued value.** `Reward.maxCoupons` caps coupons;
    nothing caps cents or points. A brand running 5% cashback has unbounded
-   exposure and no answer for their finance director.
+   exposure and no answer for their finance director. *Both halves now exist:*
+   Phase B added the ceilings on `EarnRule`, and Phase E put the outstanding
+   figure on the console overview — summed from the ledger, so a redemption
+   nets it down the moment it happens and it can never drift from the rows
+   behind it.
 3. **Rate limiting is per-process** (`lib/security/rate-limit.ts`, in-memory).
    On serverless the effective limit is limit × instances. Needs a shared store.
 4. **The privacy notice promises data access, correction and deletion. None of
@@ -399,8 +406,40 @@ the brand is the identity and Qumo is a footer line. Details above under
 plus 22 tests across host parsing, colour injection, header spoofing and
 cross-brand scans.
 
-**Phase E — brand console.** Own app, own auth, own nav. Promotions, stores,
-poster and sticker codes, analytics, billing.
+**Phase E — brand console. Auth and first screens done; management screens
+still to come.** Own app at `app.{root}`, own auth, own nav, own stylesheet.
+Built so far: staff login, an overview with the liability figure, and the
+stores list. Still to come: creating and editing promotions, generating
+poster and sticker codes, rotating store signing secrets from the UI, user
+management, and billing.
+
+*Two principals, one deployment.* The proxy decides which surface a request
+is for by hostname before it asks anything about sessions, and the split runs
+both ways — a brand host cannot reach a console route and a console host
+cannot reach a shopper route. Staff sessions are their own table and their
+own cookie, never a nullable column on the shopper's: one sessions table
+serving both principals means one row shape where `personId` and `userId` are
+both nullable, and a single missing condition turns a customer into an
+administrator. Tests assert that a shopper token does not resolve as staff
+and a staff token does not resolve as a shopper.
+
+*The console never reads a brand from its hostname.* A staff member's brand
+comes from their user row, read on every request. A console that took its
+tenant from the address bar would let staff of one brand reach another's data
+by editing it.
+
+*Session lifetime is twelve hours, against the shopper's thirty days.* A
+shopper's session unlocks their own balance on their own phone; a staff
+session unlocks a brand's stores, campaigns and signing secrets from whatever
+machine is at the desk. Resolution joins onto the user, so deactivating an
+account ends its sessions on the next request rather than at their expiry —
+"I've removed their access" has to be true when it is said.
+
+*Passwords use scrypt from `node:crypto`* — no bcrypt, no argon2, no native
+module to compile on every deploy target. Parameters are recorded in the
+stored string so they can be raised later without locking anyone out. Login
+hashes against a decoy when the address is unknown, so a wrong email and a
+wrong password cost the same time and neither is an oracle for the other.
 
 **Phase F — subscription lifecycle**, with the freeze-and-honour rule.
 

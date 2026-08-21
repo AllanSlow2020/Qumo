@@ -103,3 +103,26 @@ export function brandSlugFromHost(host: string | null | undefined, rootDomain = 
  * tenant. Stripping is not defence in depth here; it is the defence.
  */
 export const BRAND_HEADER = "x-qumo-brand";
+
+/**
+ * The console's own subdomain. In RESERVED_SUBDOMAINS above, so no brand can
+ * ever claim it — that reservation and this constant have to agree, and they
+ * do by construction because this is the string in that set.
+ */
+export const CONSOLE_SUBDOMAIN = "app";
+
+/**
+ * True when this host is the brand console rather than a shopper surface.
+ *
+ * Note what this does *not* do: it never returns a brand. The console's user
+ * brings their brand with them in their session, read from the database on
+ * every request. A console that took its tenant from the hostname would let
+ * a signed-in staff member of one brand reach another's data by editing the
+ * address bar, which is the single worst bug this product could have.
+ */
+export function isConsoleHost(host: string | null | undefined, rootDomain = ROOT_DOMAIN): boolean {
+  if (!host) return false;
+  const hostname = (host.split(":")[0] ?? "").trim().toLowerCase().replace(/\.$/, "");
+  const root = (rootDomain.split(":")[0] ?? "").trim().toLowerCase().replace(/\.$/, "");
+  return hostname === `${CONSOLE_SUBDOMAIN}.${root}`;
+}
