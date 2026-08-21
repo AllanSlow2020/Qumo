@@ -428,7 +428,9 @@ asserting it in a unit test.
 ## Decided
 
 - **Identity** — shared `Person` keyed on phone, brand-scoped view.
-- **Routing** — subdomain per brand, `{slug}.qumo.app`.
+- **Routing** — subdomain per brand, `{slug}.{root}`. The root domain is
+  configuration (`NEXT_PUBLIC_QUMO_ROOT_DOMAIN`), not a constant, so the
+  unresolved apex does not block anything.
 - **Pilot** — Chicken Licken (slip) first, Campari (sticker) once it's right.
 - **Redemption** — parked.
 - **Cancellation** — freeze earning, honour redemption 60 days.
@@ -437,9 +439,26 @@ asserting it in a unit test.
 - **No-data channel** — build it ourselves over a rented bearer; SMS first.
 - **NFC** — an additional way to scan, never a replacement. Plain tags work
   today; secure tags are their own phase.
+- **Company name** — QUMO, lodged with CIPC as first preference under
+  tracking number **9464844441**, with QUMO-APP, QUMOLATE and QUMOS as the
+  fallbacks in that order. Names are tested in order; if none is approved the
+  company registers under its registration number and a new name can be
+  reserved for R50 afterwards. Nothing in the code depends on the outcome
+  except `OPERATOR_NAME` — see below.
 
 ## Open, and needing you
 
+- **Which legal entity is the operator.** `lib/product.ts` currently names
+  Nexus Prime International, and the privacy notice renders it: "Qumo is
+  operated by ${OPERATOR_NAME}, who holds this information on behalf of the
+  brands you interact with." If the company now being registered is the entity
+  that will actually hold shopper phone numbers, that constant and the consent
+  points change together — and a consent change is a `WEB_CONSENT_VERSION`
+  bump, so it wants doing once rather than twice. Blocked on the CIPC
+  registration completing.
+- **A company name is not a trademark.** CIPC approval puts QUMO on the
+  companies register; it grants no rights in the mark. The classes 35 and 42
+  search is still its own job, and worth asking an attorney whether 36 applies.
 - **The consent copy is now the one place Qumo leads on a brand's page**, and
   it was not rewritten. It reads "I agree to Qumo storing my mobile number and
   my activity with the brands I scan" — still true, and arguably now more
