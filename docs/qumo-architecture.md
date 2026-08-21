@@ -159,6 +159,81 @@ changing the model.
 This is the distinction that makes the poster safe. A poster that awards value
 is a poster that awards value to everyone who walks past it.
 
+### Carriers: NFC taps alongside QR codes, never instead of them
+
+An NFC tag holding an NDEF URI record is a URL carrier. Tap it and the phone
+opens a URL — the engine cannot tell whether that URL arrived through a
+camera or a radio, and should not care. So NFC is a *carrier* decision, not
+an architectural one, and it splits into two very different tiers.
+
+**Tier one needs no code at all.** Encode `https://qumo.co.za/s/K7M2-P9QR-3XVW`
+onto a tag and it works today: same route, same single-use guarantee, same
+ledger. A pack code is twelve characters from a 31-symbol alphabet, so the
+whole URL sits comfortably under 60 bytes — fine even on the cheapest NTAG213
+with 144 bytes of user memory. For a sticker on a box this is a packaging
+choice and nothing else.
+
+**Tier two changes what a poster can do**, which is the part worth the money.
+
+The rule elsewhere in this document is that a poster proves nothing: it is
+one static code, anyone walking past can scan it, so a poster can only be a
+join-and-opt-in door. A secure tag breaks that. NTAG 424 DNA chips do "SUN"
+— the chip computes a fresh CMAC on every single tap and appends it, along
+with a counter that only ever increments, so the URL is different each time:
+
+    /t?e=<encrypted uid + counter>&c=<cmac>
+
+That buys two things a printed code fundamentally cannot:
+
+- **Proof the physical tag was tapped.** A copied URL carries a stale
+  counter and is refused, so it cannot be photographed, screenshotted or
+  forwarded into a group chat.
+- **Replay protection from the hardware**, rather than from a constraint we
+  maintain.
+
+So a table-talker at the till *can* honestly award a visit stamp, because
+tapping proves presence. It still does not prove **purchase** — someone
+standing near the counter taps without buying — so percent-of-spend stays on
+the slip. But for "buy 10, get the 10th free", a tap the cashier watches is
+good enough, and it is a far better moment than typing a code.
+
+#### What each carrier actually proves
+
+| Carrier | Proves presence | Proves purchase | May earn |
+|---|---|---|---|
+| Poster QR, or a plain tag | No | No | Join and opt in only |
+| Pack code (printed or on a tag) | No | Weakly — they hold the pack | Yes, once per code |
+| Till slip QR, signed | Yes | **Yes**, with the basket value | Yes, percent of spend |
+| Secure NFC tap (SUN) | **Yes** | No | Yes, a visit stamp |
+| SMS with a slip code | No | Yes, via the slip | Yes |
+
+#### The rule that goes on every printed thing
+
+**NFC is always additive. Every tag gets a QR beside it.**
+
+iPhone XS and later read tags in the background with no app, but only with
+the screen on and unlocked; older iPhones need the Control Centre widget;
+plenty of people have NFC switched off entirely. For Chicken Licken's
+customer base "my phone doesn't do that" is a common outcome, not an edge
+case, and a shopper who cannot tap must never be stuck.
+
+#### The operational risk that has no software fix
+
+**A blank tag is rewritable by anyone with a phone.** Somebody walks into a
+store, rewrites the table-talker to point at a phishing page, and the
+brand's own shoppers get harvested. Production tags must have their lock
+bits permanently set after encoding. That is a step in whoever does the
+encoding and a line in what the console tells them — it cannot be enforced
+from here, which is exactly why it needs writing down.
+
+#### Implementation, when it lands
+
+An `NfcTag` model holding the chip UID and its two AES keys encrypted, a
+`/t` route that decrypts and verifies the CMAC, and a monotonic counter
+check done as a compare-and-swap inside the same serializable transaction
+everything else uses. The same shape as receipt signing, with the secret
+living in silicon instead of a POS template.
+
 ### Subscription lifecycle
 
 `Subscription` on the brand: status, period end, cancelled-at. On cancellation:
@@ -273,6 +348,11 @@ poster and sticker codes, analytics, billing.
 short code, as a thin adapter over the same engine calls. USSD only if the
 pilot shows the demand.
 
+**Phase H — NFC.** Tier one is already supported and needs only saying out
+loud to whoever encodes the tags. Tier two waits on a decision about whether
+tap-to-earn-a-stamp is wanted, because NTAG 424 DNA costs several times an
+NTAG213 and brings a key-management story with it.
+
 Redemption stays parked until a real brand tells us what their counter can do.
 SSO is out of scope — phone+OTP is the lowest friction at a till, and social
 login can be added later as another adapter without touching identity, since
@@ -295,8 +375,14 @@ asserting it in a unit test.
 - **SSO** — out for now, addable later without touching identity.
 - **Separation** — own repo *and* own database. Nothing shared with CIOS.
 - **No-data channel** — build it ourselves over a rented bearer; SMS first.
+- **NFC** — an additional way to scan, never a replacement. Plain tags work
+  today; secure tags are their own phase.
 
 ## Open, and needing you
+
+- **Which moment is NFC for?** The pack case is free today. A poster at the
+  counter is where secure tags earn their cost. At the till the slip already
+  does the job better, because it knows the basket value.
 
 - **Operator vs responsible party** — still a legal question, now sharper: with
   brand-specific sites and per-brand opt-in, "the brand is responsible party,

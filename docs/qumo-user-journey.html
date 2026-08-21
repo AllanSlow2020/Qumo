@@ -349,6 +349,7 @@
       <span>Then: Campari (sticker)</span>
       <span>Identity: phone, brand-scoped</span>
       <span>Routing: subdomain per brand</span>
+      <span>Carriers: QR, NFC, SMS</span>
     </div>
   </header>
 
@@ -372,15 +373,23 @@
         or <strong>sticker</strong> is unique per transaction, which is what makes earning safe.
       </p>
       <p>
-        Both earning doors converge on <code>applyAccrual()</code> — one function, one ledger write,
-        one place where caps and stamp-card completion live. Adding SMS adds an adapter, not a second
-        set of rules.
+        Every earning door converges on <code>applyAccrual()</code> — one function, one ledger
+        write, one place where caps and stamp-card completion live. Adding a channel adds an
+        adapter, not a second set of rules.
+      </p>
+      <p>
+        <strong>NFC is a carrier, not a door.</strong> A tag holding a URL opens the same page a
+        camera would, so a tag on a pack works today with no code at all. What a
+        <em>secure</em> tag adds is the one thing a printed code cannot do: prove the physical
+        thing was tapped. That is why a table-talker can award a visit stamp and a poster
+        cannot — and why every tag still gets a QR beside it, since plenty of phones will not
+        tap.
       </p>
     </div>
 
     <figure>
       <div class="figbox">
-        <svg viewBox="0 0 820 300" role="img" aria-label="Poster QR leads only to account creation and opt-in with no value awarded, while slip QR and SMS both pass through verification into a single shared accrual function that writes the ledger.">
+        <svg viewBox="0 0 820 396" role="img" aria-label="A poster QR or plain tag leads only to account creation and opt-in with no value awarded. A secure NFC tap, a slip QR and an SMS each pass through verification into a single shared accrual function that writes the ledger.">
           <defs>
             <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
@@ -394,38 +403,46 @@
             <rect x="14" y="26" width="150" height="54" rx="4"/>
             <rect x="14" y="123" width="150" height="54" rx="4"/>
             <rect x="14" y="220" width="150" height="54" rx="4"/>
+            <rect x="14" y="316" width="150" height="54" rx="4"/>
             <rect x="228" y="26" width="164" height="54" rx="4"/>
             <rect x="228" y="123" width="164" height="54" rx="4"/>
             <rect x="228" y="220" width="164" height="54" rx="4"/>
+            <rect x="228" y="316" width="164" height="54" rx="4"/>
             <rect x="456" y="26" width="150" height="54" rx="4"/>
             <rect x="456" y="123" width="150" height="54" rx="4"/>
             <rect x="456" y="220" width="150" height="54" rx="4"/>
+            <rect x="456" y="316" width="150" height="54" rx="4"/>
           </g>
 
           <rect x="662" y="123" width="146" height="54" rx="4" fill="none" stroke="#a76d13" stroke-width="2"/>
 
           <g font-family="IBM Plex Mono, monospace" font-size="12" fill="currentColor" text-anchor="middle">
-            <text x="89" y="49" font-size="13" font-weight="500">Poster QR</text>
+            <text x="89" y="49" font-size="13" font-weight="500">Poster</text>
             <text x="89" y="146" font-size="13" font-weight="500">Slip QR</text>
-            <text x="89" y="243" font-size="13" font-weight="500">SMS</text>
+            <text x="89" y="243" font-size="13" font-weight="500">NFC tap</text>
+            <text x="89" y="339" font-size="13" font-weight="500">SMS</text>
             <text x="310" y="49">/join?c=…</text>
             <text x="310" y="146">/r?s&amp;t&amp;c&amp;d&amp;g</text>
-            <text x="310" y="243">/api/sms/inbound</text>
+            <text x="310" y="243">/t?e&amp;c</text>
+            <text x="310" y="339">/api/sms/inbound</text>
           </g>
 
           <g font-family="Public Sans, sans-serif" font-size="11" fill="#6f7887" text-anchor="middle">
-            <text x="89" y="66">one static code</text>
+            <text x="89" y="66">QR or plain tag</text>
             <text x="89" y="163">unique per txn</text>
-            <text x="89" y="260">keyword or code</text>
+            <text x="89" y="260">secure tag, SUN</text>
+            <text x="89" y="356">keyword or code</text>
             <text x="310" y="66">explain · sign up</text>
             <text x="310" y="163">verify signature</text>
-            <text x="310" y="260">verify MSISDN</text>
+            <text x="310" y="260">verify CMAC + counter</text>
+            <text x="310" y="356">verify MSISDN</text>
           </g>
 
           <g font-family="Public Sans, sans-serif" font-size="12.5" fill="currentColor" text-anchor="middle">
             <text x="531" y="49">Account + opt in</text>
             <text x="531" y="146">Gates (fig. 3)</text>
             <text x="531" y="243">Gates (fig. 3)</text>
+            <text x="531" y="339">Gates (fig. 3)</text>
           </g>
           <g font-family="Public Sans, sans-serif" font-size="11" fill="#6f7887" text-anchor="middle">
             <text x="531" y="66">no value awarded</text>
@@ -440,14 +457,17 @@
             <line x1="164" y1="53" x2="222" y2="53"/>
             <line x1="164" y1="150" x2="222" y2="150"/>
             <line x1="164" y1="247" x2="222" y2="247"/>
+            <line x1="164" y1="343" x2="222" y2="343"/>
             <line x1="392" y1="53" x2="450" y2="53"/>
             <line x1="392" y1="150" x2="450" y2="150"/>
             <line x1="392" y1="247" x2="450" y2="247"/>
+            <line x1="392" y1="343" x2="450" y2="343"/>
           </g>
 
           <g stroke="#a76d13" stroke-width="1.75" fill="none" marker-end="url(#ar-acc)">
             <line x1="606" y1="150" x2="656" y2="150"/>
-            <path d="M 606 247 L 634 247 L 634 160 L 656 160"/>
+            <path d="M 606 247 L 634 247 L 634 158 L 656 158"/>
+            <path d="M 606 343 L 620 343 L 620 166 L 656 166"/>
           </g>
 
           <line x1="606" y1="53" x2="640" y2="53" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 4"/>
@@ -455,11 +475,29 @@
         </svg>
       </div>
       <figcaption>
-        <strong>Fig 1.</strong> The poster path terminates at opt-in. Only the two purchase-proving
-        doors reach <code>applyAccrual()</code>, and they reach the same one — so a cap or a
-        stamp-card rule written once applies to both.
+        <strong>Fig 1.</strong> A poster carrying a QR or a plain tag terminates at opt-in: it
+        proves nothing, so it cannot carry value. Everything that proves <em>something</em>
+        reaches the same <code>applyAccrual()</code> — so a cap or a stamp-card rule written
+        once applies to all of them. What the secure tap proves is presence, not purchase,
+        which is why it earns a visit stamp and never a percentage.
       </figcaption>
     </figure>
+
+    <h3>What each carrier proves</h3>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Carrier</th><th>Presence</th><th>Purchase</th><th>May earn</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="what">Poster QR, or a plain tag</td><td class="what">No</td><td class="what">No</td><td class="what">Join and opt in only</td></tr>
+          <tr><td class="what">Pack code — printed or on a tag</td><td class="what">No</td><td class="what">Weakly, they hold the pack</td><td class="what">Yes, once per code</td></tr>
+          <tr><td class="what">Till slip QR, signed</td><td class="what">Yes</td><td class="what"><strong>Yes</strong>, with the basket</td><td class="what">Yes, percent of spend</td></tr>
+          <tr><td class="what">Secure NFC tap (SUN)</td><td class="what"><strong>Yes</strong></td><td class="what">No</td><td class="what">Yes, a visit stamp</td></tr>
+          <tr><td class="what">SMS with a slip code</td><td class="what">No</td><td class="what">Yes, via the slip</td><td class="what">Yes</td></tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 
   <!-- ============ 2. SHOPPER STATE ============ -->
@@ -536,7 +574,8 @@
           <tr><td class="route">/</td><td class="what">Brand-themed landing. The promotion in plain words, and a way in.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
           <tr><td class="route">/join</td><td class="what">Poster QR entry. Explains the promotion, registers, records opt-in. Awards nothing.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
           <tr><td class="route">/r</td><td class="what">Slip QR. Verifies and earns. <code>?s=store&amp;t=txn&amp;c=cents&amp;d=unix&amp;g=sig</code></td><td class="st"><span class="pill built">Built</span></td></tr>
-          <tr><td class="route">/s/[code]</td><td class="what">Sticker or pack code. Single-use, earns. Campari's path.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/s/[code]</td><td class="what">Sticker or pack code. Single-use, earns. Campari's path. Works from a printed code or an NFC tag holding the same URL — no code change either way.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/t</td><td class="what">Secure NFC tap. Verifies the chip's per-tap signature and its counter. Proves presence, not purchase — so a visit stamp, never a percentage.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
           <tr><td class="route">/login</td><td class="what">Phone + one-time passcode. No password, no SSO.</td><td class="st"><span class="pill rework">Built · moves</span></td></tr>
           <tr><td class="route">/balance</td><td class="what">This brand's balance and history. Currently cross-brand and must become scoped.</td><td class="st"><span class="pill rework">Built · reworks</span></td></tr>
           <tr><td class="route">/me</td><td class="what">Signed-in devices, opt out, request my data, delete account.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
@@ -797,6 +836,7 @@
       <li><div class="ph-body"><span class="ph-title">Brand console</span><span class="ph-what">Own app, own auth, own navigation. Promotions, codes, stores, analytics.</span></div></li>
       <li><div class="ph-body"><span class="ph-title">Subscription lifecycle</span><span class="ph-what">Billing, and the freeze-earning-honour-redemption rule enforced in the engine rather than the UI.</span></div></li>
       <li><div class="ph-body"><span class="ph-title">SMS channel</span><span class="ph-what">Balance lookup and SMS-to-earn over a rented short code. USSD only if the pilot shows demand.</span></div></li>
+      <li><div class="ph-body"><span class="ph-title">NFC</span><span class="ph-what">Plain tags already work. Secure tags add proof-of-presence — and a key-management story, and several times the cost per tag.</span></div></li>
     </ol>
   </section>
 
