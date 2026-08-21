@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { CONSUMER_SESSION_COOKIE } from "@/lib/consumer/session-cookie";
+import { BRAND_HEADER, brandSlugFromHost } from "@/lib/brand/host";
 
 /**
  * Edge routing for the shopper surface.
@@ -54,8 +55,30 @@ function isPublic(pathname: string): boolean {
   );
 }
 
+// Where a request on a host that names no brand is sent. Its own route
+// rather than a flag on every page — see below.
+const NO_BRAND = "/no-brand";
+
+/**
+ * Request headers with the brand decided from the Host header, on a header
+ * the client cannot influence.
+ *
+ * The delete is the important line. See BRAND_HEADER in lib/brand/host.ts.
+ */
+function brandHeaders(req: NextRequest): { headers: Headers; slug: string | null } {
+  const headers = new Headers(req.headers);
+  headers.delete(BRAND_HEADER);
+
+  const slug = brandSlugFromHost(req.headers.get("host"));
+  if (slug) {
+    headers.set(BRAND_HEADER, slug);
+  }
+  return { headers, slug };
+}
+
 export function proxy(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
+  const { headers, slug } = brandHeaders(req);
 
   if (RATE_LIMITED.includes(pathname)) {
     // Per-process and honest about it: on a serverless deployment the
@@ -71,8 +94,33 @@ export function proxy(req: NextRequest): NextResponse {
     }
   }
 
+  // The brand decision comes before the session one, and the order matters.
+  // With it the other way round, /wallet on the apex redirected to
+  // /wallet/login and *then* discovered there was no brand — so a shopper
+  // ended up at a login URL reading "this link needs a brand", which
+  // explains the problem at an address that has nothing to do with it.
+  // Nothing under the shopper surface means anything without a brand, so
+  // that is the first question asked.
+  if (!slug) {
+    // Two exceptions. The cron sweep is called by a scheduler at whatever
+    // host it was configured with — very likely the apex — and
+    // authenticates itself with CRON_SECRET rather than a brand. The privacy
+    // notice is Qumo's own document, linked from the footer of every page
+    // including the no-brand one; rewriting it made that link point back at
+    // the page it was on, a dead end on the one screen whose job is
+    // explaining a dead end.
+    if (!pathname.startsWith("/api") && !underRoot(pathname, LEGAL_ROOT)) {
+      const url = req.nextUrl.clone();
+      url.pathname = NO_BRAND;
+      // Rewrite, not redirect: the address the shopper typed stays in the
+      // bar, which is the address they need to look at to see what is wrong
+      // with it.
+      return NextResponse.rewrite(url, { request: { headers } });
+    }
+  }
+
   if (isPublic(pathname)) {
-    return NextResponse.next();
+    return NextResponse.next({ request: { headers } });
   }
 
   // Presence only, deliberately. Verifying a session means a database read,
@@ -84,7 +132,7 @@ export function proxy(req: NextRequest): NextResponse {
   if (!req.cookies.get(CONSUMER_SESSION_COOKIE)) {
     return NextResponse.redirect(new URL(SHOPPER_LOGIN, req.nextUrl.origin));
   }
-  return NextResponse.next();
+  return NextResponse.next({ request: { headers } });
 }
 
 export const config = {

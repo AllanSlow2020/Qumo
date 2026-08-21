@@ -22,6 +22,7 @@ import { looksLikePackCode, normalisePackCode } from "./code";
 
 export type ScanFailureReason =
   | "UNKNOWN_CODE"
+  | "WRONG_BRAND"
   | "ALREADY_SCANNED"
   | "VOID"
   | "CAMPAIGN_NOT_ACTIVE"
@@ -55,6 +56,7 @@ export type ScanResult =
 /** Messages a shopper reads. Every one says what happened and what to do. */
 export const SCAN_FAILURE_MESSAGES: Record<ScanFailureReason, string> = {
   UNKNOWN_CODE: "We don't recognise that code. Check the label and try again.",
+  WRONG_BRAND: "That code belongs to a different brand's rewards. Scan it again from the link on the pack.",
   ALREADY_SCANNED: "This code has already been used.",
   VOID: "This code is no longer valid.",
   CAMPAIGN_NOT_ACTIVE: "This promotion isn't running at the moment.",
@@ -139,7 +141,32 @@ export function checkCampaignWindow(campaign: CampaignGate, now: Date): ScanFail
  * first interaction with the brand: a membership is the record of a real
  * relationship, so it is created by a scan and never by signing up.
  */
-export async function redeemPackCode(rawCode: string, personId: string, now: Date = new Date()): Promise<ScanResult> {
+export async function redeemPackCode(
+  rawCode: string,
+  personId: string,
+  now: Date = new Date(),
+  /**
+   * The brand the *carrier* claims this scan is for — on the web, the brand
+   * named by the subdomain the shopper is standing on.
+   *
+   * Optional because not every carrier asserts one: an SMS arrives with a
+   * code and a phone number and no host at all, and there is nothing to
+   * cross-check. When a carrier does assert a brand it has to agree with the
+   * code, so a hand-crafted chicken-licken.qumo.co.za/s/<campari-code> is
+   * refused rather than rendering a Campari award under a Chicken Licken
+   * header.
+   *
+   * Worth being precise about what this is and is not. It is not what keeps
+   * the money right — the award is driven by the code's own brandId and
+   * always was, so a mismatched host could never misdirect value. It is what
+   * makes "a page under brand X shows only brand X" true rather than nearly
+   * true, and a shopper cannot tell those two apart by looking.
+   *
+   * Last parameter, after `now`, purely so the existing callers and their
+   * tests keep working unchanged.
+   */
+  expectedBrandId?: string | null,
+): Promise<ScanResult> {
   const canonical = normalisePackCode(rawCode);
 
   // Cheap rejection first — /s/<code> is public, and malformed guesses
@@ -157,6 +184,11 @@ export async function redeemPackCode(rawCode: string, personId: string, now: Dat
   }
   if (packCode.status === "SCANNED") {
     return { ok: false, reason: "ALREADY_SCANNED" };
+  }
+  // Before the campaign window, and long before anything is awarded: a
+  // refusal must not burn the code.
+  if (expectedBrandId && packCode.brandId !== expectedBrandId) {
+    return { ok: false, reason: "WRONG_BRAND" };
   }
 
   const windowFailure = checkCampaignWindow(packCode.campaign, now);

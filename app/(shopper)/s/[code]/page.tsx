@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { requireBrand } from "@/lib/brand/current";
 import { getConsumerSession } from "@/lib/consumer/session";
 import { formatLedgerAmount } from "@/lib/consumer/wallet";
 import { redeemPackCode, SCAN_FAILURE_MESSAGES } from "@/lib/packs/scan";
-import { Wordmark } from "../../wordmark";
+import { BrandHeader } from "../../brand-header";
 
 /**
  * Where a QR code on a pack lands. Kept at /s/<code> rather than something
@@ -26,12 +27,15 @@ export default async function ScanPage({ params }: { params: Promise<{ code: str
     redirect(`/wallet/login?next=${encodeURIComponent(`/s/${code}`)}`);
   }
 
-  const result = await redeemPackCode(code, personId);
+  // See /r: the subdomain's brand has to agree with the code's, and the
+  // check lands before the code is burned.
+  const brand = await requireBrand();
+  const result = await redeemPackCode(code, personId, new Date(), brand.id);
 
   if (!result.ok) {
     return (
       <>
-        <Wordmark />
+        <BrandHeader />
         <section className="sc-card">
           <h1 className="sc-h1">That didn&apos;t work</h1>
           <p className="sc-body">{SCAN_FAILURE_MESSAGES[result.reason]}</p>
@@ -45,7 +49,7 @@ export default async function ScanPage({ params }: { params: Promise<{ code: str
 
   return (
     <>
-      <Wordmark />
+      <BrandHeader />
       <section className="sc-card">
         <p className="sc-label">
           {result.brandName} · {result.campaignName}

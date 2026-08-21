@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { requireBrand } from "@/lib/brand/current";
 import { getConsumerSession } from "@/lib/consumer/session";
 import { getWallet, getWalletHistory, formatLedgerAmount, type BrandWallet } from "@/lib/consumer/wallet";
 import { getPendingSpend } from "@/lib/wallet/spend";
-import { Wordmark } from "../wordmark";
+import { BrandHeader } from "../brand-header";
 import { signOut } from "./actions";
 import { abandonSpend } from "./spend/actions";
 import { SpendForm } from "./spend/spend-form";
@@ -11,7 +12,6 @@ import { SpendForm } from "./spend/spend-form";
 // The ledger's reason codes are internal enum values; a shopper should read
 // what happened, not what the column says.
 const REASON_LABELS: Record<string, string> = {
-  CHECK_IN_COMPLETED: "Check-in",
   COUPON_UNLOCKED: "Reward unlocked",
   PACK_SCAN_AWARDED: "Pack scan",
   PURCHASE_ACCRUAL: "Purchase",
@@ -56,7 +56,15 @@ function PendingSpendCard({ spend }: { spend: PendingSpendView }) {
   );
 }
 
-function BrandCard({ wallet, pendingSpend }: { wallet: BrandWallet; pendingSpend: PendingSpendView | null }) {
+/**
+ * The balances, with no brand name on them.
+ *
+ * It used to carry a heading with the brand's name, because the screen was a
+ * list of brands and each card had to say which one it was. There is exactly
+ * one brand on this page now and its name is already at the top of it —
+ * repeating it here would read as though there might be another.
+ */
+function Balances({ wallet, pendingSpend }: { wallet: BrandWallet; pendingSpend: PendingSpendView | null }) {
   const cents = wallet.balances.find((b) => b.unit === "CENTS")?.amount ?? 0;
   // Cash first, because it is the balance a shopper can spend today; the
   // ordering is otherwise whatever the ledger returned.
@@ -65,18 +73,18 @@ function BrandCard({ wallet, pendingSpend }: { wallet: BrandWallet; pendingSpend
 
   return (
     <section className="sc-card">
-      <h2 className="sc-h2">{wallet.brandName}</h2>
-
       {!hero ? (
-        <p className="sc-body">Nothing earned here yet.</p>
+        <>
+          <h2 className="sc-h2">Nothing earned yet</h2>
+          <p className="sc-body">Scan a code on a till slip, a pack or a tag and your balance starts here.</p>
+        </>
       ) : (
         <>
-          {/* One hero figure per brand, then the rest at a smaller size.
-              Giving three balances equal 44px weight made the card as tall
-              as the phone and left a shopper scrolling to find the number
-              they actually came to check. Spendable cash leads where it
-              exists, since it is the only balance they can do something
-              with today. */}
+          {/* One hero figure, then the rest at a smaller size. Giving three
+              balances equal 44px weight made the card as tall as the phone
+              and left a shopper scrolling to find the number they actually
+              came to check. Spendable cash leads where it exists, since it
+              is the only balance they can do something with today. */}
           <div className="sc-balance">
             <p className="sc-figure">{formatLedgerAmount(hero.amount, hero.unit)}</p>
             <p className="sc-label">{UNIT_LABELS[hero.unit] ?? hero.unit}</p>
@@ -112,35 +120,34 @@ export default async function WalletPage() {
     redirect("/wallet/login");
   }
 
-  const [wallets, history] = await Promise.all([getWallet(personId), getWalletHistory(personId)]);
-  const brandNames = new Map(wallets.map((w) => [w.brandId, w.brandName]));
+  // One brand, decided by the host and nothing else. This is the inversion:
+  // the page used to ask "what does this shopper have everywhere" and now
+  // asks "what does this shopper have here", which is the only question a
+  // brand's own site has any business answering.
+  const brand = await requireBrand();
 
-  // One live request per brand at most, so this is a lookup rather than a
-  // list. Fetched per brand because a shopper with a balance at several
-  // could have one open at any of them.
-  const pendingSpends = new Map(
-    (
-      await Promise.all(wallets.map(async (w) => [w.brandId, await getPendingSpend(personId, w.brandId)] as const))
-    ).filter(([, spend]) => spend !== null),
-  );
+  const [wallets, history] = await Promise.all([
+    getWallet(personId, brand.id),
+    getWalletHistory(personId, 50, brand.id),
+  ]);
+  // A shopper who signed in but has never scanned here has no membership at
+  // this brand at all. An empty wallet stands in for one, so the page reads
+  // as "nothing yet" rather than erroring on a row that was never created.
+  const wallet: BrandWallet = wallets[0] ?? {
+    brandId: brand.id,
+    brandName: brand.name,
+    brandSlug: brand.slug,
+    joinedAt: new Date(),
+    balances: [],
+  };
+
+  const pendingSpend = wallets.length > 0 ? await getPendingSpend(personId, brand.id) : null;
 
   return (
     <>
-      <Wordmark caption="Your rewards, in one place" />
+      <BrandHeader caption="Your rewards" />
 
-      {wallets.length === 0 ? (
-        <section className="sc-card">
-          <h2 className="sc-h2">Nothing here yet</h2>
-          <p className="sc-body">
-            You&apos;re signed in, but you haven&apos;t scanned anything yet. Scan a code on a pack or a till slip and
-            your balance starts here.
-          </p>
-        </section>
-      ) : (
-        wallets.map((wallet) => (
-          <BrandCard key={wallet.brandId} wallet={wallet} pendingSpend={pendingSpends.get(wallet.brandId) ?? null} />
-        ))
-      )}
+      <Balances wallet={wallet} pendingSpend={pendingSpend} />
 
       {history.length > 0 && (
         <section className="sc-card">
@@ -151,7 +158,6 @@ export default async function WalletPage() {
                 <div className="sc-row-main">
                   <span>{REASON_LABELS[entry.reason] ?? entry.reason}</span>
                   <span className="sc-label">
-                    {brandNames.get(entry.brandId) ?? "—"} ·{" "}
                     {entry.createdAt.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })}
                   </span>
                 </div>
@@ -168,7 +174,7 @@ export default async function WalletPage() {
       <section className="sc-card">
         <h2 className="sc-h2">Your details</h2>
         <p className="sc-body">
-          Signed-in devices, leaving a brand&apos;s rewards, and a copy of everything we hold about you.
+          Signed-in devices, leaving {brand.name}&apos;s rewards, and a copy of everything we hold about you.
         </p>
         <Link href="/wallet/me" className="sc-btn sc-btn-ghost">
           Manage

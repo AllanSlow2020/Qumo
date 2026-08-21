@@ -372,3 +372,40 @@
 @media (prefers-reduced-motion: reduce) {
   .sc * { transition: none !important; }
 }
+
+/* ---------- brand identity ---------- */
+
+/* A brand's own mark, at whatever aspect ratio they gave us. Height is
+   capped and width follows, because a wordmark and a roundel are both
+   plausible and neither should be allowed to push the theme toggle off a
+   360px screen. */
+.sc-brandmark {
+  display: block;
+  height: 30px;
+  width: auto;
+  max-width: 220px;
+  object-fit: contain;
+}
+
+/* Where Qumo lives now: last thing on the page, smallest type on it, still
+   unambiguously present. */
+.sc-foot {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--sc-line-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sc-foot p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--sc-ink-3);
+  letter-spacing: -0.004em;
+}
+
+.sc-foot a {
+  color: var(--sc-ink-2);
+}

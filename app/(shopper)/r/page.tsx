@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { requireBrand } from "@/lib/brand/current";
 import { getConsumerSession } from "@/lib/consumer/session";
 import { formatLedgerAmount } from "@/lib/consumer/wallet";
 import { redeemReceipt, RECEIPT_FAILURE_MESSAGES } from "@/lib/stores/receipt";
-import { Wordmark } from "../wordmark";
+import { BrandHeader } from "../brand-header";
 
 function formatRands(cents: number): string {
   return `R${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, "0")}`;
@@ -42,12 +43,16 @@ export default async function ReceiptScanPage({
     redirect(`/wallet/login?next=${encodeURIComponent(`/r?${params.toString()}`)}`);
   }
 
-  const result = await redeemReceipt(params, personId);
+  // The brand named by the subdomain, cross-checked against the store's own
+  // brand inside redeemReceipt. A slip from another brand is refused before
+  // anything is awarded rather than rendered under the wrong header.
+  const brand = await requireBrand();
+  const result = await redeemReceipt(params, personId, new Date(), brand.id);
 
   if (!result.ok) {
     return (
       <>
-        <Wordmark />
+        <BrandHeader />
         <section className="sc-card">
           <h1 className="sc-h1">That didn&apos;t work</h1>
           <p className="sc-body">{RECEIPT_FAILURE_MESSAGES[result.reason]}</p>
@@ -61,7 +66,7 @@ export default async function ReceiptScanPage({
 
   return (
     <>
-      <Wordmark />
+      <BrandHeader />
       <section className="sc-card">
         <p className="sc-label">
           {result.brandName} · {result.storeName}

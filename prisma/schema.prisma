@@ -32,11 +32,55 @@ datasource db {
 }
 
 model Brand {
-  id                    String   @id @default(cuid())
-  name                  String
-  slug                  String   @unique
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id   String @id @default(cuid())
+  name String
+
+  /// Identity and address in one field, which is a decision worth stating.
+  ///
+  /// The slug is the subdomain: chicken-licken.qumo.co.za. Splitting them
+  /// would let a brand have a prettier host than their internal key, and it
+  /// would also give us two values to keep in step for a benefit nobody has
+  /// asked for. A prettier host is the custom-domain upsell, and that gets
+  /// its own field when it is real.
+  ///
+  /// Load-bearing and effectively immutable once anything is printed:
+  /// changing it dead-ends every poster, slip and tag already in a store.
+  /// Treat a rename as a migration with a redirect, not an edit.
+  slug String @unique
+
+  // ---- What a shopper sees ------------------------------------------------
+  // Every field below is optional and every reader falls back. A brand with
+  // none of them set renders as a plain, correct, unbranded page rather than
+  // a half-painted one.
+
+  /// The name to put on the page when the legal name is not the one on the
+  /// signage. Falls back to `name`.
+  displayName String?
+
+  /// One line under the mark: what the programme is, in the brand's words.
+  tagline String?
+
+  /// Absolute https URL. Validated where it is rendered and never trusted
+  /// straight out of the database — see lib/brand/theme.ts.
+  logoUrl String?
+
+  /// The single colour that carries the identity, and the ink that stays
+  /// legible on it. Two fields rather than one because contrast is a
+  /// judgement about the brand's own palette; deriving it from luminance
+  /// gets Chicken Licken's red wrong in exactly the case that matters.
+  ///
+  /// Stored as #rrggbb. These reach a style attribute, so they are matched
+  /// against a strict pattern before they go anywhere near CSS.
+  accentColor    String?
+  accentInkColor String?
+
+  /// Where a shopper takes a complaint. The brand is the responsible party
+  /// for this programme, so "contact us" has to reach them and not us.
+  supportEmail String?
+  supportUrl   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   users              User[]
   brandMemberships   BrandMembership[]

@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { CONSENT_POINTS, WEB_CONSENT_VERSION } from "@/lib/consumer/consent";
 import { OPERATOR_NAME, PRODUCT_NAME } from "@/lib/product";
-import { Wordmark } from "../../wordmark";
+import { BrandHeader } from "../../brand-header";
 
 export const metadata: Metadata = {
   title: `Privacy notice · ${PRODUCT_NAME}`,
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 export default function PrivacyNoticePage() {
   return (
     <>
-      <Wordmark />
+      <BrandHeader />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <h1 className="sc-h1">Privacy notice</h1>

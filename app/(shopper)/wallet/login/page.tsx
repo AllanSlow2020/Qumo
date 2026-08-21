@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
+import { requireBrand } from "@/lib/brand/current";
 import { getConsumerSession } from "@/lib/consumer/session";
 import { safeShopperRedirect } from "@/lib/consumer/redirect";
-import { Wordmark } from "../../wordmark";
+import { BrandHeader } from "../../brand-header";
 import { ShopperLoginForm } from "./login-form";
 
 export default async function ShopperLoginPage({
@@ -21,11 +22,17 @@ export default async function ShopperLoginPage({
     redirect(destination);
   }
 
+  const brand = await requireBrand();
+
   return (
     <>
-      <Wordmark />
+      <BrandHeader />
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <h1 className="sc-h1">Your rewards, in one place</h1>
+        {/* This used to read "Your rewards, in one place", which was a
+            promise about a cross-brand wallet the shopper is no longer being
+            offered and would not want from a chicken shop. What they are
+            actually doing is joining one brand's programme. */}
+        <h1 className="sc-h1">{brand.name} rewards</h1>
         <p className="sc-body">Enter your mobile number and we&apos;ll text you a code. No password to remember.</p>
       </div>
       <ShopperLoginForm destination={destination} />

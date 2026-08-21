@@ -36,11 +36,19 @@ export type BrandWallet = {
  * Every brand this shopper holds a membership with, and what they have
  * with each. Brands they have never interacted with do not appear —
  * membership is created by a first scan, not by signing up.
+ *
+ * `brandId` narrows it to one, which is what every shopper-facing screen
+ * now passes: a shopper on chicken-licken.qumo.co.za is on Chicken Licken's
+ * site and should not be shown that they also drink Campari. The unfiltered
+ * form survives for the one caller entitled to the whole picture — the
+ * shopper's own data export, where withholding it would answer a different
+ * question than the one the law says they asked.
  */
-export async function getWallet(personId: string): Promise<BrandWallet[]> {
+export async function getWallet(personId: string, brandId?: string): Promise<BrandWallet[]> {
   const scoped = forPerson(personId);
 
   const memberships = await scoped.brandMembership.findMany({
+    where: brandId ? { brandId } : undefined,
     include: { brand: { select: { id: true, name: true, slug: true } } },
     orderBy: { joinedAt: "asc" },
   });
@@ -55,6 +63,11 @@ export async function getWallet(personId: string): Promise<BrandWallet[]> {
   // another person's rows even if brandMembershipId were wrong.
   const sums = await scoped.pointsTransaction.groupBy({
     by: ["brandMembershipId", "unit"],
+    // Narrowed by membership rather than by brandId, so the sums can only
+    // ever come from rows belonging to the memberships listed above. A
+    // brandId filter would give the same answer today and stop giving it the
+    // moment a row's brandId and its membership's brandId disagree.
+    where: { brandMembershipId: { in: memberships.map((m) => m.id) } },
     _sum: { amount: true },
   });
 
@@ -90,8 +103,9 @@ export type WalletEntry = {
  * why the ledger is immutable: every number on the wallet screen can be
  * explained by pointing at the rows that produced it.
  */
-export async function getWalletHistory(personId: string, limit = 50): Promise<WalletEntry[]> {
+export async function getWalletHistory(personId: string, limit = 50, brandId?: string): Promise<WalletEntry[]> {
   const rows = await forPerson(personId).pointsTransaction.findMany({
+    where: brandId ? { brandId } : undefined,
     orderBy: { createdAt: "desc" },
     take: limit,
     select: { id: true, brandId: true, amount: true, unit: true, reason: true, createdAt: true },

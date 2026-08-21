@@ -33,6 +33,7 @@ import { parseReceiptPayload, signingMessage, verifySignature } from "./payload"
 
 export type ReceiptFailureReason =
   | "MALFORMED"
+  | "WRONG_BRAND"
   | "UNKNOWN_STORE"
   | "STORE_INACTIVE"
   | "BAD_SIGNATURE"
@@ -72,6 +73,7 @@ export type ReceiptResult =
 
 export const RECEIPT_FAILURE_MESSAGES: Record<ReceiptFailureReason, string> = {
   MALFORMED: "We couldn't read that slip. Try scanning it again.",
+  WRONG_BRAND: "That slip belongs to a different brand's rewards. Scan the code on the slip again.",
   UNKNOWN_STORE: "We don't recognise that store.",
   STORE_INACTIVE: "That store isn't taking scans at the moment.",
   BAD_SIGNATURE: "That slip couldn't be verified. Please show it to a staff member.",
@@ -187,6 +189,8 @@ export async function redeemReceipt(
   rawQuery: string | URLSearchParams,
   personId: string,
   now: Date = new Date(),
+  /** The brand the carrier claims this scan is for. See redeemPackCode. */
+  expectedBrandId?: string | null,
 ): Promise<ReceiptResult> {
   const params = typeof rawQuery === "string" ? new URLSearchParams(rawQuery) : rawQuery;
   const parsed = parseReceiptPayload(params);
@@ -200,6 +204,9 @@ export async function redeemReceipt(
   }
   if (!store.isActive) {
     return { ok: false, reason: "STORE_INACTIVE" };
+  }
+  if (expectedBrandId && store.brandId !== expectedBrandId) {
+    return { ok: false, reason: "WRONG_BRAND" };
   }
 
   // Signature check before anything else touches the amount, so a forged
