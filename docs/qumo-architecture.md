@@ -381,6 +381,13 @@ Local development also needs `allowedDevOrigins` in `next.config.ts`, because
 every brand subdomain is a separate origin from the apex the dev server binds
 to.
 
+A third, from the promotions editor and not Next-specific: `defaultValue` on
+an uncontrolled input applies at mount and never again. After saving a stamp
+rule the card read "1 stamp" while the form beneath it still read "share of
+spend, in rands" — and pressing save again would have quietly replaced the
+stamp card with 5% cashback. Forms whose defaults come from saved data are
+keyed on that data so they remount when it changes.
+
 A second trap in the same family: a `"use server"` file may only export async
 functions. Exporting a constant from one — an idle state for `useActionState`,
 say — passes `tsc` and `eslint` and then throws in the browser at render time.
@@ -437,10 +444,26 @@ cross-brand scans.
 **Phase E — brand console. Auth and first screens done; management screens
 still to come.** Own app at `app.{root}`, own auth, own nav, own stylesheet.
 Built so far: staff login, an overview with the liability figure, the
-promotions list with the poster URL to print, and full store management —
+promotions screen with the poster URL to print, and full store management —
 adding tills, issuing and rotating signing secrets, and switching a store
-off. Still to come: editing promotions, generating sticker codes, user
-management, and billing.
+off. Promotions can now be created, given a rule, capped and switched on.
+Still to come: generating sticker codes, user management, and billing.
+
+*The ceilings finally have a UI.* They are what the forgery suite exists to
+justify — the only bound on what an unsigned store can be made to pay out —
+and until now a seed script was the only thing that could set them. Each
+promotion also shows what it has issued against its budget, counting credits
+only: `maxTotalAmount` caps what may be *issued*, so a redemption does not
+buy back headroom, and the number a brand reads has to be the one the ceiling
+actually measures.
+
+*Activation carries the "one spend-based promotion at a time" check.*
+Setting the rule already refused when another campaign was live with one,
+which blocks the obvious sequence — but not this one: configure two while
+both are paused, then switch them on in turn. Two live percent-of-spend
+campaigns make a scanned slip worth whichever row the database returns
+first. The gap was found while building the screen, closed at activation,
+and the test was confirmed to fail without the fix.
 
 *Signing secrets are shown once and never again.* Only the ciphertext is
 stored, so losing one means issuing another rather than recovering it — the

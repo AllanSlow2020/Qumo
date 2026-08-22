@@ -371,3 +371,35 @@
   padding: 10px 12px;
   user-select: all;
 }
+
+/* ---------- promotions ---------- */
+
+.cn-panel-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Two forms side by side on a desk, stacked on anything narrower. The offer
+   and its ceiling are separate decisions and separate saves, but a brand
+   should be able to see both at once while making them. */
+.cn-edit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--cn-line);
+}
+
+.cn-edit h3 { margin: 0 0 2px; }
+
+select.cn-input {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--cn-ink-3) 50%),
+    linear-gradient(135deg, var(--cn-ink-3) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 36px;
+}
