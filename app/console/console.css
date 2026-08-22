@@ -313,3 +313,61 @@
   flex-direction: column;
   gap: 20px;
 }
+
+/* ---------- store management ---------- */
+
+.cn-check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.cn-check input { margin-top: 3px; flex: none; }
+
+.cn-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.cn-actions .cn-btn { font-size: 13px; padding: 6px 10px; }
+
+.cn-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 460px;
+}
+
+.cn-confirm .cn-btn { font-size: 13px; padding: 6px 10px; }
+
+/* Loud on purpose: the one moment a secret is on screen. */
+.cn-secret {
+  border: 1px solid color-mix(in srgb, var(--cn-warn) 45%, transparent);
+  background: var(--cn-warn-bg);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 620px;
+}
+
+.cn-secret-value {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  /* 64 hex characters have to wrap somewhere, and anywhere is fine as long
+     as it never pushes the page sideways. */
+  word-break: break-all;
+  background: var(--cn-surface);
+  border: 1px solid var(--cn-line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  user-select: all;
+}

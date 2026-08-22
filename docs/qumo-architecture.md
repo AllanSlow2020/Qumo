@@ -381,6 +381,11 @@ Local development also needs `allowedDevOrigins` in `next.config.ts`, because
 every brand subdomain is a separate origin from the apex the dev server binds
 to.
 
+A second trap in the same family: a `"use server"` file may only export async
+functions. Exporting a constant from one — an idle state for `useActionState`,
+say — passes `tsc` and `eslint` and then throws in the browser at render time.
+Shared state shapes live in their own module beside the actions.
+
 ## 5. Security work that must land regardless
 
 Found during the review, unchanged by any of the above.
@@ -431,10 +436,23 @@ cross-brand scans.
 
 **Phase E — brand console. Auth and first screens done; management screens
 still to come.** Own app at `app.{root}`, own auth, own nav, own stylesheet.
-Built so far: staff login, an overview with the liability figure, and the
-stores list. Still to come: creating and editing promotions, generating
-poster and sticker codes, rotating store signing secrets from the UI, user
+Built so far: staff login, an overview with the liability figure, the
+promotions list with the poster URL to print, and full store management —
+adding tills, issuing and rotating signing secrets, and switching a store
+off. Still to come: editing promotions, generating sticker codes, user
 management, and billing.
+
+*Signing secrets are shown once and never again.* Only the ciphertext is
+stored, so losing one means issuing another rather than recovering it — the
+same discipline as any other credential. Rotation asks for confirmation
+first and says what it costs: slips already printed at that till stop
+verifying the moment it lands, so a shopper with a receipt in their pocket
+would be told it could not be verified. A test asserts exactly that, because
+the warning is only worth printing if it is true.
+
+*Role checks live in the engine, not the screen.* The console hides controls
+a MARKETING user cannot use, and every action re-checks server-side. Hiding a
+button is courtesy; `requireRole` is the access control.
 
 *Two principals, one deployment.* The proxy decides which surface a request
 is for by hostname before it asks anything about sessions, and the split runs
