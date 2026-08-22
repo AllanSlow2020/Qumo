@@ -358,6 +358,29 @@ than a rebuild. Excluded for now because Qumo is staying clear of CIOS.
 
 ---
 
+### One Next.js trap worth writing down
+
+`redirect()` inside a server action is resolved against the dev server's own
+origin rather than the host the request arrived on. On a single-domain app
+that difference never shows. Here it silently moved a shopper from
+`chicken-licken.…` to the apex, where there is no brand, and rendered "this
+link needs a brand" under a perfectly correct URL.
+
+Making the redirect absolute did not fix it — the `Location` was right and the
+router's data fetch still went to the wrong origin. **So server actions on the
+shopper surface return an outcome and the client navigates**, which is the
+shape the login form always used. Any new action that needs to send a shopper
+somewhere must do the same.
+
+This shipped broken in Phase D: sign-out landed a shopper on the no-brand
+page. The test asserted the session row was revoked — which it was — and never
+looked at the resulting screen. Worth remembering as the class of bug that
+survives a green suite.
+
+Local development also needs `allowedDevOrigins` in `next.config.ts`, because
+every brand subdomain is a separate origin from the apex the dev server binds
+to.
+
 ## 5. Security work that must land regardless
 
 Found during the review, unchanged by any of the above.
