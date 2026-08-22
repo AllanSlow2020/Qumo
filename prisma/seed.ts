@@ -160,6 +160,7 @@ async function main() {
   console.log("\n  Each is single-use. Re-run the seed for fresh ones.");
   console.log(`\n  The other brand, for comparing the skin: http://${second.slug}.localhost:3000/wallet`);
   console.log("  The apex, which names no brand:            http://localhost:3000/wallet");
+  console.log(`\n  Poster / tag (joins, never awards):  ${origin}/join`);
   console.log("\n  Brand console:  http://app.localhost:3000");
   console.log(`    owner@chicken-licken.example / ${staffPassword}\n`);
 }

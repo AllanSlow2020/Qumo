@@ -35,6 +35,11 @@ const RECEIPT_ROOT = "/r";
 // The privacy notice is linked from the consent tick box, so it has to be
 // readable by someone who has agreed to nothing.
 const LEGAL_ROOT = "/legal";
+// Where a poster, a table-talker or a plain NFC tag lands. Public because
+// its entire job is to be read by somebody who has never heard of us: a
+// poster that redirected to a login before saying what the offer is would be
+// asking for a phone number in exchange for nothing.
+const JOIN_PATH = "/join";
 
 // The console lives under this prefix in the app directory, and never in a
 // URL a person types: on the console host every path is rewritten into it.
@@ -53,6 +58,7 @@ function underRoot(pathname: string, root: string): boolean {
 function isPublic(pathname: string): boolean {
   return (
     pathname === SHOPPER_LOGIN ||
+    pathname === JOIN_PATH ||
     underRoot(pathname, SCAN_ROOT) ||
     underRoot(pathname, RECEIPT_ROOT) ||
     underRoot(pathname, LEGAL_ROOT) ||

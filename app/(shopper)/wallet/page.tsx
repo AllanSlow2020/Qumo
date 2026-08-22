@@ -6,6 +6,7 @@ import { getWallet, getWalletHistory, formatLedgerAmount, type BrandWallet } fro
 import { getPendingSpend } from "@/lib/wallet/spend";
 import { BrandHeader } from "../brand-header";
 import { signOut } from "./actions";
+import { SignOutButton } from "./sign-out-button";
 import { abandonSpend } from "./spend/actions";
 import { SpendForm } from "./spend/spend-form";
 
@@ -181,11 +182,7 @@ export default async function WalletPage() {
         </Link>
       </section>
 
-      <form action={signOut}>
-        <button type="submit" className="sc-btn sc-btn-ghost">
-          Sign out
-        </button>
-      </form>
+      <SignOutButton action={signOut}>Sign out</SignOutButton>
     </>
   );
 }

@@ -8,6 +8,7 @@ import { getConsumerSessionDetail, listActiveSessions } from "@/lib/consumer/ses
 import { PRODUCT_NAME } from "@/lib/product";
 import { BrandHeader } from "../../brand-header";
 import { signOutEverywhere } from "../actions";
+import { SignOutButton } from "../sign-out-button";
 import { OptOutForm } from "./opt-out-form";
 
 // Async, because the title has to name the brand: a static one would put
@@ -126,11 +127,9 @@ export default async function MePage() {
               </div>
             ))}
           </div>
-          <form action={signOutEverywhere}>
-            <button type="submit" className="sc-btn sc-btn-quiet">
-              Sign out everywhere
-            </button>
-          </form>
+          <SignOutButton action={signOutEverywhere} variant="quiet">
+            Sign out everywhere
+          </SignOutButton>
         </section>
       )}
 

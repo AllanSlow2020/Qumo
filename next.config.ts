@@ -12,6 +12,10 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Brand subdomains are separate origins from the apex, and dev refuses
+  // cross-origin requests it wasn't told about. Every brand is *.localhost
+  // locally, so this is what makes chicken-licken.localhost:3000 work at all.
+  allowedDevOrigins: ["*.localhost", "localhost"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
