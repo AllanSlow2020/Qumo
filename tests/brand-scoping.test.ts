@@ -142,12 +142,29 @@ describe("what a brand's own site shows and refuses", () => {
     // The same rule on the sticker path, and the stakes are higher: a pack
     // code is single-use, so burning one on a refusal costs the shopper a
     // pack they have already bought.
+    // Its own campaign with a fixed-per-scan rule. A pack code carries no
+    // basket, so a share-of-spend promotion can never award on one — the
+    // engine refuses it, and this fixture used to build exactly that
+    // impossible pairing.
+    const packCampaign = await prisma.campaign.create({
+      data: { brandId: campari.id, name: "Campari stickers", status: "ACTIVE" },
+    });
+    await prisma.earnRule.create({
+      data: {
+        brandId: campari.id,
+        campaignId: packCampaign.id,
+        type: "FLAT_PER_SCAN",
+        unit: "POINTS",
+        amount: 25,
+      },
+    });
+
     const code = generatePackCode();
     const batch = await prisma.packBatch.create({
-      data: { brandId: campari.id, campaignId: campariCampaign.id, label: `scope-${suffix}`, quantity: 1 },
+      data: { brandId: campari.id, campaignId: packCampaign.id, label: `scope-${suffix}`, quantity: 1 },
     });
     await prisma.packCode.create({
-      data: { brandId: campari.id, campaignId: campariCampaign.id, batchId: batch.id, code },
+      data: { brandId: campari.id, campaignId: packCampaign.id, batchId: batch.id, code },
     });
 
     expect(await redeemPackCode(code, shopper.id, new Date(), licken.id)).toEqual({

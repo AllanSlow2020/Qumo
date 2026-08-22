@@ -64,6 +64,17 @@ export async function createPackBatchForSession(session: SessionLike, formData: 
   if (!earnRule) {
     throw new PackBatchError("Set up what this campaign awards per scan before generating codes for it.");
   }
+  // A share-of-spend rule needs a basket to take a share of, and a pack code
+  // arrives without one — setSpendRuleForSession zeroes `amount` precisely
+  // because it is meaningless there. Printing against one produces codes
+  // that scan successfully, award nothing, and are consumed doing it: the
+  // shopper is told they earned R0.00 and the sticker is gone for good.
+  // Same reasoning as the check above, one step further along.
+  if (earnRule.type === "PERCENT_OF_SPEND") {
+    throw new PackBatchError(
+      "That promotion pays a share of what someone spends, which needs a till slip. Pack codes need a promotion that awards a fixed amount per scan.",
+    );
+  }
 
   const batch = await scoped.packBatch.create({
     data: {

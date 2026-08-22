@@ -98,6 +98,35 @@ async function main() {
     },
   });
 
+  // A second promotion, because pack codes cannot be printed against the
+  // first one. A share-of-spend rule takes its cut from a till slip, and a
+  // code on a bottle carries no basket — so a brand needs a fixed-per-scan
+  // promotion before it can print anything, and a seed that omits one makes
+  // the whole pack path untestable out of the box.
+  const stampCampaign = await prisma.campaign.upsert({
+    where: { id: "seed-campaign-stamps" },
+    update: { status: "ACTIVE" },
+    create: {
+      id: "seed-campaign-stamps",
+      brandId: brand.id,
+      name: "Wing box stamp card",
+      status: "ACTIVE",
+    },
+  });
+  await prisma.earnRule.upsert({
+    where: { campaignId: stampCampaign.id },
+    update: {},
+    create: {
+      brandId: brand.id,
+      campaignId: stampCampaign.id,
+      type: "FLAT_PER_SCAN",
+      unit: "STAMPS",
+      amount: 1,
+      completesAt: 10,
+      maxScansPerPersonPerDay: 3,
+    },
+  });
+
   // Two stores, because the difference between them is the most important
   // operational fact about this product: one has a point of sale that can
   // sign its slips and one does not.

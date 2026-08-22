@@ -86,14 +86,43 @@ describe("lib/packs/scan", () => {
     expect(result.ok).toBe(true);
   });
 
-  it("refuses a second scan of the same code", async () => {
+  it("awards once, however many times the same shopper opens it", async () => {
+    // Rewritten to the invariant that matters. It used to assert that the
+    // second call failed, which encoded a behaviour rather than a rule — and
+    // the behaviour was wrong: the App Router renders this page twice on one
+    // navigation, so the second call is what a first-time scanner actually
+    // sees, and it told them the sticker was spent. What must be true is
+    // that the ledger moves once. The refusal that still matters — somebody
+    // else's code — is the test below.
     const code = await makeCode(campaign.id, brand.id);
-    expect((await redeemPackCode(code, shopper.id)).ok).toBe(true);
+
+    const first = await redeemPackCode(code, shopper.id);
+    expect(first.ok).toBe(true);
+
+    const membership = await prisma.brandMembership.findFirstOrThrow({
+      where: { brandId: brand.id, personId: shopper.id },
+    });
+    // A delta, not a total: this shopper has earned from other codes in
+    // this file, and a total would be asserting how many tests ran before
+    // this one.
+    const countAwards = () =>
+      prisma.pointsTransaction.count({
+        where: { brandMembershipId: membership.id, campaignId: campaign.id, reason: "PACK_SCAN_AWARDED" },
+      });
+    const before = await countAwards();
 
     const second = await redeemPackCode(code, shopper.id);
-    expect(second.ok).toBe(false);
-    if (second.ok) return;
-    expect(second.reason).toBe("ALREADY_SCANNED");
+    expect(second.ok).toBe(true);
+    if (!first.ok || !second.ok) return;
+
+    expect(second.alreadyEarned).toBe(true);
+    expect(second.amount).toBe(first.amount);
+    // A coupon is never shown twice: two sightings read as two coupons, and
+    // it is already in their rewards.
+    expect(second.coupon).toBeNull();
+
+    // The whole point: re-opening the page moved nothing.
+    expect(await countAwards()).toBe(before);
   });
 
   it("refuses a code already claimed by someone else", async () => {

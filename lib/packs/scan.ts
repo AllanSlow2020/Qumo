@@ -29,6 +29,7 @@ export type ScanFailureReason =
   | "CAMPAIGN_ENDED"
   | "CAMPAIGN_NOT_STARTED"
   | "NO_EARN_RULE"
+  | "NOT_A_SCAN_PROMOTION"
   | "DAILY_LIMIT"
   | "DAILY_SCAN_LIMIT"
   | "CAMPAIGN_EXHAUSTED"
@@ -44,6 +45,13 @@ export type ScanResult =
       unit: LedgerUnit;
       /** The shopper's balance in this unit at this brand, after the award. */
       newBalance: number;
+      /**
+       * True when this code had already been redeemed by this same shopper
+       * and we are showing them the award again rather than making a new
+       * one. Not an error: the App Router fetches this page twice on one
+       * navigation, so a first-time scanner reaches this branch every time.
+       */
+      alreadyEarned: boolean;
       /**
        * Set when this scan completed a stamp card. The card's worth of
        * stamps has already been deducted from newBalance above — the
@@ -63,6 +71,7 @@ export const SCAN_FAILURE_MESSAGES: Record<ScanFailureReason, string> = {
   CAMPAIGN_ENDED: "This promotion has ended.",
   CAMPAIGN_NOT_STARTED: "This promotion hasn't started yet.",
   NO_EARN_RULE: "This promotion isn't set up to award anything yet.",
+  NOT_A_SCAN_PROMOTION: "This code isn't part of the promotion running right now. Hold on to it — it hasn't been used.",
   DAILY_LIMIT: "You've reached today's limit for this promotion. Your code will still work tomorrow.",
   DAILY_SCAN_LIMIT: "You've scanned as many codes as this promotion allows today. Try again tomorrow.",
   CAMPAIGN_EXHAUSTED: "This promotion has reached its limit and isn't giving out any more.",
@@ -90,6 +99,7 @@ async function findCode(canonical: string) {
           endDate: true,
           earnRule: {
             select: {
+              type: true,
               unit: true,
               amount: true,
               completesAt: true,
@@ -141,6 +151,64 @@ export function checkCampaignWindow(campaign: CampaignGate, now: Date): ScanFail
  * first interaction with the brand: a membership is the record of a real
  * relationship, so it is created by a scan and never by signing up.
  */
+/**
+ * A code that is already scanned: whose was it, and what did it give them?
+ *
+ * A duplicate is only a refusal when the code belongs to somebody else.
+ * When the same shopper opens it again — which every shopper does, because
+ * one navigation renders this page twice — they should see what they
+ * earned, not be told the sticker is spent.
+ *
+ * Falls back to a refusal if the award was never recorded, which can only be
+ * a row from before that column existed.
+ */
+async function describeExistingScan(
+  packCode: {
+    id: string;
+    brandId: string;
+    campaignId: string;
+    awardedAmount: number | null;
+    awardedUnit: LedgerUnit | null;
+    scannedByMembershipId: string | null;
+    brand: { name: string };
+    campaign: { name: string };
+  },
+  personId: string,
+): Promise<ScanResult> {
+  if (!packCode.scannedByMembershipId || packCode.awardedAmount === null || packCode.awardedUnit === null) {
+    return { ok: false, reason: "ALREADY_SCANNED" };
+  }
+
+  const membership = await prisma.brandMembership.findFirst({
+    where: { id: packCode.scannedByMembershipId, personId },
+    select: { id: true },
+  });
+  // Somebody else's. A photographed label shared in a group chat is exactly
+  // this case, and it is a genuine refusal.
+  if (!membership) {
+    return { ok: false, reason: "ALREADY_SCANNED" };
+  }
+
+  const totals = await prisma.pointsTransaction.aggregate({
+    where: { brandMembershipId: membership.id, unit: packCode.awardedUnit },
+    _sum: { amount: true },
+  });
+
+  return {
+    ok: true,
+    brandId: packCode.brandId,
+    brandName: packCode.brand.name,
+    campaignName: packCode.campaign.name,
+    amount: packCode.awardedAmount,
+    unit: packCode.awardedUnit,
+    newBalance: totals._sum.amount ?? 0,
+    // Deliberately not re-issued on a repeat: a coupon shown twice reads as
+    // two coupons, and the shopper already has it in their rewards.
+    coupon: null,
+    alreadyEarned: true,
+  };
+}
+
 export async function redeemPackCode(
   rawCode: string,
   personId: string,
@@ -183,7 +251,7 @@ export async function redeemPackCode(
     return { ok: false, reason: "VOID" };
   }
   if (packCode.status === "SCANNED") {
-    return { ok: false, reason: "ALREADY_SCANNED" };
+    return describeExistingScan(packCode, personId);
   }
   // Before the campaign window, and long before anything is awarded: a
   // refusal must not burn the code.
@@ -199,6 +267,14 @@ export async function redeemPackCode(
   const earnRule = packCode.campaign.earnRule;
   if (!earnRule) {
     return { ok: false, reason: "NO_EARN_RULE" };
+  }
+  // Reachable even though generating such a batch is now refused: a brand
+  // can print flat-per-scan codes and later switch the same campaign to a
+  // share of spend, at which point every sticker already on a shelf would
+  // scan for zero and be consumed. Refusing here happens before the code is
+  // burned, so switching the rule back makes them work again.
+  if (earnRule.type === "PERCENT_OF_SPEND") {
+    return { ok: false, reason: "NOT_A_SCAN_PROMOTION" };
   }
 
   const brandId = packCode.brandId;
@@ -228,7 +304,13 @@ export async function redeemPackCode(
           // the code is already used, which is exactly true.
           const burn = await tx.packCode.updateMany({
             where: { id: packCode.id, status: "UNSCANNED" },
-            data: { status: "SCANNED", scannedAt: now, scannedByMembershipId: membership.id },
+            data: {
+              status: "SCANNED",
+              scannedAt: now,
+              scannedByMembershipId: membership.id,
+              awardedAmount: earnRule.amount,
+              awardedUnit: earnRule.unit,
+            },
           });
           if (burn.count !== 1) {
             return null;
@@ -277,6 +359,7 @@ export async function redeemPackCode(
 
   return {
     ok: true,
+    alreadyEarned: false,
     brandId,
     brandName: packCode.brand.name,
     campaignName: packCode.campaign.name,

@@ -609,6 +609,17 @@ model PackCode {
   status     PackCodeStatus @default(UNSCANNED)
 
   scannedAt             DateTime?
+  /// What this scan actually awarded, recorded so re-opening the page can
+  /// show the shopper what they got rather than telling them the code is
+  /// used up.
+  ///
+  /// The App Router fetches a page twice on one navigation, so the second
+  /// render is what a first-time scanner sees. Without this, every shopper
+  /// who scanned a sticker was told "this code has already been used" —
+  /// true of the row, and a lie about what had just happened to them. The
+  /// same fix PurchaseScan carries, for the same reason.
+  awardedAmount         Int?
+  awardedUnit           LedgerUnit?
   // Who claimed it. A membership rather than a Person: this is the
   // brand-scoped side of the relationship, and it is what a brand's staff
   // are allowed to see.

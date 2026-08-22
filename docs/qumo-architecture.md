@@ -381,6 +381,13 @@ Local development also needs `allowedDevOrigins` in `next.config.ts`, because
 every brand subdomain is a separate origin from the apex the dev server binds
 to.
 
+The `/r` double-render described above had an unfixed twin on `/s`. A pack
+code scanned after signing in rendered twice, awarded on the first and told
+the shopper "this code has already been used" on the second — the render they
+actually see. Fixed the same way: `PackCode` records what the scan awarded,
+and a repeat by the same shopper is a receipt rather than a refusal. A repeat
+by *anyone else* — a label photographed and shared — is still refused.
+
 A third, from the promotions editor and not Next-specific: `defaultValue` on
 an uncontrolled input applies at mount and never again. After saving a stamp
 rule the card read "1 stamp" while the form beneath it still read "share of
@@ -447,8 +454,24 @@ Built so far: staff login, an overview with the liability figure, the
 promotions screen with the poster URL to print, and full store management —
 adding tills, issuing and rotating signing secrets, and switching a store
 off. Promotions can now be created, given a rule, capped and switched on, and a
-brand can manage its own team. Still to come: generating sticker codes, and
-billing.
+brand can manage its own team. Pack codes can be generated and downloaded as
+CSV for a printer. Still to come: billing.
+
+*A print run is only useful if it comes back out.* Generating a batch used to
+put rows in a table nothing could read, so a brand could order 50,000
+stickers and have no way to send them anywhere. The CSV carries the code, its
+readable form, the URL to turn into a QR, and whether it has been used — and
+the URL is on the brand's own host, because a code scanned at the apex lands
+on the no-brand page.
+
+*Pack codes and share-of-spend promotions do not mix,* and nothing said so
+until driving the screen turned it up. A spend rule zeroes `amount` because a
+share of a basket is meaningless without one; a pack code carries no basket.
+Codes printed against such a promotion scanned successfully, awarded zero,
+and were consumed doing it. Refused now at print time and again at scan time
+— the second because a brand can print flat-per-scan codes and later switch
+that campaign to a share of spend, and the scan-time refusal happens before
+the code is burned so switching back makes the stickers work again.
 
 *Onboarding without email.* There is no mail provider in this product, so an
 owner adds somebody and is handed a one-time password to pass on however they
