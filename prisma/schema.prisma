@@ -117,6 +117,18 @@ model User {
   // "who redeemed/cancelled this" from the audit trail. Blocks login
   // (lib/auth/config.ts) without losing that history.
   isActive     Boolean  @default(true)
+
+  /// Set when an owner creates the account or resets its password, cleared
+  /// the first time the person chooses their own.
+  ///
+  /// There is no email in this product, so a new staff member is onboarded
+  /// by an owner reading them a one-time password. That is a credential two
+  /// people know, travelling over whatever channel they happen to use, and
+  /// the only thing that makes it acceptable is that it stops working the
+  /// moment it is used. This flag is what enforces that: the console will
+  /// not render anything else until it is cleared.
+  mustChangePassword Boolean @default(false)
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

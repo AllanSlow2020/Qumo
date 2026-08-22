@@ -446,8 +446,29 @@ still to come.** Own app at `app.{root}`, own auth, own nav, own stylesheet.
 Built so far: staff login, an overview with the liability figure, the
 promotions screen with the poster URL to print, and full store management —
 adding tills, issuing and rotating signing secrets, and switching a store
-off. Promotions can now be created, given a rule, capped and switched on.
-Still to come: generating sticker codes, user management, and billing.
+off. Promotions can now be created, given a rule, capped and switched on, and a
+brand can manage its own team. Still to come: generating sticker codes, and
+billing.
+
+*Onboarding without email.* There is no mail provider in this product, so an
+owner adds somebody and is handed a one-time password to pass on however they
+normally would. That is a credential two people know from the moment it
+exists, and the only thing that makes it acceptable is that it stops working
+the first time it is used: the account is flagged, and a nested route group
+shows it the change-password screen and nothing else until it is cleared.
+Typing another URL lands back on the same screen.
+
+*A brand cannot lock itself out.* Every path that could remove the last
+active owner — deactivating one, demoting one — refuses and says why. Without
+it a single mis-click leaves a console nobody can administer and no way back
+except reaching into the database by hand, which is not a support process to
+design on purpose.
+
+*Revocation is wired to the events that should trigger it.* Deactivating an
+account, resetting its password, and changing your own all end sessions, with
+the reason recorded. Changing your own spares the session doing it — the
+browser you just typed a new password into is not what a password change is
+meant to sign out.
 
 *The ceilings finally have a UI.* They are what the forgery suite exists to
 justify — the only bound on what an unsigned store can be made to pay out —

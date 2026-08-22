@@ -40,11 +40,13 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
             <Link href="/">Overview</Link>
             <Link href="/promotions">Promotions</Link>
             <Link href="/stores">Stores</Link>
+            <Link href="/people">Team</Link>
           </nav>
           <div className="cn-who">
             <div>{brand?.name ?? "—"}</div>
             <div>
-              {session.name} · {session.role.toLowerCase()}
+              {session.name} · {session.role.toLowerCase()} ·{" "}
+              <Link href="/change-password">password</Link>
             </div>
           </div>
           <form action={signOut}>

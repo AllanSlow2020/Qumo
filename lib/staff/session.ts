@@ -139,9 +139,19 @@ export async function revokeAllStaffSessions(
   userId: string,
   reason: "SIGNED_OUT_EVERYWHERE" | "PASSWORD_CHANGED" | "DEACTIVATED" = "SIGNED_OUT_EVERYWHERE",
   now: Date = new Date(),
+  /**
+   * A session to leave alone — the one doing the revoking.
+   *
+   * Used when somebody changes their own password: the point is to end the
+   * sessions they are *not* holding, and signing them out of the browser
+   * they just typed a new password into helps nobody. Omitted everywhere
+   * else, including sign-out-everywhere and deactivation, where ending the
+   * current session is the entire intent.
+   */
+  exceptSessionId?: string,
 ): Promise<number> {
   const result = await prisma.staffSession.updateMany({
-    where: { userId, revokedAt: null },
+    where: { userId, revokedAt: null, ...(exceptSessionId ? { id: { not: exceptSessionId } } : {}) },
     data: { revokedAt: now, revokedReason: reason },
   });
   return result.count;
