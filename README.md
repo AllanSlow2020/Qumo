@@ -43,22 +43,41 @@ docker run --name qumo-db -e POSTGRES_PASSWORD=qumo -p 5432:5432 -d postgres:16
 You do **not** need to create a database by hand. Prisma creates it on the
 first migration, as long as the Postgres user is allowed to.
 
-### 2. The code
+### 2. Everything else, in one command
 
 ```
 git clone https://github.com/AllanSlow2020/Qumo.git
 cd Qumo
+corepack enable pnpm
 pnpm install
+pnpm bootstrap
 ```
 
-### 3. Secrets
+`pnpm bootstrap` does the rest: it finds your Postgres, generates the four
+secrets, writes `.env`, creates the database, applies the schema, adds a demo
+brand, and prints every address to open. It is safe to run twice — it never
+overwrites an existing `.env`.
+
+If it can't find Postgres it says so and tells you how to start one. If your
+Postgres needs a password or lives somewhere unusual, put its connection
+string in `.env` as `DATABASE_URL` and run it again.
+
+Then:
+
+```
+pnpm dev
+```
+
+<details>
+<summary>Doing it by hand instead</summary>
+
+`pnpm bootstrap` is only convenience. The long way:
 
 ```
 cp .env.example .env
 ```
 
-Then open `.env` and replace the four placeholder secrets. These commands
-each print one value — paste each into the matching line:
+Replace the four placeholder secrets — each command prints one value:
 
 ```
 openssl rand -base64 32     # AUTH_SECRET
@@ -67,26 +86,26 @@ openssl rand -base64 32     # ENCRYPTION_KEY
 openssl rand -hex 32        # CRON_SECRET
 ```
 
-On Windows without `openssl`, run
-`node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
-instead, and `'hex'` in place of `'base64'` for the last one.
+On Windows without `openssl`, use
+`node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`,
+and `'hex'` for the last one.
 
-Check `DATABASE_URL` matches how you installed Postgres. With Postgres.app or
-Homebrew it is usually `postgresql://YOUR_MAC_USERNAME@localhost:5432/qumo_dev`;
-with the Docker line above it is
-`postgresql://postgres:qumo@localhost:5432/qumo_dev`.
+Point `DATABASE_URL` at your Postgres, then:
+
+```
+pnpm prisma:migrate
+pnpm db:seed
+pnpm dev
+```
+
+You do **not** need to create the database first — Prisma creates it, as long
+as the Postgres user is allowed to.
+
+</details>
 
 Leave `TWILIO_*` empty. Empty is what makes shopper login passcodes print to
 your terminal instead of being texted, which is what lets you sign in as
 anybody.
-
-### 4. Go
-
-```
-pnpm prisma:migrate     # creates the database and its tables
-pnpm db:seed            # creates a demo brand and prints every URL you need
-pnpm dev
-```
 
 The seed prints the addresses to open. They look odd and they are correct:
 
