@@ -296,6 +296,48 @@ living in silicon instead of a POS template.
 
 ### Subscription lifecycle
 
+*Built in Phase F.* This models the lifecycle, not the billing — no payment
+provider is integrated, so nothing here takes money. It records what state a
+brand is in, and the engine enforces the consequences. When billing lands it
+drives these transitions rather than replacing them.
+
+**The state is derived, never trusted from a flag.** A cancelled programme
+closes when its window elapses whether or not anything ran to notice.
+`closeElapsedProgrammes()` exists and is tidying — if it never runs, the
+answer is still right, because it is computed from the date. Built the other
+way round, a brand stops paying, a nightly job quietly fails, and the
+programme keeps awarding for a month.
+
+**Enforced in three places, for three different reasons.** Both scan paths
+refuse *before* burning anything, so a closed programme never costs a shopper
+a single-use code — if the brand comes back, the sticker still works.
+`applyAccrual` refuses as a backstop, inside the transaction, so a caller
+added later (an SMS adapter, an import) cannot accrue by forgetting to ask.
+And `createWalletSpend` refuses once the window closes, so a shopper is told
+before they ask a cashier to honour something that will be declined.
+
+**The window is stored, not recomputed.** `honourRedemptionUntil` is written
+once at cancellation. If the policy ever becomes thirty days, everybody
+already cancelled under sixty keeps sixty — the same reasoning as versioning
+consent copy: what somebody was promised does not change because the promise
+later did.
+
+**A brand with no subscription row fails open**, deliberately, and the
+console says so ("Not on a plan yet. Billing isn't connected yet"). While
+brands are onboarded by hand, an absent row means "not on the billing system"
+rather than "stopped paying", and failing closed would let a missed row kill
+a live programme. `lib/subscriptions/state.ts` marks this as the direction to
+reverse once billing exists.
+
+**Both sides see it.** The shopper's wallet leads with the closure and the
+date rather than showing a balance that will quietly stop working; the join
+page stops inviting people into a programme that has ended; and the join
+page states the sixty-day rule up front, which is where the plan asked for
+it. Deliberately *not* added to the versioned consent copy — that would be a
+`WEB_CONSENT_VERSION` bump, and the operator decision is still open, so it
+wants doing once rather than twice.
+
+
 `Subscription` on the brand: status, period end, cancelled-at. On cancellation:
 **earning freezes immediately, redemption is honoured for 60 days**, then the
 programme closes. Enforced in the engine — a paused brand's scan routes refuse
@@ -549,7 +591,9 @@ stored string so they can be raised later without locking anyone out. Login
 hashes against a decoy when the address is unknown, so a wrong email and a
 wrong password cost the same time and neither is an oracle for the other.
 
-**Phase F — subscription lifecycle**, with the freeze-and-honour rule.
+**Phase F — subscription lifecycle. Done.** Freeze earning at cancellation,
+honour redemption for sixty days, then close. Details above under
+*Subscription lifecycle*.
 
 **Phase G — SMS channel.** Balance lookup and SMS-to-earn over an aggregator's
 short code, as a thin adapter over the same engine calls. USSD only if the

@@ -2,7 +2,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { requireBrand } from "@/lib/brand/current";
 import { brandTitle } from "@/lib/brand/theme";
+import { PRODUCT_NAME } from "@/lib/product";
 import { getMembershipStatus, listOffers } from "@/lib/consumer/join";
+import { getProgrammeState } from "@/lib/subscriptions/manage";
+import { HONOUR_WINDOW_DAYS } from "@/lib/subscriptions/state";
 import { getConsumerSession } from "@/lib/consumer/session";
 import { BrandHeader } from "../brand-header";
 import { JoinButton } from "./join-button";
@@ -23,16 +26,36 @@ export default async function JoinPage() {
   const brand = await requireBrand();
   const personId = await getConsumerSession();
 
-  const [offers, status] = await Promise.all([
+  const [offers, status, programme] = await Promise.all([
     listOffers(brand.id),
     personId ? getMembershipStatus(personId, brand.id) : Promise.resolve({ joined: false, optedOut: false }),
+    getProgrammeState(brand.id),
   ]);
 
   return (
     <>
       <BrandHeader caption={brand.tagline ?? "Rewards"} />
 
-      <section className="sc-card">
+      {!programme.canEarn && (
+        <section className="sc-card">
+          <h1 className="sc-h1">This programme has ended</h1>
+          <p className="sc-body">
+            {brand.name} isn&apos;t running rewards through {PRODUCT_NAME} at the moment, so there&apos;s nothing to
+            join.
+          </p>
+          {programme.canRedeem && programme.honourUntil && (
+            <p className="sc-body">
+              If you were already collecting, what you earned is still yours to spend until{" "}
+              {programme.honourUntil.toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}.
+            </p>
+          )}
+          <Link href="/wallet" className="sc-btn sc-btn-ghost">
+            See my rewards
+          </Link>
+        </section>
+      )}
+
+      <section className="sc-card" hidden={!programme.canEarn}>
         {offers.length === 0 ? (
           <>
             <h1 className="sc-h1">Nothing running just yet</h1>
@@ -101,7 +124,8 @@ export default async function JoinPage() {
 
       <p className="sc-label">
         You can leave at any time from <Link href="/wallet/me">your details</Link>, and nothing you&apos;ve earned goes
-        away when you do.
+        away when you do. If {brand.name} ends this programme, you&apos;ll have {HONOUR_WINDOW_DAYS} days to use
+        whatever you&apos;ve built up.
       </p>
     </>
   );

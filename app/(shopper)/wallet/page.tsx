@@ -4,6 +4,7 @@ import { requireBrand } from "@/lib/brand/current";
 import { getConsumerSession } from "@/lib/consumer/session";
 import { getWallet, getWalletHistory, formatLedgerAmount, type BrandWallet } from "@/lib/consumer/wallet";
 import { getPendingSpend } from "@/lib/wallet/spend";
+import { getProgrammeState } from "@/lib/subscriptions/manage";
 import { BrandHeader } from "../brand-header";
 import { signOut } from "./actions";
 import { SignOutButton } from "./sign-out-button";
@@ -65,7 +66,15 @@ function PendingSpendCard({ spend }: { spend: PendingSpendView }) {
  * one brand on this page now and its name is already at the top of it —
  * repeating it here would read as though there might be another.
  */
-function Balances({ wallet, pendingSpend }: { wallet: BrandWallet; pendingSpend: PendingSpendView | null }) {
+function Balances({
+  wallet,
+  pendingSpend,
+  canRedeem,
+}: {
+  wallet: BrandWallet;
+  pendingSpend: PendingSpendView | null;
+  canRedeem: boolean;
+}) {
   const cents = wallet.balances.find((b) => b.unit === "CENTS")?.amount ?? 0;
   // Cash first, because it is the balance a shopper can spend today; the
   // ordering is otherwise whatever the ledger returned.
@@ -106,6 +115,7 @@ function Balances({ wallet, pendingSpend }: { wallet: BrandWallet; pendingSpend:
       {/* Only a cash balance is spendable at a till. Stamps and points are
           earned toward a reward, not handed over at a counter. */}
       {cents > 0 &&
+        canRedeem &&
         (pendingSpend ? (
           <PendingSpendCard spend={pendingSpend} />
         ) : (
@@ -127,9 +137,10 @@ export default async function WalletPage() {
   // brand's own site has any business answering.
   const brand = await requireBrand();
 
-  const [wallets, history] = await Promise.all([
+  const [wallets, history, programme] = await Promise.all([
     getWallet(personId, brand.id),
     getWalletHistory(personId, 50, brand.id),
+    getProgrammeState(brand.id),
   ]);
   // A shopper who signed in but has never scanned here has no membership at
   // this brand at all. An empty wallet stands in for one, so the page reads
@@ -142,13 +153,41 @@ export default async function WalletPage() {
     balances: [],
   };
 
-  const pendingSpend = wallets.length > 0 ? await getPendingSpend(personId, brand.id) : null;
+  const pendingSpend =
+    wallets.length > 0 && programme.canRedeem ? await getPendingSpend(personId, brand.id) : null;
 
   return (
     <>
       <BrandHeader caption="Your rewards" />
 
-      <Balances wallet={wallet} pendingSpend={pendingSpend} />
+      {/* Said at the top of the balance they are looking at, not buried in a
+          footer. A shopper who reads "R42.00" and nothing else will find out
+          the hard way, at a till, with a queue behind them. */}
+      {!programme.canEarn && (
+        <section className="sc-card">
+          <h2 className="sc-h2">{brand.name} has ended this programme</h2>
+          {programme.canRedeem && programme.honourUntil ? (
+            <p className="sc-body">
+              You can still spend what you&apos;ve earned until{" "}
+              <strong style={{ color: "var(--sc-ink)" }}>
+                {programme.honourUntil.toLocaleDateString("en-ZA", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </strong>
+              . After that this balance closes. You won&apos;t earn anything new in the meantime.
+            </p>
+          ) : (
+            <p className="sc-body">
+              This balance can no longer be spent. Nothing has been deleted — if {brand.name} starts again, it will
+              be here exactly as you left it.
+            </p>
+          )}
+        </section>
+      )}
+
+      <Balances wallet={wallet} pendingSpend={pendingSpend} canRedeem={programme.canRedeem} />
 
       {history.length > 0 && (
         <section className="sc-card">

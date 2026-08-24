@@ -31,6 +31,56 @@ datasource db {
   provider = "postgresql"
 }
 
+enum SubscriptionStatus {
+  /// Onboarded, not yet paying. The pilot state.
+  TRIALING
+  /// Paying.
+  ACTIVE
+  /// Cancelled, and inside the window where redemption is still honoured.
+  /// Earning is frozen from the moment of cancellation, not from the end of
+  /// the window.
+  CANCELLED
+  /// The window has elapsed. The programme is over.
+  CLOSED
+}
+
+/// A brand's standing with Qumo, and what it means for their shoppers.
+///
+/// This models the *lifecycle*, not the billing. No payment provider is
+/// integrated, so nothing here takes money — it records what state a brand
+/// is in and the engine enforces the consequences. When billing lands it
+/// drives these transitions rather than replacing them.
+///
+/// The rule, decided before any of it was built: on cancellation earning
+/// freezes immediately and redemption is honoured for 60 days, then the
+/// programme closes. A shopper who earned R80 the week before a brand
+/// cancelled does not lose it on the day the invoice stops.
+model Subscription {
+  id      String @id @default(cuid())
+  brandId String @unique
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  status SubscriptionStatus @default(TRIALING)
+
+  startedAt        DateTime  @default(now())
+  /// End of the paid period or trial. Informational until billing exists.
+  currentPeriodEnd DateTime?
+
+  cancelledAt DateTime?
+
+  /// When redemption stops being honoured — stored, not computed.
+  ///
+  /// Deliberately a stored date rather than `cancelledAt + 60 days`
+  /// evaluated at read time. If the policy ever becomes 30 days, everybody
+  /// already cancelled under the 60-day promise keeps 60. The same reasoning
+  /// as versioning consent copy: what somebody was promised does not change
+  /// because the promise later did.
+  honourRedemptionUntil DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Brand {
   id   String @id @default(cuid())
   name String
@@ -82,6 +132,7 @@ model Brand {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  subscription       Subscription?
   users              User[]
   brandMemberships   BrandMembership[]
   pointsTransactions PointsTransaction[]

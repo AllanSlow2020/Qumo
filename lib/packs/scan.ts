@@ -1,6 +1,7 @@
 import type { LedgerUnit, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
 import { applyAccrual, AccrualRefused } from "@/lib/ledger/accrue";
+import { getProgrammeState } from "@/lib/subscriptions/manage";
 import { isSerializationConflict, MAX_SERIALIZATION_ATTEMPTS } from "@/lib/db/serialization";
 import { looksLikePackCode, normalisePackCode } from "./code";
 
@@ -30,6 +31,7 @@ export type ScanFailureReason =
   | "CAMPAIGN_NOT_STARTED"
   | "NO_EARN_RULE"
   | "NOT_A_SCAN_PROMOTION"
+  | "PROGRAMME_CLOSED"
   | "DAILY_LIMIT"
   | "DAILY_SCAN_LIMIT"
   | "CAMPAIGN_EXHAUSTED"
@@ -72,6 +74,7 @@ export const SCAN_FAILURE_MESSAGES: Record<ScanFailureReason, string> = {
   CAMPAIGN_NOT_STARTED: "This promotion hasn't started yet.",
   NO_EARN_RULE: "This promotion isn't set up to award anything yet.",
   NOT_A_SCAN_PROMOTION: "This code isn't part of the promotion running right now. Hold on to it — it hasn't been used.",
+  PROGRAMME_CLOSED: "This brand's rewards programme has ended, so this code can't be used. Anything you already earned is still in your rewards.",
   DAILY_LIMIT: "You've reached today's limit for this promotion. Your code will still work tomorrow.",
   DAILY_SCAN_LIMIT: "You've scanned as many codes as this promotion allows today. Try again tomorrow.",
   CAMPAIGN_EXHAUSTED: "This promotion has reached its limit and isn't giving out any more.",
@@ -275,6 +278,12 @@ export async function redeemPackCode(
   // burned, so switching the rule back makes them work again.
   if (earnRule.type === "PERCENT_OF_SPEND") {
     return { ok: false, reason: "NOT_A_SCAN_PROMOTION" };
+  }
+  // Before the transaction, so a closed programme does not consume the
+  // shopper's single-use code on the way to refusing them. If the brand
+  // comes back, the sticker still works.
+  if (!(await getProgrammeState(packCode.brandId, now)).canEarn) {
+    return { ok: false, reason: "PROGRAMME_CLOSED" };
   }
 
   const brandId = packCode.brandId;

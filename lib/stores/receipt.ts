@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/client";
 import { decryptSecret } from "@/lib/security/crypto";
 import { isSerializationConflict, MAX_SERIALIZATION_ATTEMPTS } from "@/lib/db/serialization";
 import { applyAccrual, AccrualRefused, percentOfSpend } from "@/lib/ledger/accrue";
+import { getProgrammeState } from "@/lib/subscriptions/manage";
 import { checkCampaignWindow } from "@/lib/packs/scan";
 import { parseReceiptPayload, signingMessage, verifySignature } from "./payload";
 
@@ -34,6 +35,7 @@ import { parseReceiptPayload, signingMessage, verifySignature } from "./payload"
 export type ReceiptFailureReason =
   | "MALFORMED"
   | "WRONG_BRAND"
+  | "PROGRAMME_CLOSED"
   | "UNKNOWN_STORE"
   | "STORE_INACTIVE"
   | "BAD_SIGNATURE"
@@ -74,6 +76,7 @@ export type ReceiptResult =
 export const RECEIPT_FAILURE_MESSAGES: Record<ReceiptFailureReason, string> = {
   MALFORMED: "We couldn't read that slip. Try scanning it again.",
   WRONG_BRAND: "That slip belongs to a different brand's rewards. Scan the code on the slip again.",
+  PROGRAMME_CLOSED: "This brand's rewards programme has ended, so this slip can't earn. Anything you already earned is still in your rewards.",
   UNKNOWN_STORE: "We don't recognise that store.",
   STORE_INACTIVE: "That store isn't taking scans at the moment.",
   BAD_SIGNATURE: "That slip couldn't be verified. Please show it to a staff member.",
@@ -207,6 +210,9 @@ export async function redeemReceipt(
   }
   if (expectedBrandId && store.brandId !== expectedBrandId) {
     return { ok: false, reason: "WRONG_BRAND" };
+  }
+  if (!(await getProgrammeState(store.brandId, now)).canEarn) {
+    return { ok: false, reason: "PROGRAMME_CLOSED" };
   }
 
   // Signature check before anything else touches the amount, so a forged
