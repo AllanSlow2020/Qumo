@@ -313,6 +313,21 @@
     line-height: 1.25;
     color: var(--accent);
   }
+  ol.phases li.done::before { color: var(--built); }
+  ol.phases li.done .ph-title::after {
+    content: "Done";
+    font-family: var(--body);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--built);
+    background: var(--built-soft);
+    border-radius: 3px;
+    padding: 2px 6px;
+    margin-left: 9px;
+    vertical-align: 2px;
+  }
   ol.phases .ph-body { display: flex; flex-direction: column; gap: 4px; }
   ol.phases .ph-title { font-weight: 600; }
   ol.phases .ph-what { font-size: 14px; color: var(--ink-mid); }
@@ -338,11 +353,12 @@
 <div class="wrap">
 
   <header class="mast">
-    <p class="eyebrow">Reference · pre-build</p>
+    <p class="eyebrow">Status · August 2026</p>
     <h1 class="mark">Qumo Route Map</h1>
     <p class="standfirst">
       Every door a shopper can come through, every screen a brand can open, and where each of them
-      lands in the engine. Written before Phase&nbsp;B so the build has something to disagree with.
+      lands in the engine. Written before the build so it had something to disagree with, and kept
+      current since — what is marked built exists, is tested, and has been driven in a browser.
     </p>
     <div class="meta">
       <span>Pilot: Chicken Licken (slip)</span>
@@ -350,16 +366,63 @@
       <span>Identity: phone, brand-scoped</span>
       <span>Routing: subdomain per brand</span>
       <span>Carriers: QR, NFC, SMS</span>
+      <span>302 tests passing</span>
+      <span>Not deployed anywhere</span>
     </div>
   </header>
 
   <div class="legend">
     <span class="pill built">Built</span>
-    <span class="pill rework">Built · reworks</span>
-    <span class="pill planned">Planned</span>
+    <span class="pill planned">Not built</span>
+    <span class="pill rework">Blocked</span>
     <span class="pill parked">Parked</span>
-    <span class="note">Status is against the target architecture, not against the current repo — several routes exist today but under the wrong shell.</span>
+    <span class="note">Built means it exists, has tests, and has been clicked through — not that it is live. Nothing is deployed yet.</span>
   </div>
+
+  <!-- ============ 0. WHAT IT DOES ============ -->
+  <section>
+    <p class="eyebrow">In one page</p>
+    <h2>What Qumo does</h2>
+    <div class="prose">
+      <p>
+        A customer buys a bucket at Chicken Licken. On the till slip is a QR code. They scan it,
+        land on a page that looks like Chicken Licken — not like us — give a phone number, and 5% of
+        what they spent lands in a balance they can spend at that same brand. No app to download,
+        no card to carry, no points that mean nothing.
+      </p>
+      <p>
+        For the brand, it is a subscription. They get their own site on their own subdomain, a
+        console to set up promotions and see what they are costing, and codes to print. They can
+        cancel any month. When they do, earning stops that day and every balance their customers
+        already built stays spendable for sixty days — because the alternative is taking something
+        from people who did nothing wrong.
+      </p>
+      <p>
+        The same mechanic reskins for the next brand. Campari does not want percent-of-spend off a
+        till slip; they want a unique code under a bottle cap. Same engine, same ledger, different
+        carrier and different colours.
+      </p>
+    </div>
+
+    <h3>Three things it deliberately is not</h3>
+    <div class="prose">
+      <ul class="plain">
+        <li>
+          <strong>Not a universal points scheme.</strong> Value is closed-loop — earned with one
+          brand, spent with that brand. A shopper cannot move Chicken Licken value to Campari, and
+          neither brand can see the other's customers.
+        </li>
+        <li>
+          <strong>Not an app.</strong> The chance of a customer downloading something at a till is
+          close to zero, so everything runs in the browser they already have open.
+        </li>
+        <li>
+          <strong>Not a card.</strong> Identity is a phone number and a one-time passcode. Nothing
+          to lose, nothing to print, and it works on the cheapest handset in the queue.
+        </li>
+      </ul>
+    </div>
+  </section>
 
   <!-- ============ 1. THREE DOORS ============ -->
   <section>
@@ -508,7 +571,8 @@
       <p>
         Four states, and the transitions are what the routes exist to serve. Consent is captured
         <em>before</em> any personal detail is asked for, and withdrawal is a first-class transition
-        rather than a support request — which is the gap in what exists today.
+        rather than a support request — a button on <code>/wallet/me</code>, not an email to
+        somebody.
       </p>
     </div>
 
@@ -571,16 +635,16 @@
           <tr><th>Route</th><th>What it does</th><th>Status</th></tr>
         </thead>
         <tbody>
-          <tr><td class="route">/</td><td class="what">Brand-themed landing. The promotion in plain words, and a way in.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
-          <tr><td class="route">/join</td><td class="what">Poster QR entry. Explains the promotion, registers, records opt-in. Awards nothing.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">/join</td><td class="what">Poster, table-talker or plain tag. Explains what is running, registers, records the opt-in. Awards nothing, ever — that is what makes it safe to print where anyone can scan it.</td><td class="st"><span class="pill built">Built</span></td></tr>
           <tr><td class="route">/r</td><td class="what">Slip QR. Verifies and earns. <code>?s=store&amp;t=txn&amp;c=cents&amp;d=unix&amp;g=sig</code></td><td class="st"><span class="pill built">Built</span></td></tr>
-          <tr><td class="route">/s/[code]</td><td class="what">Sticker or pack code. Single-use, earns. Campari's path. Works from a printed code or an NFC tag holding the same URL — no code change either way.</td><td class="st"><span class="pill built">Built</span></td></tr>
-          <tr><td class="route">/t</td><td class="what">Secure NFC tap. Verifies the chip's per-tap signature and its counter. Proves presence, not purchase — so a visit stamp, never a percentage.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
-          <tr><td class="route">/login</td><td class="what">Phone + one-time passcode. No password, no SSO.</td><td class="st"><span class="pill rework">Built · moves</span></td></tr>
-          <tr><td class="route">/balance</td><td class="what">This brand's balance and history. Currently cross-brand and must become scoped.</td><td class="st"><span class="pill rework">Built · reworks</span></td></tr>
-          <tr><td class="route">/me</td><td class="what">Signed-in devices, opt out, request my data, delete account.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
-          <tr><td class="route">/legal/privacy</td><td class="what">The notice linked from the consent tick box. Rendered from the same constants that were agreed to.</td><td class="st"><span class="pill built">Built</span></td></tr>
-          <tr><td class="route">/legal/terms</td><td class="what">Programme terms, including what happens if the brand cancels.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">/s/[code]</td><td class="what">Sticker or pack code. Single-use. Campari's path, and the same URL an NFC tag can hold.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/wallet</td><td class="what">This brand's balance and history — this brand's only. Spend request when there is cash to spend.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/wallet/login</td><td class="what">Phone plus a one-time passcode. No password, no SSO.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/wallet/me</td><td class="what">Signed-in devices, leave the programme, download everything held about you.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/legal/privacy</td><td class="what">The notice linked from the consent tick box, rendered from the same constants that were agreed to.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/no-brand</td><td class="what">Where a host that names no brand lands. Says so plainly rather than 404ing.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/t</td><td class="what">Secure NFC tap. Verifies the chip's per-tap signature and counter. Proves presence, not purchase — a visit stamp, never a percentage.</td><td class="st"><span class="pill planned">Not built</span></td></tr>
+          <tr><td class="route">/legal/terms</td><td class="what">Programme terms. The closure rule is currently stated on <code>/join</code> and in the console instead.</td><td class="st"><span class="pill planned">Not built</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -615,10 +679,12 @@
     <h2>What a slip has to survive</h2>
     <div class="prose">
       <p>
-        Nine checks between a scanned slip and a ledger row. Seven exist. The two that don't are the
-        reason unsigned stores can't ship yet — without a per-person cap, a shopper at a store whose
-        POS can't sign controls every field of the URL and the single-use constraint only stops them
-        reusing a transaction number, not choosing a fresh one.
+        Nine checks between a scanned slip and a ledger row. All nine exist now. The last two were
+        the reason unsigned stores could not ship: without a per-person ceiling, a shopper at a store
+        whose point of sale cannot sign controls every field of the URL, and the single-use
+        constraint only stops them reusing a transaction number rather than choosing a fresh one.
+        Twenty fabricated slips minted R1,000 before the ceilings landed — that was measured, not
+        estimated.
       </p>
     </div>
 
@@ -657,13 +723,13 @@
           </g>
 
           <g font-family="Public Sans, sans-serif" font-size="13">
-            <circle cx="40" cy="312" r="5.5" fill="none" stroke="#cc5442" stroke-width="2"/>
-            <text x="62" y="317" fill="#cc5442" font-weight="600">Per-person velocity cap</text>
-            <text x="62" y="333" fill="#6f7887" font-size="11">not built — this is the hole</text>
+            <circle cx="40" cy="312" r="5.5" fill="currentColor"/>
+            <text x="62" y="317" fill="currentColor">Per-person daily ceilings</text>
+            <text x="62" y="333" fill="#6f7887" font-size="11">value per day, and scans per day</text>
 
-            <circle cx="40" cy="360" r="5.5" fill="none" stroke="#cc5442" stroke-width="2"/>
-            <text x="62" y="365" fill="#cc5442" font-weight="600">Campaign liability cap</text>
-            <text x="62" y="381" fill="#6f7887" font-size="11">not built — unbounded exposure</text>
+            <circle cx="40" cy="360" r="5.5" fill="currentColor"/>
+            <text x="62" y="365" fill="currentColor">Campaign liability ceiling</text>
+            <text x="62" y="381" fill="#6f7887" font-size="11">total this promotion may ever issue</text>
           </g>
 
           <line x1="40" y1="392" x2="40" y2="418" stroke="#a76d13" stroke-width="1.75" marker-end="url(#ar3)"/>
@@ -679,16 +745,17 @@
             <text x="800" y="235" text-anchor="end">eligibility</text>
             <text x="800" y="275" text-anchor="end">eligibility</text>
           </g>
-          <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#cc5442">
+          <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#6f7887">
             <text x="800" y="317" text-anchor="end">abuse</text>
             <text x="800" y="365" text-anchor="end">liability</text>
           </g>
         </svg>
       </div>
       <figcaption>
-        <strong>Fig 3.</strong> The two unbuilt gates are the whole of Phase B. Both belong inside
-        the same serializable transaction that writes the row — checked outside it, two concurrent
-        scans each pass and both write.
+        <strong>Fig 3.</strong> The last two gates were the whole of Phase B. Both sit inside the
+        same serializable transaction that writes the row — checked outside it, two concurrent scans
+        each pass and both write. A tenth check joined them later: a brand whose programme has
+        closed cannot accrue at all.
       </figcaption>
     </figure>
   </section>
@@ -699,9 +766,10 @@
     <h2>What a brand opens</h2>
     <div class="prose">
       <p>
-        A separate application on its own domain, with its own login. Three of these pages exist
-        today inside the CIOS portal and carry CIOS navigation and CIOS branding — they move, they
-        don't get linked to.
+        A separate application on its own host, with its own login, its own session table and its own
+        stylesheet. The console is Qumo's product and looks like Qumo — only the shopper surface
+        wears a brand, because only the shopper is being asked to believe they are dealing with one.
+        A staff member's brand comes from their user row, never from the address bar.
       </p>
     </div>
 
@@ -711,14 +779,16 @@
           <tr><th>Route</th><th>What it does</th><th>Status</th></tr>
         </thead>
         <tbody>
-          <tr><td class="route">/login</td><td class="what">Staff email and password. Own instance, own user table.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
-          <tr><td class="route">/</td><td class="what">Scans, value issued, value redeemed, active members. The answer to "is this working?"</td><td class="st"><span class="pill planned">Planned</span></td></tr>
-          <tr><td class="route">/promotions</td><td class="what">Earn rules: percent of spend, or stamp card. Caps, minimum basket, campaign window.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
-          <tr><td class="route">/stores</td><td class="what">Store codes and receipt signing keys. Names the exposure where a POS can't sign.</td><td class="st"><span class="pill rework">Built · moves</span></td></tr>
-          <tr><td class="route">/codes</td><td class="what">Poster codes and sticker batches. CSV export for the printer.</td><td class="st"><span class="pill rework">Built · moves</span></td></tr>
-          <tr><td class="route">/analytics</td><td class="what">Campaign performance. Their own members only — the tenant guard makes that structural.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
-          <tr><td class="route">/billing</td><td class="what">Subscription, invoices, cancel. Cancelling freezes earning and honours redemption 60 days.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
-          <tr><td class="route">/settings</td><td class="what">Logo, colours, subdomain, staff users. This is the reskin.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">/login</td><td class="what">Staff email and password. Own table, own cookie, own session — nothing shared with a shopper's.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/</td><td class="what">Overview. Outstanding liability first, because it is the number a finance director asks for. Members, scans, unsigned-store exposure.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/promotions</td><td class="what">Create one, decide what it awards, cap what it can cost, switch it on. Shows the poster URL to print.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/stores</td><td class="what">Add tills, issue and rotate signing secrets, switch a store off. Names the exposure where a POS cannot sign.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/codes</td><td class="what">Generate a print run and download it as CSV — code, readable form, URL, and whether it has been used.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/people</td><td class="what">Invite staff, set roles, switch access off. Refuses to remove the last owner.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/billing</td><td class="what">Standing with Qumo, and ending the programme. Cancelling freezes earning and honours redemption 60 days.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/change-password</td><td class="what">Forced on a new account until the one-time password is replaced, and available to anyone after.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/settings</td><td class="what">Logo, colours, display name, support contact. The fields exist and the shopper surface reads them; nothing edits them yet.</td><td class="st"><span class="pill planned">Not built</span></td></tr>
+          <tr><td class="route">/analytics</td><td class="what">Per-campaign and per-store performance over time. The overview answers "is it working", not "which store".</td><td class="st"><span class="pill planned">Not built</span></td></tr>
           <tr><td class="route">/till</td><td class="what">Cashier confirms a spend code. Needs a logged-in device at every counter.</td><td class="st"><span class="pill parked">Parked</span></td></tr>
         </tbody>
       </table>
@@ -731,10 +801,11 @@
           <tr><th>Route</th><th>What it does</th><th>Status</th></tr>
         </thead>
         <tbody>
-          <tr><td class="route">/api/sms/inbound</td><td class="what">Aggregator webhook. One adapter over the same engine calls the web uses.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">/api/console/batches/[id]</td><td class="what">Print run as CSV. Staff session checked in the handler, and the lookup is brand-scoped — it hands over a whole batch.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/api/consumer/export</td><td class="what">Everything held about one shopper, as a file. The privacy notice's promise, as a button.</td><td class="st"><span class="pill built">Built</span></td></tr>
           <tr><td class="route">/api/cron/sweep-sessions</td><td class="what">Daily. Deletes session rows 90 days past expiry.</td><td class="st"><span class="pill built">Built</span></td></tr>
-          <tr><td class="route">/api/codes/[batch].csv</td><td class="what">Sticker batch export, scan URLs built from the request origin.</td><td class="st"><span class="pill rework">Built · moves</span></td></tr>
-          <tr><td class="route">/api/cron/close-lapsed</td><td class="what">Daily. Ends programmes whose 60-day redemption grace has run out.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">/api/sms/inbound</td><td class="what">Aggregator webhook. One adapter over the same engine calls the web uses.</td><td class="st"><span class="pill planned">Not built</span></td></tr>
+          <tr><td class="route">/api/cron/close-lapsed</td><td class="what">Tidying only. A lapsed programme is already treated as closed by reading the date, so nothing depends on this running.</td><td class="st"><span class="pill planned">Not built</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -822,21 +893,24 @@
     <h2>Order of work</h2>
     <div class="prose">
       <p>
-        Lettered because it is genuinely a sequence — each phase depends on the one before it. The
-        security work sits before extraction deliberately: those fixes travel with the engine, and
-        fixing them once beats fixing them in two repos.
+        Lettered because it is genuinely a sequence — each phase depended on the one before it. The
+        security work sat before extraction deliberately: those fixes travelled with the engine, and
+        fixing them once beat fixing them in two repos.
+      </p>
+      <p>
+        Six of the eight are finished. What remains is not held up by the code.
       </p>
     </div>
 
     <ol class="phases">
-      <li><div class="ph-body"><span class="ph-title">Decide and document</span><span class="ph-what">This page, plus the architecture note, committed to the repo. No code.</span></div></li>
-      <li><div class="ph-body"><span class="ph-title">Engine hardening</span><span class="ph-what">The two missing gates from Fig 3. Opt-out. Data export. Slip path first, since Chicken Licken is the pilot.</span></div></li>
-      <li><div class="ph-body"><span class="ph-title">Extraction</span><span class="ph-what">New repo, new database. Copy the engine, drop everything CIOS-shaped.</span></div></li>
-      <li><div class="ph-body"><span class="ph-title">Brand identity layer</span><span class="ph-what">Subdomain resolution, theme fields, and inverting the shell so the brand leads and Qumo is the footer.</span></div></li>
-      <li><div class="ph-body"><span class="ph-title">Brand console</span><span class="ph-what">Own app, own auth, own navigation. Promotions, codes, stores, analytics.</span></div></li>
-      <li><div class="ph-body"><span class="ph-title">Subscription lifecycle</span><span class="ph-what">Billing, and the freeze-earning-honour-redemption rule enforced in the engine rather than the UI.</span></div></li>
-      <li><div class="ph-body"><span class="ph-title">SMS channel</span><span class="ph-what">Balance lookup and SMS-to-earn over a rented short code. USSD only if the pilot shows demand.</span></div></li>
-      <li><div class="ph-body"><span class="ph-title">NFC</span><span class="ph-what">Plain tags already work. Secure tags add proof-of-presence — and a key-management story, and several times the cost per tag.</span></div></li>
+      <li class="done"><div class="ph-body"><span class="ph-title">Decide and document</span><span class="ph-what">This page and the architecture note, committed to the repo.</span></div></li>
+      <li class="done"><div class="ph-body"><span class="ph-title">Engine hardening</span><span class="ph-what">Three ceilings inside the accrual transaction, opt-out, and the data export. The forgery the ceilings exist to stop was reproduced first — twenty fabricated slips minted R1,000 before they landed.</span></div></li>
+      <li class="done"><div class="ph-body"><span class="ph-title">Extraction</span><span class="ph-what">Own repo, own database. Nothing shared with CIOS at runtime.</span></div></li>
+      <li class="done"><div class="ph-body"><span class="ph-title">Brand identity layer</span><span class="ph-what">Subdomain resolution, theme fields, and the shell inverted so the brand leads and Qumo is a footer line.</span></div></li>
+      <li class="done"><div class="ph-body"><span class="ph-title">Brand console</span><span class="ph-what">Own host, own auth, own stylesheet. Overview, promotions, stores, pack codes, team. Settings and analytics still to come.</span></div></li>
+      <li class="done"><div class="ph-body"><span class="ph-title">Subscription lifecycle</span><span class="ph-what">The freeze-earning-honour-redemption rule, enforced in the engine rather than the UI. Billing itself is not integrated — this models the lifecycle, not the money.</span></div></li>
+      <li><div class="ph-body"><span class="ph-title">SMS channel</span><span class="ph-what">Balance lookup and SMS-to-earn over a rented short code. Blocked on an aggregator account. USSD only if the pilot shows demand.</span></div></li>
+      <li><div class="ph-body"><span class="ph-title">NFC</span><span class="ph-what">Plain tags already work — they hold the same URL a QR does. Secure tags add proof-of-presence, a key-management story, and several times the cost per tag.</span></div></li>
     </ol>
   </section>
 
@@ -845,13 +919,42 @@
     <p class="eyebrow">Unresolved</p>
     <h2>Blocking, and not yet answered</h2>
 
-    <div class="note risk">
-      <h3>The domain is load-bearing now</h3>
+    <div class="prose">
       <p>
-        <code>qumo.app</code> resolves to an address held by someone else, and so does
-        <code>qumo.com</code>. When it was one wallet domain that was cosmetic. With a subdomain per
-        brand it is what goes on a Chicken Licken poster — and a poster cannot carry a hostname we
-        do not control. This blocks Phase D, not Phase B.
+        None of these are code problems. The product runs end to end on a laptop today; what is
+        listed here is what stands between that and a customer using it at a till.
+      </p>
+    </div>
+
+    <div class="note risk">
+      <h3>Nothing is deployed</h3>
+      <p>
+        There is no URL. The whole product runs locally — <code>pnpm bootstrap</code> takes a fresh
+        clone to a working install — but nothing is hosted, so there is no link to send anyone and
+        nothing to open on a phone at a counter.
+      </p>
+    </div>
+
+    <div class="note risk">
+      <h3>The domain, which blocks the deployment</h3>
+      <p>
+        A brand is a subdomain, so hosting needs a wildcard certificate on a domain we control.
+        <code>qumo.app</code> and <code>qumo.com</code> both resolve to somebody else.
+        <code>qumo.co.za</code> is unconfirmed. Worth separating two decisions that look like one:
+        the domain the business launches on is a branding and trademark question and can take its
+        time, while any throwaway domain unblocks a real URL this week. The root domain is one
+        environment variable, so moving later costs a redeploy.
+      </p>
+    </div>
+
+    <div class="note">
+      <h3>An aggregator account</h3>
+      <p>
+        The same account serves the login passcodes the shopper flow already depends on and the SMS
+        balance channel. Today passcodes print to the server log, which is fine for testing and
+        useless for anyone else. Worth pricing reverse-billed against standard-rated early: that
+        number sets the per-brand monthly cap, and this is the first feature whose cost scales with
+        engagement rather than staying flat.
       </p>
     </div>
 
@@ -861,25 +964,26 @@
         Brand-specific sites with per-brand opt-in make "the brand is responsible party, Qumo is the
         operator" the natural reading — but that is a lawyer's confirmation, and it has to land
         before the first real shopper registers. Retrofitting consent onto people who already signed
-        up is materially harder than getting it right once.
+        up is materially harder than getting it right once. The consent copy is deliberately
+        untouched until this is settled, so it gets rewritten once rather than twice.
       </p>
     </div>
 
     <div class="note">
-      <h3>An aggregator account</h3>
+      <h3>Two smaller things, named so they are not forgotten</h3>
       <p>
-        The same account serves both the login passcodes Phase B already depends on and the Phase G
-        balance channel. Worth pricing reverse-billed against standard-rated early: that number sets
-        the per-brand monthly cap, and this is the first feature whose cost scales with engagement
-        rather than staying flat.
+        Rate limiting is per-process, so on a serverless host the effective limit is multiplied by
+        the instance count — it needs a shared store before real traffic. And brand theming has
+        fields in the database and readers on every shopper page, but no console screen to edit
+        them: a brand's colours are currently set by whoever has database access.
       </p>
     </div>
   </section>
 
   <footer>
-    Status reflects the branch <code>claude/new-product-idea-dnr9ve</code> at the point this was
-    written. Routes marked <em>built</em> exist and are tested; routes marked <em>moves</em> exist
-    but under the wrong shell and are not linked from anything a shopper or brand should see.
+    Status reflects the branch <code>claude/phase-d-brand-identity</code>, which is where all of
+    this lives — <code>main</code> still holds only the scaffold. Routes marked <em>built</em> exist,
+    have tests, and have been driven in a browser. Built does not mean live: nothing is deployed.
   </footer>
 
 </div>
