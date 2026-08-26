@@ -787,7 +787,7 @@
           <tr><td class="route">/people</td><td class="what">Invite staff, set roles, switch access off. Refuses to remove the last owner.</td><td class="st"><span class="pill built">Built</span></td></tr>
           <tr><td class="route">/billing</td><td class="what">Standing with Qumo, and ending the programme. Cancelling freezes earning and honours redemption 60 days.</td><td class="st"><span class="pill built">Built</span></td></tr>
           <tr><td class="route">/change-password</td><td class="what">Forced on a new account until the one-time password is replaced, and available to anyone after.</td><td class="st"><span class="pill built">Built</span></td></tr>
-          <tr><td class="route">/settings</td><td class="what">Logo, colours, display name, support contact. The fields exist and the shopper surface reads them; nothing edits them yet.</td><td class="st"><span class="pill planned">Not built</span></td></tr>
+          <tr><td class="route">/settings</td><td class="what">Name, colour, logo and support contact, with a live preview of the shopper page. Saved changes are live immediately — there is nothing to publish.</td><td class="st"><span class="pill built">Built</span></td></tr>
           <tr><td class="route">/analytics</td><td class="what">Per-campaign and per-store performance over time. The overview answers "is it working", not "which store".</td><td class="st"><span class="pill planned">Not built</span></td></tr>
           <tr><td class="route">/till</td><td class="what">Cashier confirms a spend code. Needs a logged-in device at every counter.</td><td class="st"><span class="pill parked">Parked</span></td></tr>
         </tbody>
@@ -907,7 +907,7 @@
       <li class="done"><div class="ph-body"><span class="ph-title">Engine hardening</span><span class="ph-what">Three ceilings inside the accrual transaction, opt-out, and the data export. The forgery the ceilings exist to stop was reproduced first — twenty fabricated slips minted R1,000 before they landed.</span></div></li>
       <li class="done"><div class="ph-body"><span class="ph-title">Extraction</span><span class="ph-what">Own repo, own database. Nothing shared with CIOS at runtime.</span></div></li>
       <li class="done"><div class="ph-body"><span class="ph-title">Brand identity layer</span><span class="ph-what">Subdomain resolution, theme fields, and the shell inverted so the brand leads and Qumo is a footer line.</span></div></li>
-      <li class="done"><div class="ph-body"><span class="ph-title">Brand console</span><span class="ph-what">Own host, own auth, own stylesheet. Overview, promotions, stores, pack codes, team. Settings and analytics still to come.</span></div></li>
+      <li class="done"><div class="ph-body"><span class="ph-title">Brand console</span><span class="ph-what">Own host, own auth, own stylesheet. Overview, promotions, stores, pack codes, team, appearance, plan. Per-campaign analytics still to come.</span></div></li>
       <li class="done"><div class="ph-body"><span class="ph-title">Subscription lifecycle</span><span class="ph-what">The freeze-earning-honour-redemption rule, enforced in the engine rather than the UI. Billing itself is not integrated — this models the lifecycle, not the money.</span></div></li>
       <li><div class="ph-body"><span class="ph-title">SMS channel</span><span class="ph-what">Balance lookup and SMS-to-earn over a rented short code. Blocked on an aggregator account. USSD only if the pilot shows demand.</span></div></li>
       <li><div class="ph-body"><span class="ph-title">NFC</span><span class="ph-what">Plain tags already work — they hold the same URL a QR does. Secure tags add proof-of-presence, a key-management story, and several times the cost per tag.</span></div></li>
@@ -973,9 +973,8 @@
       <h3>Two smaller things, named so they are not forgotten</h3>
       <p>
         Rate limiting is per-process, so on a serverless host the effective limit is multiplied by
-        the instance count — it needs a shared store before real traffic. And brand theming has
-        fields in the database and readers on every shopper page, but no console screen to edit
-        them: a brand's colours are currently set by whoever has database access.
+        the instance count — it needs a shared store before real traffic. And per-campaign analytics
+        over time: the overview answers "is this working", not "which store, which week".
       </p>
     </div>
   </section>

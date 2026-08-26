@@ -1,0 +1,114 @@
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { ZodError } from "zod";
+import type { Brand } from "@prisma/client";
+import { prisma } from "@/lib/db/client";
+import { ForbiddenError } from "@/lib/auth/rbac";
+import { BrandIdentityError, getBrandIdentity, updateBrandIdentityForSession } from "@/lib/brand/manage";
+import { toBrandTheme, accentStyle } from "@/lib/brand/theme";
+
+/**
+ * Editing the face a brand shows its shoppers.
+ *
+ * The interesting property is that this module and lib/brand/theme.ts treat
+ * the same bad input in opposite ways on purpose: the render path degrades so
+ * a shopper always gets a page, and this path refuses so somebody filling in
+ * a form is told what happened.
+ */
+describe("a brand editing its own appearance", () => {
+  const suffix = Date.now();
+  let brand: Brand;
+  let other: Brand;
+
+  const owner = (id: string) => ({ user: { brandId: id, role: "OWNER" } });
+  const marketing = (id: string) => ({ user: { brandId: id, role: "MARKETING" } });
+
+  function form(fields: Record<string, string>): FormData {
+    const fd = new FormData();
+    for (const [k, v] of Object.entries(fields)) fd.set(k, v);
+    return fd;
+  }
+
+  beforeAll(async () => {
+    brand = await prisma.brand.create({ data: { name: "Licken Holdings (Pty) Ltd", slug: `id-a-${suffix}` } });
+    other = await prisma.brand.create({ data: { name: "Campari", slug: `id-b-${suffix}` } });
+  });
+
+  afterAll(async () => {
+    await prisma.brand.deleteMany({ where: { id: { in: [brand.id, other.id] } } });
+  });
+
+  it("saves a name, colour and tagline", async () => {
+    await updateBrandIdentityForSession(
+      owner(brand.id),
+      form({
+        displayName: "Chicken Licken",
+        tagline: "Soul food rewards",
+        accentColor: "#C8102E",
+        accentInkColor: "#FFFFFF",
+        supportEmail: "rewards@example.invalid",
+      }),
+    );
+
+    const saved = await getBrandIdentity(brand.id);
+    expect(saved?.displayName).toBe("Chicken Licken");
+    // Normalised on the way in, so the render path never has to care about case.
+    expect(saved?.accentColor).toBe("#c8102e");
+
+    const theme = toBrandTheme({ id: brand.id, ...saved! });
+    // The legal name is what the row holds; the signage name is what a
+    // shopper reads.
+    expect(theme.name).toBe("Chicken Licken");
+    expect(accentStyle(theme)).toEqual({ "--sc-btn": "#c8102e", "--sc-btn-ink": "#ffffff" });
+  });
+
+  it("refuses a malformed colour instead of quietly dropping it", async () => {
+    // The render path takes anything and falls back, because a shopper in a
+    // queue must get a page. Here somebody is watching, and a form that
+    // saves nothing while reporting success is worse than an error.
+    await expect(updateBrandIdentityForSession(owner(brand.id), form({ accentColor: "red" }))).rejects.toThrow(
+      ZodError,
+    );
+    await expect(updateBrandIdentityForSession(owner(brand.id), form({ accentColor: "#fff" }))).rejects.toThrow(
+      ZodError,
+    );
+    // And the previous value survives the refusal.
+    expect((await getBrandIdentity(brand.id))?.accentColor).toBe("#c8102e");
+  });
+
+  it("refuses an insecure logo, which would render as nothing at all", async () => {
+    await expect(
+      updateBrandIdentityForSession(owner(brand.id), form({ logoUrl: "http://cdn.example/logo.png" })),
+    ).rejects.toThrow(ZodError);
+  });
+
+  it("refuses button text without a button colour", async () => {
+    await expect(
+      updateBrandIdentityForSession(owner(brand.id), form({ accentInkColor: "#ffffff" })),
+    ).rejects.toThrow(BrandIdentityError);
+  });
+
+  it("treats an empty field as clearing it", async () => {
+    await updateBrandIdentityForSession(owner(brand.id), form({ displayName: "", tagline: "" }));
+    const saved = await getBrandIdentity(brand.id);
+    expect(saved?.displayName).toBeNull();
+    expect(saved?.tagline).toBeNull();
+    // Falls back to the registered name, rather than rendering an empty
+    // masthead.
+    const theme = toBrandTheme({ id: brand.id, ...saved! });
+    expect(theme.name).toBe("Licken Holdings (Pty) Ltd");
+  });
+
+  it("won't let marketing change the brand's face", async () => {
+    await expect(
+      updateBrandIdentityForSession(marketing(brand.id), form({ displayName: "Nope" })),
+    ).rejects.toThrow(ForbiddenError);
+  });
+
+  it("won't reach another brand", async () => {
+    // The tenant guard scopes the update to the session's own brand, so an
+    // owner of one cannot repaint another.
+    await updateBrandIdentityForSession(owner(other.id), form({ displayName: "Campari SA" }));
+    expect((await getBrandIdentity(brand.id))?.displayName).toBeNull();
+    expect((await getBrandIdentity(other.id))?.displayName).toBe("Campari SA");
+  });
+});

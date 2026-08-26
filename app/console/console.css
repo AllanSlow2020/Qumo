@@ -403,3 +403,65 @@ select.cn-input {
   background-repeat: no-repeat;
   padding-right: 36px;
 }
+
+/* ---------- appearance preview ---------- */
+
+/* A real render of the shopper surface, not a picture of one. It borrows the
+   shopper palette rather than the console's, because the point is to show
+   what a customer sees — a preview drawn in console colours would be a
+   different page wearing the brand's button. */
+.cn-preview {
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid var(--cn-line);
+  border-radius: 10px;
+  padding: 22px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 380px;
+}
+
+.cn-preview-head { display: flex; flex-direction: column; gap: 3px; }
+
+.cn-preview-mark {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.cn-preview-logo { display: block; height: 28px; width: auto; max-width: 200px; object-fit: contain; }
+
+.cn-preview-sub { font-size: 13px; color: #757575; }
+
+.cn-preview-h1 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  margin: 6px 0 0;
+}
+
+/* Defaults to the shopper surface's own black button, so an unset accent
+   previews exactly what an unset accent actually renders. */
+.cn-preview-btn {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 10px;
+  background: #000000;
+  color: #ffffff;
+  cursor: default;
+  width: 100%;
+}
+
+.cn-preview-foot {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #757575;
+  border-top: 1px solid #eeeeee;
+  padding-top: 12px;
+}
