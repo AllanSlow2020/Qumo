@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Every capability Qumo has, read against the code: what works today, what exists only as engine, and what is still to build.">
+<title>Qumo Capability Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+</head>
+<body>
+<style>
+  :root {
+    --ground: #fcfcfd;
+    --raised: #f4f5f8;
+    --sunk: #eceef3;
+    --ink: #14181f;
+    --ink-mid: #4b5462;
+    --ink-soft: #6f7887;
+    --rule: #dfe3e9;
+    --rule-firm: #c6ccd6;
+    --accent: #a76d13;
+    --accent-soft: #f6ecd9;
+    --built: #2f6f52;
+    --built-soft: #e2efe8;
+    --part: #96601b;
+    --part-soft: #f7edda;
+    --none-ink: #6f7887;
+    --none-soft: #eceef3;
+
+    --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+    --body: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #101318;
+      --raised: #181d24;
+      --sunk: #1e242c;
+      --ink: #e8ebf0;
+      --ink-mid: #a8b1bf;
+      --ink-soft: #828c9b;
+      --rule: #282f39;
+      --rule-firm: #3a434f;
+      --accent: #e2a93f;
+      --accent-soft: #2c2415;
+      --built: #6cbf95;
+      --built-soft: #16281f;
+      --part: #d9a24a;
+      --part-soft: #2a2113;
+      --none-ink: #828c9b;
+      --none-soft: #1e242c;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #101318;
+    --raised: #181d24;
+    --sunk: #1e242c;
+    --ink: #e8ebf0;
+    --ink-mid: #a8b1bf;
+    --ink-soft: #828c9b;
+    --rule: #282f39;
+    --rule-firm: #3a434f;
+    --accent: #e2a93f;
+    --accent-soft: #2c2415;
+    --built: #6cbf95;
+    --built-soft: #16281f;
+    --part: #d9a24a;
+    --part-soft: #2a2113;
+    --none-ink: #828c9b;
+    --none-soft: #1e242c;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0 24px 96px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 44px;
+  }
+
+  .prose { max-width: 66ch; }
+  .prose p { margin: 0 0 14px; }
+  .prose p:last-child { margin-bottom: 0; }
+
+  .nb {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  a { color: inherit; text-decoration-color: var(--rule-firm); text-underline-offset: 3px; }
+  a:hover { text-decoration-color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  /* ---------- masthead ---------- */
+
+  header.mast {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 64px 0 30px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0;
+  }
+
+  .mark {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(38px, 7vw, 58px);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-size: 17px;
+    color: var(--ink-mid);
+    margin: 0;
+    max-width: 58ch;
+  }
+
+  /* ---------- scoreboard ---------- */
+
+  .score {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+
+  .score .cell {
+    background: var(--raised);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .score .num {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 34px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .score .cell.is-built .num { color: var(--built); }
+  .score .cell.is-part .num { color: var(--part); }
+  .score .cell.is-none .num { color: var(--none-ink); }
+
+  .score .lab {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .score .note { font-size: 13px; color: var(--ink-mid); }
+
+  /* ---------- sections ---------- */
+
+  section { display: flex; flex-direction: column; gap: 20px; }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(24px, 3.4vw, 31px);
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .sec-head { display: flex; flex-direction: column; gap: 10px; }
+  .sec-head .kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  /* ---------- capability ledger ---------- */
+
+  .ledger { display: flex; flex-direction: column; gap: 26px; }
+  .group { display: flex; flex-direction: column; gap: 0; }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: 18px;
+    row-gap: 4px;
+    align-items: baseline;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .row .name {
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+
+  .row .desc {
+    grid-column: 1 / 2;
+    font-size: 14.5px;
+    color: var(--ink-mid);
+    max-width: 62ch;
+  }
+
+  .row .desc code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--sunk);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  .chip {
+    grid-row: 1 / 2;
+    grid-column: 2 / 3;
+    justify-self: end;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .row[data-status="built"] .chip { background: var(--built-soft); color: var(--built); }
+  .row[data-status="part"]  .chip { background: var(--part-soft);  color: var(--part); }
+  .row[data-status="none"]  .chip { background: var(--none-soft);  color: var(--none-ink); }
+
+  .row[data-status="none"] .name { color: var(--ink-mid); font-weight: 500; }
+
+  /* ---------- callout ---------- */
+
+  .callout {
+    background: var(--raised);
+    border-left: 3px solid var(--accent);
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .callout .ct {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .callout p { margin: 0; font-size: 15px; color: var(--ink-mid); max-width: 64ch; }
+  .callout p strong { color: var(--ink); }
+
+  /* ---------- phase rail ---------- */
+
+  .rail { display: flex; flex-direction: column; }
+
+  .phase {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    column-gap: 16px;
+    align-items: start;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .phase .letter {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1.2;
+    color: var(--rule-firm);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .phase[data-status="built"] .letter { color: var(--built); }
+  .phase .pt { font-weight: 600; }
+  .phase .pd { grid-column: 2 / 4; font-size: 14.5px; color: var(--ink-mid); max-width: 60ch; }
+  .phase .chip { grid-row: 1 / 2; grid-column: 3 / 4; justify-self: end; }
+  .phase[data-status="built"] .chip { background: var(--built-soft); color: var(--built); }
+  .phase[data-status="none"] .chip { background: var(--none-soft); color: var(--none-ink); }
+  .phase[data-status="none"] .pt { color: var(--ink-mid); font-weight: 500; }
+
+  /* ---------- blocked-on cards ---------- */
+
+  .blocks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 18px;
+  }
+
+  .block {
+    background: var(--raised);
+    border: 1px solid var(--rule);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .block h4 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .block ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 9px; }
+  .block li { font-size: 14.5px; color: var(--ink-mid); }
+  .block li strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- footer ---------- */
+
+  footer {
+    border-top: 2px solid var(--ink);
+    padding-top: 20px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  footer .fmono { font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; }
+
+  @media (max-width: 560px) {
+    body { padding: 0 18px 72px; }
+    .row { grid-template-columns: 1fr; }
+    .chip { grid-row: auto; grid-column: 1 / 2; justify-self: start; margin-top: 6px; }
+    .phase { grid-template-columns: 32px 1fr; }
+    .phase .chip { grid-row: auto; grid-column: 2 / 3; justify-self: start; }
+    .phase .pd { grid-column: 2 / 3; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <p class="eyebrow">Qumo &middot; read against the code, 1 September 2026</p>
+    <h1 class="mark">Qumo Capability Ledger</h1>
+    <p class="standfirst">Every capability the product has, line by line: what a shopper or a brand can do today, what exists as tested engine but has no screen yet, and what has not been built at all.</p>
+  </header>
+
+  <div class="score" id="score">
+    <div class="cell is-built"><span class="num" data-count="built">&mdash;</span><span class="lab">Working today</span></div>
+    <div class="cell is-part"><span class="num" data-count="part">&mdash;</span><span class="lab">Partial</span></div>
+    <div class="cell is-none"><span class="num" data-count="none">&mdash;</span><span class="lab">Not built</span></div>
+    <div class="cell"><span class="num">309</span><span class="lab">Tests passing</span></div>
+  </div>
+
+  <section class="prose">
+    <div class="sec-head">
+      <span class="kicker">The product in a paragraph</span>
+      <h2>A shopper proves a purchase and gets something back. A brand sets the rules and pays for the privilege.</h2>
+    </div>
+    <p>Qumo is a purchase-loyalty platform for South African brands. A customer buys something, scans a code &mdash; on the till slip, on the pack, or on a poster &mdash; and value lands in a wallet held under that brand&rsquo;s name. No app to install, no card to carry, no password to remember: a phone number and a six-digit code is the whole of signing in.</p>
+    <p>The brand it belongs to is the site. <span class="nb">chickenlicken.qumo.app</span> is Chicken Licken&rsquo;s: their logo, their colour, their programme, and nothing about anyone else&rsquo;s. Qumo is the footer. Brands run their own programmes from a separate console at <span class="nb">app.qumo.app</span> &mdash; promotions, stores, print codes, team, appearance, plan &mdash; without asking us for anything.</p>
+    <p>Underneath both is one engine: a single immutable ledger that carries points, rand-value cashback and stamp cards on the same table, one accrual path every earn event goes through, and a tenancy guard that makes it structurally impossible for one brand to read another&rsquo;s data.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="kicker">Section one</span>
+      <h2>What a shopper can do</h2>
+    </div>
+
+    <div class="ledger">
+
+      <div class="group">
+        <h3>Getting in</h3>
+
+        <div class="row" data-status="built">
+          <span class="name">Land on a brand&rsquo;s own site</span>
+          <span class="chip">Working</span>
+          <span class="desc">The brand&rsquo;s name, logo and colour render on every screen, resolved from the hostname before the page is built. A shopper never sees another brand&rsquo;s programme on it.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Join from a poster or table-talker</span>
+          <span class="chip">Working</span>
+          <span class="desc">A single static code that explains the promotion and signs the shopper up. It deliberately awards nothing &mdash; a poster that pays out pays out to everyone who walks past it.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Sign in with a phone number</span>
+          <span class="chip">Working</span>
+          <span class="desc">A one-time code by SMS. No password, no app, no account to create separately. The same number recognised at a second brand needs one tap to opt in, not a second registration.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Stay signed in, safely</span>
+          <span class="chip">Working</span>
+          <span class="desc">Sessions are revocable and scoped per brand subdomain, so a session on one brand&rsquo;s site never carries to another.</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Earning</h3>
+
+        <div class="row" data-status="built">
+          <span class="name">Scan a till slip</span>
+          <span class="chip">Working</span>
+          <span class="desc">The QR carries the store, the transaction and the amount, signed with that store&rsquo;s secret. A forged or edited slip is refused; a slip already scanned is refused; a stale slip is refused.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Scan a code on the pack</span>
+          <span class="chip">Working</span>
+          <span class="desc">Unique single-use codes, printed in batches for stickers or under-cap promotions. One code, one award, ever &mdash; enforced by the database, not by a check that could race.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Tap an NFC tag</span>
+          <span class="chip">Working</span>
+          <span class="desc">A tag encoding a normal single-use code URL works today with no change: the phone opens the same page a scan would. The shopper does not have to aim a camera.</span>
+        </div>
+
+        <div class="row" data-status="none">
+          <span class="name">Tap a cryptographically secure NFC tag</span>
+          <span class="chip">Not built</span>
+          <span class="desc">Tags that sign each tap with a per-tap counter, so a cloned tag fails. Needs a <code>/t</code> route and the tag vendor&rsquo;s key scheme. Phase H.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Earn points, cash back or stamps</span>
+          <span class="chip">Working</span>
+          <span class="desc">Three currencies on one ledger. A points campaign and a stamp-card campaign differ by one field. Cashback is a percentage of what was actually spent, read from the signed slip.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Get a reward when a card fills</span>
+          <span class="chip">Working</span>
+          <span class="desc">The tenth stamp issues the coupon in the same transaction that records the stamp. There is no separate job that could fail and leave a full card unrewarded.</span>
+        </div>
+
+        <div class="row" data-status="none">
+          <span class="name">Earn by SMS, with no data</span>
+          <span class="chip">Not built</span>
+          <span class="desc">The slip already carries a unique code. Printing it as text beside the QR &mdash; <em>&ldquo;No data? SMS CL&nbsp;8842315 to 33xxx&rdquo;</em> &mdash; makes the receipt earn with no smartphone at all. Phase G, and it needs an aggregator account.</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Holding value</h3>
+
+        <div class="row" data-status="built">
+          <span class="name">See the balance and every line behind it</span>
+          <span class="chip">Working</span>
+          <span class="desc">Balance is always the sum of the ledger, computed on read. No stored total anywhere that could drift from the transactions that made it.</span>
+        </div>
+
+        <div class="row" data-status="part">
+          <span class="name">Spend a balance at a till</span>
+          <span class="chip">Engine only</span>
+          <span class="desc">A two-phase spend &mdash; shopper generates a code, staff confirm it &mdash; is written and tested, but has no shopper or cashier screen. Parked deliberately: it assumes every till has a staffed Qumo login, which is a large ask of a franchise. Waiting on a real brand to say what their counter can do.</span>
+        </div>
+
+        <div class="row" data-status="none">
+          <span class="name">Check a balance by SMS</span>
+          <span class="chip">Not built</span>
+          <span class="desc">Read-only by design when it lands: a network-supplied number identifies, but does not consent. Phase G.</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Rights</h3>
+
+        <div class="row" data-status="built">
+          <span class="name">Leave a programme at any time</span>
+          <span class="chip">Working</span>
+          <span class="desc">One switch. Earning stops immediately &mdash; the refusal is inside the accrual path, not in the interface &mdash; and the shopper can rejoin later.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Download everything held about them</span>
+          <span class="chip">Working</span>
+          <span class="desc">Their number, every scan, every reward and every consent, as a file. What the privacy notice promises is what the endpoint returns.</span>
+        </div>
+
+        <div class="row" data-status="none">
+          <span class="name">Delete everything held about them</span>
+          <span class="chip">Not built</span>
+          <span class="desc">The harder half of the same promise, because an immutable ledger and a deletion request pull in opposite directions and the answer has to be decided, not improvised.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Read the privacy notice, versioned per channel</span>
+          <span class="chip">Working</span>
+          <span class="desc">Consent is captured against a version, so a change of terms is a new consent rather than a silent overwrite.</span>
+        </div>
+
+        <div class="row" data-status="none">
+          <span class="name">Read the terms of service</span>
+          <span class="chip">Not built</span>
+          <span class="desc">Blocked on the operator entity &mdash; the CIPC name reservation decides whose terms these are.</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="kicker">Section two</span>
+      <h2>What a brand can do without asking us</h2>
+    </div>
+
+    <div class="ledger">
+
+      <div class="group">
+        <h3>Running a programme</h3>
+
+        <div class="row" data-status="built">
+          <span class="name">See the programme at a glance</span>
+          <span class="chip">Working</span>
+          <span class="desc">Outstanding liability and value issued, side by side &mdash; a finance question and a marketing one, and a brand asks both. Plus members, opt-outs, scans and joins over the last seven days, and a warning for any store still running unsigned.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Create and switch on a promotion</span>
+          <span class="chip">Working</span>
+          <span class="desc">Every campaign starts as a draft. Choose flat-per-scan or a share of spend, choose points, cents or stamps, then activate. Conflicting rules are refused at activation, not discovered later.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Cap the exposure</span>
+          <span class="chip">Working</span>
+          <span class="desc">Per person per day, per scan per day, and a total budget for the campaign. A brand running five percent cashback has an answer for their finance director.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Pause or close a promotion</span>
+          <span class="chip">Working</span>
+          <span class="desc">Status changes take effect on the next scan. There is no window where a paused campaign keeps awarding.</span>
+        </div>
+
+        <div class="row" data-status="none">
+          <span class="name">See how a campaign is performing</span>
+          <span class="chip">Not built</span>
+          <span class="desc">Per-campaign analytics &mdash; redemption rate, repeat-scan rate, cost per member. The overview answers &ldquo;what is happening&rdquo;; nothing yet answers &ldquo;is this working&rdquo;.</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Stores and codes</h3>
+
+        <div class="row" data-status="built">
+          <span class="name">Add stores and issue signing secrets</span>
+          <span class="chip">Working</span>
+          <span class="desc">Each store gets its own secret for signing slip QRs, shown once and stored encrypted. Rotating a secret invalidates old slips immediately.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Generate a batch of print codes</span>
+          <span class="chip">Working</span>
+          <span class="desc">Unique single-use codes in bulk, tied to a campaign, refused outright against a campaign whose rule cannot award a fixed amount &mdash; a bug caught by building this screen.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Export codes for the printer</span>
+          <span class="chip">Working</span>
+          <span class="desc">CSV with the code, how it should be printed, the URL to encode, and its current status.</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>The brand&rsquo;s own house</h3>
+
+        <div class="row" data-status="built">
+          <span class="name">Manage the team</span>
+          <span class="chip">Working</span>
+          <span class="desc">Invite staff, set roles, reset a password. Every path that could remove the last active owner refuses &mdash; a brand cannot lock itself out.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Change appearance</span>
+          <span class="chip">Working</span>
+          <span class="desc">Name, logo and accent colour, with a live preview that checks contrast as you type and refuses a colour the shopper screens would render illegibly.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Cancel the subscription</span>
+          <span class="chip">Working</span>
+          <span class="desc">Earning freezes at cancellation, redemption is honoured for sixty days, then the programme closes. Closure is derived from the date, so no failed job can leave a cancelled programme still awarding.</span>
+        </div>
+
+        <div class="row" data-status="none">
+          <span class="name">Sign up and pay</span>
+          <span class="chip">Not built</span>
+          <span class="desc">Subscription state and its consequences are enforced; the payment side and self-serve onboarding are not. Brands are created by us today.</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="kicker">Section three</span>
+      <h2>What holds it up</h2>
+    </div>
+
+    <div class="ledger">
+      <div class="group">
+        <h3>Guarantees, not features</h3>
+
+        <div class="row" data-status="built">
+          <span class="name">One brand cannot read another&rsquo;s data</span>
+          <span class="chip">Working</span>
+          <span class="desc">Every brand-scoped query goes through a guard that adds the brand filter itself. A query that forgets it does not silently read everything &mdash; it does not compile.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">The brand header cannot be forged</span>
+          <span class="chip">Working</span>
+          <span class="desc">Any incoming brand header is deleted before ours is set. Verified by sending a forged one at both the apex and a wrong brand host.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">A shopper and a staff member are different principals</span>
+          <span class="chip">Working</span>
+          <span class="desc">Two session tables, two cookies, two code paths that never meet. Tested by proving a shopper token does not resolve as staff, and the reverse.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">A refused award leaves no trace</span>
+          <span class="chip">Working</span>
+          <span class="desc">Hitting a ceiling rolls the whole transaction back, so a shopper keeps a slip they can scan tomorrow instead of one silently burnt on an award they never got.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Phone numbers are hashed and encrypted</span>
+          <span class="chip">Working</span>
+          <span class="desc">Hashed for lookup, encrypted at rest for display. A database dump is not a contact list.</span>
+        </div>
+
+        <div class="row" data-status="part">
+          <span class="name">Abuse is rate limited</span>
+          <span class="chip">Per process</span>
+          <span class="desc">The limiter counts in memory, so on a scaled-out deployment the effective limit multiplies by the number of instances. Fine against casual abuse, not sufficient as the only defence in production. Needs a shared store.</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Running it</h3>
+
+        <div class="row" data-status="built">
+          <span class="name">One command from a fresh clone to a running app</span>
+          <span class="chip">Working</span>
+          <span class="desc"><code>pnpm bootstrap</code> finds the database, writes the secrets, migrates and seeds. Verified against a genuinely empty machine rather than remembered.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">Seed data for two brands</span>
+          <span class="chip">Working</span>
+          <span class="desc">Two brands, a staff owner, two stores, a cashback campaign and a stamp card &mdash; enough to demonstrate the whole product locally in a minute.</span>
+        </div>
+
+        <div class="row" data-status="built">
+          <span class="name">309 tests against a real database</span>
+          <span class="chip">Working</span>
+          <span class="desc">Across 29 files, including adversarial tests that reproduce an attack before the fix &mdash; receipt forgery, tenant leakage, session revocation.</span>
+        </div>
+
+        <div class="row" data-status="none">
+          <span class="name">Deployed where anyone else can see it</span>
+          <span class="chip">Not built</span>
+          <span class="desc">Runs locally end to end. Deployment needs a domain &mdash; the root domain is one environment variable, and subdomain routing is what makes it load-bearing rather than cosmetic.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="kicker">Section four</span>
+      <h2>How it got here</h2>
+    </div>
+
+    <div class="rail">
+      <div class="phase" data-status="built">
+        <span class="letter">A</span>
+        <span class="pt">Decide and document</span>
+        <span class="chip">Done</span>
+        <span class="pd">Qumo separated from CIOS: own repo, own database, nothing shared at runtime.</span>
+      </div>
+      <div class="phase" data-status="built">
+        <span class="letter">B</span>
+        <span class="pt">Engine hardening</span>
+        <span class="chip">Done</span>
+        <span class="pd">Velocity and per-person caps, liability ceilings, opt-out, data export &mdash; each proven by reproducing the hole first.</span>
+      </div>
+      <div class="phase" data-status="built">
+        <span class="letter">C</span>
+        <span class="pt">Extraction</span>
+        <span class="chip">Done</span>
+        <span class="pd">The engine moved to its own repo and schema, and was proven to stand on its own.</span>
+      </div>
+      <div class="phase" data-status="built">
+        <span class="letter">D</span>
+        <span class="pt">Brand identity layer</span>
+        <span class="chip">Done</span>
+        <span class="pd">Subdomain routing, theme fields, and the shell inverted so the brand leads and Qumo is the footer.</span>
+      </div>
+      <div class="phase" data-status="built">
+        <span class="letter">E</span>
+        <span class="pt">Brand console</span>
+        <span class="chip">Done</span>
+        <span class="pd">Its own app, its own auth, its own navigation: promotions, stores, codes, team, appearance.</span>
+      </div>
+      <div class="phase" data-status="built">
+        <span class="letter">F</span>
+        <span class="pt">Subscription lifecycle</span>
+        <span class="chip">Done</span>
+        <span class="pd">Cancel any time, and mean it: freeze earning, honour redemption sixty days, close by date.</span>
+      </div>
+      <div class="phase" data-status="none">
+        <span class="letter">G</span>
+        <span class="pt">SMS channel</span>
+        <span class="chip">Not started</span>
+        <span class="pd">Balance lookup and SMS-to-earn as thin adapters over the same engine calls. Blocked on an aggregator account.</span>
+      </div>
+      <div class="phase" data-status="none">
+        <span class="letter">H</span>
+        <span class="pt">Secure NFC</span>
+        <span class="chip">Not started</span>
+        <span class="pd">Per-tap signed tags, so a cloned tag fails. Ordinary NFC tags already work.</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="kicker">Section five</span>
+      <h2>What is left, and what it is waiting on</h2>
+    </div>
+
+    <div class="blocks">
+      <div class="block">
+        <h4>Waiting on you</h4>
+        <ul>
+          <li><strong>A domain.</strong> Any registrable name unblocks deployment. The root domain is one environment variable; nothing in the code is tied to a particular one.</li>
+          <li><strong>The Vercel plan.</strong> Pro is $20 a month per deploying seat, with $20 of usage included. Hobby cannot be used commercially.</li>
+          <li><strong>The CIPC outcome.</strong> Confirming the operator entity changes the operator name, the consent copy and the consent version in one pass.</li>
+          <li><strong>An SMS aggregator account.</strong> The same account covers login codes and the whole of Phase G.</li>
+          <li><strong>Operator or responsible party.</strong> With brand-specific sites and per-brand opt-in, &ldquo;the brand is responsible party, Qumo is operator&rdquo; is now the natural reading. It needs confirming before the first real shopper.</li>
+        </ul>
+      </div>
+
+      <div class="block">
+        <h4>Waiting on a first brand</h4>
+        <ul>
+          <li><strong>Till redemption.</strong> Built and parked. What ships depends on what a real counter can actually run.</li>
+          <li><strong>Campaign analytics.</strong> Worth building once a brand can say which number they would act on.</li>
+          <li><strong>SMS versus USSD.</strong> SMS first because it is cheaper and simpler; USSD only if the pilot shows the demand.</li>
+        </ul>
+      </div>
+
+      <div class="block">
+        <h4>Just needs building</h4>
+        <ul>
+          <li><strong>A shared rate-limit store.</strong> The one known production gap in the security work.</li>
+          <li><strong>Data deletion.</strong> The other half of the rights promise.</li>
+          <li><strong>Terms of service.</strong> Waiting on the entity name.</li>
+          <li><strong>Self-serve signup and billing.</strong> Subscription consequences are enforced; taking money is not.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="ct">The short version</span>
+      <p><strong>The engine is finished and the shell is finished.</strong> What remains is not a build problem &mdash; it is a domain, an SMS account, a legal answer and a first brand. Everything on this page marked <em>working</em> can be demonstrated end to end on a laptop today.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p class="fmono">Qumo &middot; capability ledger &middot; 1 September 2026</p>
+    <p>Read against the code on branch <span class="fmono">claude/phase-d-brand-identity</span>. Companion documents: the route map, which lists every URL and what it does, and the walkthrough, which shows all eighteen screens as they render today.</p>
+  </footer>
+
+</div>
+
+<script>
+  (function () {
+    var counts = { built: 0, part: 0, none: 0 };
+    document.querySelectorAll('.ledger .row[data-status]').forEach(function (row) {
+      var s = row.getAttribute('data-status');
+      if (counts[s] !== undefined) counts[s] += 1;
+    });
+    document.querySelectorAll('#score [data-count]').forEach(function (el) {
+      el.textContent = String(counts[el.getAttribute('data-count')]);
+    });
+  })();
+</script>
+
+</body>
+</html>
