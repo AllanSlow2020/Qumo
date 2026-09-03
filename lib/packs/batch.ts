@@ -1,14 +1,17 @@
 import { z } from "zod";
 import { Prisma, type Role } from "@prisma/client";
 import { forBrand } from "@/lib/db/tenant";
+import { prisma } from "@/lib/db/client";
+import { record } from "@/lib/audit/record";
 import { requireRole } from "@/lib/auth/rbac";
 import { generatePackCode } from "./code";
+import type { Actor } from "@/lib/staff/actor";
 
 export const MANAGE_PACK_BATCH_ROLES: Role[] = ["OWNER", "ADMIN", "MARKETING"];
 
 export class PackBatchError extends Error {}
 
-export type SessionLike = { user: { brandId: string; role: string; id: string } };
+export type SessionLike = Actor;
 
 // A print run is a physical thing with a real cost, so the cap is about
 // keeping a typo from becoming a million-row insert and a very surprised
@@ -92,6 +95,15 @@ export async function createPackBatchForSession(session: SessionLike, formData: 
     await insertChunk(scoped, session.user.brandId, campaign.id, batch.id, size);
     remaining -= size;
   }
+
+  await record(prisma, session.user, {
+    action: "pack_batch.created",
+    targetId: batch.id,
+    targetLabel: batch.label,
+    // Quantity is the point: this is how many single-use awards were just
+    // brought into existence, which is a liability the moment it prints.
+    detail: { quantity: batch.quantity, campaignId: batch.campaignId },
+  });
 
   return batch;
 }

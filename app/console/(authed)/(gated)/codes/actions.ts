@@ -9,7 +9,7 @@ export async function createBatch(_prev: BatchActionState, formData: FormData): 
   try {
     const staff = await requireStaff();
     await createPackBatchForSession(
-      { user: { brandId: staff.brandId, role: staff.role, id: staff.userId } },
+      { user: { id: staff.userId, brandId: staff.brandId, role: staff.role, name: staff.name, email: staff.email } },
       formData,
     );
     return { ok: true };

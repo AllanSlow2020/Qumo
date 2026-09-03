@@ -24,7 +24,7 @@ describe("who can get into a brand's console", () => {
   let admin: User;
   let outsider: User;
 
-  const as = (user: User) => ({ user: { brandId: user.brandId, role: user.role, id: user.id } });
+  const as = (user: User) => ({ user: { id: user.id, brandId: user.brandId, role: user.role, name: user.name } });
 
   function form(fields: Record<string, string>): FormData {
     const fd = new FormData();

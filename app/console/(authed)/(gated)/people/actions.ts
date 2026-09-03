@@ -30,7 +30,7 @@ function toState(err: unknown): TeamActionState {
 
 async function engineSession() {
   const staff = await requireStaff();
-  return { user: { brandId: staff.brandId, role: staff.role, id: staff.userId } };
+  return { user: { id: staff.userId, brandId: staff.brandId, role: staff.role, name: staff.name, email: staff.email } };
 }
 
 export async function invite(_prev: TeamActionState, formData: FormData): Promise<TeamActionState> {

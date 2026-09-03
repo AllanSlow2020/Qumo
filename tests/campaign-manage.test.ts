@@ -18,8 +18,8 @@ describe("running a promotion from the console", () => {
   let brand: Brand;
   let otherBrand: Brand;
 
-  const owner = (brandId: string) => ({ user: { brandId, role: "OWNER" } });
-  const marketing = (brandId: string) => ({ user: { brandId, role: "MARKETING" } });
+  const owner = (brandId: string) => ({ user: { id: `${brandId}-owner`, brandId, role: "OWNER", name: "Test Owner" } });
+  const marketing = (brandId: string) => ({ user: { id: `${brandId}-marketing`, brandId, role: "MARKETING", name: "Test Marketing" } });
 
   function form(fields: Record<string, string>): FormData {
     const fd = new FormData();

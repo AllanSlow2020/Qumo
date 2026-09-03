@@ -42,6 +42,7 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
             <Link href="/stores">Stores</Link>
             <Link href="/codes">Pack codes</Link>
             <Link href="/people">Team</Link>
+            <Link href="/activity">Activity</Link>
             <Link href="/settings">Appearance</Link>
             <Link href="/billing">Plan</Link>
           </nav>

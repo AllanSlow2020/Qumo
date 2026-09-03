@@ -38,7 +38,7 @@ function toState(err: unknown): PromoActionState {
 
 async function engineSession() {
   const staff = await requireStaff();
-  return { user: { brandId: staff.brandId, role: staff.role } };
+  return { user: { id: staff.userId, brandId: staff.brandId, role: staff.role, name: staff.name, email: staff.email } };
 }
 
 export async function createCampaign(_prev: PromoActionState, formData: FormData): Promise<PromoActionState> {

@@ -2,6 +2,9 @@ import { z } from "zod";
 import type { Role } from "@prisma/client";
 import { requireRole } from "@/lib/auth/rbac";
 import { forBrand } from "@/lib/db/tenant";
+import { prisma } from "@/lib/db/client";
+import { record } from "@/lib/audit/record";
+import type { Actor } from "@/lib/staff/actor";
 
 /**
  * Editing the face a brand shows its shoppers.
@@ -18,7 +21,7 @@ export const MANAGE_IDENTITY_ROLES: Role[] = ["OWNER", "ADMIN"];
 
 export class BrandIdentityError extends Error {}
 
-export type SessionLike = { user: { brandId: string; role: string } };
+export type SessionLike = Actor;
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
@@ -106,6 +109,27 @@ export async function updateBrandIdentityForSession(session: SessionLike, formDa
       accentInkColor: accentInkColor?.toLowerCase() ?? null,
       supportEmail: blankToNull(parsed.supportEmail),
       supportUrl: blankToNull(parsed.supportUrl),
+    },
+  });
+
+  // Names which fields were set, not what they were set to: a shopper-facing
+  // identity change is worth knowing about, and the values are visible on
+  // the screen next door.
+  await record(prisma, session.user, {
+    action: "brand.identity_changed",
+    targetId: session.user.brandId,
+    detail: {
+      changed: Object.entries({
+        displayName: blankToNull(parsed.displayName),
+        tagline: blankToNull(parsed.tagline),
+        logoUrl: blankToNull(parsed.logoUrl),
+        accentColor,
+        accentInkColor,
+        supportEmail: blankToNull(parsed.supportEmail),
+        supportUrl: blankToNull(parsed.supportUrl),
+      })
+        .filter(([, value]) => value !== null)
+        .map(([key]) => key),
     },
   });
 }

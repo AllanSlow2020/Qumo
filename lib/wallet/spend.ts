@@ -6,6 +6,7 @@ import { forPerson } from "@/lib/consumer/scope";
 import { requireRole } from "@/lib/auth/rbac";
 import { isSerializationConflict, MAX_SERIALIZATION_ATTEMPTS } from "@/lib/db/serialization";
 import { getProgrammeState } from "@/lib/subscriptions/manage";
+import type { Actor } from "@/lib/staff/actor";
 
 /**
  * Spending a closed-loop wallet balance at a till, in two steps.
@@ -33,7 +34,7 @@ export const CONFIRM_SPEND_ROLES: Role[] = ["OWNER", "ADMIN", "MARKETING", "QUAL
 
 export class WalletSpendError extends Error {}
 
-export type StaffSessionLike = { user: { brandId: string; role: string; id: string } };
+export type StaffSessionLike = Actor;
 
 /** Long enough not to collide in a queue, short enough to read aloud. */
 const CODE_DIGITS = 6;

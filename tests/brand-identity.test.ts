@@ -19,8 +19,8 @@ describe("a brand editing its own appearance", () => {
   let brand: Brand;
   let other: Brand;
 
-  const owner = (id: string) => ({ user: { brandId: id, role: "OWNER" } });
-  const marketing = (id: string) => ({ user: { brandId: id, role: "MARKETING" } });
+  const owner = (id: string) => ({ user: { id: `${id}-owner`, brandId: id, role: "OWNER", name: "Test Owner" } });
+  const marketing = (id: string) => ({ user: { id: `${id}-marketing`, brandId: id, role: "MARKETING", name: "Test Marketing" } });
 
   function form(fields: Record<string, string>): FormData {
     const fd = new FormData();

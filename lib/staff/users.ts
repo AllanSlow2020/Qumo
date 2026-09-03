@@ -4,8 +4,10 @@ import { Prisma, type Role } from "@prisma/client";
 import { requireRole } from "@/lib/auth/rbac";
 import { forBrand } from "@/lib/db/tenant";
 import { prisma } from "@/lib/db/client";
+import { record } from "@/lib/audit/record";
 import { hashPassword, verifyPassword } from "./password";
 import { revokeAllStaffSessions } from "./session";
+import type { Actor } from "@/lib/staff/actor";
 
 /**
  * Who can get into a brand's console.
@@ -18,7 +20,7 @@ export const MANAGE_USER_ROLES: Role[] = ["OWNER"];
 
 export class UserError extends Error {}
 
-export type SessionLike = { user: { brandId: string; role: string; id: string } };
+export type SessionLike = Actor;
 
 /**
  * Twelve characters, and nothing else prescribed.
@@ -77,6 +79,13 @@ export async function inviteUserForSession(session: SessionLike, formData: FormD
         mustChangePassword: true,
       },
     });
+    await record(prisma, session.user, {
+      action: "user.invited",
+      targetId: user.id,
+      targetLabel: user.email,
+      detail: { role: parsed.role, name: parsed.name },
+    });
+
     return { id: user.id, email: user.email, temporaryPassword };
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
@@ -128,6 +137,13 @@ export async function setUserRoleForSession(session: SessionLike, userId: string
   }
 
   await forBrand(session.user.brandId).user.update({ where: { id: user.id }, data: { role } });
+
+  await record(prisma, session.user, {
+    action: "user.role_changed",
+    targetId: user.id,
+    targetLabel: user.email,
+    detail: { from: user.role, to: role },
+  });
 }
 
 /**
@@ -164,6 +180,12 @@ export async function setUserActiveForSession(
   if (!isActive) {
     await revokeAllStaffSessions(user.id, "DEACTIVATED");
   }
+
+  await record(prisma, session.user, {
+    action: isActive ? "user.reactivated" : "user.deactivated",
+    targetId: user.id,
+    targetLabel: user.email,
+  });
 }
 
 /**
@@ -184,6 +206,14 @@ export async function resetPasswordForSession(session: SessionLike, userId: stri
     data: { passwordHash: await hashPassword(temporaryPassword), mustChangePassword: true },
   });
   await revokeAllStaffSessions(user.id, "PASSWORD_CHANGED");
+
+  // The fact only. A generated password in a table the whole team can read
+  // would defeat the reason for generating one.
+  await record(prisma, session.user, {
+    action: "user.password_reset",
+    targetId: user.id,
+    targetLabel: user.email,
+  });
 
   return temporaryPassword;
 }

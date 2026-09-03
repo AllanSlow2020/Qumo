@@ -1,7 +1,10 @@
 import { z } from "zod";
 import type { CampaignStatus, EarnRuleType, LedgerUnit, Role } from "@prisma/client";
 import { forBrand } from "@/lib/db/tenant";
+import { prisma } from "@/lib/db/client";
+import { record } from "@/lib/audit/record";
 import { requireRole } from "@/lib/auth/rbac";
+import type { Actor } from "@/lib/staff/actor";
 
 /**
  * Creating a promotion, switching it on and off, and putting a ceiling on
@@ -30,7 +33,7 @@ export const MANAGE_CAMPAIGN_ROLES: Role[] = ["OWNER", "ADMIN"];
 
 export class CampaignError extends Error {}
 
-export type SessionLike = { user: { brandId: string; role: string } };
+export type SessionLike = Actor;
 
 const createSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -52,7 +55,7 @@ export async function createCampaignForSession(session: SessionLike, formData: F
     description: formData.get("description") || undefined,
   });
 
-  return forBrand(session.user.brandId).campaign.create({
+  const campaign = await forBrand(session.user.brandId).campaign.create({
     data: {
       brandId: session.user.brandId,
       name: parsed.name,
@@ -60,6 +63,14 @@ export async function createCampaignForSession(session: SessionLike, formData: F
       status: "DRAFT",
     },
   });
+
+  await record(prisma, session.user, {
+    action: "campaign.created",
+    targetId: campaign.id,
+    targetLabel: campaign.name,
+  });
+
+  return campaign;
 }
 
 /**
@@ -110,6 +121,16 @@ export async function setCampaignStatusForSession(
   }
 
   await scoped.campaign.update({ where: { id: campaign.id }, data: { status } });
+
+  // The status change is the event a brand asks about when their liability
+  // moves, so the previous status is recorded beside the new one — "who
+  // switched this on" is only half an answer without "from what".
+  await record(prisma, session.user, {
+    action: `campaign.${status.toLowerCase()}`,
+    targetId: campaign.id,
+    targetLabel: campaign.name,
+    detail: { from: campaign.status, to: status },
+  });
 }
 
 const limitsSchema = z.object({
@@ -156,17 +177,26 @@ export async function setCampaignLimitsForSession(session: SessionLike, formData
     throw new CampaignError("Set what this promotion awards before putting a ceiling on it.");
   }
 
-  await scoped.earnRule.update({
-    where: { campaignId: campaign.id },
-    data: {
-      // null rather than undefined, so clearing a field actually clears it.
-      // undefined would leave the old ceiling in place while the form that
-      // submitted it showed an empty box — the worst of both.
-      maxPerPersonPerDay: parsed.maxPerPersonPerDay ?? null,
-      maxScansPerPersonPerDay: parsed.maxScansPerPersonPerDay ?? null,
-      maxTotalAmount: parsed.maxTotalAmount ?? null,
-      completesAt: parsed.completesAt ?? null,
-    },
+  const limits = {
+    // null rather than undefined, so clearing a field actually clears it.
+    // undefined would leave the old ceiling in place while the form that
+    // submitted it showed an empty box — the worst of both.
+    maxPerPersonPerDay: parsed.maxPerPersonPerDay ?? null,
+    maxScansPerPersonPerDay: parsed.maxScansPerPersonPerDay ?? null,
+    maxTotalAmount: parsed.maxTotalAmount ?? null,
+    completesAt: parsed.completesAt ?? null,
+  };
+
+  await scoped.earnRule.update({ where: { campaignId: campaign.id }, data: limits });
+
+  // The ceilings are the bound on what a forged slip can mint, so removing
+  // one is among the most consequential things anyone can do in the
+  // console. Recorded with the actual numbers, not just "limits changed".
+  await record(prisma, session.user, {
+    action: "campaign.limits_changed",
+    targetId: campaign.id,
+    targetLabel: campaign.name,
+    detail: limits,
   });
 }
 

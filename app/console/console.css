@@ -465,3 +465,14 @@ select.cn-input {
   border-top: 1px solid #eeeeee;
   padding-top: 12px;
 }
+
+/* Secondary text inside a table cell: an actor's email under their name, a
+   target under an action. The activity log stacks two or three of these per
+   row, and without a colour of their own the row reads as one run-on
+   sentence. */
+.cn-sub {
+  color: var(--cn-ink-2);
+  font-size: 13px;
+  line-height: 1.45;
+  margin-top: 2px;
+}

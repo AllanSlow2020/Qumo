@@ -2,12 +2,13 @@ import { z } from "zod";
 import type { LedgerUnit, Role } from "@prisma/client";
 import { forBrand } from "@/lib/db/tenant";
 import { requireRole } from "@/lib/auth/rbac";
+import type { Actor } from "@/lib/staff/actor";
 
 export const MANAGE_EARN_RULE_ROLES: Role[] = ["OWNER", "ADMIN", "MARKETING"];
 
 export class EarnRuleError extends Error {}
 
-export type SessionLike = { user: { brandId: string; role: string } };
+export type SessionLike = Actor;
 
 const setEarnRuleSchema = z.object({
   campaignId: z.string().trim().min(1),

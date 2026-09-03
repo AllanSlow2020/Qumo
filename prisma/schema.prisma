@@ -146,6 +146,7 @@ model Brand {
   walletSpends       WalletSpend[]
   stores             Store[]
   purchaseScans      PurchaseScan[]
+  auditEvents        AuditEvent[]
 }
 
 enum Role {
@@ -937,4 +938,81 @@ model RateLimit {
   // The sweep deletes by expiry, and nothing ever reads by it, so this
   // index exists for the delete rather than for any query a request makes.
   @@index([resetAt])
+}
+
+/**
+ * What a member of a brand's staff did, and when.
+ *
+ * The console can create a promotion that awards money, rotate the secret
+ * that makes a till slip trustworthy, reset a colleague's password and
+ * cancel the programme. None of that left a trace. A brand asking "who
+ * changed this, and when?" had no answer, and neither did we.
+ *
+ * ── Append-only, and enforced rather than intended ───────────────────────
+ *
+ * A log that the people it watches can edit is not a log. Nothing in the
+ * app updates or deletes a row here, and lib/db/tenant.ts refuses the
+ * attempt outright for this model rather than trusting that nobody writes
+ * the call — the same reasoning that makes the tenant guard deny unknown
+ * operations by default.
+ *
+ * ── Why the actor's name is copied in ────────────────────────────────────
+ *
+ * `actorId` points at the User, but `actorName` and `actorEmail` are
+ * written at the time. A log is read months later, by which point the
+ * person may have been deactivated, renamed, or had their email changed —
+ * and "who did this" has to answer with who they were when they did it,
+ * not who the row points at today. The relation stays for joining; the
+ * copied fields are what the log actually means.
+ */
+model AuditEvent {
+  id      String @id @default(cuid())
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  // Nullable because not every recorded event has a person behind it — a
+  // scheduled programme closure is the system acting, and pretending some
+  // user did it would be a lie in the one table that must not contain any.
+  //
+  // Deliberately NOT a foreign key, for two reasons that both matter more
+  // than the convenience of a join:
+  //
+  //  - a relation needs a delete rule, and every available rule rewrites or
+  //    removes rows here when a User is deleted. This table is append-only;
+  //    a cascade that edits it on someone else's behalf is exactly the thing
+  //    append-only is supposed to prevent.
+  //  - the write must never fail for a reason unrelated to the event. An
+  //    audit entry is part of the action (see lib/audit/record.ts), so a
+  //    referential check standing between a privileged change and its record
+  //    is a way for the change to be refused for no good reason — or worse,
+  //    to happen unrecorded.
+  //
+  // The copied name and email are what the log means; the id is for
+  // correlating when the user still exists.
+  actorId    String?
+  actorName  String
+  actorEmail String?
+
+  // A dotted verb: "store.secret_rotated", "campaign.activated". A string
+  // rather than an enum so recording a new kind of event is one line at the
+  // call site instead of a migration — the cost of a typo is a mislabelled
+  // row, and the cost of a migration per event type is events that never
+  // get recorded.
+  action String
+
+  // What it happened to, in both forms: the id for joining, and a label for
+  // reading. The label is copied for the same reason the actor's name is.
+  targetId    String?
+  targetLabel String?
+
+  // Small, already-redacted context: which status, which role, what
+  // changed. Never a secret, never a phone number — see lib/audit/record.ts.
+  detail Json?
+
+  createdAt DateTime @default(now())
+
+  // Every read is "this brand's log, newest first", and there is no other
+  // access pattern worth an index.
+  @@index([brandId, createdAt])
+  @@index([actorId])
 }

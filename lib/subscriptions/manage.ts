@@ -1,7 +1,9 @@
 import type { Role, SubscriptionStatus } from "@prisma/client";
 import { requireRole } from "@/lib/auth/rbac";
 import { prisma } from "@/lib/db/client";
+import { record, recordSystem } from "@/lib/audit/record";
 import { HONOUR_WINDOW_MS, programmeState, type ProgrammeState } from "./state";
+import type { Actor } from "@/lib/staff/actor";
 
 /**
  * Starting, cancelling and resuming a brand's programme.
@@ -14,7 +16,7 @@ export const MANAGE_SUBSCRIPTION_ROLES: Role[] = ["OWNER"];
 
 export class SubscriptionError extends Error {}
 
-export type SessionLike = { user: { brandId: string; role: string } };
+export type SessionLike = Actor;
 
 const SELECT = { status: true, cancelledAt: true, honourRedemptionUntil: true } as const;
 
@@ -78,6 +80,14 @@ export async function cancelForSession(session: SessionLike, now: Date = new Dat
     // unmanaged pilot brand leaves.
     create: { brandId: session.user.brandId, ...data },
   });
+
+  // The date is recorded, not just the fact, because it is the promise: a
+  // shopper was told sixty days, and this row is what says so afterwards.
+  await record(prisma, session.user, {
+    action: "subscription.cancelled",
+    targetId: session.user.brandId,
+    detail: { honourRedemptionUntil: honourRedemptionUntil.toISOString() },
+  });
 }
 
 /**
@@ -95,6 +105,11 @@ export async function resumeForSession(session: SessionLike): Promise<void> {
     where: { brandId: session.user.brandId },
     update: { status: "ACTIVE", cancelledAt: null, honourRedemptionUntil: null },
     create: { brandId: session.user.brandId, status: "ACTIVE" },
+  });
+
+  await record(prisma, session.user, {
+    action: "subscription.resumed",
+    targetId: session.user.brandId,
   });
 }
 
@@ -121,9 +136,32 @@ export async function setStatusForSession(
  * easier to read. Safe to never run.
  */
 export async function closeElapsedProgrammes(now: Date = new Date()): Promise<number> {
-  const result = await prisma.subscription.updateMany({
+  // Read the ids before updating, so each brand's own log can carry the
+  // closure. An updateMany returns a count and no rows, and a count cannot
+  // be written into anybody's audit trail.
+  const elapsed = await prisma.subscription.findMany({
     where: { status: "CANCELLED", honourRedemptionUntil: { lt: now } },
+    select: { brandId: true, honourRedemptionUntil: true },
+  });
+  if (elapsed.length === 0) {
+    return 0;
+  }
+
+  const result = await prisma.subscription.updateMany({
+    where: { brandId: { in: elapsed.map((row) => row.brandId) }, status: "CANCELLED" },
     data: { status: "CLOSED" },
   });
+
+  // recordSystem, not record: nobody did this. Attributing an automatic
+  // closure to whichever user happened to be in scope is the one kind of
+  // falsehood an audit table cannot survive.
+  for (const row of elapsed) {
+    await recordSystem(prisma, row.brandId, {
+      action: "subscription.closed",
+      targetId: row.brandId,
+      detail: { honourWindowEnded: row.honourRedemptionUntil?.toISOString() ?? null },
+    });
+  }
+
   return result.count;
 }

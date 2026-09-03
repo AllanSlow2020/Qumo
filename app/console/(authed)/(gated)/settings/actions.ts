@@ -9,7 +9,7 @@ import type { IdentityState } from "./state";
 export async function saveIdentity(_prev: IdentityState, formData: FormData): Promise<IdentityState> {
   try {
     const staff = await requireStaff();
-    await updateBrandIdentityForSession({ user: { brandId: staff.brandId, role: staff.role } }, formData);
+    await updateBrandIdentityForSession({ user: { id: staff.userId, brandId: staff.brandId, role: staff.role, name: staff.name, email: staff.email } }, formData);
     return { ok: true };
   } catch (err) {
     if (err instanceof BrandIdentityError) {

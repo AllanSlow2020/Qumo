@@ -490,6 +490,23 @@ Found during the review, unchanged by any of the above.
    both at once. HSTS is two years with `includeSubDomains` (the shopper
    surface *is* subdomains) and deliberately without `preload`, which is
    close to irreversible and premature before the domain is registered.
+7. **No record of what a brand's staff did.** *Fixed.* `AuditEvent` records
+   every console write — promotions created and switched on, ceilings
+   moved, store secrets rotated and signing disabled, team invited,
+   demoted, deactivated and reset, identity changed, programme cancelled
+   and resumed. The write is part of the action rather than a side effect:
+   `record()` throws if it cannot write, which is the deliberate opposite
+   of the error reporter, because a privileged action that completed with
+   no record of who did it is worse than one that failed and can be
+   retried.
+
+   Append-only, and enforced rather than intended: `lib/db/tenant.ts`
+   refuses update, upsert and delete on the model outright. The actor is
+   stored as a plain id with the name and email copied in, deliberately
+   *not* a foreign key — every delete rule available would rewrite or
+   remove rows here when a User is deleted, which is exactly what
+   append-only exists to prevent, and a log answers "who did this" with who
+   they were at the time rather than who the row points at today.
 6. **Nothing tells us when production breaks.** *Fixed.* `instrumentation.ts`
    wires Next's `onRequestError` into `lib/observability/report.ts`, so
    every server throw — page, action or route handler, caught or not —

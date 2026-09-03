@@ -69,8 +69,8 @@ describe("cancelling a programme, end to end", () => {
   let store: Store;
   let shopper: Person;
 
-  const owner = () => ({ user: { brandId: brand.id, role: "OWNER" } });
-  const admin = () => ({ user: { brandId: brand.id, role: "ADMIN" } });
+  const owner = () => ({ user: { id: "test-owner", brandId: brand.id, role: "OWNER", name: "Test Owner" } });
+  const admin = () => ({ user: { id: "test-admin", brandId: brand.id, role: "ADMIN", name: "Test Admin" } });
 
   let txn = 0;
   function slip(amountCents = 10_000): string {

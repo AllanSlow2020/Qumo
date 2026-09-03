@@ -2,14 +2,17 @@ import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { Prisma, type Role } from "@prisma/client";
 import { forBrand } from "@/lib/db/tenant";
+import { prisma } from "@/lib/db/client";
 import { requireRole } from "@/lib/auth/rbac";
 import { encryptSecret } from "@/lib/security/crypto";
+import { record } from "@/lib/audit/record";
+import type { Actor } from "@/lib/staff/actor";
 
 export const MANAGE_STORE_ROLES: Role[] = ["OWNER", "ADMIN"];
 
 export class StoreError extends Error {}
 
-export type SessionLike = { user: { brandId: string; role: string } };
+export type SessionLike = Actor;
 
 const createStoreSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -62,6 +65,15 @@ export async function createStoreForSession(session: SessionLike, formData: Form
         signingSecretEncrypted: signingSecret ? encryptSecret(signingSecret) : null,
       },
     });
+    await record(prisma, session.user, {
+      action: "store.created",
+      targetId: store.id,
+      targetLabel: store.code,
+      // Whether the store can sign is the fact that decides how much a slip
+      // from it is worth trusting, so it belongs in the record from day one.
+      detail: { name: store.name, signed: signingSecret !== null },
+    });
+
     return { id: store.id, code: store.code, signingSecret };
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
@@ -97,6 +109,16 @@ export async function rotateStoreSecretForSession(session: SessionLike, storeId:
     where: { id: store.id },
     data: { signingSecretEncrypted: encryptSecret(signingSecret) },
   });
+
+  // The fact, never the secret. A rotation exists to keep that value out of
+  // places it can be read later, and this table is read in a console.
+  await record(prisma, session.user, {
+    action: "store.secret_rotated",
+    targetId: store.id,
+    targetLabel: store.code,
+    detail: { wasSigned: store.signingSecretEncrypted !== null },
+  });
+
   return signingSecret;
 }
 
@@ -114,6 +136,14 @@ export async function disableStoreSigningForSession(session: SessionLike, storeI
     throw new StoreError("That store doesn't exist.");
   }
   await scoped.store.update({ where: { id: store.id }, data: { signingSecretEncrypted: null } });
+
+  // Worth recording loudly: this is the change that makes every slip from
+  // this store unverifiable, and it is the one an auditor asks about.
+  await record(prisma, session.user, {
+    action: "store.signing_disabled",
+    targetId: store.id,
+    targetLabel: store.code,
+  });
 }
 
 export async function setStoreActiveForSession(
@@ -129,6 +159,12 @@ export async function setStoreActiveForSession(
     throw new StoreError("That store doesn't exist.");
   }
   await scoped.store.update({ where: { id: store.id }, data: { isActive } });
+
+  await record(prisma, session.user, {
+    action: isActive ? "store.reactivated" : "store.deactivated",
+    targetId: store.id,
+    targetLabel: store.code,
+  });
 }
 
 export type StoreSummary = {

@@ -27,7 +27,7 @@ describe("exporting a print run", () => {
   // A real row: PackBatch.createdByUserId is a foreign key, so a placeholder
   // id fails the insert rather than being ignored — which is the schema
   // doing its job, and worth the two extra lines here.
-  const session = (brandId: string) => ({ user: { brandId, role: "MARKETING", id: staff.id } });
+  const session = (brandId: string) => ({ user: { id: staff.id, brandId, role: "MARKETING", name: "Test Staff" } });
 
   function form(fields: Record<string, string>): FormData {
     const fd = new FormData();
@@ -156,7 +156,7 @@ describe("pack codes and share-of-spend promotions don't mix", () => {
   let spendCampaign: Campaign;
   let scanCampaign: Campaign;
 
-  const session = () => ({ user: { brandId: brand.id, role: "OWNER", id: staff.id } });
+  const session = () => ({ user: { id: staff.id, brandId: brand.id, role: "OWNER", name: "Test Staff" } });
 
   function form(fields: Record<string, string>): FormData {
     const fd = new FormData();
