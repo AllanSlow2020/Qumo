@@ -181,6 +181,29 @@ model User {
   /// not render anything else until it is cleared.
   mustChangePassword Boolean @default(false)
 
+  // ---- Second factor -------------------------------------------------------
+
+  /// The TOTP shared secret, encrypted at rest with the same key as phone
+  /// numbers (lib/security/crypto.ts). Encrypted rather than hashed because
+  /// verifying a code requires the secret itself — this is the one
+  /// authentication value in the system that cannot be a one-way hash, and
+  /// it is why a database dump alone still does not produce a working second
+  /// factor: the key lives in the environment.
+  totpSecretEncrypted String?
+
+  /// Set when the person has proved they can produce a code, not when the
+  /// secret was generated. Enrolment that trusted the generation step would
+  /// lock out anybody whose app failed to scan, which is the most common way
+  /// a second factor goes wrong.
+  totpConfirmedAt DateTime?
+
+  /// The last thirty-second step accepted for this account.
+  ///
+  /// A code stays valid across a three-step window, so without this a code
+  /// read over a shoulder can be used again for up to ninety seconds.
+  /// Refusing anything at or below this step makes each code single-use.
+  totpLastStep Int?
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -189,8 +212,40 @@ model User {
   packBatches         PackBatch[]
   walletSpends        WalletSpend[]
   staffSessions       StaffSession[]
+  recoveryCodes       StaffRecoveryCode[]
 
   @@index([brandId])
+}
+
+/**
+ * A single-use way back in when the phone with the authenticator on it is
+ * lost, broken or replaced.
+ *
+ * Every other part of this system refuses to let a brand lock itself out —
+ * the last owner cannot be demoted or deactivated — and a second factor
+ * without recovery codes reintroduces exactly that failure, only worse,
+ * because the way back in would be us editing the database.
+ *
+ * Stored as a hash, like a session token and unlike the TOTP secret: a
+ * recovery code is checked by comparison and never needs to be read back,
+ * so there is no reason for the plaintext to survive the screen that showed
+ * it once.
+ */
+model StaffRecoveryCode {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// sha256 of the normalised code. Unkeyed is right here and wrong for a
+  /// six-digit passcode: these carry enough entropy that a digest of one is
+  /// not brute-forceable, which is the same reasoning that separates
+  /// hashOtpCode from the session token hash.
+  codeHash String @unique
+
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
 
 // A one-time passcode for shopper login. Like PasswordResetToken, this is

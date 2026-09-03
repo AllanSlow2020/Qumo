@@ -507,6 +507,28 @@ Found during the review, unchanged by any of the above.
    remove rows here when a User is deleted, which is exactly what
    append-only exists to prevent, and a log answers "who did this" with who
    they were at the time rather than who the row points at today.
+8. **No second factor for staff.** *Fixed.* TOTP, not SMS: SMS costs money
+   per login, needs an aggregator account that does not exist yet, and SIM
+   swap is a live attack in this market. Written out rather than installed
+   — forty specified lines, and a dependency in the authentication path is
+   a supply chain in the authentication path — and verified against the
+   published RFC 6238 test vectors rather than against itself.
+
+   Ten single-use recovery codes, because every other part of this system
+   refuses to let a brand lock itself out and a second factor without them
+   reintroduces exactly that. Using one revokes every other session, since
+   it means a phone was lost or somebody else has the codes. Codes are
+   single-use within their own window too: `totpLastStep` is recorded and
+   anything at or below it refused, which closes the ninety seconds an
+   overshoulder-read code would otherwise stay usable for.
+
+   There is deliberately no "reset someone else's MFA" — an owner who could
+   clear a colleague's second factor could also take their account.
+9. **Nothing ran the checks automatically.** *Fixed.* CI runs lint,
+   typecheck, tests and build on every push and pull request against a real
+   Postgres service container. Running it proved something the suite had
+   never been asked: all tests pass on an empty database, so none had come
+   to depend on a developer's seeded data.
 6. **Nothing tells us when production breaks.** *Fixed.* `instrumentation.ts`
    wires Next's `onRequestError` into `lib/observability/report.ts`, so
    every server throw — page, action or route handler, caught or not —

@@ -5,11 +5,30 @@ import { signInStaff, LOGIN_FAILED } from "@/lib/staff/login";
 import { STAFF_SESSION_COOKIE } from "@/lib/staff/session-cookie";
 import { loginAttemptAllowed, TOO_MANY_ATTEMPTS } from "@/lib/security/login-guard";
 
-export type LoginState = { error: string | null };
+export type LoginState = {
+  /**
+   * Explicit, and not inferred from "error is null".
+   *
+   * The form used to treat a null error as success. The second-factor
+   * prompt is also a null error — the password was right and nothing has
+   * gone wrong — so without this flag asking for a code would have been
+   * read as a successful sign-in and navigated straight to the console.
+   */
+  ok?: boolean;
+  error: string | null;
+  /**
+   * The password was accepted and a code is wanted. The form keeps the
+   * password in component state rather than a hidden input — it is a client
+   * component, so the value never renders into the HTML — and sends all
+   * three on the next attempt.
+   */
+  secondFactorRequired?: boolean;
+};
 
 export async function signIn(_prev: LoginState, formData: FormData): Promise<LoginState> {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
+  const code = String(formData.get("code") ?? "").trim();
 
   // Ahead of signInStaff, so a machine guessing passwords is stopped
   // before it costs a scrypt verification each time — the work factor that
@@ -19,8 +38,11 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
     return { error: TOO_MANY_ATTEMPTS };
   }
 
-  const result = await signInStaff(email, password);
+  const result = await signInStaff(email, password, code || undefined);
   if (!result.ok) {
+    if (result.secondFactorRequired) {
+      return { error: result.error, secondFactorRequired: true };
+    }
     return { error: result.error || LOGIN_FAILED };
   }
 
@@ -40,5 +62,5 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
     maxAge: 12 * 60 * 60,
   });
 
-  return { error: null };
+  return { ok: true, error: null };
 }

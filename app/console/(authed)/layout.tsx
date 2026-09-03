@@ -50,7 +50,7 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
             <div>{brand?.name ?? "—"}</div>
             <div>
               {session.name} · {session.role.toLowerCase()} ·{" "}
-              <Link href="/change-password">password</Link>
+              <Link href="/change-password">password</Link> · <Link href="/security">security</Link>
             </div>
           </div>
           <form action={signOut}>

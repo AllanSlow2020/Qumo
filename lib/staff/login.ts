@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/client";
 import { verifyPassword } from "./password";
 import { createStaffSession } from "./session";
+import { consumeSecondFactor } from "./mfa";
 
 /**
  * Signing in a member of a brand's staff.
@@ -36,11 +37,32 @@ const DECOY_HASH =
  */
 export const LOGIN_FAILED = "That email and password don't match an active account.";
 
-export type LoginResult = { ok: true; token: string; userId: string } | { ok: false; error: string };
+export const SECOND_FACTOR_FAILED = "That code didn't match. Try the next one from your app, or a recovery code.";
+
+export type LoginResult =
+  | { ok: true; token: string; userId: string }
+  /**
+   * The password was right and this account has a second factor. No session
+   * exists yet and nothing about the account has changed — the caller asks
+   * for a code and calls again with all three values.
+   *
+   * Deliberately not an intermediate token in a cookie. A half-authenticated
+   * credential is a credential: it can be stolen, it has to be expired, and
+   * it has to be revoked when a password changes. Re-verifying the password
+   * on the second call costs one scrypt and removes that entire category.
+   */
+  | { ok: false; secondFactorRequired: true; error: string | null }
+  | { ok: false; secondFactorRequired?: false; error: string };
 
 export async function signInStaff(
   rawEmail: string,
   password: string,
+  /**
+   * A TOTP or recovery code, when the caller already knows one is wanted.
+   * Undefined on the first attempt, which is how the second factor gets
+   * asked for in the first place.
+   */
+  secondFactorCode?: string,
   now: Date = new Date(),
 ): Promise<LoginResult> {
   const email = rawEmail.trim().toLowerCase();
@@ -50,7 +72,7 @@ export async function signInStaff(
 
   const user = await prisma.user.findUnique({
     where: { email },
-    select: { id: true, passwordHash: true, isActive: true },
+    select: { id: true, passwordHash: true, isActive: true, totpConfirmedAt: true },
   });
 
   // The decoy runs on the unknown-address path so both paths cost the same.
@@ -58,6 +80,20 @@ export async function signInStaff(
 
   if (!user || !matched || !user.isActive) {
     return { ok: false, error: LOGIN_FAILED };
+  }
+
+  if (user.totpConfirmedAt) {
+    // Asked for only after the password is known to be right, so the prompt
+    // never reveals which addresses have a second factor — or exist.
+    if (!secondFactorCode) {
+      return { ok: false, secondFactorRequired: true, error: null };
+    }
+    if (!(await consumeSecondFactor(user.id, secondFactorCode, now))) {
+      // A distinct message, and safely so: reaching here means the password
+      // already matched, so this tells the person in front of the screen
+      // what to fix and tells an attacker nothing they did not know.
+      return { ok: false, secondFactorRequired: true, error: SECOND_FACTOR_FAILED };
+    }
   }
 
   const token = await createStaffSession(user.id, now);
