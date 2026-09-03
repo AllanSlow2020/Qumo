@@ -41,6 +41,14 @@
  * to 'self'. A real improvement, and a bigger change than this one.
  */
 
+/**
+ * The violation sink. Exported so proxy.ts can name the same path in the
+ * Reporting-Endpoints header, and so the proxy's public-path list can let
+ * it through without a session — a browser posting a violation report has
+ * no cookie to offer and no way to be told to sign in.
+ */
+export const REPORT_PATH = "/api/csp-report";
+
 /** 128 bits, base64. Web Crypto rather than node:crypto, for the Edge. */
 export function generateNonce(): string {
   const bytes = new Uint8Array(16);
@@ -95,6 +103,25 @@ export function buildCsp(nonce: string, secure: boolean): string {
     // No plugins, and no <base> to rewrite where relative URLs resolve to.
     "object-src 'none'",
     "base-uri 'none'",
+    // Where a browser posts what it just blocked.
+    //
+    // report-uri only, and that is a finding rather than an oversight. The
+    // obvious thing is to send both spellings — report-uri for older
+    // browsers, report-to for newer ones. Doing that delivers nothing:
+    // Chrome ignores report-uri whenever report-to is present, and the
+    // report-to path then failed silently, which is the worst possible
+    // behaviour for the one feature whose job is to tell you when something
+    // is failing silently.
+    //
+    // Established by removing report-to and watching the same violation
+    // arrive immediately. report-uri is deprecated and universally
+    // supported; report-to can be added the day it can be verified against
+    // a real certificate on the real domain, and not before.
+    //
+    // A relative path on purpose: it resolves against whichever brand
+    // subdomain the shopper is on, so every brand reports to its own origin
+    // and nothing is hardcoded to a domain that is not registered yet.
+    `report-uri ${REPORT_PATH}`,
   ]
     .concat(
       // Only on a page that is already secure, where it is a safety net for

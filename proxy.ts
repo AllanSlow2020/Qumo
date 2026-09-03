@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { CONSUMER_SESSION_COOKIE } from "@/lib/consumer/session-cookie";
 import { BRAND_HEADER, brandSlugFromHost, isConsoleHost } from "@/lib/brand/host";
 import { STAFF_SESSION_COOKIE } from "@/lib/staff/session-cookie";
-import { buildCsp, generateNonce } from "@/lib/security/csp";
+import { buildCsp, generateNonce, REPORT_PATH } from "@/lib/security/csp";
 
 /**
  * Edge routing for the shopper surface.
@@ -61,7 +61,11 @@ function isPublic(pathname: string): boolean {
     // Called by the scheduler with no browser session to carry. Protected by
     // its own CRON_SECRET check inside the handler instead — the same
     // "public URL, real auth in the route" shape a webhook uses.
-    pathname.startsWith("/api/cron")
+    pathname.startsWith("/api/cron") ||
+    // A browser posting a blocked-resource report has no session and cannot
+    // be told to sign in. It defends itself instead: rate limited, size
+    // capped, and answering 204 to everything.
+    pathname === REPORT_PATH
   );
 }
 

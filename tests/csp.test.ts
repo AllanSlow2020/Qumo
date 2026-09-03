@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { buildCsp, generateNonce } from "@/lib/security/csp";
+import { buildCsp, generateNonce, REPORT_PATH } from "@/lib/security/csp";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -101,5 +101,30 @@ describe("the development policy", () => {
     // Everything else holds, so dev is not a different policy shape.
     expect(directive(csp, "frame-ancestors")).toBe("frame-ancestors 'none'");
     expect(directive(csp, "object-src")).toBe("object-src 'none'");
+  });
+});
+
+describe("violation reporting", () => {
+  /**
+   * The regression guard for a finding that cost an afternoon.
+   *
+   * Sending both spellings is the obvious, careful-looking thing to do —
+   * report-uri for older browsers, report-to for newer ones. It delivers
+   * nothing. Chrome ignores report-uri whenever report-to is present, and
+   * the report-to path then failed silently, so every violation vanished
+   * while the policy looked correctly configured.
+   *
+   * Proven by removing report-to and watching the same blocked inline
+   * script arrive at the endpoint immediately.
+   */
+  it("names exactly one reporting mechanism", () => {
+    const csp = production();
+    expect(csp).toContain(`report-uri ${REPORT_PATH}`);
+    expect(csp).not.toContain("report-to");
+  });
+
+  it("reports to a relative path, so every brand subdomain reports to itself", () => {
+    expect(REPORT_PATH.startsWith("/")).toBe(true);
+    expect(REPORT_PATH).not.toContain("://");
   });
 });

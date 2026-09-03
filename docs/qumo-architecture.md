@@ -490,6 +490,24 @@ Found during the review, unchanged by any of the above.
    both at once. HSTS is two years with `includeSubDomains` (the shopper
    surface *is* subdomains) and deliberately without `preload`, which is
    close to irreversible and premature before the domain is registered.
+6. **Nothing tells us when production breaks.** *Fixed.* `instrumentation.ts`
+   wires Next's `onRequestError` into `lib/observability/report.ts`, so
+   every server throw — page, action or route handler, caught or not —
+   produces a structured line on stdout, which Vercel indexes with no
+   account needed. `ERROR_WEBHOOK_URL` adds a Slack-shaped POST per
+   distinct failure per five minutes. The throttle counts in process
+   memory, and the reasoning is deliberately the *opposite* of the rate
+   limiter's: an error reporter is most needed when the database is
+   unreachable, so it must not need one. Proven by stopping Postgres and
+   watching the report arrive anyway.
+
+   CSP violations post to `/api/csp-report`, which defends itself as an
+   unauthenticated public endpoint should — shared rate limit, size cap,
+   known fields only, 204 to everything. One finding worth keeping: sending
+   both `report-uri` and `report-to` delivers **nothing**, because Chrome
+   ignores the former when the latter is present and the `report-to` path
+   then fails silently. `report-uri` alone, verified end to end against a
+   real browser over TLS.
 
 ---
 
