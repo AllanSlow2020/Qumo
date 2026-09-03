@@ -911,3 +911,30 @@ model PurchaseScan {
   @@index([brandMembershipId])
   @@index([campaignId])
 }
+
+/**
+ * A fixed-window rate-limit counter, shared by every instance of the app.
+ *
+ * The limiter this replaces counted in process memory, which meant the real
+ * limit was (configured limit) x (however many serverless instances Vercel
+ * happened to be running). Three OTP sends per fifteen minutes across four
+ * instances is twelve, and nobody could tell you the number in advance.
+ *
+ * Postgres rather than Redis on purpose. The counters are written on login
+ * attempts and scans — hundreds a day at pilot scale, not millions — and a
+ * database we already run beats a second vendor, a second bill and a second
+ * set of credentials to leak. The interface is one function, so moving to
+ * Redis later is one file and no call-site changes.
+ *
+ * `key` carries its own namespace ("otp:send:<phoneHash>"), so one table
+ * serves every limit without them colliding.
+ */
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  // The sweep deletes by expiry, and nothing ever reads by it, so this
+  // index exists for the delete rather than for any query a request makes.
+  @@index([resetAt])
+}

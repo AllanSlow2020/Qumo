@@ -3,12 +3,21 @@
 import { cookies } from "next/headers";
 import { signInStaff, LOGIN_FAILED } from "@/lib/staff/login";
 import { STAFF_SESSION_COOKIE } from "@/lib/staff/session-cookie";
+import { loginAttemptAllowed, TOO_MANY_ATTEMPTS } from "@/lib/security/login-guard";
 
 export type LoginState = { error: string | null };
 
 export async function signIn(_prev: LoginState, formData: FormData): Promise<LoginState> {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
+
+  // Ahead of signInStaff, so a machine guessing passwords is stopped
+  // before it costs a scrypt verification each time — the work factor that
+  // makes the hash strong also makes an unlimited guess rate expensive for
+  // us rather than for them.
+  if (!(await loginAttemptAllowed("staff"))) {
+    return { error: TOO_MANY_ATTEMPTS };
+  }
 
   const result = await signInStaff(email, password);
   if (!result.ok) {

@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { rateLimit } from "@/lib/security/rate-limit";
 import { CONSUMER_SESSION_COOKIE } from "@/lib/consumer/session-cookie";
 import { BRAND_HEADER, brandSlugFromHost, isConsoleHost } from "@/lib/brand/host";
 import { STAFF_SESSION_COOKIE } from "@/lib/staff/session-cookie";
@@ -46,10 +45,6 @@ const JOIN_PATH = "/join";
 const CONSOLE_ROOT = "/console";
 // What a staff member actually types, on app.{root}.
 const CONSOLE_LOGIN = "/login";
-
-const RATE_LIMITED = [SHOPPER_LOGIN, CONSOLE_LOGIN];
-const RATE_LIMIT_MAX = 20;
-const RATE_LIMIT_WINDOW_MS = 60_000;
 
 function underRoot(pathname: string, root: string): boolean {
   return pathname === root || pathname.startsWith(`${root}/`);
@@ -131,19 +126,13 @@ function consoleRoute(req: NextRequest, pathname: string): NextResponse {
 export function proxy(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
 
-  if (RATE_LIMITED.includes(pathname)) {
-    // Per-process and honest about it: on a serverless deployment the
-    // effective limit is this times the instance count. A first line against
-    // casual abuse, not a defence — the real backstop for passcodes is the
-    // per-code attempt cap in lib/consumer/otp.ts. A shared store belongs
-    // here before real traffic; see docs/qumo-architecture.md.
-    const forwardedFor = req.headers.get("x-forwarded-for");
-    const clientKey = forwardedFor?.split(",")[0]?.trim() ?? "unknown";
-    const { allowed } = rateLimit(`${pathname}:${clientKey}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS);
-    if (!allowed) {
-      return new NextResponse("Too many requests", { status: 429 });
-    }
-  }
+  // The login rate limit used to sit here and no longer does. It counted
+  // in this runtime's memory, which is the one thing an Edge function
+  // cannot share between instances, so the limit was really the limit
+  // times however many copies were running. It now lives in
+  // lib/security/login-guard.ts, against a counter in Postgres, called from
+  // the login actions themselves — the nearest place to here that can read
+  // a number every instance agrees on.
 
   // Which surface, decided by hostname and nothing else, before any question
   // about who is signed in.

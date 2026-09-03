@@ -398,7 +398,7 @@
     <div class="cell is-built"><span class="num" data-count="built">&mdash;</span><span class="lab">Working today</span></div>
     <div class="cell is-part"><span class="num" data-count="part">&mdash;</span><span class="lab">Partial</span></div>
     <div class="cell is-none"><span class="num" data-count="none">&mdash;</span><span class="lab">Not built</span></div>
-    <div class="cell"><span class="num">309</span><span class="lab">Tests passing</span></div>
+    <div class="cell"><span class="num">318</span><span class="lab">Tests passing</span></div>
   </div>
 
   <section class="prose">
@@ -687,10 +687,10 @@
           <span class="desc">Hashed for lookup, encrypted at rest for display. A database dump is not a contact list.</span>
         </div>
 
-        <div class="row" data-status="part">
-          <span class="name">Abuse is rate limited</span>
-          <span class="chip">Per process</span>
-          <span class="desc">The limiter counts in memory, so on a scaled-out deployment the effective limit multiplies by the number of instances. Fine against casual abuse, not sufficient as the only defence in production. Needs a shared store.</span>
+        <div class="row" data-status="built">
+          <span class="name">Abuse is rate limited, across every instance</span>
+          <span class="chip">Working</span>
+          <span class="desc">Counters live in Postgres, incremented by a single atomic statement, so concurrent attempts queue rather than interleave and a limit of twenty is twenty however many copies of the app are running. Login attempts are capped per client address, passcode sends and checks per phone number, and guesses per issued code &mdash; three limits keyed three ways, because each defeats an attack the others do not.</span>
         </div>
       </div>
 
@@ -710,9 +710,9 @@
         </div>
 
         <div class="row" data-status="built">
-          <span class="name">309 tests against a real database</span>
+          <span class="name">318 tests against a real database</span>
           <span class="chip">Working</span>
-          <span class="desc">Across 29 files, including adversarial tests that reproduce an attack before the fix &mdash; receipt forgery, tenant leakage, session revocation.</span>
+          <span class="desc">Across 30 files, including adversarial tests that reproduce an attack before the fix &mdash; receipt forgery, tenant leakage, session revocation, and a limiter proven by restoring the old one and watching it fail.</span>
         </div>
 
         <div class="row" data-status="none">

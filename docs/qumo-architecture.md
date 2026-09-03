@@ -461,7 +461,19 @@ Found during the review, unchanged by any of the above.
    nets it down the moment it happens and it can never drift from the rows
    behind it.
 3. **Rate limiting is per-process** (`lib/security/rate-limit.ts`, in-memory).
-   On serverless the effective limit is limit × instances. Needs a shared store.
+   On serverless the effective limit is limit × instances. Needs a shared
+   store. *Fixed.* The counters moved to Postgres — one row per key, one
+   atomic `INSERT ... ON CONFLICT` per check, so concurrent callers queue
+   rather than interleave and the limit means the number it says. Postgres
+   rather than Redis because the volume is login attempts and scans, not
+   millions of events, and a database we already run beats a second vendor
+   and a second set of credentials to leak; the interface is one function,
+   so moving to Redis later is one file. The per-client login cap moved out
+   of the Edge proxy at the same time — the Edge runtime is precisely where
+   a shared counter cannot be read — into `lib/security/login-guard.ts`,
+   called from the login actions. Proven by restoring the old limiter and
+   watching the multi-instance test admit six attempts against a limit of
+   three.
 4. **The privacy notice promises data access, correction and deletion. None of
    it is implemented.** Same family as the missing opt-out.
 

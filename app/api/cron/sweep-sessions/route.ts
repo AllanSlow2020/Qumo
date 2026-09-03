@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sweepExpiredSessions } from "@/lib/consumer/session";
+import { sweepExpiredRateLimits } from "@/lib/security/rate-limit";
 import { logger } from "@/lib/security/logger";
 
 /**
@@ -24,8 +25,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
+  // Two sweeps, one job, because they are the same job: rows kept only
+  // until a window or a session closes. Sequential rather than
+  // Promise.all — a cron has no deadline worth racing for, and a failure
+  // in one should not leave the other's outcome ambiguous.
   const deleted = await sweepExpiredSessions();
+  const rateLimitsDeleted = await sweepExpiredRateLimits();
 
-  logger.info("session sweep: run complete", { deleted });
-  return NextResponse.json({ deleted });
+  logger.info("session sweep: run complete", { deleted, rateLimitsDeleted });
+  return NextResponse.json({ deleted, rateLimitsDeleted });
 }

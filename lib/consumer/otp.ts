@@ -76,7 +76,7 @@ export async function requestOtp(rawPhone: string, smsClient: SmsClient = getSms
   // Keyed on the phone hash rather than an IP: the thing being protected is
   // a specific person's handset (and our SMS bill), and an attacker rotating
   // IPs should not get a fresh allowance for the same target.
-  const { allowed } = rateLimit(`otp:send:${phoneHash}`, SEND_LIMIT, SEND_WINDOW_MS);
+  const { allowed } = await rateLimit(`otp:send:${phoneHash}`, SEND_LIMIT, SEND_WINDOW_MS);
   if (!allowed) {
     throw new OtpError("Too many codes requested. Wait a few minutes and try again.");
   }
@@ -140,7 +140,7 @@ export async function verifyOtp(rawPhone: string, code: string, consented: boole
   const phoneE164 = normaliseSaPhone(rawPhone);
   const phoneHash = hashPhone(phoneE164);
 
-  const { allowed } = rateLimit(`otp:verify:${phoneHash}`, VERIFY_LIMIT, VERIFY_WINDOW_MS);
+  const { allowed } = await rateLimit(`otp:verify:${phoneHash}`, VERIFY_LIMIT, VERIFY_WINDOW_MS);
   if (!allowed) {
     throw new OtpError("Too many attempts. Wait a few minutes and try again.");
   }
