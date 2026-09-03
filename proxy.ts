@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { CONSUMER_SESSION_COOKIE } from "@/lib/consumer/session-cookie";
 import { BRAND_HEADER, brandSlugFromHost, isConsoleHost } from "@/lib/brand/host";
 import { STAFF_SESSION_COOKIE } from "@/lib/staff/session-cookie";
+import { buildCsp, generateNonce } from "@/lib/security/csp";
 
 /**
  * Edge routing for the shopper surface.
@@ -69,13 +70,37 @@ function isPublic(pathname: string): boolean {
 const NO_BRAND = "/no-brand";
 
 /**
+ * One request's Content-Security-Policy and the nonce inside it.
+ *
+ * Generated once per request and threaded through every branch below,
+ * because a nonce that appeared in the response header but not on the
+ * script tags — or the other way round — would produce a page whose own
+ * scripts are blocked.
+ */
+type Security = { nonce: string; csp: string };
+
+/**
+ * Request headers, with the security context attached.
+ *
+ * Both headers matter and for different readers. Next.js looks for the
+ * nonce in the Content-Security-Policy header on the *request* and stamps
+ * it onto the framework's script tags; `x-nonce` is there for our own
+ * components, should any of them ever need to mark a script as ours.
+ */
+function withSecurity(headers: Headers, security: Security): Headers {
+  headers.set("content-security-policy", security.csp);
+  headers.set("x-nonce", security.nonce);
+  return headers;
+}
+
+/**
  * Request headers with the brand decided from the Host header, on a header
  * the client cannot influence.
  *
  * The delete is the important line. See BRAND_HEADER in lib/brand/host.ts.
  */
-function brandHeaders(req: NextRequest): { headers: Headers; slug: string | null } {
-  const headers = new Headers(req.headers);
+function brandHeaders(req: NextRequest, security: Security): { headers: Headers; slug: string | null } {
+  const headers = withSecurity(new Headers(req.headers), security);
   headers.delete(BRAND_HEADER);
 
   const slug = brandSlugFromHost(req.headers.get("host"));
@@ -95,13 +120,13 @@ function brandHeaders(req: NextRequest): { headers: Headers; slug: string | null
  * ever produces, so it can be refused without a list of console routes to
  * keep in step.
  */
-function consoleRoute(req: NextRequest, pathname: string): NextResponse {
+function consoleRoute(req: NextRequest, pathname: string, security: Security): NextResponse {
   // The brand header is never set on this surface, and is stripped like
   // everywhere else. The console's tenant comes from the signed-in user's
   // row, not from a hostname — a console that read its brand from the
   // address bar would let staff of one brand reach another's data by
   // editing it.
-  const headers = new Headers(req.headers);
+  const headers = withSecurity(new Headers(req.headers), security);
   headers.delete(BRAND_HEADER);
 
   // Cron and any other machine-called route keep their own paths and their
@@ -123,7 +148,33 @@ function consoleRoute(req: NextRequest, pathname: string): NextResponse {
   return NextResponse.rewrite(url, { request: { headers } });
 }
 
+/**
+ * Every branch below returns a response, and every one of them needs the
+ * policy on it, so the header is set once here rather than at eight return
+ * statements where the ninth would eventually be forgotten.
+ *
+ * Set only on documents: the matcher at the bottom of this file excludes
+ * static assets and images, which have no scripts to govern. The headers
+ * that do apply to everything — HSTS, nosniff, referrer policy — are in
+ * next.config.ts, and the policy is deliberately not repeated there. Two
+ * Content-Security-Policy headers on one response are enforced as the
+ * intersection of both, which is a hard thing to reason about and an easy
+ * thing to get wrong twice.
+ */
 export function proxy(req: NextRequest): NextResponse {
+  const nonce = generateNonce();
+  // Vercel terminates TLS at the edge and forwards the original scheme, so
+  // the header is the authority in production; nextUrl.protocol is the
+  // fallback for running the server directly.
+  const secure =
+    req.headers.get("x-forwarded-proto") === "https" || req.nextUrl.protocol === "https:";
+  const security: Security = { nonce, csp: buildCsp(nonce, secure) };
+  const response = route(req, security);
+  response.headers.set("Content-Security-Policy", security.csp);
+  return response;
+}
+
+function route(req: NextRequest, security: Security): NextResponse {
   const { pathname } = req.nextUrl;
 
   // The login rate limit used to sit here and no longer does. It counted
@@ -137,10 +188,10 @@ export function proxy(req: NextRequest): NextResponse {
   // Which surface, decided by hostname and nothing else, before any question
   // about who is signed in.
   if (isConsoleHost(req.headers.get("host"))) {
-    return consoleRoute(req, pathname);
+    return consoleRoute(req, pathname, security);
   }
 
-  const { headers, slug } = brandHeaders(req);
+  const { headers, slug } = brandHeaders(req, security);
 
   // The other direction of the same split. A console route reached on a
   // brand host would render with no staff session and no brand header, which

@@ -476,6 +476,20 @@ Found during the review, unchanged by any of the above.
    three.
 4. **The privacy notice promises data access, correction and deletion. None of
    it is implemented.** Same family as the missing opt-out.
+5. **No Content-Security-Policy, and no HSTS.** *Both now exist.* The policy
+   is built per request in `lib/security/csp.ts` and set from `proxy.ts`,
+   with a per-request nonce that Next stamps onto its own script tags. It
+   is the strict form rather than the usual `'unsafe-inline'` compromise,
+   which was affordable only because there is no inline script anywhere in
+   `app/` and `next/font` self-hosts the one typeface. Two places stay
+   loose and are documented where they are set: `style-src` allows inline
+   because brand theming colours elements through the `style` attribute,
+   and `img-src` allows any https host because a brand's logo lives on that
+   brand's CDN — which also means the brand's host sees every shopper who
+   loads the page, and proxying logos through our own origin would close
+   both at once. HSTS is two years with `includeSubDomains` (the shopper
+   surface *is* subdomains) and deliberately without `preload`, which is
+   close to irreversible and premature before the domain is registered.
 
 ---
 
