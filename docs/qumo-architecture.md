@@ -529,6 +529,42 @@ Found during the review, unchanged by any of the above.
    Postgres service container. Running it proved something the suite had
    never been asked: all tests pass on an empty database, so none had come
    to depend on a developer's seeded data.
+
+### What the adversarial pass found
+
+Run over the finished branch rather than each change, so it read the state
+that ships. Three findings, all fixed, and the first was serious.
+
+**No cap on second-factor guesses.** The only limit on guessing a TOTP was
+the per-client login cap — which is keyed on the caller's address precisely
+so it catches one machine working through many accounts, and does nothing
+about many machines working on one. That is the shape of an attack on a
+second factor, because whoever is guessing already has the password. A
+six-digit code across a three-step window is roughly a 3-in-a-million guess,
+so an attacker with rotating addresses expects to be through inside a day at
+ten requests a second. The feature was decorative. Now capped per account,
+which is the same two-limits-keyed-differently shape the shopper passcode
+already used, and proved by removing the fix and watching the correct code
+be accepted after ten wrong ones.
+
+**The print-run download had no role check.** It checked that somebody was
+signed in and that the batch was theirs, but not their role — while creating
+a batch requires OWNER, ADMIN or MARKETING. QUALITY, the one role
+deliberately barred from making codes, could download every code in every
+batch. The comment justifying it was the error: "codes are not secret — they
+end up printed on the outside of a box." True of a printed code, which costs
+a purchase to obtain; not true of the file, which is every unredeemed code
+at once.
+
+**The cron secret was compared with `!==`.** String comparison stops at the
+first differing byte. Hard to exploit over a network and free to avoid — and
+the inconsistency was the real finding, since every other secret comparison
+in the repo already uses `timingSafeEqual`.
+
+Checked and found sound: only one code path mints a staff session and it is
+behind the second factor; every console action gates on a verified session
+and re-checks the role in the engine; no manage function takes an id it does
+not scope; the join and wallet paths read no id from the request at all.
 6. **Nothing tells us when production breaks.** *Fixed.* `instrumentation.ts`
    wires Next's `onRequestError` into `lib/observability/report.ts`, so
    every server throw — page, action or route handler, caught or not —

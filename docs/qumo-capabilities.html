@@ -398,7 +398,7 @@
     <div class="cell is-built"><span class="num" data-count="built">&mdash;</span><span class="lab">Working today</span></div>
     <div class="cell is-part"><span class="num" data-count="part">&mdash;</span><span class="lab">Partial</span></div>
     <div class="cell is-none"><span class="num" data-count="none">&mdash;</span><span class="lab">Not built</span></div>
-    <div class="cell"><span class="num">412</span><span class="lab">Tests passing</span></div>
+    <div class="cell"><span class="num">419</span><span class="lab">Tests passing</span></div>
   </div>
 
   <section class="prose">
@@ -646,7 +646,7 @@
         <div class="row" data-status="built">
           <span class="name">Put a second factor on a staff account</span>
           <span class="chip">Working</span>
-          <span class="desc">An authenticator app, set up by the person themselves, with ten single-use recovery codes for a lost phone. A stolen password stops being enough on its own. Each code works once and only once, even inside the ninety seconds it stays mathematically valid.</span>
+          <span class="desc">An authenticator app, set up by the person themselves, with ten single-use recovery codes for a lost phone. A stolen password stops being enough on its own. Each code works once and only once, even inside the ninety seconds it stays mathematically valid, and guesses are capped per account so no amount of address rotation buys another attempt.</span>
         </div>
 
         <div class="row" data-status="none">
@@ -734,9 +734,9 @@
         </div>
 
         <div class="row" data-status="built">
-          <span class="name">412 tests against a real database</span>
+          <span class="name">419 tests against a real database</span>
           <span class="chip">Working</span>
-          <span class="desc">Across 35 files, including adversarial tests that reproduce an attack before the fix &mdash; receipt forgery, tenant leakage, session revocation, and a limiter proven by restoring the old one and watching it fail.</span>
+          <span class="desc">Across 36 files, including adversarial tests that reproduce an attack before the fix &mdash; receipt forgery, tenant leakage, session revocation, and a limiter proven by restoring the old one and watching it fail.</span>
         </div>
 
         <div class="row" data-status="built">

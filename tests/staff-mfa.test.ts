@@ -58,6 +58,9 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+  // The second-factor attempt counter is keyed on the user and lives in
+  // Postgres, so it survives between tests unless it is cleared.
+  await prisma.rateLimit.deleteMany({ where: { key: { startsWith: `mfa:verify:${user.id}` } } });
   // Every test starts with no second factor, so one enrolling does not
   // silently decide what the next one is testing.
   await prisma.staffRecoveryCode.deleteMany({ where: { userId: user.id } });
@@ -284,5 +287,66 @@ describe("a session is still a session", () => {
 
     const identity = await resolveStaffToken(result.token);
     expect(identity?.userId).toBe(user.id);
+  });
+});
+
+/**
+ * Found by reviewing the finished feature, and it is the hole that would
+ * have made the rest of it decorative.
+ *
+ * The only limit on guessing a code was the per-client login cap, which is
+ * keyed on the caller's address precisely so it catches one machine working
+ * through many accounts. It does nothing about many machines working on one
+ * account — which is the shape of an attack on a second factor, because
+ * whoever is guessing already has the password.
+ *
+ * The arithmetic is why it mattered: a six-digit code across a three-step
+ * window is roughly a 3-in-a-million guess, so an attacker with the password
+ * and rotating addresses expects to be through within a day at ten requests
+ * a second.
+ */
+describe("guessing the second factor", () => {
+  it("stops accepting guesses long before the keyspace does", async () => {
+    const now = new Date();
+    const { secret } = await enrol(new Date(now.getTime() - 120_000));
+
+    // Ten wrong guesses, which is the cap.
+    for (let i = 0; i < 10; i += 1) {
+      expect(await consumeSecondFactor(user.id, String(100000 + i), now)).toBe(false);
+    }
+
+    // The eleventh is refused before any comparison happens — and the proof
+    // is that the *correct* code is refused too. Without the cap this would
+    // pass, and so would the ten thousandth guess.
+    expect(await consumeSecondFactor(user.id, totpCode(secret, now), now)).toBe(false);
+  });
+
+  it("counts per account, so rotating addresses buys nothing", async () => {
+    const now = new Date();
+    await enrol(new Date(now.getTime() - 120_000));
+
+    // consumeSecondFactor never sees an address. That is the point: the
+    // counter is keyed on the user, so there is no address to rotate.
+    for (let i = 0; i < 11; i += 1) {
+      await consumeSecondFactor(user.id, "000000", now);
+    }
+    const { rateLimit } = await import("@/lib/security/rate-limit");
+    const state = await rateLimit(`mfa:verify:${user.id}`, 10, 15 * 60 * 1000, now);
+    expect(state.allowed).toBe(false);
+  });
+
+  it("lets a real person back in once the window has passed", async () => {
+    const now = new Date();
+    const { secret } = await enrol(new Date(now.getTime() - 120_000));
+
+    for (let i = 0; i < 11; i += 1) {
+      await consumeSecondFactor(user.id, "000000", now);
+    }
+    expect(await consumeSecondFactor(user.id, totpCode(secret, now), now)).toBe(false);
+
+    // Somebody who fat-fingered their code ten times is not locked out
+    // permanently — the window closes and they try again.
+    const later = new Date(now.getTime() + 15 * 60 * 1000 + 1_000);
+    expect(await consumeSecondFactor(user.id, totpCode(secret, later), later)).toBe(true);
   });
 });

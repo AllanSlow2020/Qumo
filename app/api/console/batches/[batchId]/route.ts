@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db/client";
 import { ROOT_DOMAIN } from "@/lib/brand/host";
 import { getStaffSession } from "@/lib/staff/session";
+import { requireRole, ForbiddenError } from "@/lib/auth/rbac";
+import { MANAGE_PACK_BATCH_ROLES } from "@/lib/packs/batch";
 import { exportBatchCodes, toCsv } from "@/lib/packs/export";
 
 /**
@@ -10,14 +12,32 @@ import { exportBatchCodes, toCsv } from "@/lib/packs/export";
  * check — so this handler does its own, and it is not optional. It returns
  * every code in a batch, which is the whole print run.
  *
- * Two checks, not one: the staff session says who is asking, and
+ * Three checks, not one. The staff session says who is asking;
  * exportBatchCodes is scoped to their brand, so a batchId from another
- * brand's console is not found rather than served.
+ * brand's console is not found rather than served; and the role is the same
+ * one required to create a batch.
+ *
+ * That third check was missing, and the comment that used to justify its
+ * absence was wrong: "codes are not secret — they end up printed on the
+ * outside of a box." True of a printed code, which costs a purchase to
+ * obtain. Not true of the file: a batch that has not been printed yet is
+ * every unredeemed code in one download, each one worth an award, and QUALITY
+ * — the one role deliberately barred from creating a batch — could take the
+ * lot.
  */
 export async function GET(req: Request, { params }: { params: Promise<{ batchId: string }> }) {
   const staff = await getStaffSession();
   if (!staff) {
     return new Response("Not signed in", { status: 401 });
+  }
+
+  try {
+    requireRole(staff.role, MANAGE_PACK_BATCH_ROLES);
+  } catch (err) {
+    if (err instanceof ForbiddenError) {
+      return new Response("Not allowed", { status: 403 });
+    }
+    throw err;
   }
 
   const { batchId } = await params;

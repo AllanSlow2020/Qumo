@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db/client";
 import { decryptSecret, encryptSecret } from "@/lib/security/crypto";
 import { record } from "@/lib/audit/record";
+import { rateLimit } from "@/lib/security/rate-limit";
 import type { Actor } from "./actor";
 import { revokeAllStaffSessions } from "./session";
 import { generateTotpSecret, otpauthUrl, totpStep, verifyTotp } from "./totp";
@@ -20,6 +21,30 @@ import { verifyPassword } from "./password";
  */
 
 export class MfaError extends Error {}
+
+/**
+ * A cap on second-factor guesses, per account.
+ *
+ * Found by reviewing the finished feature, and it is the hole that would
+ * have made the rest of it decorative. The only limit on a code guess was
+ * the per-client login cap in lib/security/login-guard.ts — and that is
+ * keyed on the caller's address precisely so it catches one machine working
+ * through many accounts. It does nothing about many machines working on one
+ * account, which is the shape of an attack on a second factor: whoever is
+ * guessing already has the password.
+ *
+ * The numbers say why it mattered. A six-digit code with a three-step
+ * accepted window is roughly a 3-in-a-million guess, so an attacker with
+ * the password and rotating addresses expects to be in within a day at ten
+ * requests a second. That is not a second factor.
+ *
+ * Keyed on the user, so no amount of address rotation buys another
+ * allowance — the same two-limits-keyed-differently shape the shopper
+ * passcode already used (per phone number *and* per issued code), which is
+ * exactly the design this path was missing.
+ */
+const FACTOR_ATTEMPT_LIMIT = 10;
+const FACTOR_ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
 
 export const RECOVERY_CODE_COUNT = 10;
 
@@ -217,6 +242,20 @@ export async function consumeSecondFactor(
   code: string,
   now: Date = new Date(),
 ): Promise<boolean> {
+  // Before any comparison, so a guess costs an attempt whether or not it
+  // was close. Counted per account rather than per address, and refused
+  // rather than delayed: a second factor that can be guessed indefinitely
+  // is a second factor in name only.
+  const { allowed } = await rateLimit(
+    `mfa:verify:${userId}`,
+    FACTOR_ATTEMPT_LIMIT,
+    FACTOR_ATTEMPT_WINDOW_MS,
+    now,
+  );
+  if (!allowed) {
+    return false;
+  }
+
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { totpSecretEncrypted: true, totpConfirmedAt: true, totpLastStep: true },
