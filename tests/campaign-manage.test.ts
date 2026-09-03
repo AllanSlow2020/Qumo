@@ -11,6 +11,7 @@ import {
 } from "@/lib/campaigns/manage";
 import { setSpendRuleForSession } from "@/lib/stores/manage";
 import { setEarnRuleForSession } from "@/lib/packs/earn-rule";
+import { getBrandOverview } from "@/lib/console/overview";
 
 describe("running a promotion from the console", () => {
   const suffix = Date.now();
@@ -195,5 +196,92 @@ describe("running a promotion from the console", () => {
       setCampaignStatusForSession(owner(otherBrand.id), campaign.id, "ACTIVE"),
     ).rejects.toThrow(CampaignError);
     expect((await listCampaignsForConsole(otherBrand.id)).length).toBe(0);
+  });
+});
+
+/**
+ * The ceilings exist and default to nothing, so a brand can switch on five
+ * percent cashback with no bound at all. The console warned about unsigned
+ * stores and said nothing about this — and worse, that warning told them
+ * their ceilings bounded the cost, which is true only if they set one. A
+ * warning that promises a limit nobody set is worse than no warning.
+ */
+describe("the overview counts what is unbounded", () => {
+  const suffix = `${Date.now()}-uncapped`;
+  let brand: Brand;
+
+  beforeAll(async () => {
+    brand = await prisma.brand.create({ data: { name: `Uncapped ${suffix}`, slug: `uncapped-${suffix}` } });
+  });
+
+  afterAll(async () => {
+    await prisma.earnRule.deleteMany({ where: { brandId: brand.id } });
+    await prisma.campaign.deleteMany({ where: { brandId: brand.id } });
+    await prisma.brand.delete({ where: { id: brand.id } });
+  });
+
+  async function liveCampaign(name: string, limits: { maxTotalAmount?: number; maxPerPersonPerDay?: number } = {}) {
+    const campaign = await prisma.campaign.create({
+      data: { brandId: brand.id, name, status: "ACTIVE" },
+    });
+    await prisma.earnRule.create({
+      data: {
+        brandId: brand.id,
+        campaignId: campaign.id,
+        type: "FLAT_PER_SCAN",
+        unit: "POINTS",
+        amount: 10,
+        maxTotalAmount: limits.maxTotalAmount ?? null,
+        maxPerPersonPerDay: limits.maxPerPersonPerDay ?? null,
+      },
+    });
+    return campaign;
+  }
+
+  it("counts a live promotion with no total ceiling", async () => {
+    await liveCampaign("No ceiling");
+
+    const overview = await getBrandOverview(brand.id);
+    expect(overview.uncappedCampaigns).toBe(1);
+    expect(overview.uncappedPerPerson).toBe(1);
+  });
+
+  it("stops counting one once a ceiling is set", async () => {
+    const campaign = await prisma.campaign.findFirstOrThrow({
+      where: { brandId: brand.id, name: "No ceiling" },
+    });
+    await prisma.earnRule.update({
+      where: { campaignId: campaign.id },
+      data: { maxTotalAmount: 50_000, maxPerPersonPerDay: 500 },
+    });
+
+    const overview = await getBrandOverview(brand.id);
+    expect(overview.uncappedCampaigns).toBe(0);
+    expect(overview.uncappedPerPerson).toBe(0);
+  });
+
+  it("counts the two ceilings separately, because they answer different questions", async () => {
+    // A total budget but no per-person limit: the campaign cannot cost more
+    // than the budget, but one shopper can take all of it in an afternoon.
+    await liveCampaign("Budget but no per-person", { maxTotalAmount: 100_000 });
+
+    const overview = await getBrandOverview(brand.id);
+    expect(overview.uncappedCampaigns).toBe(0);
+    expect(overview.uncappedPerPerson).toBe(1);
+  });
+
+  it("ignores a promotion that is not live", async () => {
+    const campaign = await prisma.campaign.create({
+      data: { brandId: brand.id, name: "Draft, no ceiling", status: "DRAFT" },
+    });
+    await prisma.earnRule.create({
+      data: { brandId: brand.id, campaignId: campaign.id, type: "FLAT_PER_SCAN", unit: "POINTS", amount: 10 },
+    });
+
+    // A draft awards nothing, so it has nothing to bound. Counting it would
+    // train people to ignore the warning, which is how a real one gets
+    // missed.
+    const overview = await getBrandOverview(brand.id);
+    expect(overview.uncappedCampaigns).toBe(0);
   });
 });

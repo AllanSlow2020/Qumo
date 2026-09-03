@@ -70,6 +70,44 @@ export default async function ConsoleOverviewPage() {
         />
       </div>
 
+      {o.uncappedCampaigns > 0 && (
+        <section className="cn-panel">
+          <div className="cn-panel-head">
+            <h2 className="cn-h2">
+              {o.uncappedCampaigns === 1
+                ? "A live promotion has no ceiling"
+                : `${o.uncappedCampaigns} live promotions have no ceiling`}
+            </h2>
+            <span className="cn-pill cn-pill-warn">Unbounded</span>
+          </div>
+          <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* The console warned about unsigned stores and said nothing
+                about this, which is the larger of the two: an unsigned store
+                is a way in, and a missing ceiling is what decides how much
+                gets out. */}
+            <p className="cn-body">
+              A promotion with no total ceiling can issue value until somebody notices. There is no bound in the
+              engine beyond the one you set here, so this is the number your finance director is asking for when
+              they ask what this can cost.
+              {o.uncappedPerPerson > 0 && (
+                <>
+                  {" "}
+                  {o.uncappedPerPerson === 1 ? "One" : String(o.uncappedPerPerson)} also{" "}
+                  {o.uncappedPerPerson === 1 ? "has" : "have"} no daily limit per shopper.
+                </>
+              )}
+            </p>
+            <Link
+              href="/promotions"
+              className="cn-btn cn-btn-quiet"
+              style={{ alignSelf: "flex-start", textDecoration: "none" }}
+            >
+              Set a ceiling
+            </Link>
+          </div>
+        </section>
+      )}
+
       {o.unsignedStores > 0 && (
         <section className="cn-panel">
           <div className="cn-panel-head">
@@ -82,8 +120,21 @@ export default async function ConsoleOverviewPage() {
                 money if they don't. */}
             <p className="cn-body">
               A store whose point of sale can&apos;t sign a slip is a store where the shopper controls what the slip
-              says. The per-person and per-campaign ceilings on your promotion bound what that can cost, but they
-              don&apos;t stop it. Getting a signing secret into those tills is the fix.
+              says.{" "}
+              {o.uncappedCampaigns > 0 ? (
+                <>
+                  <strong>
+                    And with no ceiling set on {o.uncappedCampaigns === 1 ? "your live promotion" : "your live promotions"},
+                    nothing bounds what that costs.
+                  </strong>{" "}
+                  Set a ceiling first, then get a signing secret into those tills.
+                </>
+              ) : (
+                <>
+                  The ceilings on your promotion bound what that can cost, but they don&apos;t stop it. Getting a
+                  signing secret into those tills is the fix.
+                </>
+              )}
             </p>
             <Link href="/stores" className="cn-btn cn-btn-quiet" style={{ alignSelf: "flex-start", textDecoration: "none" }}>
               See which stores

@@ -34,6 +34,18 @@ export type BrandOverview = {
   stores: number;
   /** Stores whose point of sale cannot sign a slip. The exposure, counted. */
   unsignedStores: number;
+  /**
+   * Live promotions with no ceiling on what they may ever issue.
+   *
+   * The ceilings exist and default to nothing, which means a brand can
+   * switch on five percent cashback with no bound at all and the console
+   * said nothing about it. Worse, the unsigned-stores warning on this page
+   * told them their ceilings bounded the cost — true only if they set one.
+   * A warning that promises a limit nobody set is worse than no warning.
+   */
+  uncappedCampaigns: number;
+  /** Live promotions with no per-person daily cap. One shopper's ceiling. */
+  uncappedPerPerson: number;
   scansLast7Days: number;
   newMembersLast7Days: number;
 };
@@ -44,7 +56,19 @@ export async function getBrandOverview(brandId: string, now: Date = new Date()):
   const scoped = forBrand(brandId);
   const since = new Date(now.getTime() - WEEK_MS);
 
-  const [balances, credits, members, optedOut, activeCampaigns, stores, unsignedStores, scans, newMembers] =
+  const [
+    balances,
+    credits,
+    members,
+    optedOut,
+    activeCampaigns,
+    stores,
+    unsignedStores,
+    uncappedCampaigns,
+    uncappedPerPerson,
+    scans,
+    newMembers,
+  ] =
     await Promise.all([
       scoped.pointsTransaction.groupBy({ by: ["unit"], _sum: { amount: true } }),
       // Credits only, so "issued" means what was handed out rather than what
@@ -56,6 +80,12 @@ export async function getBrandOverview(brandId: string, now: Date = new Date()):
       scoped.campaign.count({ where: { status: "ACTIVE" } }),
       scoped.store.count(),
       scoped.store.count({ where: { signingSecretEncrypted: null } }),
+      // A live promotion with no total ceiling. Counted separately from the
+      // per-person one because they answer different questions: this is
+      // "what can this campaign cost us in total", the other is "what can
+      // one person take".
+      scoped.campaign.count({ where: { status: "ACTIVE", earnRule: { maxTotalAmount: null } } }),
+      scoped.campaign.count({ where: { status: "ACTIVE", earnRule: { maxPerPersonPerDay: null } } }),
       scoped.purchaseScan.count({ where: { scannedAt: { gte: since } } }),
       scoped.brandMembership.count({ where: { joinedAt: { gte: since } } }),
     ]);
@@ -73,6 +103,8 @@ export async function getBrandOverview(brandId: string, now: Date = new Date()):
     activeCampaigns,
     stores,
     unsignedStores,
+    uncappedCampaigns,
+    uncappedPerPerson,
     scansLast7Days: scans,
     newMembersLast7Days: newMembers,
   };

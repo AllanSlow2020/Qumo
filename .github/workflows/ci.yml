@@ -1,0 +1,92 @@
+name: CI
+
+# Every push to a branch and every pull request. The tests exist and pass;
+# what was missing was anything that ran them without being asked, which
+# means "the suite is green" has been a claim about the last time somebody
+# remembered rather than about the branch.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+# A second push to the same branch makes the first run irrelevant. Cancel it
+# rather than queue behind it.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # The suite runs against a real Postgres, deliberately: the tenant guard,
+    # the serializable retries and the atomic rate limiter are all things a
+    # mock would agree with while the database disagreed. A service container
+    # is the cheapest honest way to keep that true in CI.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: qumo
+          POSTGRES_PASSWORD: qumo
+          POSTGRES_DB: qumo_test
+        ports:
+          - 5432:5432
+        # Without this the first migration races the database's own startup.
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://qumo:qumo@localhost:5432/qumo_test
+      # Test-only values. Real ones live in the host's secret manager and
+      # never in a repository — these exist so the crypto layer has
+      # well-formed inputs, not to protect anything.
+      PHONE_HASH_SECRET: ci-phone-hash-secret-not-a-real-one
+      ENCRYPTION_KEY: TdmDVWuwzHOa3JLJ0xLoNzZQNRpQwBGpLxDkWQMPDPQ=
+      AUTH_SECRET: ci-auth-secret-not-a-real-one
+      CRON_SECRET: ci-cron-secret-not-a-real-one
+      NEXT_PUBLIC_QUMO_ROOT_DOMAIN: localhost
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Matches the version the project is developed on. Pinned rather
+          # than "latest" so CI going green or red is about the diff.
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate the Prisma client
+        run: pnpm prisma:generate
+
+      - name: Apply migrations
+        # deploy, not dev: dev would offer to reset the database and prompt.
+        run: pnpm exec prisma migrate deploy
+
+      # Ordered cheapest-first, so an obvious failure reports in seconds
+      # rather than after the whole suite.
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      # Last because it is the slowest, and because a build failure that the
+      # three checks above did not catch is nearly always a Next.js-specific
+      # problem — a server action exporting a constant, a route that only
+      # fails when it is compiled for production.
+      - name: Build
+        run: pnpm build
