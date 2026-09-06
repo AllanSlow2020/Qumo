@@ -169,7 +169,7 @@ async function main() {
       const award = Math.round(basket * 0.05);
       scans += 1;
 
-      await prisma.purchaseScan.create({
+      const scan = await prisma.purchaseScan.create({
         data: {
           brandId: brand.id,
           storeId: store.id,
@@ -189,6 +189,10 @@ async function main() {
           brandId: brand.id,
           brandMembershipId: membership.id,
           campaignId: cashback.id,
+          // What the real scan path writes, so the demo's history reads the
+          // same as a history you make yourself: named stores, not
+          // "Purchase" forty times.
+          purchaseScanId: scan.id,
           amount: award,
           unit: "CENTS",
           reason: "PURCHASE_ACCRUAL",

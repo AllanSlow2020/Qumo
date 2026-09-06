@@ -6,10 +6,6 @@ import { formatLedgerAmount } from "@/lib/consumer/wallet";
 import { redeemReceipt, RECEIPT_FAILURE_MESSAGES } from "@/lib/stores/receipt";
 import { BrandHeader } from "../brand-header";
 
-function formatRands(cents: number): string {
-  return `R${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, "0")}`;
-}
-
 /**
  * Where a QR printed on a till slip lands.
  *
@@ -81,7 +77,7 @@ export default async function ReceiptScanPage({
             sentence is true either way. `alreadyEarned` still does its job
             in the data, where it stops a coupon being shown twice. */}
         <p className="sc-body">
-          Earned on a {formatRands(result.amountCents)} purchase. You have{" "}
+          Earned on a {formatLedgerAmount(result.amountCents, "CENTS")} purchase. You have{" "}
           <strong style={{ color: "var(--sc-ink)" }}>{formatLedgerAmount(result.newBalance, result.unit)}</strong> with{" "}
           {result.brandName}.
         </p>

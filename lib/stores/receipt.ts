@@ -300,6 +300,10 @@ export async function redeemReceipt(
             campaignId: campaign.id,
             brandMembershipId: membership.id,
             optedOutAt: membership.optedOutAt,
+            // What makes the ledger row able to name the store it came
+            // from. The scan is written above, before anything is awarded,
+            // so its id exists by the time the row does.
+            purchaseScanId: scan.id,
             rule: {
               unit: rule.unit,
               amount: awarded,

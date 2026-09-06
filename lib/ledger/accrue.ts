@@ -217,11 +217,23 @@ export async function applyAccrual(
     rule: AccrualRule;
     reward: AccrualReward;
     reason: PointsReason;
+    /**
+     * The scan that caused this, when there was one. Carried onto every row
+     * written here — the award and the card completion alike — so the
+     * shopper's activity list can name the store instead of saying
+     * "Purchase", and so a query can get from a ledger row back to the
+     * basket that produced it.
+     *
+     * Optional because not every accrual comes from a till: a pack code has
+     * no store, and neither will an SMS adapter or a manual adjustment.
+     */
+    purchaseScanId?: string | null;
     /** Injectable so the ceiling window is testable without waiting a day. */
     now?: Date;
   },
 ): Promise<AccrualResult> {
   const { brandId, campaignId, brandMembershipId, rule, reward, reason } = input;
+  const purchaseScanId = input.purchaseScanId ?? null;
   const now = input.now ?? new Date();
 
   // A backstop, not the primary check. Both scan paths already refuse a
@@ -248,7 +260,7 @@ export async function applyAccrual(
   });
 
   await tx.pointsTransaction.create({
-    data: { brandId, brandMembershipId, campaignId, amount: rule.amount, unit: rule.unit, reason },
+    data: { brandId, brandMembershipId, campaignId, purchaseScanId, amount: rule.amount, unit: rule.unit, reason },
   });
 
   // Re-read inside the transaction, so the number reported is the one this
@@ -287,6 +299,10 @@ export async function applyAccrual(
           brandId,
           brandMembershipId,
           campaignId,
+          // The same scan. A card completes because of a specific purchase,
+          // and a deduction that cannot say which one is the one row in the
+          // history a shopper would dispute.
+          purchaseScanId,
           amount: -rule.completesAt,
           unit: rule.unit,
           reason: "COUPON_UNLOCKED",

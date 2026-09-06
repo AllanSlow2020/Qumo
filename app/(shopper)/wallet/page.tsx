@@ -2,7 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireBrand } from "@/lib/brand/current";
 import { getConsumerSession } from "@/lib/consumer/session";
-import { getWallet, getWalletHistory, formatLedgerAmount, type BrandWallet } from "@/lib/consumer/wallet";
+import {
+  getWallet,
+  getWalletHistory,
+  formatLedgerAmount,
+  type BrandWallet,
+  type WalletEntry,
+} from "@/lib/consumer/wallet";
 import { getPendingSpend } from "@/lib/wallet/spend";
 import { REDEMPTION_AVAILABLE } from "@/lib/wallet/availability";
 import { getProgrammeState } from "@/lib/subscriptions/manage";
@@ -20,6 +26,54 @@ const REASON_LABELS: Record<string, string> = {
   PURCHASE_ACCRUAL: "Purchase",
   WALLET_SPENT: "Spent at the till",
 };
+
+/**
+ * The two rows where the event outranks the place.
+ *
+ * Everywhere else the most useful heading is where it happened — a shopper
+ * checking a statement is matching it against their own week, and "Sea
+ * Point" is a thing they either did or did not do. But a completed card and
+ * a spend are events in their own right, and heading both with the store
+ * name would put two rows reading "Sea Point" next to each other for the
+ * same scan, one of them negative. The store still appears, one line down.
+ */
+const EVENT_TITLES: Record<string, string> = {
+  COUPON_UNLOCKED: "Reward unlocked",
+  WALLET_SPENT: "Spent at the till",
+};
+
+/**
+ * What one line of the history says, in the order a shopper reads it.
+ *
+ * The fallbacks are a ladder from most specific to least, and each rung is
+ * the truth about a real path rather than a guess: a till slip knows its
+ * store, a pack code knows only its promotion, and a row from neither — an
+ * older one, or an adjustment — has nothing but its reason. Nothing is
+ * invented to fill a gap; the line just gets shorter.
+ */
+function describeEntry(entry: WalletEntry): { title: string; detail: string } {
+  const title =
+    EVENT_TITLES[entry.reason] ??
+    entry.storeName ??
+    entry.campaignName ??
+    REASON_LABELS[entry.reason] ??
+    entry.reason;
+
+  const detail = [
+    entry.createdAt.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" }),
+    // Only when the title is not already the store.
+    entry.storeName && title !== entry.storeName ? entry.storeName : null,
+    // The answer to "why that much", and only on the row that earned it —
+    // on a card completion the basket explains the stamp, not the deduction.
+    entry.amount > 0 && entry.amountCents != null
+      ? `${formatLedgerAmount(entry.amountCents, "CENTS")} purchase`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return { title, detail };
+}
 
 const UNIT_LABELS: Record<string, string> = {
   CENTS: "Wallet",
@@ -199,20 +253,21 @@ export default async function WalletPage() {
         <section className="sc-card">
           <h2 className="sc-h2">Activity</h2>
           <div className="sc-rows">
-            {history.map((entry) => (
+            {history.map((entry) => {
+              const { title, detail } = describeEntry(entry);
+              return (
               <div className="sc-row" key={entry.id}>
                 <div className="sc-row-main">
-                  <span>{REASON_LABELS[entry.reason] ?? entry.reason}</span>
-                  <span className="sc-label">
-                    {entry.createdAt.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })}
-                  </span>
+                  <span>{title}</span>
+                  <span className="sc-label">{detail}</span>
                 </div>
                 <span className={`sc-row-amt${entry.amount > 0 ? " sc-pos" : ""}`}>
                   {entry.amount > 0 ? "+" : ""}
                   {formatLedgerAmount(entry.amount, entry.unit)}
                 </span>
               </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}

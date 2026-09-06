@@ -96,22 +96,62 @@ export type WalletEntry = {
   unit: LedgerUnit;
   reason: string;
   createdAt: Date;
+  /** The store this happened at, when it happened at one. */
+  storeName: string | null;
+  /** What the basket came to, for a row that came from a till slip. */
+  amountCents: number | null;
+  /** The promotion that produced it, when the row records one. */
+  campaignName: string | null;
 };
 
 /**
  * The ledger itself, newest first — the shopper's own audit trail. This is
  * why the ledger is immutable: every number on the wallet screen can be
  * explained by pointing at the rows that produced it.
+ *
+ * "Explained" is the operative word, and a reason code is not an
+ * explanation. A row reading "Purchase · 4 Sept · +R8.50" gives a shopper
+ * nothing to check it against; "Sea Point · 4 Sept · R170.00 basket" is a
+ * thing they either remember doing or do not, which is the whole point of
+ * showing them a history. So the store and the basket come back with it.
+ *
+ * Both are reached through the scan rather than copied onto the ledger row,
+ * so there is one answer to "where did this happen" and it cannot drift
+ * from the scan that decided it. Both are null for the paths with no till
+ * behind them — a pack code, a card completion arriving without its scan —
+ * and the caller falls back rather than inventing one.
  */
 export async function getWalletHistory(personId: string, limit = 50, brandId?: string): Promise<WalletEntry[]> {
   const rows = await forPerson(personId).pointsTransaction.findMany({
     where: brandId ? { brandId } : undefined,
     orderBy: { createdAt: "desc" },
     take: limit,
-    select: { id: true, brandId: true, amount: true, unit: true, reason: true, createdAt: true },
+    select: {
+      id: true,
+      brandId: true,
+      amount: true,
+      unit: true,
+      reason: true,
+      createdAt: true,
+      // Safe to reach through without a scope filter of its own: the row it
+      // hangs off has already been narrowed to this person by forPerson(),
+      // so the only scan reachable here is one of theirs.
+      purchaseScan: { select: { amountCents: true, store: { select: { name: true } } } },
+      campaign: { select: { name: true } },
+    },
   });
 
-  return rows.map((row) => ({ ...row, reason: row.reason as string }));
+  return rows.map((row) => ({
+    id: row.id,
+    brandId: row.brandId,
+    amount: row.amount,
+    unit: row.unit,
+    reason: row.reason as string,
+    createdAt: row.createdAt,
+    storeName: row.purchaseScan?.store.name ?? null,
+    amountCents: row.purchaseScan?.amountCents ?? null,
+    campaignName: row.campaign?.name ?? null,
+  }));
 }
 
 /**

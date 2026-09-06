@@ -35,7 +35,16 @@ export type PersonExport = {
     joinedAt: string;
     optedOut: string | null;
     balances: { unit: string; amount: number }[];
-    activity: { at: string; what: string; unit: string; amount: number }[];
+    activity: {
+      at: string;
+      what: string;
+      unit: string;
+      amount: number;
+      /** The store, for a row that came from a till slip. Null otherwise. */
+      where: string | null;
+      /** What that basket came to, in cents. Null otherwise. */
+      purchaseCents: number | null;
+    }[];
     rewards: { code: string; status: string; issuedAt: string }[];
   }[];
   signIns: { startedAt: string; endedAt: string | null }[];
@@ -59,7 +68,15 @@ export async function exportPerson(personId: string): Promise<PersonExport | nul
       include: { brand: { select: { name: true } } },
       orderBy: { joinedAt: "asc" },
     }),
-    scoped.pointsTransaction.findMany({ orderBy: { createdAt: "asc" } }),
+    // Held, therefore exported. The link from a ledger row back to the scan
+    // that produced it is data about this person as much as the amount is,
+    // and an export that listed "PURCHASE_ACCRUAL, R8.50" while we quietly
+    // knew which shop it was in would be answering a narrower question than
+    // the one the law says was asked.
+    scoped.pointsTransaction.findMany({
+      orderBy: { createdAt: "asc" },
+      include: { purchaseScan: { select: { amountCents: true, store: { select: { name: true } } } } },
+    }),
     scoped.coupon.findMany({ orderBy: { issuedAt: "asc" } }),
     prisma.shopperSession.findMany({
       where: { personId },
@@ -104,6 +121,8 @@ export async function exportPerson(personId: string): Promise<PersonExport | nul
           what: row.reason,
           unit: row.unit,
           amount: row.amount,
+          where: row.purchaseScan?.store.name ?? null,
+          purchaseCents: row.purchaseScan?.amountCents ?? null,
         })),
         rewards: byMembership(coupons, membership.id).map((coupon) => ({
           code: coupon.code,

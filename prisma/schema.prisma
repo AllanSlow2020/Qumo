@@ -481,10 +481,27 @@ model PointsTransaction {
   // column the ledger could not answer it at all.
   campaignId        String?
   campaign          Campaign?       @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  // The scan this row came from, when it came from one.
+  //
+  // Added so a shopper's activity list can say "Sea Point" instead of
+  // "Purchase". A ledger row that cannot say where it happened is a row a
+  // shopper cannot check against their own memory of the week, and "is
+  // this mine?" is the first question anybody asks of a statement.
+  //
+  // A link rather than a copied storeId, because a copy can disagree with
+  // the scan it was copied from and this cannot. It also carries the
+  // basket amount along with it, which answers the second question — why
+  // that much — without a second column.
+  //
+  // Not unique: one scan writes the award and, when a card completes, the
+  // deduction too. Both belong to it.
+  purchaseScanId    String?
+  purchaseScan      PurchaseScan?   @relation(fields: [purchaseScanId], references: [id], onDelete: SetNull)
   createdAt         DateTime        @default(now())
 
   @@index([brandId])
   @@index([brandMembershipId])
+  @@index([purchaseScanId])
   // The liability ceiling sums every positive row for a campaign.
   @@index([campaignId])
   // The per-person daily ceiling scans one membership's recent rows. Without
@@ -961,6 +978,9 @@ model PurchaseScan {
   // Nullable because the columns arrive after the first rows did.
   awardedAmount Int?
   awardedUnit   LedgerUnit?
+
+  // The award, and the card completion when there was one.
+  ledgerEntries PointsTransaction[]
 
   @@unique([storeId, externalTxnId])
   @@index([brandId])
