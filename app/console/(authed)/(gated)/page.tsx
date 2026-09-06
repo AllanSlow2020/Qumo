@@ -4,12 +4,58 @@ import { formatLedgerAmount } from "@/lib/consumer/wallet";
 import { getBrandOverview } from "@/lib/console/overview";
 import { requireStaff } from "@/lib/staff/current";
 
-function Metric({ value, label, note, warn }: { value: string; label: string; note?: string; warn?: boolean }) {
+function Metric({
+  value,
+  label,
+  note,
+  warn,
+  series,
+}: {
+  value: string;
+  label: string;
+  note?: string;
+  warn?: boolean;
+  /** Optional daily counts, oldest first. Drawn as bars under the figure. */
+  series?: { day: Date; count: number }[];
+}) {
   return (
     <div className="cn-metric">
       <div className="cn-metric-v">{value}</div>
       <div className="cn-metric-k">{label}</div>
       {note && <div className={`cn-metric-note${warn ? " cn-warn-note" : ""}`}>{note}</div>}
+      {series && series.length > 0 && <Sparkline series={series} />}
+    </div>
+  );
+}
+
+/**
+ * Seven days of scans as bars.
+ *
+ * Heights are relative to the busiest day rather than to an absolute scale,
+ * because the question this answers is "which way is it going", not "how
+ * many exactly" — the exact number is the figure directly above it. A brand
+ * with one scan a day and a brand with a thousand both get a readable shape.
+ *
+ * The last bar carries the only colour on the page that is not a warning:
+ * it is today, which is the bar somebody is actually asking about.
+ */
+function Sparkline({ series }: { series: { day: Date; count: number }[] }) {
+  const peak = Math.max(...series.map((d) => d.count), 0);
+
+  // A week of nothing draws seven bars at the baseline, which reads as a
+  // broken rule rather than as a quiet week. The figure above already says
+  // zero; a chart of it adds nothing and costs trust.
+  if (peak === 0) return null;
+
+  return (
+    <div className="cn-spark" aria-hidden="true">
+      {series.map((d, i) => (
+        <i
+          key={d.day.toISOString()}
+          className={i === series.length - 1 ? "cn-chart-now" : undefined}
+          style={{ height: `${Math.round((d.count / peak) * 100)}%` }}
+        />
+      ))}
     </div>
   );
 }
@@ -57,6 +103,7 @@ export default async function ConsoleOverviewPage() {
           value={o.scansLast7Days.toLocaleString("en-ZA")}
           label="Slips scanned, last 7 days"
           note={`${o.activeCampaigns} active promotion${o.activeCampaigns === 1 ? "" : "s"}`}
+          series={o.scansByDay}
         />
         <Metric
           value={o.stores.toLocaleString("en-ZA")}

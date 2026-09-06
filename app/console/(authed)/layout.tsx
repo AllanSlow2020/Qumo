@@ -31,21 +31,17 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
 
   return (
     <>
+      {/* Two rows, not one.
+          Nine nav items, an identity and a sign-out do not fit on one line
+          at 1280px: the nav clipped mid-word into the brand name. Splitting
+          identity from navigation is also the more honest structure — who
+          you are signed in as does not belong in the same row as where you
+          can go. */}
       <header className="cn-top">
         <div className="cn-top-in">
           <Link href="/" className="cn-mark" style={{ textDecoration: "none" }}>
             {PRODUCT_NAME} <span>console</span>
           </Link>
-          <nav className="cn-nav">
-            <Link href="/">Overview</Link>
-            <Link href="/promotions">Promotions</Link>
-            <Link href="/stores">Stores</Link>
-            <Link href="/codes">Pack codes</Link>
-            <Link href="/people">Team</Link>
-            <Link href="/activity">Activity</Link>
-            <Link href="/settings">Appearance</Link>
-            <Link href="/billing">Plan</Link>
-          </nav>
           <div className="cn-who">
             <div>{brand?.name ?? "—"}</div>
             <div>
@@ -58,6 +54,18 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
               Sign out
             </button>
           </form>
+        </div>
+        <div className="cn-nav-row">
+          <nav className="cn-nav">
+            <Link href="/">Overview</Link>
+            <Link href="/promotions">Promotions</Link>
+            <Link href="/stores">Stores</Link>
+            <Link href="/codes">Pack codes</Link>
+            <Link href="/people">Team</Link>
+            <Link href="/activity">Activity</Link>
+            <Link href="/settings">Appearance</Link>
+            <Link href="/billing">Plan</Link>
+          </nav>
         </div>
       </header>
       <main className="cn-main">{children}</main>

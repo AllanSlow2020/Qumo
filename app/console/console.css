@@ -14,61 +14,106 @@
  * used by a brand's staff, and it looks like Qumo. Only the shopper surface
  * wears the brand, because only the shopper is being asked to believe they
  * are dealing with one.
+ *
+ * ── One system, two densities ────────────────────────────────────────────
+ *
+ * The two design directions differed on two axes, and the answer takes one
+ * from each. The *surface* follows the shopper — the same near-white and
+ * near-black, the same hairlines, the same two-pixel radius — because a
+ * product whose two halves disagree about what a border looks like reads as
+ * two products. The *structure* is the console's own: tables with real
+ * column heads, charts, filters, figures aligned so they can be compared
+ * down a column rather than admired one at a time.
+ *
+ * ── Where colour is allowed here ─────────────────────────────────────────
+ *
+ * Achromatic, like the shopper surface, and for a related reason: colour
+ * that appears everywhere means nothing anywhere. Actions are ink. Hue is
+ * reserved for two jobs — a state that needs acting on (an unsigned store,
+ * an uncapped promotion) and the emphasised mark in a chart. Everything a
+ * brand's staff sees in colour here is therefore something they can do
+ * something about.
  */
 
 .cn {
-  --cn-bg: #fbfbfa;
+  --cn-bg: #fafaf9;
   --cn-surface: #ffffff;
-  --cn-ink: #16181d;
-  --cn-ink-2: #5a6069;
-  --cn-ink-3: #868d97;
-  --cn-line: #e4e6e9;
-  --cn-line-soft: #eff0f2;
-  --cn-accent: #1f5fd0;
+  --cn-ink: #0a0a0a;
+  --cn-ink-2: #52525b;
+  --cn-ink-3: #8a8a90;
+  --cn-line: #e4e4e0;
+  --cn-line-soft: #efefec;
+  /* Actions are ink, not a hue. See the note at the top of this file. */
+  --cn-accent: #0a0a0a;
   --cn-accent-ink: #ffffff;
+  /* The emphasised mark in a chart, and only that. Deliberately deeper and
+     less saturated than the default product blue, which is the one colour
+     every dashboard already uses. */
+  --cn-data: #1e4b8f;
   --cn-pos: #0a7d47;
-  --cn-warn: #9a6100;
+  --cn-warn: #8a5a00;
   --cn-warn-bg: #fdf6e6;
-  --cn-neg: #c8271b;
+  --cn-neg: #b91c1c;
+  --cn-radius: 2px;
 
   background: var(--cn-bg);
   color: var(--cn-ink);
   min-height: 100vh;
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  /* The same word-space correction the shopper surface makes: it is a
+     property of the face, not of a component. */
+  word-spacing: 0.05em;
   font-feature-settings: "tnum" 1;
+}
+
+/* Every figure goes through the monospace, so a column of amounts can be
+   compared down the page rather than read one at a time. The same face the
+   shopper sees, which is most of what makes the two halves one product. */
+.cn-num,
+.cn-mono,
+.cn-metric-v,
+.cn-secret-value,
+.cn-table td.cn-num,
+.cn-table th.cn-num {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .cn {
-    --cn-bg: #101216;
-    --cn-surface: #171a1f;
-    --cn-ink: #f2f4f6;
-    --cn-ink-2: #a5adb8;
-    --cn-ink-3: #7b838e;
-    --cn-line: #282c33;
-    --cn-line-soft: #1f2329;
-    --cn-accent: #5b91f5;
-    --cn-accent-ink: #0b1220;
+    --cn-bg: #0a0a0b;
+    --cn-surface: #121214;
+    --cn-ink: #f7f7f5;
+    --cn-ink-2: #a1a1a8;
+    --cn-ink-3: #71717a;
+    --cn-line: #232326;
+    --cn-line-soft: #1a1a1d;
+    --cn-accent: #f7f7f5;
+    --cn-accent-ink: #0a0a0b;
+    --cn-data: #7aa2e8;
     --cn-pos: #3fbf7f;
     --cn-warn: #e0a83a;
-    --cn-warn-bg: #2a2313;
-    --cn-neg: #ff6b5e;
+    --cn-warn-bg: #241d0f;
+    --cn-neg: #f87171;
   }
 }
 
 :root[data-theme="dark"] .cn {
-  --cn-bg: #101216;
-  --cn-surface: #171a1f;
-  --cn-ink: #f2f4f6;
-  --cn-ink-2: #a5adb8;
-  --cn-ink-3: #7b838e;
-  --cn-line: #282c33;
-  --cn-line-soft: #1f2329;
-  --cn-accent: #5b91f5;
-  --cn-accent-ink: #0b1220;
+  --cn-bg: #0a0a0b;
+  --cn-surface: #121214;
+  --cn-ink: #f7f7f5;
+  --cn-ink-2: #a1a1a8;
+  --cn-ink-3: #71717a;
+  --cn-line: #232326;
+  --cn-line-soft: #1a1a1d;
+  --cn-accent: #f7f7f5;
+  --cn-accent-ink: #0a0a0b;
+  --cn-data: #7aa2e8;
   --cn-pos: #3fbf7f;
   --cn-warn: #e0a83a;
-  --cn-warn-bg: #2a2313;
-  --cn-neg: #ff6b5e;
+  --cn-warn-bg: #241d0f;
+  --cn-neg: #f87171;
 }
 
 /* ---------- chrome ---------- */
@@ -78,16 +123,25 @@
   background: var(--cn-surface);
 }
 
+/* The identity row: mark on the left, who you are and the way out on the
+ * right. Navigation lives on its own row below — see .cn-nav-row.
+ *
+ * This started as one row and did not survive contact with eight nav items:
+ * at 1280px the nav clipped mid-word into the brand name. Two rows is not a
+ * compromise, it is the more honest structure — where you can go and who
+ * you are signed in as answer different questions. */
 .cn-top-in {
   max-width: 1120px;
   margin: 0 auto;
   padding: 0 24px;
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
   min-height: 56px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
+
+.cn-top-in .cn-mark { margin-right: auto; white-space: nowrap; }
 
 .cn-mark {
   font-size: 16px;
@@ -101,19 +155,35 @@
   font-weight: 500;
 }
 
-.cn-nav {
-  display: flex;
-  gap: 4px;
-  margin-right: auto;
-  flex-wrap: wrap;
+.cn-nav-row {
+  border-top: 1px solid var(--cn-line-soft);
 }
+
+.cn-nav {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 18px;
+  display: flex;
+  gap: 2px;
+  min-height: 42px;
+  align-items: center;
+  flex-wrap: nowrap;
+  /* Below about 900px there is still more nav than room. It scrolls rather
+     than wrapping, because a nav that changes height moves the page under
+     somebody mid-click. */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.cn-nav::-webkit-scrollbar { display: none; }
 
 .cn-nav a {
   color: var(--cn-ink-2);
   text-decoration: none;
   font-size: 14px;
-  padding: 6px 10px;
-  border-radius: 6px;
+  padding: 6px 9px;
+  border-radius: var(--cn-radius);
+  white-space: nowrap;
 }
 
 .cn-nav a:hover {
@@ -126,7 +196,11 @@
   color: var(--cn-ink-3);
   text-align: right;
   line-height: 1.35;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
+
+.cn-top-in > form { flex: 0 0 auto; }
 
 .cn-main {
   max-width: 1120px;
@@ -155,7 +229,7 @@
 .cn-metric {
   background: var(--cn-surface);
   border: 1px solid var(--cn-line);
-  border-radius: 10px;
+  border-radius: var(--cn-radius);
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -181,7 +255,7 @@
 .cn-panel {
   background: var(--cn-surface);
   border: 1px solid var(--cn-line);
-  border-radius: 10px;
+  border-radius: var(--cn-radius);
   overflow: hidden;
 }
 
@@ -223,7 +297,7 @@
 
 .cn-table tr:last-child td { border-bottom: 0; }
 .cn-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.cn-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+.cn-mono { font-size: 12.5px; }
 
 .cn-empty { padding: 28px 16px; text-align: center; color: var(--cn-ink-3); font-size: 14px; }
 
@@ -256,7 +330,7 @@
   font-size: 15px;
   padding: 10px 12px;
   border: 1px solid var(--cn-line);
-  border-radius: 8px;
+  border-radius: var(--cn-radius);
   background: var(--cn-surface);
   color: var(--cn-ink);
   width: 100%;
@@ -269,7 +343,7 @@
   font-size: 14px;
   font-weight: 600;
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: var(--cn-radius);
   border: 1px solid transparent;
   background: var(--cn-accent);
   color: var(--cn-accent-ink);
@@ -307,7 +381,7 @@
   max-width: 380px;
   background: var(--cn-surface);
   border: 1px solid var(--cn-line);
-  border-radius: 12px;
+  border-radius: var(--cn-radius);
   padding: 28px;
   display: flex;
   flex-direction: column;
@@ -349,7 +423,7 @@
 .cn-secret {
   border: 1px solid color-mix(in srgb, var(--cn-warn) 45%, transparent);
   background: var(--cn-warn-bg);
-  border-radius: 10px;
+  border-radius: var(--cn-radius);
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -367,7 +441,7 @@
   word-break: break-all;
   background: var(--cn-surface);
   border: 1px solid var(--cn-line);
-  border-radius: 8px;
+  border-radius: var(--cn-radius);
   padding: 10px 12px;
   user-select: all;
 }
@@ -414,7 +488,7 @@ select.cn-input {
   background: #ffffff;
   color: #000000;
   border: 1px solid var(--cn-line);
-  border-radius: 10px;
+  border-radius: var(--cn-radius);
   padding: 22px 20px 24px;
   display: flex;
   flex-direction: column;
@@ -451,7 +525,7 @@ select.cn-input {
   font-weight: 600;
   padding: 14px 18px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--cn-radius);
   background: #000000;
   color: #ffffff;
   cursor: default;
@@ -466,10 +540,109 @@ select.cn-input {
   padding-top: 12px;
 }
 
-/* Secondary text inside a table cell: an actor's email under their name, a
-   target under an action. The activity log stacks two or three of these per
-   row, and without a colour of their own the row reads as one run-on
-   sentence. */
+
+/* ---------- charts ----------
+ *
+ * The console's job is to answer "is this working", and a column of totals
+ * answers "what happened". A shape answers the first question in about a
+ * second, which is the whole argument for putting one here.
+ *
+ * Bars rather than a line: these are discrete periods, and a line between
+ * two weeks implies values in between that do not exist.
+ */
+
+.cn-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 44px;
+  margin-top: 10px;
+}
+
+.cn-chart > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  height: 100%;
+  min-width: 0;
+}
+
+.cn-chart i {
+  display: block;
+  width: 100%;
+  min-height: 2px;
+  background: var(--cn-line);
+  border-radius: 1px 1px 0 0;
+}
+
+/* The one mark that carries colour: the period being talked about. */
+.cn-chart i.cn-chart-now { background: var(--cn-data); }
+
+.cn-chart em {
+  font-style: normal;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: var(--cn-ink-3);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  white-space: nowrap;
+}
+
+/* A sparkline with no axis, for a metric cell. */
+.cn-spark { display: flex; align-items: flex-end; gap: 3px; height: 26px; margin-top: 8px; }
+.cn-spark i {
+  flex: 1;
+  /* Three pixels rather than two, so a zero day still reads as a bar at
+     the baseline rather than as a hairline that looks like a rule. */
+  min-height: 3px;
+  background: var(--cn-line);
+  border-radius: 1px;
+  display: block;
+}
+.cn-spark i.cn-chart-now { background: var(--cn-data); }
+
+/* ---------- segmented filter ----------
+   A filter that shows its options rather than hiding them behind a select:
+   a console screen has room, and a visible set of choices is faster to
+   scan than a menu that has to be opened to be read. */
+
+.cn-seg {
+  display: inline-flex;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius);
+  padding: 2px;
+  gap: 2px;
+}
+
+.cn-seg a,
+.cn-seg button {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 5px 11px;
+  border: 0;
+  border-radius: 1px;
+  background: transparent;
+  color: var(--cn-ink-3);
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cn-seg [aria-current="true"],
+.cn-seg .cn-seg-on {
+  background: var(--cn-ink);
+  color: var(--cn-surface);
+}
+
+/* ---------- a value that is missing on purpose ----------
+   "No ceiling" is not zero and not blank; it is a decision somebody made.
+   Drawn as an em dash in the warn colour so it reads as a state rather
+   than as an empty cell. */
+.cn-unset { color: var(--cn-warn); font-family: var(--font-mono), ui-monospace, monospace; }
+
+/* ---------- secondary text in a table cell ---------- */
 .cn-sub {
   color: var(--cn-ink-2);
   font-size: 13px;

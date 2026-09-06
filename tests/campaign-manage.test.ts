@@ -285,3 +285,90 @@ describe("the overview counts what is unbounded", () => {
     expect(overview.uncappedCampaigns).toBe(0);
   });
 });
+
+/**
+ * The seven-day scan series behind the overview's sparkline.
+ *
+ * A chart drawn from a number rather than from data is decoration, and
+ * decoration on a console page is worse than nothing: it implies a shape
+ * that was never measured.
+ */
+describe("the seven-day scan series", () => {
+  const suffix = `${Date.now()}-series`;
+  let brand: Brand;
+  let store: { id: string };
+  let membership: { id: string };
+  let campaign: { id: string };
+
+  beforeAll(async () => {
+    brand = await prisma.brand.create({ data: { name: `Series ${suffix}`, slug: `series-${suffix}` } });
+    store = await prisma.store.create({
+      data: { brandId: brand.id, name: "Sea Point", code: `SP-${suffix}`.slice(0, 40) },
+    });
+    const person = await prisma.person.create({
+      data: { phoneHash: `series-${suffix}`, phoneEncrypted: "x" },
+    });
+    membership = await prisma.brandMembership.create({
+      data: { brandId: brand.id, personId: person.id },
+    });
+    campaign = await prisma.campaign.create({
+      data: { brandId: brand.id, name: "Cashback", status: "ACTIVE" },
+    });
+  });
+
+  afterAll(async () => {
+    await prisma.purchaseScan.deleteMany({ where: { brandId: brand.id } });
+    await prisma.brandMembership.deleteMany({ where: { brandId: brand.id } });
+    await prisma.campaign.deleteMany({ where: { brandId: brand.id } });
+    await prisma.store.deleteMany({ where: { brandId: brand.id } });
+    await prisma.brand.delete({ where: { id: brand.id } });
+  });
+
+  async function scanAt(daysAgo: number, externalTxnId: string) {
+    await prisma.purchaseScan.create({
+      data: {
+        brandId: brand.id,
+        storeId: store.id,
+        brandMembershipId: membership.id,
+        campaignId: campaign.id,
+        externalTxnId,
+        amountCents: 10_000,
+        wasSigned: true,
+        purchasedAt: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000),
+        scannedAt: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000),
+      },
+    });
+  }
+
+  it("always returns seven days, even with no scans at all", async () => {
+    const { scansByDay } = await getBrandOverview(brand.id);
+    expect(scansByDay).toHaveLength(7);
+    expect(scansByDay.every((d) => d.count === 0)).toBe(true);
+  });
+
+  it("is oldest first, so the last bar is today", async () => {
+    const { scansByDay } = await getBrandOverview(brand.id);
+    const times = scansByDay.map((d) => d.day.getTime());
+    expect([...times].sort((a, b) => a - b)).toEqual(times);
+  });
+
+  it("counts each scan into its own day", async () => {
+    await scanAt(0, `t-today-1-${suffix}`);
+    await scanAt(0, `t-today-2-${suffix}`);
+    await scanAt(3, `t-three-${suffix}`);
+
+    const { scansByDay, scansLast7Days } = await getBrandOverview(brand.id);
+    expect(scansByDay.at(-1)!.count).toBe(2);
+    expect(scansByDay.reduce((sum, d) => sum + d.count, 0)).toBe(3);
+    // And it agrees with the total shown above it, which is the one way a
+    // chart can quietly lie about a number printed next to it.
+    expect(scansLast7Days).toBe(3);
+  });
+
+  it("ignores a scan older than the window rather than adding an eighth bar", async () => {
+    await scanAt(30, `t-old-${suffix}`);
+    const { scansByDay } = await getBrandOverview(brand.id);
+    expect(scansByDay).toHaveLength(7);
+    expect(scansByDay.reduce((sum, d) => sum + d.count, 0)).toBe(3);
+  });
+});

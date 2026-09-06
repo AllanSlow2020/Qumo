@@ -48,6 +48,15 @@ export type BrandOverview = {
   uncappedPerPerson: number;
   scansLast7Days: number;
   newMembersLast7Days: number;
+  /**
+   * Scans per day for the last seven days, oldest first.
+   *
+   * A total answers "what happened"; a shape answers "is this working",
+   * which is the question the console exists for. Seven discrete days
+   * rather than a smoothed line, because there is no value between
+   * Tuesday and Wednesday to draw.
+   */
+  scansByDay: { day: Date; count: number }[];
 };
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -90,6 +99,28 @@ export async function getBrandOverview(brandId: string, now: Date = new Date()):
       scoped.brandMembership.count({ where: { joinedAt: { gte: since } } }),
     ]);
 
+  // One query for the series rather than seven counts. groupBy cannot bucket
+  // by day, so the dates come back raw and are counted in memory — seven
+  // days of one brand's scans is a small enough set that the alternative
+  // (a raw SQL date_trunc) would be optimising the wrong thing.
+  const scanDays = await scoped.purchaseScan.findMany({
+    where: { scannedAt: { gte: since } },
+    select: { scannedAt: true },
+  });
+
+  const buckets = new Map<string, number>();
+  for (let i = 6; i >= 0; i -= 1) {
+    const day = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+    buckets.set(day.toISOString().slice(0, 10), 0);
+  }
+  for (const scan of scanDays) {
+    const key = scan.scannedAt.toISOString().slice(0, 10);
+    // A scan can land a few minutes outside the window between the two
+    // queries; drop it rather than inventing an eighth bar.
+    if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
+  }
+  const scansByDay = [...buckets.entries()].map(([key, count]) => ({ day: new Date(key), count }));
+
   const toRows = (rows: { unit: LedgerUnit; _sum: { amount: number | null } }[]) =>
     rows
       .map((row) => ({ unit: row.unit, amount: row._sum.amount ?? 0 }))
@@ -107,5 +138,6 @@ export async function getBrandOverview(brandId: string, now: Date = new Date()):
     uncappedPerPerson,
     scansLast7Days: scans,
     newMembersLast7Days: newMembers,
+    scansByDay,
   };
 }
