@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { brandSlugFromHost, RESERVED_SUBDOMAINS } from "@/lib/brand/host";
-import { accentStyle, safeColor, safeLogoUrl, toBrandTheme } from "@/lib/brand/theme";
+import { brandStyle, safeColor, safeLogoUrl, toBrandTheme } from "@/lib/brand/theme";
 
 /**
  * Which brand a request is for is decided entirely by these two files, and
@@ -110,6 +110,8 @@ describe("what a brand is allowed to put on the page", () => {
       logoUrl: "http://insecure.example/logo.png",
       accentColor: "not-a-colour",
       accentInkColor: "#ffffff",
+      displayFont: null,
+      figureFont: null,
       supportEmail: null,
       supportUrl: null,
     });
@@ -120,10 +122,10 @@ describe("what a brand is allowed to put on the page", () => {
     // Ink only means anything against an accent. Kept on its own it would
     // recolour the default black button's text and could land white on white.
     expect(theme.accentInk).toBeNull();
-    expect(accentStyle(theme)).toBeUndefined();
+    expect(brandStyle(theme)).toBeUndefined();
   });
 
-  it("overrides the button and only the button", () => {
+  it("overrides only what the brand actually chose", () => {
     const theme = toBrandTheme({
       id: "b1",
       slug: "chicken-licken",
@@ -133,13 +135,19 @@ describe("what a brand is allowed to put on the page", () => {
       logoUrl: null,
       accentColor: "#E4002B",
       accentInkColor: "#FFFFFF",
+      displayFont: null,
+      figureFont: null,
       supportEmail: null,
       supportUrl: null,
     });
 
-    // A brand owns the element that says what happens next. It does not get
-    // to recolour type, ground or rules, so it cannot make its own
-    // programme unreadable.
-    expect(accentStyle(theme)).toEqual({ "--sc-btn": "#e4002b", "--sc-btn-ink": "#ffffff" });
+    // A brand owns the element that says what happens next, and the type it
+    // is read in. It does not get to recolour the ground or the rules, so it
+    // cannot make its own programme unreadable.
+    //
+    // No font in this row, so no font token: an override that is not asked
+    // for is not written, which is what lets the default in globals.css
+    // apply with no cascade to reason about.
+    expect(brandStyle(theme)).toEqual({ "--sc-btn": "#e4002b", "--sc-btn-ink": "#ffffff" });
   });
 });

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { currentBrand } from "@/lib/brand/current";
-import { accentStyle, brandTitle } from "@/lib/brand/theme";
+import { brandStyle, brandTitle } from "@/lib/brand/theme";
 import { QumoFooter } from "./qumo-footer";
 import "./shopper.css";
 
@@ -10,9 +10,10 @@ import "./shopper.css";
  * a small-screen concession.
  *
  * Everything below lives under `.sc`, which is where the shopper surface's
- * own tokens are defined (shopper.css). Brand theming is an override of two
- * of those tokens and nothing more, applied here as an inline custom
- * property so it cascades to every child without a stylesheet per brand.
+ * own tokens are defined (shopper.css). Brand theming is an override of four
+ * of those tokens and nothing more — the button, its ink, and the two type
+ * faces — applied here as inline custom properties so they cascade to every
+ * child without a stylesheet per brand.
  *
  * A request whose host names no brand never reaches a page under here: the
  * proxy rewrites it to /no-brand first. So this layout does not branch, and
@@ -35,7 +36,7 @@ export default async function ShopperLayout({ children }: { children: React.Reac
   const brand = await currentBrand();
 
   return (
-    <div className="sc" style={accentStyle(brand)}>
+    <div className="sc" style={brandStyle(brand)}>
       <div className="sc-shell">
         {children}
         <QumoFooter />

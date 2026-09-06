@@ -481,7 +481,9 @@ Found during the review, unchanged by any of the above.
    with a per-request nonce that Next stamps onto its own script tags. It
    is the strict form rather than the usual `'unsafe-inline'` compromise,
    which was affordable only because there is no inline script anywhere in
-   `app/` and `next/font` self-hosts the one typeface. Two places stay
+   `app/` and `next/font` self-hosts every typeface at build time — brand
+   type selection included, which is exactly why it is a list rather than a
+   text box. Two places stay
    loose and are documented where they are set: `style-src` allows inline
    because brand theming colours elements through the `style` attribute,
    and `img-src` allows any https host because a brand's logo lives on that
@@ -749,6 +751,15 @@ asserting it in a unit test.
 - **No-data channel** — build it ourselves over a rented bearer; SMS first.
 - **NFC** — an additional way to scan, never a replacement. Plain tags work
   today; secure tags are their own phase.
+- **Type** — a brand can set both faces: the one everything is read in and
+  the one every figure is set in. Qumo's own (Instrument Sans, Martian Mono)
+  is the default rather than a floor, because a house style that cannot be
+  turned off is a restriction wearing a default's clothes. Chosen from a
+  curated list loaded at build time from our own origin, not typed as a font
+  name or a URL — that is what keeps `font-src 'self'` as it is, and keeps a
+  shopper's browser from telling a font CDN which brand's page they are on.
+  A brand's own licensed typeface is a real ask and a different piece of
+  work: it needs file storage and an answer to the webfont licence question.
 - **Company name** — QUMO, lodged with CIPC as first preference under
   tracking number **9464844441**, with QUMO-APP, QUMOLATE and QUMOS as the
   fallbacks in that order. Names are tested in order; if none is approved the

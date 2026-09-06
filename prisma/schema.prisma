@@ -124,6 +124,18 @@ model Brand {
   accentColor    String?
   accentInkColor String?
 
+  /// Which faces the brand chose, as ids from the registry in
+  /// lib/brand/fonts.ts — never a font name and never a URL. The value ends
+  /// up in a style attribute, so what is stored here is a key we look up
+  /// rather than anything that reaches CSS directly; an id we no longer
+  /// recognise resolves to Qumo's default instead of to a broken page.
+  ///
+  /// Null on both by default, which is the house style: Instrument Sans for
+  /// everything a shopper reads, Martian Mono for every figure. A brand can
+  /// take over either, or both.
+  displayFont String?
+  figureFont  String?
+
   /// Where a shopper takes a complaint. The brand is the responsible party
   /// for this programme, so "contact us" has to reach them and not us.
   supportEmail String?

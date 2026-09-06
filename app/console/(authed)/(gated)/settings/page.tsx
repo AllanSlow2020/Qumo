@@ -19,8 +19,9 @@ export default async function ConsoleSettingsPage() {
     <>
       <h1 className="cn-h1">Appearance</h1>
       <p className="cn-body">
-        Your name, your colour and your logo, on the pages your customers actually see. The same mechanic runs
-        underneath for every brand — this is the part that makes it yours.
+        Your name, your colour, your type and your logo, on the pages your customers actually see. The same
+        mechanic runs underneath for every brand — this is the part that makes it yours. Everything here has a
+        Qumo default already set, so changing nothing still gets you a considered page.
       </p>
 
       <section className="cn-panel">

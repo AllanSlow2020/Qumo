@@ -4,7 +4,7 @@ import type { Brand } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
 import { ForbiddenError } from "@/lib/auth/rbac";
 import { BrandIdentityError, getBrandIdentity, updateBrandIdentityForSession } from "@/lib/brand/manage";
-import { toBrandTheme, accentStyle } from "@/lib/brand/theme";
+import { toBrandTheme, brandStyle } from "@/lib/brand/theme";
 
 /**
  * Editing the face a brand shows its shoppers.
@@ -58,7 +58,7 @@ describe("a brand editing its own appearance", () => {
     // The legal name is what the row holds; the signage name is what a
     // shopper reads.
     expect(theme.name).toBe("Chicken Licken");
-    expect(accentStyle(theme)).toEqual({ "--sc-btn": "#c8102e", "--sc-btn-ink": "#ffffff" });
+    expect(brandStyle(theme)).toEqual({ "--sc-btn": "#c8102e", "--sc-btn-ink": "#ffffff" });
   });
 
   it("refuses a malformed colour instead of quietly dropping it", async () => {

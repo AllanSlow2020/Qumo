@@ -50,6 +50,9 @@ function dayWeight(date: Date): number {
   return [0.7, 0.6, 0.75, 0.85, 1.0, 1.4, 1.2][date.getDay()] ?? 1;
 }
 
+/** Every promotion this script creates. Anything else on the brand is stale. */
+const CAMPAIGNS = ["5% back", "Wing box sleeve", "Rounds card"];
+
 async function main() {
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
 
@@ -65,6 +68,12 @@ async function main() {
   await prisma.packCode.deleteMany({ where: { brandId: brand.id } });
   await prisma.packBatch.deleteMany({ where: { brandId: brand.id } });
   await prisma.brandMembership.deleteMany({ where: { brandId: brand.id } });
+  // Promotions this script did not write. The bootstrap seed leaves a stamp
+  // card behind, and a demo brand carrying both it and the one below shows a
+  // shopper the same offer twice on the join page — the sort of thing nobody
+  // notices until it is on a screen in front of the brand. This script owns
+  // the brand's whole promotion set, so anything else goes.
+  await prisma.campaign.deleteMany({ where: { brandId: brand.id, name: { notIn: CAMPAIGNS } } });
 
   await prisma.brand.update({
     where: { id: brand.id },
@@ -74,6 +83,11 @@ async function main() {
       accentColor: "#c8102e",
       accentInkColor: "#ffffff",
       supportEmail: "rewards@chickenlicken.example",
+      // Reset to Qumo's house style on purpose. Changing the type in the
+      // console is one of the better things to actually do in front of a
+      // brand, and it only reads as a change if it starts from the default.
+      displayFont: null,
+      figureFont: null,
     },
   });
 

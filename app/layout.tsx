@@ -1,49 +1,39 @@
 import type { Metadata } from "next";
-import { Instrument_Sans, Martian_Mono } from "next/font/google";
 import { getTheme } from "@/lib/theme";
 import { PRODUCT_NAME } from "@/lib/product";
+import { ALL_FONT_CLASSES } from "./font-faces";
 import "./globals.css";
 
 /**
- * Two faces, two jobs, and the split is the type contract rather than a
- * preference.
+ * Two roles, and both of them a brand can take over.
  *
  * ── Why two roles and not one ────────────────────────────────────────────
  *
- * Brands will choose their own type. That is right for the *display* face:
- * the wordmark, the headings, the voice — it is their site and their
- * identity. It is wrong for the *numeric* face, and the reason is concrete:
- * a balance, a basket total and a column of amounts need tabular figures, a
- * real bold, and an unambiguous 0/O and 1/l. A brand picking a face without
- * tabular numerals makes every amount column jitter as it updates, and the
- * balance is the one number in this product that must never look sloppy.
+ * `--font-display` is everything a shopper reads. `--font-mono` is every
+ * figure: a balance, a basket total, a coupon code, a column of amounts.
+ * They are separate because the second job has a requirement the first does
+ * not — digits that are all the same width, so a column does not shift
+ * sideways as the numbers in it change. The stylesheet asks for that with
+ * `font-variant-numeric: tabular-nums` on every figure, which most faces
+ * honour; a monospace is the one that cannot fail to.
  *
- * So: the brand sets the display face, we own the numerals. It is the same
- * shape as the colour contract — they choose the accent, we refuse one that
- * renders illegibly.
+ * That used to be a rule: brands chose the display face and we kept the
+ * numerals. It is now a default. A brand can set both, because it is their
+ * identity and a house style that cannot be turned off is not a default,
+ * it is a restriction wearing one. What survives of the old rule is a note
+ * on the picker pointing at the preview, which is where a face without
+ * tabular figures actually shows itself.
  *
- * ── Why these two ────────────────────────────────────────────────────────
+ * ── What the defaults are ────────────────────────────────────────────────
  *
- * Instrument Sans is the default display face, replaced per brand later.
- * Martian Mono carries every figure: a receipt reads down a column, and a
- * true monospace is what makes that column line up. It is also deliberately
- * not one of the two or three grotesques every product ships with.
+ * Instrument Sans and Martian Mono, set in globals.css and pointed at by
+ * these two variables. A brand that never opens the appearance screen gets
+ * Qumo's set style rather than the browser's idea of one.
  *
- * Self-hosted by next/font at build time rather than fetched at runtime, so
- * `font-src 'self'` in the content security policy stays as it is and no
- * shopper's browser tells a font CDN which page they are on.
+ * Every face in the registry is declared here — see app/font-faces.ts for
+ * why that is cheap — and a brand's choice is an alias of one of them,
+ * applied where the accent is (lib/brand/theme.ts).
  */
-const display = Instrument_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-display",
-});
-
-const mono = Martian_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-mono",
-});
 
 export const metadata: Metadata = {
   title: PRODUCT_NAME,
@@ -58,7 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html
       lang="en"
-      className={`${display.variable} ${mono.variable}`}
+      className={ALL_FONT_CLASSES}
       {...(theme ? { "data-theme": theme } : {})}
     >
       <body>{children}</body>

@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/auth/rbac";
 import { forBrand } from "@/lib/db/tenant";
 import { prisma } from "@/lib/db/client";
 import { record } from "@/lib/audit/record";
+import { findFont } from "@/lib/brand/fonts";
 import type { Actor } from "@/lib/staff/actor";
 
 /**
@@ -68,6 +69,19 @@ const identitySchema = z.object({
     .max(500)
     .optional()
     .refine((v) => !v || /^https:\/\//i.test(v), { message: "The support address has to start with https://." }),
+  // Checked against the registry rather than against a pattern. A font id is
+  // a key we look up, so "is this well-formed" is the wrong question — the
+  // only thing worth knowing is whether we have the face.
+  displayFont: z
+    .string()
+    .trim()
+    .optional()
+    .refine((v) => !v || findFont(v) !== null, { message: "That isn't one of the fonts we can serve." }),
+  figureFont: z
+    .string()
+    .trim()
+    .optional()
+    .refine((v) => !v || findFont(v) !== null, { message: "That isn't one of the fonts we can serve." }),
 });
 
 /** Empty form fields mean "clear this", not "leave it alone". */
@@ -87,6 +101,8 @@ export async function updateBrandIdentityForSession(session: SessionLike, formDa
     accentInkColor: formData.get("accentInkColor")?.toString(),
     supportEmail: formData.get("supportEmail")?.toString(),
     supportUrl: formData.get("supportUrl")?.toString(),
+    displayFont: formData.get("displayFont")?.toString(),
+    figureFont: formData.get("figureFont")?.toString(),
   });
 
   const accentColor = blankToNull(parsed.accentColor);
@@ -109,6 +125,10 @@ export async function updateBrandIdentityForSession(session: SessionLike, formDa
       accentInkColor: accentInkColor?.toLowerCase() ?? null,
       supportEmail: blankToNull(parsed.supportEmail),
       supportUrl: blankToNull(parsed.supportUrl),
+      // Blank is "use Qumo's", which is a real choice rather than an absence
+      // — the picker's first option, not an empty select.
+      displayFont: blankToNull(parsed.displayFont),
+      figureFont: blankToNull(parsed.figureFont),
     },
   });
 
@@ -127,6 +147,8 @@ export async function updateBrandIdentityForSession(session: SessionLike, formDa
         accentInkColor,
         supportEmail: blankToNull(parsed.supportEmail),
         supportUrl: blankToNull(parsed.supportUrl),
+        displayFont: blankToNull(parsed.displayFont),
+        figureFont: blankToNull(parsed.figureFont),
       })
         .filter(([, value]) => value !== null)
         .map(([key]) => key),
@@ -142,6 +164,8 @@ export type BrandIdentity = {
   logoUrl: string | null;
   accentColor: string | null;
   accentInkColor: string | null;
+  displayFont: string | null;
+  figureFont: string | null;
   supportEmail: string | null;
   supportUrl: string | null;
 };
@@ -157,6 +181,8 @@ export async function getBrandIdentity(brandId: string): Promise<BrandIdentity |
       logoUrl: true,
       accentColor: true,
       accentInkColor: true,
+      displayFont: true,
+      figureFont: true,
       supportEmail: true,
       supportUrl: true,
     },

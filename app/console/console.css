@@ -545,6 +545,36 @@ select.cn-input {
   padding-top: 12px;
 }
 
+/* The balance, at the size a shopper actually meets it.
+   Here because a figures face cannot be judged at label size: whether a 0
+   reads as a 0, and whether the face carries the weight, only show up
+   large. It is the same figure the wallet leads with, set the same way —
+   tabular figures and all — so the panel answers the tabular question by
+   demonstration rather than by claim. */
+.cn-preview-figure {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.cn-preview-rows { display: flex; flex-direction: column; gap: 7px; }
+
+.cn-preview-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.cn-preview-row span:last-child {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 
 /* ---------- charts ----------
  *

@@ -27,6 +27,8 @@ const SELECT = {
   logoUrl: true,
   accentColor: true,
   accentInkColor: true,
+  displayFont: true,
+  figureFont: true,
   supportEmail: true,
   supportUrl: true,
 } as const;

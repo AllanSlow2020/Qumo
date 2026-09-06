@@ -3,6 +3,13 @@
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { BrandIdentity } from "@/lib/brand/manage";
+import {
+  DEFAULT_DISPLAY_FONT,
+  DEFAULT_FIGURE_FONT,
+  FONTS,
+  findFont,
+  fontStack,
+} from "@/lib/brand/fonts";
 import { saveIdentity } from "./actions";
 import { IDLE, type IdentityState } from "./state";
 
@@ -29,6 +36,63 @@ function contrastRatio(a: string, b: string): number {
   return (hi! + 0.05) / (lo! + 0.05);
 }
 
+/**
+ * One face chooser.
+ *
+ * A select rather than a grid of specimens, and the specimen is the option
+ * itself: each one is drawn in the face it names, so the list *is* the
+ * preview. Every face is already declared on the page (app/font-faces.ts),
+ * so this costs nothing beyond the download of a face somebody looked at.
+ *
+ * The first option is Qumo's, and it says so. An empty first option would
+ * read as "nothing chosen"; this is a choice with a default already made.
+ */
+function FontField({
+  id,
+  name,
+  label,
+  value,
+  onChange,
+  defaultFontId,
+  help,
+}: {
+  id: string;
+  name: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  defaultFontId: string;
+  help: React.ReactNode;
+}) {
+  const chosen = findFont(value);
+  const fallback = findFont(defaultFontId);
+
+  return (
+    <div className="cn-field">
+      <label htmlFor={id}>{label}</label>
+      <select
+        id={id}
+        name={name}
+        className="cn-input"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={{ fontFamily: chosen ? fontStack(chosen) : fallback ? fontStack(fallback) : undefined }}
+      >
+        <option value="">Qumo&apos;s own ({fallback?.label})</option>
+        {FONTS.map((font) => (
+          <option key={font.id} value={font.id} style={{ fontFamily: fontStack(font) }}>
+            {font.label}
+          </option>
+        ))}
+      </select>
+      {/* The constant line first, then the one that changes as you scroll
+          the list — otherwise the field's own explanation appears to move. */}
+      {help}
+      {chosen && <p className="cn-label">{chosen.note}</p>}
+    </div>
+  );
+}
+
 export function IdentityForm({ brand }: { brand: BrandIdentity }) {
   const router = useRouter();
   const [state, action, pending] = useActionState<IdentityState, FormData>(saveIdentity, IDLE);
@@ -41,6 +105,8 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
   const [accent, setAccent] = useState(brand.accentColor ?? "");
   const [ink, setInk] = useState(brand.accentInkColor ?? "");
   const [logoUrl, setLogoUrl] = useState(brand.logoUrl ?? "");
+  const [displayFont, setDisplayFont] = useState(brand.displayFont ?? "");
+  const [figureFont, setFigureFont] = useState(brand.figureFont ?? "");
 
   useEffect(() => {
     if (state.ok) router.refresh();
@@ -49,6 +115,14 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
   const accentOk = HEX.test(accent);
   const inkOk = HEX.test(ink);
   const ratio = accentOk && inkOk ? contrastRatio(accent, ink) : null;
+
+  // What the preview renders in. Falls through to Qumo's own, exactly as
+  // the shopper surface does when the column is null.
+  const displayFace = findFont(displayFont) ?? findFont(DEFAULT_DISPLAY_FONT);
+  const figureFace = findFont(figureFont) ?? findFont(DEFAULT_FIGURE_FONT);
+  // The one thing worth saying out loud about a figures face, said only when
+  // it applies rather than sitting under the field forever.
+  const figuresAreProportional = figureFace !== null && !figureFace.mono;
 
   return (
     <div className="cn-edit">
@@ -136,6 +210,48 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
           )}
         </div>
 
+        <FontField
+          id="displayFont"
+          name="displayFont"
+          label="Type"
+          value={displayFont}
+          onChange={setDisplayFont}
+          defaultFontId={DEFAULT_DISPLAY_FONT}
+          help={
+            <p className="cn-label">
+              Everything a shopper reads — your name, headings and body. Leave it on Qumo&apos;s and you get our
+              house style rather than the browser&apos;s.
+            </p>
+          }
+        />
+
+        <FontField
+          id="figureFont"
+          name="figureFont"
+          label="Figures"
+          value={figureFont}
+          onChange={setFigureFont}
+          defaultFontId={DEFAULT_FIGURE_FONT}
+          help={
+            figuresAreProportional ? (
+              /* Not a block, and not a scold. The face is theirs to choose;
+                 this points at the one thing a picker cannot show them, and
+                 tells them where to look rather than asserting a problem —
+                 amounts are already set to ask for fixed-width digits, and
+                 most faces have them, so the preview is the real answer. */
+              <p className="cn-label cn-warn-note">
+                {figureFace?.label} isn&apos;t a monospace. Amounts ask for fixed-width digits and most faces have
+                them — look at the two in the preview: if their decimal points line up, yours do too.
+              </p>
+            ) : (
+              <p className="cn-label">
+                Balances, amounts and coupon codes. A monospace, so a column of them holds still whatever the
+                numbers do.
+              </p>
+            )
+          }
+        />
+
         <div className="cn-field">
           <label htmlFor="logoUrl">Logo address</label>
           <input
@@ -186,7 +302,7 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
         {/* A real render of the shopper header and primary button, not a
             picture of one — same fallbacks, same two tokens. It moves as the
             fields move, which is the whole reason the panel is here. */}
-        <div className="cn-preview">
+        <div className="cn-preview" style={{ fontFamily: displayFace ? fontStack(displayFace) : undefined }}>
           <div className="cn-preview-head">
             {logoUrl.startsWith("https://") ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -197,6 +313,25 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
             {tagline && <span className="cn-preview-sub">{tagline}</span>}
           </div>
           <p className="cn-preview-h1">Get 5% of every purchase back</p>
+
+          {/* The balance and two activity rows, in the figures face. The
+              amounts are deliberately different widths — 8.50 against
+              142.00 — because that is when a proportional face shows what
+              it does to a column. */}
+          <div style={{ fontFamily: figureFace ? fontStack(figureFace) : undefined }}>
+            <p className="cn-preview-figure">R142.00</p>
+          </div>
+          <div className="cn-preview-rows" style={{ fontFamily: figureFace ? fontStack(figureFace) : undefined }}>
+            <div className="cn-preview-row">
+              <span>Sea Point</span>
+              <span>+R8.50</span>
+            </div>
+            <div className="cn-preview-row">
+              <span>Claremont</span>
+              <span>+R11.00</span>
+            </div>
+          </div>
+
           <button
             type="button"
             className="cn-preview-btn"
