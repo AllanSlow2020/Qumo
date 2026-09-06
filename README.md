@@ -8,6 +8,78 @@ Two things it is not: it is not a points system you can spend anywhere (value
 is closed-loop, earned with one brand and spent only there), and it has
 nothing to do with CIOS. Shared no tables, shared no runtime.
 
+## Trying it yourself
+
+Everything below runs on one machine with no accounts, no domain and no
+deployment. Two commands, then a browser.
+
+```bash
+pnpm bootstrap     # database, secrets, schema — safe to re-run
+pnpm demo          # a Chicken Licken worth looking at
+pnpm dev
+```
+
+`pnpm demo` builds a brand that looks like a business rather than a test
+fixture: five Cape Town stores, 280 members, three months of deliberately
+uneven activity, a stamp card partway through and forty unscanned pack
+codes. It clears its own rows first, so run it as often as you like.
+
+### The three addresses
+
+| | |
+|---|---|
+| **Shopper** | http://chicken-licken.localhost:3000 |
+| **Console** | http://app.localhost:3000 — `owner@chicken-licken.example` / `qumo-dev-password` |
+| **Till** | http://chicken-licken.localhost:3000/dev/till |
+
+`*.localhost` resolves to your own machine in every current browser, so
+there is nothing to add to `/etc/hosts`.
+
+### The loop worth walking
+
+1. **Open the till.** Pick a store and a basket. It signs a slip with that
+   store's own secret, through the same code a real point of sale would
+   use — what comes out is a real slip, not a special case.
+2. **Scan it** — click it on the laptop, or point a phone at the QR.
+3. **Sign in** with any South African mobile number. There is no SMS
+   account yet, so the passcode is printed to the terminal running
+   `pnpm dev`: look for `sms (simulated) send`.
+4. **Watch the balance move**, then scan the same slip again. The page
+   says the same thing — it is the same award — but the balance underneath
+   does not move, because a slip is worth one award, ever. Scanned from a
+   second phone it is refused outright.
+5. **Try a pack code** from the bottom of the till page — the other way to
+   earn, with no till involved.
+6. **Open the console** and look at Performance: the scan you just made is
+   in the chart, in the store table, and in the activity log under your
+   own name.
+
+### Using a phone
+
+`chicken-licken.localhost` means nothing to a phone, and Qumo resolves the
+brand from the subdomain, so a bare IP will not do. `nip.io` solves it with
+no code and no configuration — it resolves any `<anything>.<ip>.nip.io` to
+that IP.
+
+```bash
+ipconfig getifaddr en0                       # macOS, e.g. 192.168.1.42
+NEXT_PUBLIC_QUMO_ROOT_DOMAIN=192.168.1.42.nip.io pnpm dev
+```
+
+Then browse to `http://chicken-licken.192.168.1.42.nip.io:3000` from the
+phone, on the same wifi. The till's QR codes will point there too, so they
+scan properly.
+
+The root domain is read at build time as well as at run time, so if you
+have already run `pnpm build`, rebuild after changing it.
+
+### The till simulator is development only
+
+It hands out validly signed slips, which is the exact artefact the whole
+verification scheme exists to make unforgeable. It 404s when `NODE_ENV` is
+`production`, which `next build` sets — there is no header, cookie or query
+string that reaches it. See `lib/dev/guard.ts`.
+
 ## Running it on your own machine
 
 You need three things installed: **Node 22 or newer**, **pnpm**, and

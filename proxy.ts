@@ -65,7 +65,13 @@ function isPublic(pathname: string): boolean {
     // A browser posting a blocked-resource report has no session and cannot
     // be told to sign in. It defends itself instead: rate limited, size
     // capped, and answering 204 to everything.
-    pathname === REPORT_PATH
+    pathname === REPORT_PATH ||
+    // The till simulator, which has to be reachable before you have signed
+    // in — producing a slip is how you get something to sign in *for*. It
+    //404s outside development regardless of what happens here; see
+    // lib/dev/guard.ts. This list only decides whether a request is sent to
+    // the page at all.
+    pathname.startsWith("/dev/")
   );
 }
 

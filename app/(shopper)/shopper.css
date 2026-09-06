@@ -510,3 +510,38 @@
 .sc-foot a {
   color: var(--sc-ink-2);
 }
+
+/* ---------- the till simulator (development only) ---------- */
+
+.sc-devgrid { display: flex; flex-wrap: wrap; gap: 8px; }
+.sc-devgrid .sc-btn { width: auto; flex: 1 1 auto; padding: 11px 14px; font-size: 14px; }
+
+.sc-qr {
+  width: 100%;
+  max-width: 240px;
+  align-self: center;
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid var(--sc-line);
+}
+
+/* The code is always dark-on-light, in both themes: a phone camera reads
+   contrast, and an inverted QR is a QR that does not scan. */
+.sc-qr svg { display: block; width: 100%; height: auto; }
+.sc-qr-sm { max-width: 96px; padding: 8px; margin: 0; }
+
+.sc-devcode { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px dotted var(--sc-line); }
+.sc-devcode:last-child { border-bottom: 0; }
+
+/* The slip URL, for copying onto another device. Small and wrapping: it is
+   reference, not a headline, and .sc-code-sm sets it at a size meant for a
+   six-character coupon. */
+.sc-devurl {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  line-height: 1.6;
+  letter-spacing: 0;
+  color: var(--sc-ink-3);
+  word-break: break-all;
+  margin: 0;
+}
