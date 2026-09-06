@@ -55,6 +55,9 @@
   --cn-warn-bg: #fdf6e6;
   --cn-neg: #b91c1c;
   --cn-radius: 2px;
+  /* One step darker than a rule, for the largest segment of a stacked
+     bar: it has to read as a quantity rather than as an empty track. */
+  --cn-line-strong: #cbcbc6;
 
   background: var(--cn-bg);
   color: var(--cn-ink);
@@ -92,6 +95,7 @@
     --cn-accent: #f7f7f5;
     --cn-accent-ink: #0a0a0b;
     --cn-data: #7aa2e8;
+  --cn-line-strong: #3a3a40;
     --cn-pos: #3fbf7f;
     --cn-warn: #e0a83a;
     --cn-warn-bg: #241d0f;
@@ -110,6 +114,7 @@
   --cn-accent: #f7f7f5;
   --cn-accent-ink: #0a0a0b;
   --cn-data: #7aa2e8;
+  --cn-line-strong: #3a3a40;
   --cn-pos: #3fbf7f;
   --cn-warn: #e0a83a;
   --cn-warn-bg: #241d0f;
@@ -649,3 +654,61 @@ select.cn-input {
   line-height: 1.45;
   margin-top: 2px;
 }
+
+/* ---------- performance screen ---------- */
+
+.cn-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cn-grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+
+.cn-chart-tall { height: 120px; }
+.cn-chart-tall em { min-height: 12px; }
+
+/* The repeat distribution as one bar. Three tones of ink rather than three
+   hues: they are parts of one quantity, not three unrelated categories, and
+   colouring them separately would imply they are. */
+.cn-stack {
+  display: flex;
+  height: 10px;
+  margin-top: 12px;
+  border-radius: 1px;
+  overflow: hidden;
+  background: var(--cn-line);
+}
+
+.cn-stack span { display: block; }
+.cn-seg-once { background: var(--cn-line-strong); }
+.cn-seg-twice { background: var(--cn-ink-3); }
+.cn-seg-more { background: var(--cn-data); }
+
+.cn-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--cn-ink-2);
+}
+
+.cn-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.cn-legend i { width: 9px; height: 9px; border-radius: 1px; display: inline-block; }
+.cn-legend b { font-weight: 600; color: var(--cn-ink); }
+
+/* A share, drawn. Reading a column of these answers "is it running
+   everywhere" faster than reading a column of percentages. */
+.cn-bar {
+  height: 6px;
+  background: var(--cn-line-soft);
+  border-radius: 1px;
+  overflow: hidden;
+  min-width: 60px;
+}
+
+.cn-bar span { display: block; height: 100%; background: var(--cn-ink-3); }
+.cn-bar span.cn-bar-warn { background: var(--cn-warn); }
