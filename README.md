@@ -80,6 +80,8 @@ verification scheme exists to make unforgeable. It 404s when `NODE_ENV` is
 `production`, which `next build` sets — there is no header, cookie or query
 string that reaches it. See `lib/dev/guard.ts`.
 
+Deploying it, when you want a link rather than a laptop: `docs/deploying.md`.
+
 ## Running it on your own machine
 
 You need three things installed: **Node 22 or newer**, **pnpm**, and
@@ -260,5 +262,7 @@ database you are developing on.
   and the decisions behind both.
 - `docs/qumo-user-journey.html` — every route, what is built, and four
   diagrams. Open it in a browser.
+- `docs/deploying.md` — putting it on the internet: a database, a domain, a
+  wildcard host, and an honest list of what a deployed demo cannot do.
 - `lib/ledger/accrue.ts` — the one place a scan becomes money.
 - `lib/db/tenant.ts` — the guard that makes one brand unable to read another.

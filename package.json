@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "bootstrap": "node scripts/setup.mjs",
-    "build": "prisma generate && next build",
+    "build": "node scripts/preflight.mjs && prisma generate && next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -18,7 +18,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
-    "demo": "tsx scripts/demo.ts"
+    "demo": "tsx scripts/demo.ts",
+    "preflight": "QUMO_PREFLIGHT=strict node scripts/preflight.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

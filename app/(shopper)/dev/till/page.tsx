@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import QRCode from "qrcode";
 import { prisma } from "@/lib/db/client";
@@ -54,7 +55,25 @@ export default async function DevTillPage({
   // slip is stable while you are looking at it, and a new one is a button.
   const externalTxnId = txn ?? null;
 
-  const origin = `http://${brand.slug}.${process.env.NEXT_PUBLIC_QUMO_ROOT_DOMAIN ?? "localhost"}:3000`;
+  // Where the QR codes point.
+  //
+  // The request's own address by default, which is the only thing that is
+  // reliably right: it carries the port you are actually on, and the brand
+  // host you actually asked for. It used to be assembled from the root
+  // domain and a hardcoded :3000, which was correct exactly once.
+  //
+  // QUMO_TILL_ORIGIN overrides it, and that is the useful case rather than
+  // an escape hatch: /dev/till does not exist on a deployed site — it hands
+  // out validly signed slips, which is the artefact the whole verification
+  // scheme exists to make unforgeable — so the way to demo a deployed Qumo
+  // is to run this locally against the deployed database and point the
+  // codes at the deployed site. The slip is signed with the store's real
+  // secret either way, so the deployed site accepts it. See
+  // docs/deploying.md.
+  const requestHeaders = await headers();
+  const host = requestHeaders.get("host") ?? "localhost:3000";
+  const scheme = requestHeaders.get("x-forwarded-proto") ?? "http";
+  const origin = process.env.QUMO_TILL_ORIGIN?.replace(/\/$/, "") || `${scheme}://${host}`;
 
   const slipUrl = chosen && externalTxnId
     ? buildReceiptUrl(
