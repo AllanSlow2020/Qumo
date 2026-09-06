@@ -23,17 +23,17 @@ body {
      behind it, so an unstyled or errored page is never a bright white flash
      in a dark theme. */
   background: #ffffff;
-  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) html,
   :root:not([data-theme="light"]) body {
-    background: #121212;
+    background: #0a0a0b;
   }
 }
 
 :root[data-theme="dark"] html,
 :root[data-theme="dark"] body {
-  background: #121212;
+  background: #0a0a0b;
 }

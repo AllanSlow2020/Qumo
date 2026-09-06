@@ -4,6 +4,7 @@ import { requireBrand } from "@/lib/brand/current";
 import { getConsumerSession } from "@/lib/consumer/session";
 import { getWallet, getWalletHistory, formatLedgerAmount, type BrandWallet } from "@/lib/consumer/wallet";
 import { getPendingSpend } from "@/lib/wallet/spend";
+import { REDEMPTION_AVAILABLE } from "@/lib/wallet/availability";
 import { getProgrammeState } from "@/lib/subscriptions/manage";
 import { BrandHeader } from "../brand-header";
 import { signOut } from "./actions";
@@ -113,8 +114,13 @@ function Balances({
       )}
 
       {/* Only a cash balance is spendable at a till. Stamps and points are
-          earned toward a reward, not handed over at a counter. */}
-      {cents > 0 &&
+          earned toward a reward, not handed over at a counter.
+
+          REDEMPTION_AVAILABLE gates the whole thing: there is no cashier
+          screen, so offering a shopper a spend code would be offering them
+          a code nobody can accept. See lib/wallet/availability.ts. */}
+      {REDEMPTION_AVAILABLE &&
+        cents > 0 &&
         canRedeem &&
         (pendingSpend ? (
           <PendingSpendCard spend={pendingSpend} />
