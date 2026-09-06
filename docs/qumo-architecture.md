@@ -758,24 +758,25 @@ asserting it in a unit test.
 
 ## Open, and needing you
 
-- **Which legal entity is the operator.** `lib/product.ts` currently names
-  Nexus Prime International, and the privacy notice renders it: "Qumo is
-  operated by ${OPERATOR_NAME}, who holds this information on behalf of the
-  brands you interact with." If the company now being registered is the entity
-  that will actually hold shopper phone numbers, that constant and the consent
-  points change together — and a consent change is a `WEB_CONSENT_VERSION`
-  bump, so it wants doing once rather than twice. Blocked on the CIPC
-  registration completing.
+- ~~**Which legal entity is the operator.**~~ **Decided: Qumo.**
+  `OPERATOR_NAME` names Qumo, the consent point that renders it was rewritten
+  to read properly now that the operator and the product share a name, and
+  `WEB_CONSENT_VERSION` moved to `web-v3` — anyone on an older version
+  re-affirms on their next sign-in. The same bump picked up the terms, which
+  the tick box now points at alongside the notice, so the versioned copy was
+  rewritten once rather than twice. One caveat stands: a name lodged with CIPC
+  is not yet a registered company, so if registration lands under one of the
+  fallbacks, `OPERATOR_NAME` and the consent version move together again.
 - **A company name is not a trademark.** CIPC approval puts QUMO on the
   companies register; it grants no rights in the mark. The classes 35 and 42
   search is still its own job, and worth asking an attorney whether 36 applies.
-- **The consent copy is now the one place Qumo leads on a brand's page**, and
-  it was not rewritten. It reads "I agree to Qumo storing my mobile number and
-  my activity with the brands I scan" — still true, and arguably now more
-  important to say plainly, but written for a page that led with Qumo. Whether
-  it should also name the brand being joined depends on the operator vs
-  responsible party decision below, and rewriting versioned consent copy twice
-  is worse than rewriting it once. `WEB_CONSENT_VERSION` is untouched.
+- **The consent copy is the one place Qumo leads on a brand's page.** It now
+  reads "I agree to Qumo storing my mobile number and my activity with the
+  brands I scan, as described in the privacy notice and the terms" — still
+  true, and arguably more important to say plainly on a page that otherwise
+  belongs to the brand. Whether it should also *name* the brand being joined
+  still depends on the operator vs responsible party question below, and is
+  deliberately left for that decision rather than bumped a third time.
 
 - **Which moment is NFC for?** The pack case is free today. A poster at the
   counter is where secure tags earn their cost. At the till the slip already

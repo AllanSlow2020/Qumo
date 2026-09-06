@@ -23,7 +23,8 @@ export async function QumoFooter() {
     <footer className="sc-foot">
       <p>
         {brand ? `${brand.name} rewards, run on ${PRODUCT_NAME}.` : `${PRODUCT_NAME}.`}{" "}
-        <Link href="/legal/privacy">How we handle your details</Link>
+        <Link href="/legal/privacy">How we handle your details</Link> ·{" "}
+        <Link href="/legal/terms">Terms</Link>
       </p>
       {support && (
         <p>

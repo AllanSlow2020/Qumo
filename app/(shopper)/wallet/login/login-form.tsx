@@ -93,7 +93,10 @@ export function ShopperLoginForm({ destination }: { destination: string }) {
             onChange={(e) => setConsented(e.target.checked)}
           />
           <span>
-            {CONSENT_CHECKBOX_LABEL} <Link href="/legal/privacy">Read it</Link>.
+            {/* The label already names both documents; these are the way to
+                them, not a second mention of them. */}
+            {CONSENT_CHECKBOX_LABEL} <Link href="/legal/privacy">Privacy notice</Link> ·{" "}
+            <Link href="/legal/terms">Terms</Link>
           </span>
         </label>
 

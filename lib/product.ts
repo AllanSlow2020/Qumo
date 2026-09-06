@@ -12,5 +12,21 @@
  */
 export const PRODUCT_NAME = "Qumo";
 
-/** The operating company, named in consent copy and the privacy notice. */
-export const OPERATOR_NAME = "Nexus Prime International";
+/**
+ * The operating company, named in the consent copy, the privacy notice and
+ * the terms.
+ *
+ * Qumo, which is the name lodged with CIPC as first preference — see
+ * docs/qumo-architecture.md for the tracking number and the fallbacks. It
+ * used to name a different entity, inherited from before Qumo was its own
+ * product, and leaving it there would have made the privacy notice say a
+ * company holds your phone number when a different one does.
+ *
+ * One caveat, and it is worth knowing rather than discovering: a name that
+ * is lodged is not yet a registered company, so this names the business
+ * rather than a legal person. If registration lands under one of the
+ * fallbacks, this line and WEB_CONSENT_VERSION move together — a rendered
+ * consent string that changed without its version bumping is precisely the
+ * question the version exists to answer.
+ */
+export const OPERATOR_NAME = "Qumo";

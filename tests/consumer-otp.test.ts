@@ -1,6 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db/client";
 import { requestOtp, verifyOtp, OtpError } from "@/lib/consumer/otp";
+import { WEB_CONSENT_VERSION } from "@/lib/consumer/consent";
 import { InvalidPhoneNumberError } from "@/lib/consumer/phone";
 import { hashPhone } from "@/lib/security/crypto";
 import type { SmsClient } from "@/lib/sms/client";
@@ -65,7 +66,7 @@ describe("lib/consumer/otp", () => {
     // this person actually agreed to.
     // Names the wording actually shown — the WhatsApp door stamps "wa-v1"
     // for its own, different, script.
-    expect(person.consentVersion).toBe("web-v2");
+    expect(person.consentVersion).toBe(WEB_CONSENT_VERSION);
     // The plaintext number is never stored.
     expect(person.phoneEncrypted).not.toContain(phone);
   });
@@ -262,7 +263,10 @@ describe("lib/consumer/otp", () => {
     await requestOtp(phone, sms);
     const second = await verifyOtp(phone, sms.lastCode(), true);
 
-    expect(second.consentVersion).toBe("web-v2");
+    // The version they are re-stamped with is whatever the current copy
+    // is, not a literal — a bump is a routine event and a test that fails
+    // on one teaches people to edit tests when they change wording.
+    expect(second.consentVersion).toBe(WEB_CONSENT_VERSION);
     expect(second.consentGivenAt!.getTime()).toBeGreaterThan(new Date("2020-01-01").getTime());
   });
 
