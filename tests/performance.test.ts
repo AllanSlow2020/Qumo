@@ -3,7 +3,9 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db/client";
 import {
   costPerMemberCents,
+  delta,
   getPerformance,
+  isNoMovement,
   isPeriod,
   repeatRate,
 } from "@/lib/console/performance";
@@ -284,5 +286,130 @@ describe("the chart", () => {
   it("agrees with the total printed beside it", async () => {
     const p = await getPerformance(brand.id, 30);
     expect(p.scansByDay.reduce((sum, d) => sum + d.count, 0)).toBe(p.slips);
+  });
+});
+
+/**
+ * The comparison against the window before.
+ *
+ * A figure with nothing to compare it to is not a finding: "42% came back"
+ * is unreadable on its own, and the only question anybody actually has is
+ * whether that is better or worse than it was.
+ */
+describe("comparison with the previous window", () => {
+  it("measures the window immediately before, with no gap and no overlap", async () => {
+    const p = await getPerformance(brand.id, 7);
+    expect(p.previous).toBeDefined();
+
+    // The previous window ends exactly where this one starts. A gap loses
+    // days; an overlap counts them twice, and both look plausible.
+    const previousEnd = new Date(p.previous!.from.getTime() + 7 * DAY);
+    expect(previousEnd.getTime()).toBeCloseTo(p.from.getTime(), -3);
+  });
+
+  /**
+   * The test that was missing, and the bug it would have caught.
+   *
+   * Every period filter started as `gte: from` with no upper bound. That is
+   * right exactly once — for the current window, where "now" is the end of
+   * time anyway — and wrong the moment the same function measures an
+   * earlier window: an open-ended range from the start of the previous
+   * period runs to today and swallows the current one whole.
+   *
+   * The symptom was that every comparison on the screen read "no change",
+   * because the previous window contained the current window's data and
+   * then some. A bug that makes a number look boring rather than wrong is
+   * the kind that ships.
+   */
+  it("does not let the current window leak into the previous one", async () => {
+    const p = await getPerformance(brand.id, 7);
+
+    // Everything in this suite was scanned within the last five days, so a
+    // correctly bounded previous window — days 7 to 14 — contains none of
+    // it. Unbounded, it would contain all twelve.
+    expect(p.previous!.slips).toBe(0);
+    expect(p.previous!.membersReached).toBe(0);
+    expect(p.slips).toBe(12);
+  });
+
+  it("does not recurse forever", async () => {
+    const p = await getPerformance(brand.id, 7);
+    expect((p.previous as { previous?: unknown }).previous).toBeUndefined();
+  });
+
+  it("finds the older scans in the earlier window rather than this one", async () => {
+    // The 60-day-old R50 scan is outside a 30-day window and outside the
+    // 30 before it, so neither should see it; the 90-day window should.
+    const ninety = await getPerformance(brand.id, 90);
+    expect(ninety.slips).toBe(13);
+  });
+});
+
+describe("delta", () => {
+  it("reports the movement between two figures", () => {
+    expect(delta(120, 100)).toEqual({ absolute: 20, relative: 0.2 });
+    expect(delta(80, 100)).toEqual({ absolute: -20, relative: -0.2 });
+  });
+
+  /**
+   * Everything is an infinite increase on nothing, and "+∞%" tells a brand
+   * less than the two raw numbers do.
+   */
+  it("has no relative change when there was nothing before", () => {
+    expect(delta(50, 0)).toEqual({ absolute: 50, relative: null });
+  });
+
+  it("is null when either side is missing, rather than treating it as zero", () => {
+    // A repeat rate of null means nobody earned, which is not the same as
+    // a repeat rate of zero, and subtracting the two would invent a fall.
+    expect(delta(null, 0.5)).toBeNull();
+    expect(delta(0.5, null)).toBeNull();
+  });
+});
+
+describe("a brand with nothing yet", () => {
+  /**
+   * The state every brand is in on day one, and the one screen state I had
+   * never actually looked at.
+   */
+  it("returns a whole, empty shape rather than throwing or half-filling", async () => {
+    const p = await getPerformance(other.id, 30);
+
+    expect(p.slips).toBe(0);
+    expect(p.packCodes).toBe(0);
+    expect(p.membersReached).toBe(0);
+    expect(p.issued).toEqual([]);
+    expect(p.outstanding).toEqual([]);
+    expect(p.repeat).toEqual({ once: 0, twice: 0, more: 0 });
+    expect(p.byStore).toEqual([]);
+    expect(p.byCampaign).toEqual([]);
+    // Still seven-times-thirty buckets, so the chart has a shape to be
+    // empty in rather than undefined to crash on.
+    expect(p.scansByDay).toHaveLength(30);
+    expect(p.previous).toBeDefined();
+
+    expect(repeatRate(p)).toBeNull();
+    expect(costPerMemberCents(p)).toBeNull();
+  });
+});
+
+describe("isNoMovement", () => {
+  /**
+   * A brand on its first day should see a clean screen, not a row of "no
+   * change" notes. Saying "no change" implies there was something to change
+   * from, and there was not.
+   */
+  it("is true when there was nothing then and nothing now", () => {
+    expect(isNoMovement(delta(0, 0))).toBe(true);
+  });
+
+  it("is false for a real change, including one from nothing", () => {
+    expect(isNoMovement(delta(5, 0))).toBe(false);
+    expect(isNoMovement(delta(0, 5))).toBe(false);
+    expect(isNoMovement(delta(120, 100))).toBe(false);
+  });
+
+  it("is false when there is nothing to compare at all", () => {
+    expect(isNoMovement(null)).toBe(false);
   });
 });

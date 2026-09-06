@@ -104,7 +104,40 @@ export type Performance = {
   scansByDay: { day: Date; count: number }[];
   byStore: StoreRow[];
   byCampaign: CampaignRow[];
+  /**
+   * The same window, immediately before this one.
+   *
+   * A figure with nothing to compare it to is not a finding. "42% came
+   * back" is unreadable on its own — the only question anybody has is
+   * whether that is better or worse than it was, and answering it needs
+   * the window before.
+   *
+   * Undefined when this *is* the previous window, which stops the
+   * comparison recursing forever.
+   */
+  previous?: Omit<Performance, "previous">;
 };
+
+/** A change worth showing, or null when there is nothing to compare to. */
+export type Delta = { absolute: number; relative: number | null } | null;
+
+/**
+ * The change between two figures.
+ *
+ * `relative` is null when the previous figure was zero: everything is an
+ * infinite increase on nothing, and "+∞%" tells a brand less than the two
+ * raw numbers do.
+ */
+export function delta(now: number | null, before: number | null): Delta {
+  if (now === null || before === null) return null;
+  const absolute = now - before;
+  return { absolute, relative: before === 0 ? null : absolute / before };
+}
+
+/** True when there is genuinely nothing to say: nothing then, nothing now. */
+export function isNoMovement(change: Delta): boolean {
+  return change !== null && change.absolute === 0 && change.relative === null;
+}
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -119,33 +152,76 @@ export async function getPerformance(
   brandId: string,
   days: PeriodDays,
   now: Date = new Date(),
+  /** Internal: the recursive call for the preceding window sets this. */
+  withComparison = true,
 ): Promise<Performance> {
   const scoped = forBrand(brandId);
   const from = new Date(now.getTime() - days * DAY_MS);
 
-  const [issuedRows, outstandingRows, slipRows, packCodes, newMembers, perMember, campaigns, stores] =
-    await Promise.all([
+  /**
+   * Both ends of the window, always.
+   *
+   * Every one of these filters started as `gte: from` with no upper bound,
+   * which is correct exactly once — for the current window, where "now" is
+   * the end of time anyway. The moment the same function is asked to
+   * measure an *earlier* window it is wrong: an open-ended range from the
+   * start of the previous period runs all the way to today and swallows
+   * the current one whole.
+   *
+   * The symptom was that every comparison read "no change", because the
+   * previous window contained the current window's data and then some. A
+   * bug that makes a number look boring rather than wrong is the kind that
+   * ships.
+   */
+  const window = { gte: from, lt: now };
+
+  // The window immediately before this one, measured the same way. Run
+  // first so the two are computed against the same clock: taking `now`
+  // twice a few hundred milliseconds apart is how a comparison quietly
+  // develops a gap or an overlap.
+  const previous = withComparison ? await getPerformance(brandId, days, from, false) : undefined;
+
+  const [
+    issuedRows,
+    outstandingRows,
+    slipRows,
+    slipsPerStore,
+    packCodes,
+    newMembers,
+    perMember,
+    campaigns,
+    stores,
+  ] = await Promise.all([
       // Credits only. "Issued" is what was handed out; netting redemptions
       // off it would answer a different question, and the outstanding
       // figure beside it already answers that one.
       scoped.pointsTransaction.groupBy({
         by: ["unit"],
-        where: { amount: { gt: 0 }, createdAt: { gte: from } },
+        where: { amount: { gt: 0 }, createdAt: window },
         _sum: { amount: true },
       }),
       scoped.pointsTransaction.groupBy({ by: ["unit"], _sum: { amount: true } }),
+      // Only the timestamps. Store counts come from a groupBy below rather
+      // than from counting these in memory: loading every scan row to
+      // tally them worked at four hundred scans and would not at a hundred
+      // thousand, and the database can count without sending anything.
       scoped.purchaseScan.findMany({
-        where: { scannedAt: { gte: from } },
-        select: { scannedAt: true, storeId: true, brandMembershipId: true },
+        where: { scannedAt: window },
+        select: { scannedAt: true },
       }),
-      scoped.packCode.count({ where: { status: "SCANNED", scannedAt: { gte: from } } }),
-      scoped.brandMembership.count({ where: { joinedAt: { gte: from } } }),
+      scoped.purchaseScan.groupBy({
+        by: ["storeId"],
+        where: { scannedAt: window },
+        _count: { _all: true },
+      }),
+      scoped.packCode.count({ where: { status: "SCANNED", scannedAt: window } }),
+      scoped.brandMembership.count({ where: { joinedAt: window } }),
       // Earn events per member in the period, which is what the repeat
       // distribution is built from. Counted over ledger credits rather than
       // over slips, so a pack code counts as coming back too.
       scoped.pointsTransaction.groupBy({
         by: ["brandMembershipId"],
-        where: { amount: { gt: 0 }, createdAt: { gte: from } },
+        where: { amount: { gt: 0 }, createdAt: window },
         _count: { _all: true },
       }),
       scoped.campaign.findMany({
@@ -175,15 +251,16 @@ export async function getPerformance(
   // one brand's scans, and date_trunc in raw SQL would step outside the
   // tenant guard for a query that is not expensive.
   const buckets = new Map<string, number>();
-  for (let i = days - 1; i >= 0; i -= 1) {
+  for (let i = 1; i <= days; i += 1) {
+    // Counting back from the last full day inside the window rather than
+    // from `now`, so the buckets line up with the range the query used.
     buckets.set(new Date(now.getTime() - i * DAY_MS).toISOString().slice(0, 10), 0);
   }
-  const perStore = new Map<string, number>();
   for (const scan of slipRows) {
     const key = scan.scannedAt.toISOString().slice(0, 10);
     if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
-    perStore.set(scan.storeId, (perStore.get(scan.storeId) ?? 0) + 1);
   }
+  const perStore = new Map(slipsPerStore.map((r) => [r.storeId, r._count._all]));
 
   // ---- by store ------------------------------------------------------------
   const byStore: StoreRow[] = stores
@@ -205,7 +282,7 @@ export async function getPerformance(
     campaignIds.length
       ? scoped.pointsTransaction.groupBy({
           by: ["campaignId"],
-          where: { amount: { gt: 0 }, createdAt: { gte: from }, campaignId: { in: campaignIds } },
+          where: { amount: { gt: 0 }, createdAt: window, campaignId: { in: campaignIds } },
           _sum: { amount: true },
         })
       : [],
@@ -219,7 +296,7 @@ export async function getPerformance(
     campaignIds.length
       ? scoped.pointsTransaction.groupBy({
           by: ["campaignId", "brandMembershipId"],
-          where: { amount: { gt: 0 }, createdAt: { gte: from }, campaignId: { in: campaignIds } },
+          where: { amount: { gt: 0 }, createdAt: window, campaignId: { in: campaignIds } },
         })
       : [],
   ]);
@@ -260,9 +337,12 @@ export async function getPerformance(
     membersReached,
     newMembers,
     repeat,
-    scansByDay: [...buckets.entries()].map(([key, count]) => ({ day: new Date(key), count })),
+    scansByDay: [...buckets.entries()]
+      .map(([key, count]) => ({ day: new Date(key), count }))
+      .sort((a, b) => a.day.getTime() - b.day.getTime()),
     byStore,
     byCampaign,
+    previous,
   };
 }
 

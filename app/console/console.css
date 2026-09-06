@@ -712,3 +712,21 @@ select.cn-input {
 
 .cn-bar span { display: block; height: 100%; background: var(--cn-ink-3); }
 .cn-bar span.cn-bar-warn { background: var(--cn-warn); }
+
+/* The change against the previous window.
+   Deliberately not coloured: on this page "issued more" is not good news
+   and "issued less" is not bad news, and a green arrow would be the
+   console making a judgement that belongs to the brand. */
+.cn-delta {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--cn-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.cn-head-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* The export control is an anchor so the browser handles the download, and
+   an anchor brings an underline that a button should not have. */
+a.cn-btn { text-decoration: none; display: inline-block; }

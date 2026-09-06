@@ -3,11 +3,13 @@ import { formatLedgerAmount } from "@/lib/consumer/wallet";
 import { requireStaff } from "@/lib/staff/current";
 import {
   costPerMemberCents,
+  delta,
   getPerformance,
   isPeriod,
   PERIODS,
   repeatRate,
   type CampaignRow,
+  type Delta,
   type PeriodDays,
   type Performance,
   type StoreRow,
@@ -29,6 +31,45 @@ function unitLine(rows: UnitAmount[]): string {
 
 function percent(value: number | null): string {
   return value === null ? "—" : `${Math.round(value * 100)}%`;
+}
+
+/**
+ * The change against the window before, said in words rather than in an
+ * arrow and a colour.
+ *
+ * No green-up-red-down: on this page "issued more" is not good news and
+ * "issued less" is not bad news — it depends entirely on what the brand is
+ * trying to do, and colouring it would be the console deciding for them.
+ * The direction is in the sign, and the reader supplies the judgement.
+ *
+ * A change of less than a percentage point is reported as flat. Reporting
+ * 0.4% as movement trains people to ignore the line.
+ */
+function Change({ change, unit }: { change: Delta; unit?: "percent" | "count" }) {
+  if (change === null) return null;
+
+  const { absolute, relative } = change;
+
+  // Nothing then, nothing now: there is no change to report and saying "no
+  // change" implies there was something to change from. A brand on its
+  // first day should see a clean screen, not a row of null results.
+  if (absolute === 0 && relative === null) return null;
+
+  const flat = relative !== null ? Math.abs(relative) < 0.01 : absolute === 0;
+  if (flat) return <span className="cn-delta">no change on the previous period</span>;
+
+  const sign = absolute > 0 ? "+" : "\u2212";
+  const size = Math.abs(absolute);
+  const shown =
+    unit === "percent" ? `${sign}${Math.round(size * 100)} points` : `${sign}${Math.round(size).toLocaleString("en-ZA")}`;
+
+  return (
+    <span className="cn-delta">
+      {shown}
+      {relative !== null && unit !== "percent" && ` (${sign}${Math.round(Math.abs(relative) * 100)}%)`} on the previous
+      period
+    </span>
+  );
 }
 
 /**
@@ -71,7 +112,9 @@ function ScanChart({ series, days }: { series: { day: Date; count: number }[]; d
  */
 function RepeatBar({ repeat }: { repeat: Performance["repeat"] }) {
   const total = repeat.once + repeat.twice + repeat.more;
-  if (total === 0) return <p className="cn-body">Nobody has earned in this window yet.</p>;
+  // Nothing, rather than a second sentence saying what the note above
+  // already said. An empty state that repeats itself reads as a bug.
+  if (total === 0) return null;
 
   const parts = [
     { key: "once", label: "Once", value: repeat.once, className: "cn-seg-once" },
@@ -213,17 +256,32 @@ export default async function ConsolePerformancePage({
   const perMember = costPerMemberCents(p);
   const rate = repeatRate(p);
 
+  // The same figures for the window before, so every headline can say
+  // which way it moved.
+  const was = p.previous;
+  const rateChange = was ? delta(rate, repeatRate(was as Performance)) : null;
+  const perMemberChange = was ? delta(perMember, costPerMemberCents(was as Performance)) : null;
+  const slipsChange = was ? delta(p.slips, was.slips) : null;
+  const reachedChange = was ? delta(p.membersReached, was.membersReached) : null;
+
   return (
     <>
       <div className="cn-head-row">
         <h1 className="cn-h1">Performance</h1>
-        <nav className="cn-seg" aria-label="Period">
-          {PERIODS.map((n) => (
-            <Link key={n} href={`/performance?days=${n}`} aria-current={n === days ? "true" : undefined}>
-              {n} days
-            </Link>
-          ))}
-        </nav>
+        <div className="cn-head-tools">
+          <nav className="cn-seg" aria-label="Period">
+            {PERIODS.map((n) => (
+              <Link key={n} href={`/performance?days=${n}`} aria-current={n === days ? "true" : undefined}>
+                {n} days
+              </Link>
+            ))}
+          </nav>
+          {/* A plain link, not a fetch: the browser already knows how to
+              save a file the server labels as one. */}
+          <a className="cn-btn cn-btn-quiet" href={`/api/console/performance?days=${days}`}>
+            Export CSV
+          </a>
+        </div>
       </div>
 
       <p className="cn-body">
@@ -241,6 +299,7 @@ export default async function ConsolePerformancePage({
               ? "Nobody has earned yet"
               : `${(p.repeat.twice + p.repeat.more).toLocaleString("en-ZA")} of ${p.membersReached.toLocaleString("en-ZA")} people earned more than once`}
           </div>
+          <Change change={rateChange} unit="percent" />
           <RepeatBar repeat={p.repeat} />
         </div>
 
@@ -252,6 +311,7 @@ export default async function ConsolePerformancePage({
               ? "Nobody reached in this window"
               : `${unitLine(p.issued)} issued to ${p.membersReached.toLocaleString("en-ZA")} people`}
           </div>
+          <Change change={perMemberChange} />
         </div>
       </div>
 
@@ -267,11 +327,13 @@ export default async function ConsolePerformancePage({
           <div className="cn-metric-note">
             {p.packCodes > 0 ? `${p.packCodes.toLocaleString("en-ZA")} pack codes as well` : "No pack codes yet"}
           </div>
+          <Change change={slipsChange} />
         </div>
         <div className="cn-metric">
           <div className="cn-metric-v">{p.membersReached.toLocaleString("en-ZA")}</div>
           <div className="cn-metric-k">People who earned</div>
           <div className="cn-metric-note">{p.newMembers.toLocaleString("en-ZA")} joined in this window</div>
+          <Change change={reachedChange} />
         </div>
       </div>
 
