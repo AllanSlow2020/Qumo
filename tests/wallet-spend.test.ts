@@ -223,7 +223,7 @@ describe("lib/wallet/spend", () => {
   it("enforces role permissions on confirmation", async () => {
     const spend = await createWalletSpend(shopper.id, brand.id, 1_000);
     await expect(
-      confirmWalletSpend({ user: { brandId: brand.id, role: "NOT_A_ROLE", id: cashier.id } }, spend.code),
+      confirmWalletSpend({ user: { id: cashier.id, brandId: brand.id, role: "NOT_A_ROLE", name: "Test Cashier" } }, spend.code),
     ).rejects.toThrow(ForbiddenError);
   });
 

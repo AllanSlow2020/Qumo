@@ -7,70 +7,98 @@
  * with different jobs, and the scoping means restyling one can never
  * silently restyle the other.
  *
- * The direction is Uber's: a white ground, true black type, hairline rules
- * instead of card chrome, one enormous number per screen, and a single
- * full-width black button that says what happens. Dark mode reverses it
- * onto grey rather than pure black — #000 on an OLED phone at night reads
- * as a hole in the screen, and the surfaces need somewhere to sit.
+ * The direction is "Slip": the thing a shopper is actually holding is a
+ * printed till receipt, so the screen is one. Hairline and dotted rules
+ * instead of card chrome, figures in a true monospace so every amount lines
+ * up down the page, almost no radius, and one full-width button that says
+ * what happens. Dark mode goes to near-black rather than #000 — a pure
+ * black on an OLED phone at night reads as a hole in the screen, and the
+ * surfaces need somewhere to sit.
+ *
+ * ── The one rule about colour, and why it changed ────────────────────────
+ *
+ * **The brand's colour marks action and progress. Money is always ink.**
+ *
+ * The first pass had earned amounts render in the brand accent. That works
+ * until the brand is Chicken Licken, whose colour is red — and a column of
+ * red money reads as money lost to anyone who has ever opened a banking
+ * app. It is the kind of thing that only shows up when you put a real
+ * brand's palette into it.
+ *
+ * So amounts are ink and carry their emphasis by weight, the accent is
+ * reserved for buttons and for progress marks (a stamp filling up), and the
+ * system is then immune to whichever colour a brand picks — including the
+ * ones that already mean something.
  */
 
 .sc {
   --sc-bg: #ffffff;
-  --sc-raised: #f6f6f6;
-  --sc-ink: #000000;
-  --sc-ink-2: #545454;
-  --sc-ink-3: #757575;
-  --sc-line: #e2e2e2;
-  --sc-line-soft: #eeeeee;
-  --sc-btn: #000000;
+  --sc-raised: #fafaf9;
+  --sc-ink: #0a0a0a;
+  --sc-ink-2: #52525b;
+  --sc-ink-3: #8a8a90;
+  --sc-line: #e4e4e0;
+  --sc-line-soft: #efefec;
+  --sc-btn: #0a0a0a;
   --sc-btn-ink: #ffffff;
-  --sc-pos: #05944f;
-  --sc-pos-bg: #edf7f1;
-  --sc-neg: #e11900;
-  --sc-focus: #276ef1;
+  /* Not a colour any more. Money is ink; see the note at the top of this
+     file. The variable stays so every existing call site keeps working and
+     the decision lives in one place. */
+  --sc-pos: var(--sc-ink);
+  --sc-pos-bg: #fafaf9;
+  --sc-neg: #b91c1c;
+  --sc-focus: #0a0a0a;
+  --sc-radius: 2px;
 }
 
 /* System setting, no explicit choice stamped — the state most viewers are
    in. Guarded so an explicit "light" still wins over a dark OS. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .sc {
-    --sc-bg: #121212;
-    --sc-raised: #1f1f1f;
-    --sc-ink: #ffffff;
-    --sc-ink-2: #afafaf;
-    --sc-ink-3: #8c8c8c;
-    --sc-line: #2e2e2e;
-    --sc-line-soft: #242424;
-    --sc-btn: #ffffff;
-    --sc-btn-ink: #000000;
-    --sc-pos: #3fcf7f;
-    --sc-pos-bg: #14291f;
-    --sc-neg: #ff6b5e;
-    --sc-focus: #5b91f5;
+    --sc-bg: #0a0a0b;
+    --sc-raised: #131315;
+    --sc-ink: #f7f7f5;
+    --sc-ink-2: #a1a1a8;
+    --sc-ink-3: #71717a;
+    --sc-line: #232326;
+    --sc-line-soft: #1a1a1d;
+    --sc-btn: #f7f7f5;
+    --sc-btn-ink: #0a0a0b;
+    --sc-pos: var(--sc-ink);
+    --sc-pos-bg: #131315;
+    --sc-neg: #f87171;
+    --sc-focus: #f7f7f5;
   }
 }
 
 /* Explicit choice from the toggle, so it wins in both directions. */
 :root[data-theme="dark"] .sc {
-  --sc-bg: #121212;
-  --sc-raised: #1f1f1f;
-  --sc-ink: #ffffff;
-  --sc-ink-2: #afafaf;
-  --sc-ink-3: #8c8c8c;
-  --sc-line: #2e2e2e;
-  --sc-line-soft: #242424;
-  --sc-btn: #ffffff;
-  --sc-btn-ink: #000000;
-  --sc-pos: #3fcf7f;
-  --sc-pos-bg: #14291f;
-  --sc-neg: #ff6b5e;
-  --sc-focus: #5b91f5;
+  --sc-bg: #0a0a0b;
+  --sc-raised: #131315;
+  --sc-ink: #f7f7f5;
+  --sc-ink-2: #a1a1a8;
+  --sc-ink-3: #71717a;
+  --sc-line: #232326;
+  --sc-line-soft: #1a1a1d;
+  --sc-btn: #f7f7f5;
+  --sc-btn-ink: #0a0a0b;
+  --sc-pos: var(--sc-ink);
+  --sc-pos-bg: #131315;
+  --sc-neg: #f87171;
+  --sc-focus: #f7f7f5;
 }
 
 .sc {
   background: var(--sc-bg);
   color: var(--sc-ink);
-  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* The display face, which a brand replaces. Never used for figures. */
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Instrument Sans sets a narrow word space, which ran dates together
+     ("04Sept2026") at small sizes as well as headings. Corrected once at
+     the root, because it is a property of the face rather than of any one
+     component — and it is inherited by anything a brand's face replaces it
+     with, which is the wrong default only if their face is wide. */
+  word-spacing: 0.05em;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
@@ -97,7 +125,15 @@
 .sc-mark {
   font-size: 22px;
   font-weight: 700;
-  letter-spacing: -0.035em;
+  /* Instrument Sans is narrower than the Inter this was tuned for, and has
+     a narrow word space to match. The tracking that gave Inter its
+     tightness ran Instrument's words into each other — "Chicken Licken"
+     set as one word. Tracking sits at zero at display sizes and the word
+     space is opened slightly instead, which is the pair of adjustments a
+     narrower face wants. This is the whole argument for owning the type
+     contract rather than letting a brand vary it silently. */
+  letter-spacing: 0;
+  word-spacing: 0.06em;
   line-height: 1;
   color: var(--sc-ink);
 }
@@ -106,7 +142,7 @@
   font-size: 13px;
   font-weight: 400;
   color: var(--sc-ink-3);
-  letter-spacing: -0.006em;
+  letter-spacing: 0;
   margin-top: 4px;
 }
 
@@ -115,7 +151,8 @@
 .sc-h1 {
   font-size: 30px;
   font-weight: 700;
-  letter-spacing: -0.032em;
+  letter-spacing: -0.004em;
+  word-spacing: 0.05em;
   line-height: 1.12;
   margin: 0;
   text-wrap: balance;
@@ -124,7 +161,8 @@
 .sc-h2 {
   font-size: 17px;
   font-weight: 600;
-  letter-spacing: -0.016em;
+  letter-spacing: 0;
+  word-spacing: 0.04em;
   line-height: 1.25;
   margin: 0;
 }
@@ -133,7 +171,7 @@
   font-size: 15px;
   line-height: 1.5;
   color: var(--sc-ink-2);
-  letter-spacing: -0.006em;
+  letter-spacing: 0;
   margin: 0;
 }
 
@@ -148,32 +186,85 @@
 /* The one enormous number per screen. Tabular so a balance doesn't
    shuffle sideways as it changes. */
 .sc-figure {
-  font-size: 44px;
-  font-weight: 700;
-  letter-spacing: -0.04em;
+  font-size: 40px;
+  font-weight: 600;
+  /* Martian Mono is a wide monospace. It needs negative tracking to sit at
+     a sensible width, but nowhere near what a grotesque wants. */
+  letter-spacing: -0.05em;
   line-height: 1.02;
   font-variant-numeric: tabular-nums;
   margin: 0;
 }
 
 .sc-figure-sm {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.05em;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
   margin: 0;
 }
 
-.sc-pos { color: var(--sc-pos); }
+/* Money is ink, and carries its emphasis by weight rather than by hue.
+   See the note at the top of this file: a red brand would otherwise render
+   every amount earned in the colour of money lost. */
+.sc-pos { color: var(--sc-ink); font-weight: 600; }
+
+/* ---------- figures ----------
+   Every number in the product goes through the monospace, which is what
+   makes a column of amounts line up down the page — the whole reason this
+   direction is called Slip. Applied by selector rather than by asking each
+   component to remember a class. */
+.sc-figure,
+.sc-figure-sm,
+.sc-row-amt,
+.sc-balance .sc-figure-sm,
+.sc-code,
+.sc-code-sm,
+.sc-input-code {
+  font-family: var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- the dotted leader ----------
+   A label on the left, a figure on the right, and a dotted line joining
+   them: the detail that makes a screen read as a printed record rather
+   than a list of divs. Drawn as a dotted underline on the label, which
+   grows to fill the row, so it survives any label length and needs no
+   filler element in the markup. */
+.sc-ldr {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0;
+  font-size: 13px;
+}
+
+.sc-ldr > *:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--sc-ink-3);
+  border-bottom: 1px dotted var(--sc-line);
+  transform: translateY(-3px);
+}
+
+.sc-ldr > *:last-child {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+}
 
 /* ---------- surfaces ---------- */
 
 .sc-card {
   background: var(--sc-bg);
   border: 1px solid var(--sc-line);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: var(--sc-radius);
+  padding: 18px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -181,7 +272,8 @@
 
 .sc-tile {
   background: var(--sc-raised);
-  border-radius: 12px;
+  border: 1px solid var(--sc-line-soft);
+  border-radius: var(--sc-radius);
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -209,8 +301,8 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--sc-line-soft);
+  padding: 13px 0;
+  border-bottom: 1px dotted var(--sc-line);
 }
 
 .sc-row:last-child { border-bottom: 0; }
@@ -228,12 +320,12 @@
   display: block;
   width: 100%;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--sc-radius);
   padding: 16px 20px;
   font: inherit;
   font-size: 16px;
   font-weight: 600;
-  letter-spacing: -0.011em;
+  letter-spacing: 0;
   text-align: center;
   text-decoration: none;
   cursor: pointer;
@@ -243,7 +335,16 @@
 }
 
 .sc-btn:hover { opacity: 0.85; }
-.sc-btn:disabled { opacity: 0.32; cursor: not-allowed; }
+.sc-btn:disabled {
+  /* Not a faded brand colour: at 32% opacity Chicken Licken's red became a
+     pale pink that reads as a rendering fault rather than as "not yet".
+     A disabled control is drawn as a control that is off. */
+  background: var(--sc-raised);
+  color: var(--sc-ink-3);
+  box-shadow: inset 0 0 0 1px var(--sc-line);
+  opacity: 1;
+  cursor: not-allowed;
+}
 
 .sc-btn-ghost {
   background: var(--sc-raised);
@@ -262,14 +363,14 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--sc-ink-2);
-  letter-spacing: -0.006em;
+  letter-spacing: 0;
 }
 
 .sc-input {
   width: 100%;
   font: inherit;
   font-size: 17px;
-  letter-spacing: -0.011em;
+  letter-spacing: 0;
   padding: 15px 16px;
   border-radius: 10px;
   border: 1px solid var(--sc-line);
@@ -317,7 +418,7 @@
   font-size: 14px;
   color: var(--sc-neg);
   margin: 0;
-  letter-spacing: -0.006em;
+  letter-spacing: 0;
 }
 
 /* Excludes buttons deliberately. This rule sits after .sc-btn and outranks
@@ -371,4 +472,76 @@
 
 @media (prefers-reduced-motion: reduce) {
   .sc * { transition: none !important; }
+}
+
+/* ---------- brand identity ---------- */
+
+/* A brand's own mark, at whatever aspect ratio they gave us. Height is
+   capped and width follows, because a wordmark and a roundel are both
+   plausible and neither should be allowed to push the theme toggle off a
+   360px screen. */
+.sc-brandmark {
+  display: block;
+  height: 30px;
+  width: auto;
+  max-width: 220px;
+  object-fit: contain;
+}
+
+/* Where Qumo lives now: last thing on the page, smallest type on it, still
+   unambiguously present. */
+.sc-foot {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--sc-line-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sc-foot p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--sc-ink-3);
+  letter-spacing: -0.004em;
+}
+
+.sc-foot a {
+  color: var(--sc-ink-2);
+}
+
+/* ---------- the till simulator (development only) ---------- */
+
+.sc-devgrid { display: flex; flex-wrap: wrap; gap: 8px; }
+.sc-devgrid .sc-btn { width: auto; flex: 1 1 auto; padding: 11px 14px; font-size: 14px; }
+
+.sc-qr {
+  width: 100%;
+  max-width: 240px;
+  align-self: center;
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid var(--sc-line);
+}
+
+/* The code is always dark-on-light, in both themes: a phone camera reads
+   contrast, and an inverted QR is a QR that does not scan. */
+.sc-qr svg { display: block; width: 100%; height: auto; }
+.sc-qr-sm { max-width: 96px; padding: 8px; margin: 0; }
+
+.sc-devcode { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px dotted var(--sc-line); }
+.sc-devcode:last-child { border-bottom: 0; }
+
+/* The slip URL, for copying onto another device. Small and wrapping: it is
+   reference, not a headline, and .sc-code-sm sets it at a size meant for a
+   six-character coupon. */
+.sc-devurl {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  line-height: 1.6;
+  letter-spacing: 0;
+  color: var(--sc-ink-3);
+  word-break: break-all;
+  margin: 0;
 }

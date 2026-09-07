@@ -1,5 +1,6 @@
 import type { LedgerUnit, PointsReason, Prisma } from "@prisma/client";
 import { createCouponWithRetry } from "@/lib/coupons/issue";
+import { programmeState, type SubscriptionRow } from "@/lib/subscriptions/state";
 
 /**
  * The one place a scan turns into ledger movement.
@@ -50,6 +51,12 @@ type AccrualTx = {
     count: (args: { where: { rewardId: string } }) => Promise<number>;
     create: (args: { data: Prisma.CouponUncheckedCreateInput }) => Promise<unknown>;
   };
+  subscription: {
+    findUnique: (args: {
+      where: { brandId: string };
+      select: { status: true; cancelledAt: true; honourRedemptionUntil: true };
+    }) => Promise<SubscriptionRow>;
+  };
 };
 
 /**
@@ -62,7 +69,8 @@ export type AccrualRefusal =
   | "DAILY_LIMIT"
   | "DAILY_SCAN_LIMIT"
   | "CAMPAIGN_EXHAUSTED"
-  | "OPTED_OUT";
+  | "OPTED_OUT"
+  | "PROGRAMME_CLOSED";
 
 /**
  * Thrown, not returned, and deliberately.
@@ -209,12 +217,39 @@ export async function applyAccrual(
     rule: AccrualRule;
     reward: AccrualReward;
     reason: PointsReason;
+    /**
+     * The scan that caused this, when there was one. Carried onto every row
+     * written here — the award and the card completion alike — so the
+     * shopper's activity list can name the store instead of saying
+     * "Purchase", and so a query can get from a ledger row back to the
+     * basket that produced it.
+     *
+     * Optional because not every accrual comes from a till: a pack code has
+     * no store, and neither will an SMS adapter or a manual adjustment.
+     */
+    purchaseScanId?: string | null;
     /** Injectable so the ceiling window is testable without waiting a day. */
     now?: Date;
   },
 ): Promise<AccrualResult> {
   const { brandId, campaignId, brandMembershipId, rule, reward, reason } = input;
+  const purchaseScanId = input.purchaseScanId ?? null;
   const now = input.now ?? new Date();
+
+  // A backstop, not the primary check. Both scan paths already refuse a
+  // closed programme *before* they burn anything, which is what stops a
+  // single-use code being destroyed on the way to a refusal. This is here so
+  // that a caller added later — an SMS adapter, an import, a manual
+  // adjustment — cannot accrue for a brand that has stopped paying just by
+  // forgetting to ask. Reading it inside the transaction also closes the
+  // window where a brand cancels between the outer check and the write.
+  const subscription = await tx.subscription.findUnique({
+    where: { brandId },
+    select: { status: true, cancelledAt: true, honourRedemptionUntil: true },
+  });
+  if (!programmeState(subscription, now).canEarn) {
+    throw new AccrualRefused("PROGRAMME_CLOSED");
+  }
 
   await assertWithinCeilings(tx, {
     campaignId,
@@ -225,7 +260,7 @@ export async function applyAccrual(
   });
 
   await tx.pointsTransaction.create({
-    data: { brandId, brandMembershipId, campaignId, amount: rule.amount, unit: rule.unit, reason },
+    data: { brandId, brandMembershipId, campaignId, purchaseScanId, amount: rule.amount, unit: rule.unit, reason },
   });
 
   // Re-read inside the transaction, so the number reported is the one this
@@ -264,6 +299,10 @@ export async function applyAccrual(
           brandId,
           brandMembershipId,
           campaignId,
+          // The same scan. A card completes because of a specific purchase,
+          // and a deduction that cannot say which one is the one row in the
+          // history a shopper would dispute.
+          purchaseScanId,
           amount: -rule.completesAt,
           unit: rule.unit,
           reason: "COUPON_UNLOCKED",

@@ -23,7 +23,7 @@ describe("lib/packs/batch", () => {
 
   // PackBatch.createdByUserId is a real foreign key — a print run records
   // who ordered it — so these have to be real staff rows, not stand-ins.
-  const owner = (brandId: string, userId: string) => ({ user: { brandId, role: "OWNER", id: userId } });
+  const owner = (brandId: string, userId: string) => ({ user: { id: userId, brandId, role: "OWNER", name: "Test Owner" } });
 
   beforeAll(async () => {
     brand = await prisma.brand.create({ data: { name: "Batch Brand", slug: `batch-brand-${suffix}` } });
@@ -105,7 +105,7 @@ describe("lib/packs/batch", () => {
     // action — hiding the button is not the boundary.
     await expect(
       createPackBatchForSession(
-        { user: { brandId: brand.id, role: "QUALITY", id: "u1" } },
+        { user: { id: "u1", brandId: brand.id, role: "QUALITY", name: "Test Quality" } },
         formData({ campaignId: campaign.id, label: "Nope", quantity: "5" }),
       ),
     ).rejects.toThrow(ForbiddenError);
@@ -181,7 +181,7 @@ describe("lib/packs/earn-rule", () => {
   });
 
   it("edits the existing rule rather than adding a second", async () => {
-    const session = { user: { brandId: brand.id, role: "OWNER" } };
+    const session = { user: { id: "test-owner", brandId: brand.id, role: "OWNER", name: "Test Owner" } };
     await setEarnRuleForSession(session, formData({ campaignId: campaign.id, unit: "POINTS", amount: "50" }));
     await setEarnRuleForSession(session, formData({ campaignId: campaign.id, unit: "POINTS", amount: "60" }));
 
@@ -194,7 +194,7 @@ describe("lib/packs/earn-rule", () => {
   it("enforces role permissions", async () => {
     await expect(
       setEarnRuleForSession(
-        { user: { brandId: brand.id, role: "QUALITY" } },
+        { user: { id: "test-quality", brandId: brand.id, role: "QUALITY", name: "Test Quality" } },
         formData({ campaignId: campaign.id, unit: "POINTS", amount: "10" }),
       ),
     ).rejects.toThrow(ForbiddenError);

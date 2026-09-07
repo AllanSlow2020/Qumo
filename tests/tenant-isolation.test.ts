@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db/client";
-import { forBrand, getMemberProfile, TenantScopeViolation } from "@/lib/db/tenant";
+import { forBrand, getMemberProfile, TENANT_SCOPED_MODELS, TenantScopeViolation } from "@/lib/db/tenant";
 import { encryptPhone, hashPhone } from "@/lib/security/crypto";
 
 // The single most important test in the repository: it proves brand A can
@@ -101,5 +101,33 @@ describe("tenant isolation", () => {
     expect(viaB).toBeNull();
 
     await prisma.person.delete({ where: { id: person.id } });
+  });
+});
+
+/**
+ * The guard has two halves that must agree: the list of models it claims to
+ * scope, and the `$extends` block that actually intercepts them. They are
+ * deliberately separate — a literal object per model, so a typo in a name
+ * is a type error rather than a silent no-op — and separate things drift.
+ *
+ * They did. `auditEvent` was added to the list and not to the block, which
+ * left an entire table listed as tenant-scoped while every query against it
+ * ran unscoped: one brand could read another's audit history, and the
+ * append-only rule that lives in the same code path never ran either. No
+ * type error, because the omission is a missing line rather than a wrong
+ * one, and nothing else would have noticed.
+ */
+describe("every scoped model is actually wired into the guard", () => {
+  it.each([...TENANT_SCOPED_MODELS])("%s goes through the tenant guard", async (model) => {
+    const scoped = forBrand("some-brand-id") as unknown as Record<
+      string,
+      { findFirst: (args: unknown) => Promise<unknown> }
+    >;
+
+    // A where naming a different brand must be refused. If the model is not
+    // intercepted the query simply runs and resolves, which is the bug.
+    await expect(
+      scoped[model]!.findFirst({ where: { brandId: "a-different-brand" } }),
+    ).rejects.toThrow(TenantScopeViolation);
   });
 });

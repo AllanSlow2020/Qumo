@@ -1,22 +1,79 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { requireBrand } from "@/lib/brand/current";
 import { getConsumerSession } from "@/lib/consumer/session";
-import { getWallet, getWalletHistory, formatLedgerAmount, type BrandWallet } from "@/lib/consumer/wallet";
+import {
+  getWallet,
+  getWalletHistory,
+  formatLedgerAmount,
+  type BrandWallet,
+  type WalletEntry,
+} from "@/lib/consumer/wallet";
 import { getPendingSpend } from "@/lib/wallet/spend";
-import { Wordmark } from "../wordmark";
+import { REDEMPTION_AVAILABLE } from "@/lib/wallet/availability";
+import { getProgrammeState } from "@/lib/subscriptions/manage";
+import { BrandHeader } from "../brand-header";
 import { signOut } from "./actions";
+import { SignOutButton } from "./sign-out-button";
 import { abandonSpend } from "./spend/actions";
 import { SpendForm } from "./spend/spend-form";
 
 // The ledger's reason codes are internal enum values; a shopper should read
 // what happened, not what the column says.
 const REASON_LABELS: Record<string, string> = {
-  CHECK_IN_COMPLETED: "Check-in",
   COUPON_UNLOCKED: "Reward unlocked",
   PACK_SCAN_AWARDED: "Pack scan",
   PURCHASE_ACCRUAL: "Purchase",
   WALLET_SPENT: "Spent at the till",
 };
+
+/**
+ * The two rows where the event outranks the place.
+ *
+ * Everywhere else the most useful heading is where it happened — a shopper
+ * checking a statement is matching it against their own week, and "Sea
+ * Point" is a thing they either did or did not do. But a completed card and
+ * a spend are events in their own right, and heading both with the store
+ * name would put two rows reading "Sea Point" next to each other for the
+ * same scan, one of them negative. The store still appears, one line down.
+ */
+const EVENT_TITLES: Record<string, string> = {
+  COUPON_UNLOCKED: "Reward unlocked",
+  WALLET_SPENT: "Spent at the till",
+};
+
+/**
+ * What one line of the history says, in the order a shopper reads it.
+ *
+ * The fallbacks are a ladder from most specific to least, and each rung is
+ * the truth about a real path rather than a guess: a till slip knows its
+ * store, a pack code knows only its promotion, and a row from neither — an
+ * older one, or an adjustment — has nothing but its reason. Nothing is
+ * invented to fill a gap; the line just gets shorter.
+ */
+function describeEntry(entry: WalletEntry): { title: string; detail: string } {
+  const title =
+    EVENT_TITLES[entry.reason] ??
+    entry.storeName ??
+    entry.campaignName ??
+    REASON_LABELS[entry.reason] ??
+    entry.reason;
+
+  const detail = [
+    entry.createdAt.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" }),
+    // Only when the title is not already the store.
+    entry.storeName && title !== entry.storeName ? entry.storeName : null,
+    // The answer to "why that much", and only on the row that earned it —
+    // on a card completion the basket explains the stamp, not the deduction.
+    entry.amount > 0 && entry.amountCents != null
+      ? `${formatLedgerAmount(entry.amountCents, "CENTS")} purchase`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return { title, detail };
+}
 
 const UNIT_LABELS: Record<string, string> = {
   CENTS: "Wallet",
@@ -56,7 +113,23 @@ function PendingSpendCard({ spend }: { spend: PendingSpendView }) {
   );
 }
 
-function BrandCard({ wallet, pendingSpend }: { wallet: BrandWallet; pendingSpend: PendingSpendView | null }) {
+/**
+ * The balances, with no brand name on them.
+ *
+ * It used to carry a heading with the brand's name, because the screen was a
+ * list of brands and each card had to say which one it was. There is exactly
+ * one brand on this page now and its name is already at the top of it —
+ * repeating it here would read as though there might be another.
+ */
+function Balances({
+  wallet,
+  pendingSpend,
+  canRedeem,
+}: {
+  wallet: BrandWallet;
+  pendingSpend: PendingSpendView | null;
+  canRedeem: boolean;
+}) {
   const cents = wallet.balances.find((b) => b.unit === "CENTS")?.amount ?? 0;
   // Cash first, because it is the balance a shopper can spend today; the
   // ordering is otherwise whatever the ledger returned.
@@ -65,18 +138,18 @@ function BrandCard({ wallet, pendingSpend }: { wallet: BrandWallet; pendingSpend
 
   return (
     <section className="sc-card">
-      <h2 className="sc-h2">{wallet.brandName}</h2>
-
       {!hero ? (
-        <p className="sc-body">Nothing earned here yet.</p>
+        <>
+          <h2 className="sc-h2">Nothing earned yet</h2>
+          <p className="sc-body">Scan a code on a till slip, a pack or a tag and your balance starts here.</p>
+        </>
       ) : (
         <>
-          {/* One hero figure per brand, then the rest at a smaller size.
-              Giving three balances equal 44px weight made the card as tall
-              as the phone and left a shopper scrolling to find the number
-              they actually came to check. Spendable cash leads where it
-              exists, since it is the only balance they can do something
-              with today. */}
+          {/* One hero figure, then the rest at a smaller size. Giving three
+              balances equal 44px weight made the card as tall as the phone
+              and left a shopper scrolling to find the number they actually
+              came to check. Spendable cash leads where it exists, since it
+              is the only balance they can do something with today. */}
           <div className="sc-balance">
             <p className="sc-figure">{formatLedgerAmount(hero.amount, hero.unit)}</p>
             <p className="sc-label">{UNIT_LABELS[hero.unit] ?? hero.unit}</p>
@@ -95,8 +168,14 @@ function BrandCard({ wallet, pendingSpend }: { wallet: BrandWallet; pendingSpend
       )}
 
       {/* Only a cash balance is spendable at a till. Stamps and points are
-          earned toward a reward, not handed over at a counter. */}
-      {cents > 0 &&
+          earned toward a reward, not handed over at a counter.
+
+          REDEMPTION_AVAILABLE gates the whole thing: there is no cashier
+          screen, so offering a shopper a spend code would be offering them
+          a code nobody can accept. See lib/wallet/availability.ts. */}
+      {REDEMPTION_AVAILABLE &&
+        cents > 0 &&
+        canRedeem &&
         (pendingSpend ? (
           <PendingSpendCard spend={pendingSpend} />
         ) : (
@@ -112,55 +191,83 @@ export default async function WalletPage() {
     redirect("/wallet/login");
   }
 
-  const [wallets, history] = await Promise.all([getWallet(personId), getWalletHistory(personId)]);
-  const brandNames = new Map(wallets.map((w) => [w.brandId, w.brandName]));
+  // One brand, decided by the host and nothing else. This is the inversion:
+  // the page used to ask "what does this shopper have everywhere" and now
+  // asks "what does this shopper have here", which is the only question a
+  // brand's own site has any business answering.
+  const brand = await requireBrand();
 
-  // One live request per brand at most, so this is a lookup rather than a
-  // list. Fetched per brand because a shopper with a balance at several
-  // could have one open at any of them.
-  const pendingSpends = new Map(
-    (
-      await Promise.all(wallets.map(async (w) => [w.brandId, await getPendingSpend(personId, w.brandId)] as const))
-    ).filter(([, spend]) => spend !== null),
-  );
+  const [wallets, history, programme] = await Promise.all([
+    getWallet(personId, brand.id),
+    getWalletHistory(personId, 50, brand.id),
+    getProgrammeState(brand.id),
+  ]);
+  // A shopper who signed in but has never scanned here has no membership at
+  // this brand at all. An empty wallet stands in for one, so the page reads
+  // as "nothing yet" rather than erroring on a row that was never created.
+  const wallet: BrandWallet = wallets[0] ?? {
+    brandId: brand.id,
+    brandName: brand.name,
+    brandSlug: brand.slug,
+    joinedAt: new Date(),
+    balances: [],
+  };
+
+  const pendingSpend =
+    wallets.length > 0 && programme.canRedeem ? await getPendingSpend(personId, brand.id) : null;
 
   return (
     <>
-      <Wordmark caption="Your rewards, in one place" />
+      <BrandHeader caption="Your rewards" />
 
-      {wallets.length === 0 ? (
+      {/* Said at the top of the balance they are looking at, not buried in a
+          footer. A shopper who reads "R42.00" and nothing else will find out
+          the hard way, at a till, with a queue behind them. */}
+      {!programme.canEarn && (
         <section className="sc-card">
-          <h2 className="sc-h2">Nothing here yet</h2>
-          <p className="sc-body">
-            You&apos;re signed in, but you haven&apos;t scanned anything yet. Scan a code on a pack or a till slip and
-            your balance starts here.
-          </p>
+          <h2 className="sc-h2">{brand.name} has ended this programme</h2>
+          {programme.canRedeem && programme.honourUntil ? (
+            <p className="sc-body">
+              You can still spend what you&apos;ve earned until{" "}
+              <strong style={{ color: "var(--sc-ink)" }}>
+                {programme.honourUntil.toLocaleDateString("en-ZA", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </strong>
+              . After that this balance closes. You won&apos;t earn anything new in the meantime.
+            </p>
+          ) : (
+            <p className="sc-body">
+              This balance can no longer be spent. Nothing has been deleted — if {brand.name} starts again, it will
+              be here exactly as you left it.
+            </p>
+          )}
         </section>
-      ) : (
-        wallets.map((wallet) => (
-          <BrandCard key={wallet.brandId} wallet={wallet} pendingSpend={pendingSpends.get(wallet.brandId) ?? null} />
-        ))
       )}
+
+      <Balances wallet={wallet} pendingSpend={pendingSpend} canRedeem={programme.canRedeem} />
 
       {history.length > 0 && (
         <section className="sc-card">
           <h2 className="sc-h2">Activity</h2>
           <div className="sc-rows">
-            {history.map((entry) => (
+            {history.map((entry) => {
+              const { title, detail } = describeEntry(entry);
+              return (
               <div className="sc-row" key={entry.id}>
                 <div className="sc-row-main">
-                  <span>{REASON_LABELS[entry.reason] ?? entry.reason}</span>
-                  <span className="sc-label">
-                    {brandNames.get(entry.brandId) ?? "—"} ·{" "}
-                    {entry.createdAt.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })}
-                  </span>
+                  <span>{title}</span>
+                  <span className="sc-label">{detail}</span>
                 </div>
                 <span className={`sc-row-amt${entry.amount > 0 ? " sc-pos" : ""}`}>
                   {entry.amount > 0 ? "+" : ""}
                   {formatLedgerAmount(entry.amount, entry.unit)}
                 </span>
               </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}
@@ -168,18 +275,14 @@ export default async function WalletPage() {
       <section className="sc-card">
         <h2 className="sc-h2">Your details</h2>
         <p className="sc-body">
-          Signed-in devices, leaving a brand&apos;s rewards, and a copy of everything we hold about you.
+          Signed-in devices, leaving {brand.name}&apos;s rewards, and a copy of everything we hold about you.
         </p>
         <Link href="/wallet/me" className="sc-btn sc-btn-ghost">
           Manage
         </Link>
       </section>
 
-      <form action={signOut}>
-        <button type="submit" className="sc-btn sc-btn-ghost">
-          Sign out
-        </button>
-      </form>
+      <SignOutButton action={signOut}>Sign out</SignOutButton>
     </>
   );
 }

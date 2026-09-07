@@ -17,11 +17,23 @@ import { forPerson } from "./scope";
  * different, slower request that has to reckon with both.
  */
 
-/** The brands this person has a membership with, and whether it is live. */
+/**
+ * The brands this person has a membership with, and whether it is live.
+ *
+ * `brandId` narrows it to the one whose site the shopper is standing on.
+ * Not a confidentiality measure — this is the shopper's own screen and they
+ * are entitled to every row of it — but a coherence one: a Chicken Licken
+ * page that lists a Campari membership invites exactly the wrong conclusion
+ * about who can see what. The complete list is a click away in the data
+ * export, where it is unambiguously theirs and unambiguously not the
+ * brand's.
+ */
 export async function listProgrammes(
   personId: string,
+  brandId?: string,
 ): Promise<{ brandId: string; brandName: string; optedOutAt: Date | null; joinedAt: Date }[]> {
   const memberships = await forPerson(personId).brandMembership.findMany({
+    where: brandId ? { brandId } : undefined,
     include: { brand: { select: { id: true, name: true } } },
     orderBy: { joinedAt: "asc" },
   });

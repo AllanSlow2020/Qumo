@@ -28,7 +28,7 @@ describe("lib/stores/manage", () => {
   let campaign: Campaign;
   let second: Campaign;
 
-  const owner = (brandId: string) => ({ user: { brandId, role: "OWNER" } });
+  const owner = (brandId: string) => ({ user: { id: `${brandId}-owner`, brandId, role: "OWNER", name: "Test Owner" } });
 
   beforeAll(async () => {
     brand = await prisma.brand.create({ data: { name: "Store Brand", slug: `store-brand-${suffix}` } });
@@ -94,7 +94,7 @@ describe("lib/stores/manage", () => {
 
   it("enforces role permissions", async () => {
     await expect(
-      createStoreForSession({ user: { brandId: brand.id, role: "MARKETING" } }, formData({ name: "X", code: "XX" })),
+      createStoreForSession({ user: { id: "test-marketing", brandId: brand.id, role: "MARKETING", name: "Test Marketing" } }, formData({ name: "X", code: "XX" })),
     ).rejects.toThrow(ForbiddenError);
   });
 

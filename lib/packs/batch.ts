@@ -1,14 +1,17 @@
 import { z } from "zod";
 import { Prisma, type Role } from "@prisma/client";
 import { forBrand } from "@/lib/db/tenant";
+import { prisma } from "@/lib/db/client";
+import { record } from "@/lib/audit/record";
 import { requireRole } from "@/lib/auth/rbac";
 import { generatePackCode } from "./code";
+import type { Actor } from "@/lib/staff/actor";
 
 export const MANAGE_PACK_BATCH_ROLES: Role[] = ["OWNER", "ADMIN", "MARKETING"];
 
 export class PackBatchError extends Error {}
 
-export type SessionLike = { user: { brandId: string; role: string; id: string } };
+export type SessionLike = Actor;
 
 // A print run is a physical thing with a real cost, so the cap is about
 // keeping a typo from becoming a million-row insert and a very surprised
@@ -64,6 +67,17 @@ export async function createPackBatchForSession(session: SessionLike, formData: 
   if (!earnRule) {
     throw new PackBatchError("Set up what this campaign awards per scan before generating codes for it.");
   }
+  // A share-of-spend rule needs a basket to take a share of, and a pack code
+  // arrives without one — setSpendRuleForSession zeroes `amount` precisely
+  // because it is meaningless there. Printing against one produces codes
+  // that scan successfully, award nothing, and are consumed doing it: the
+  // shopper is told they earned R0.00 and the sticker is gone for good.
+  // Same reasoning as the check above, one step further along.
+  if (earnRule.type === "PERCENT_OF_SPEND") {
+    throw new PackBatchError(
+      "That promotion pays a share of what someone spends, which needs a till slip. Pack codes need a promotion that awards a fixed amount per scan.",
+    );
+  }
 
   const batch = await scoped.packBatch.create({
     data: {
@@ -81,6 +95,15 @@ export async function createPackBatchForSession(session: SessionLike, formData: 
     await insertChunk(scoped, session.user.brandId, campaign.id, batch.id, size);
     remaining -= size;
   }
+
+  await record(prisma, session.user, {
+    action: "pack_batch.created",
+    targetId: batch.id,
+    targetLabel: batch.label,
+    // Quantity is the point: this is how many single-use awards were just
+    // brought into existence, which is a liability the moment it prints.
+    detail: { quantity: batch.quantity, campaignId: batch.campaignId },
+  });
 
   return batch;
 }

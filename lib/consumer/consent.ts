@@ -25,7 +25,7 @@ import { OPERATOR_NAME, PRODUCT_NAME } from "@/lib/product";
  * always answer what a given person actually saw. A shopper whose recorded
  * version is behind re-affirms on their next sign-in (lib/consumer/otp.ts).
  */
-export const WEB_CONSENT_VERSION = "web-v2";
+export const WEB_CONSENT_VERSION = "web-v3";
 
 /**
  * web-v1 said the same things under the product's old working title. That
@@ -34,10 +34,18 @@ export const WEB_CONSENT_VERSION = "web-v2";
  * web-v1 row resolve to copy naming a product that person never saw. That
  * is precisely the question the version exists to answer, so it is bumped.
  * Anyone on web-v1 re-affirms on their next sign-in.
+ *
+ * web-v2 named a different operating company. Qumo is the entity now, and
+ * "who holds my phone number" is the one fact in this notice a person is
+ * most entitled to have been told correctly — so it is a change of
+ * substance, not just of string. The same bump also picks up the terms,
+ * which the tick box now points at alongside the notice: the two documents
+ * arrived at different times and rewriting versioned consent copy twice is
+ * worse than rewriting it once.
  */
 
 /** The single line beside the tick box. Kept short enough to actually be read. */
-export const CONSENT_CHECKBOX_LABEL = `I agree to ${PRODUCT_NAME} storing my mobile number and my activity with the brands I scan, as described in the privacy notice.`;
+export const CONSENT_CHECKBOX_LABEL = `I agree to ${PRODUCT_NAME} storing my mobile number and my activity with the brands I scan, as described in the privacy notice and the terms.`;
 
 /**
  * The fuller notice, rendered at /legal/privacy and linked from the tick
@@ -55,7 +63,7 @@ export const CONSENT_POINTS: { heading: string; body: string }[] = [
   },
   {
     heading: "Who operates it",
-    body: `${PRODUCT_NAME} is operated by ${OPERATOR_NAME}, who holds this information on behalf of the brands you interact with and uses it to run the rewards programme.`,
+    body: `${OPERATOR_NAME} holds this information on behalf of the brands you interact with, and uses it to run the rewards programme. The brand decides what the programme offers; we count it and keep the record.`,
   },
   {
     heading: "Your balances",

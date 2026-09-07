@@ -24,7 +24,16 @@ import { prisma as basePrisma } from "./client";
 // and can't be gotten wrong) applies to reads, updates, and deletes, where
 // `where` is optional and entirely under the guard's control.
 
-const TENANT_SCOPED_MODELS = [
+/**
+ * Exported so a test can assert that every name here is actually wired into
+ * the `$extends` block below. The two are separate on purpose — see the
+ * note on forBrand — and separate things drift: `auditEvent` was added to
+ * this list and not to that block, which left the model listed as scoped
+ * while every query against it ran unscoped and unguarded. The type on
+ * makeHandler cannot catch that, because the omission is a missing line
+ * rather than a wrong one.
+ */
+export const TENANT_SCOPED_MODELS = [
   "user",
   "brandMembership",
   "pointsTransaction",
@@ -38,6 +47,7 @@ const TENANT_SCOPED_MODELS = [
   "walletSpend",
   "store",
   "purchaseScan",
+  "auditEvent",
 ] as const;
 type TenantScopedModel = (typeof TENANT_SCOPED_MODELS)[number];
 
@@ -88,6 +98,17 @@ function assertOwnedBy(model: string, value: unknown, brandId: string): void {
   }
 }
 
+/**
+ * Models nothing may rewrite once written.
+ *
+ * A log that the people it watches can edit is not a log, and "nothing in
+ * the app calls update on it" is a property of today's code rather than a
+ * guarantee. This makes it a guarantee: the attempt throws, wherever it
+ * comes from. Rows are created and read, and that is all.
+ */
+const APPEND_ONLY_MODELS = new Set<string>(["auditEvent"]);
+const MUTATING_OPS = new Set(["update", "updateMany", "upsert", "delete", "deleteMany"]);
+
 function scopeArgs(
   model: string,
   operation: string,
@@ -95,6 +116,13 @@ function scopeArgs(
   brandId: string,
 ): ScopeableArgs {
   const next: ScopeableArgs = { ...args };
+
+  if (APPEND_ONLY_MODELS.has(model) && MUTATING_OPS.has(operation)) {
+    throw new TenantScopeViolation(
+      model,
+      `"${operation}" is not permitted: this model is append-only, and a record that can be rewritten is not a record`,
+    );
+  }
 
   if (operation === "create") {
     const data = { ...(next.data as Record<string, unknown> | undefined) };
@@ -180,6 +208,7 @@ export function forBrand(brandId: string) {
       walletSpend: { $allOperations: makeHandler("walletSpend", brandId) },
       store: { $allOperations: makeHandler("store", brandId) },
       purchaseScan: { $allOperations: makeHandler("purchaseScan", brandId) },
+      auditEvent: { $allOperations: makeHandler("auditEvent", brandId) },
     },
   });
 }

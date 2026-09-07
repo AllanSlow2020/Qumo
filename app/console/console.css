@@ -1,0 +1,762 @@
+/* Qumo brand console.
+ *
+ * Scoped under `.cn`, its own tokens, its own stylesheet — the same
+ * separation the shopper surface has, and for the same reason: these are two
+ * products with two jobs, and restyling one must never reach the other.
+ *
+ * The shopper surface is a narrow column someone opens once at a till, so it
+ * is one enormous number and one full-width button. This is the opposite: a
+ * desk tool, opened for twenty minutes, read across a wide screen. Dense
+ * rows, real tables, numbers aligned so they can be compared down a column
+ * rather than admired one at a time.
+ *
+ * Note what is NOT here: any brand theming. The console is Qumo's product,
+ * used by a brand's staff, and it looks like Qumo. Only the shopper surface
+ * wears the brand, because only the shopper is being asked to believe they
+ * are dealing with one.
+ *
+ * ── One system, two densities ────────────────────────────────────────────
+ *
+ * The two design directions differed on two axes, and the answer takes one
+ * from each. The *surface* follows the shopper — the same near-white and
+ * near-black, the same hairlines, the same two-pixel radius — because a
+ * product whose two halves disagree about what a border looks like reads as
+ * two products. The *structure* is the console's own: tables with real
+ * column heads, charts, filters, figures aligned so they can be compared
+ * down a column rather than admired one at a time.
+ *
+ * ── Where colour is allowed here ─────────────────────────────────────────
+ *
+ * Achromatic, like the shopper surface, and for a related reason: colour
+ * that appears everywhere means nothing anywhere. Actions are ink. Hue is
+ * reserved for two jobs — a state that needs acting on (an unsigned store,
+ * an uncapped promotion) and the emphasised mark in a chart. Everything a
+ * brand's staff sees in colour here is therefore something they can do
+ * something about.
+ */
+
+.cn {
+  --cn-bg: #fafaf9;
+  --cn-surface: #ffffff;
+  --cn-ink: #0a0a0a;
+  --cn-ink-2: #52525b;
+  --cn-ink-3: #8a8a90;
+  --cn-line: #e4e4e0;
+  --cn-line-soft: #efefec;
+  /* Actions are ink, not a hue. See the note at the top of this file. */
+  --cn-accent: #0a0a0a;
+  --cn-accent-ink: #ffffff;
+  /* The emphasised mark in a chart, and only that. Deliberately deeper and
+     less saturated than the default product blue, which is the one colour
+     every dashboard already uses. */
+  --cn-data: #1e4b8f;
+  --cn-pos: #0a7d47;
+  --cn-warn: #8a5a00;
+  --cn-warn-bg: #fdf6e6;
+  --cn-neg: #b91c1c;
+  --cn-radius: 2px;
+  /* One step darker than a rule, for the largest segment of a stacked
+     bar: it has to read as a quantity rather than as an empty track. */
+  --cn-line-strong: #cbcbc6;
+
+  background: var(--cn-bg);
+  color: var(--cn-ink);
+  min-height: 100vh;
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  /* The same word-space correction the shopper surface makes: it is a
+     property of the face, not of a component. */
+  word-spacing: 0.05em;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Every figure goes through the monospace, so a column of amounts can be
+   compared down the page rather than read one at a time. The same face the
+   shopper sees, which is most of what makes the two halves one product. */
+.cn-num,
+.cn-mono,
+.cn-metric-v,
+.cn-secret-value,
+.cn-table td.cn-num,
+.cn-table th.cn-num {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .cn {
+    --cn-bg: #0a0a0b;
+    --cn-surface: #121214;
+    --cn-ink: #f7f7f5;
+    --cn-ink-2: #a1a1a8;
+    --cn-ink-3: #71717a;
+    --cn-line: #232326;
+    --cn-line-soft: #1a1a1d;
+    --cn-accent: #f7f7f5;
+    --cn-accent-ink: #0a0a0b;
+    --cn-data: #7aa2e8;
+  --cn-line-strong: #3a3a40;
+    --cn-pos: #3fbf7f;
+    --cn-warn: #e0a83a;
+    --cn-warn-bg: #241d0f;
+    --cn-neg: #f87171;
+  }
+}
+
+:root[data-theme="dark"] .cn {
+  --cn-bg: #0a0a0b;
+  --cn-surface: #121214;
+  --cn-ink: #f7f7f5;
+  --cn-ink-2: #a1a1a8;
+  --cn-ink-3: #71717a;
+  --cn-line: #232326;
+  --cn-line-soft: #1a1a1d;
+  --cn-accent: #f7f7f5;
+  --cn-accent-ink: #0a0a0b;
+  --cn-data: #7aa2e8;
+  --cn-line-strong: #3a3a40;
+  --cn-pos: #3fbf7f;
+  --cn-warn: #e0a83a;
+  --cn-warn-bg: #241d0f;
+  --cn-neg: #f87171;
+}
+
+/* ---------- chrome ---------- */
+
+.cn-top {
+  border-bottom: 1px solid var(--cn-line);
+  background: var(--cn-surface);
+}
+
+/* The identity row: mark on the left, who you are and the way out on the
+ * right. Navigation lives on its own row below — see .cn-nav-row.
+ *
+ * This started as one row and did not survive contact with eight nav items:
+ * at 1280px the nav clipped mid-word into the brand name. Two rows is not a
+ * compromise, it is the more honest structure — where you can go and who
+ * you are signed in as answer different questions. */
+.cn-top-in {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 56px;
+  flex-wrap: nowrap;
+}
+
+.cn-top-in .cn-mark { margin-right: auto; white-space: nowrap; }
+
+.cn-mark {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--cn-ink);
+}
+
+.cn-mark span {
+  color: var(--cn-ink-3);
+  font-weight: 500;
+}
+
+.cn-nav-row {
+  border-top: 1px solid var(--cn-line-soft);
+}
+
+.cn-nav {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 18px;
+  display: flex;
+  gap: 2px;
+  min-height: 42px;
+  align-items: center;
+  flex-wrap: nowrap;
+  /* Below about 900px there is still more nav than room. It scrolls rather
+     than wrapping, because a nav that changes height moves the page under
+     somebody mid-click. */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.cn-nav::-webkit-scrollbar { display: none; }
+
+.cn-nav a {
+  color: var(--cn-ink-2);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 6px 9px;
+  border-radius: var(--cn-radius);
+  white-space: nowrap;
+}
+
+.cn-nav a:hover {
+  color: var(--cn-ink);
+  background: var(--cn-line-soft);
+}
+
+.cn-who {
+  font-size: 13px;
+  color: var(--cn-ink-3);
+  text-align: right;
+  line-height: 1.35;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.cn-top-in > form { flex: 0 0 auto; }
+
+.cn-main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ---------- type ---------- */
+
+.cn-h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+.cn-h2 { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
+.cn-body { font-size: 14px; line-height: 1.55; color: var(--cn-ink-2); margin: 0; }
+.cn-label { font-size: 12px; color: var(--cn-ink-3); margin: 0; }
+
+/* ---------- metrics ---------- */
+
+.cn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.cn-metric {
+  background: var(--cn-surface);
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cn-metric-v {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  /* Tabular figures so two metrics side by side line up rather than
+     wandering — the whole reason these are in a grid is comparison. */
+  font-variant-numeric: tabular-nums;
+}
+
+.cn-metric-k { font-size: 12px; color: var(--cn-ink-3); }
+.cn-metric-note { font-size: 12px; color: var(--cn-ink-2); }
+.cn-warn-note { color: var(--cn-warn); }
+
+/* ---------- panels and tables ---------- */
+
+.cn-panel {
+  background: var(--cn-surface);
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius);
+  overflow: hidden;
+}
+
+.cn-panel-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--cn-line);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Wide content scrolls inside its own box; the page itself never scrolls
+   sideways. */
+.cn-scroll { overflow-x: auto; }
+
+.cn-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 640px;
+}
+
+.cn-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cn-ink-3);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--cn-line);
+  white-space: nowrap;
+}
+
+.cn-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--cn-line-soft);
+  vertical-align: top;
+}
+
+.cn-table tr:last-child td { border-bottom: 0; }
+.cn-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cn-mono { font-size: 12.5px; }
+
+.cn-empty { padding: 28px 16px; text-align: center; color: var(--cn-ink-3); font-size: 14px; }
+
+/* ---------- pills ---------- */
+
+.cn-pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--cn-line);
+  color: var(--cn-ink-2);
+  white-space: nowrap;
+}
+
+.cn-pill-ok { color: var(--cn-pos); border-color: color-mix(in srgb, var(--cn-pos) 40%, transparent); }
+.cn-pill-warn { color: var(--cn-warn); border-color: color-mix(in srgb, var(--cn-warn) 45%, transparent); background: var(--cn-warn-bg); }
+.cn-pill-off { color: var(--cn-ink-3); }
+
+/* ---------- forms ---------- */
+
+.cn-form { display: flex; flex-direction: column; gap: 16px; }
+
+.cn-field { display: flex; flex-direction: column; gap: 6px; }
+.cn-field label { font-size: 13px; font-weight: 600; }
+
+.cn-input {
+  font: inherit;
+  font-size: 15px;
+  padding: 10px 12px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius);
+  background: var(--cn-surface);
+  color: var(--cn-ink);
+  width: 100%;
+}
+
+.cn-input:focus-visible { outline: 2px solid var(--cn-accent); outline-offset: 1px; border-color: transparent; }
+
+.cn-btn {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: var(--cn-radius);
+  border: 1px solid transparent;
+  background: var(--cn-accent);
+  color: var(--cn-accent-ink);
+  cursor: pointer;
+}
+
+.cn-btn:disabled { opacity: 0.5; cursor: default; }
+
+.cn-btn-quiet {
+  background: transparent;
+  color: var(--cn-ink-2);
+  border-color: var(--cn-line);
+}
+
+.cn-btn-quiet:hover { color: var(--cn-ink); border-color: var(--cn-ink-3); }
+
+.cn-err {
+  font-size: 13px;
+  color: var(--cn-neg);
+  margin: 0;
+}
+
+/* ---------- login ---------- */
+
+.cn-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.cn-login-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--cn-surface);
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ---------- store management ---------- */
+
+.cn-check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.cn-check input { margin-top: 3px; flex: none; }
+
+.cn-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.cn-actions .cn-btn { font-size: 13px; padding: 6px 10px; }
+
+.cn-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 460px;
+}
+
+.cn-confirm .cn-btn { font-size: 13px; padding: 6px 10px; }
+
+/* Loud on purpose: the one moment a secret is on screen. */
+.cn-secret {
+  border: 1px solid color-mix(in srgb, var(--cn-warn) 45%, transparent);
+  background: var(--cn-warn-bg);
+  border-radius: var(--cn-radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 620px;
+}
+
+.cn-secret-value {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  /* 64 hex characters have to wrap somewhere, and anywhere is fine as long
+     as it never pushes the page sideways. */
+  word-break: break-all;
+  background: var(--cn-surface);
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius);
+  padding: 10px 12px;
+  user-select: all;
+}
+
+/* ---------- promotions ---------- */
+
+.cn-panel-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Two forms side by side on a desk, stacked on anything narrower. The offer
+   and its ceiling are separate decisions and separate saves, but a brand
+   should be able to see both at once while making them. */
+.cn-edit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--cn-line);
+}
+
+.cn-edit h3 { margin: 0 0 2px; }
+
+select.cn-input {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--cn-ink-3) 50%),
+    linear-gradient(135deg, var(--cn-ink-3) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 36px;
+}
+
+/* ---------- appearance preview ---------- */
+
+/* A real render of the shopper surface, not a picture of one. It borrows the
+   shopper palette rather than the console's, because the point is to show
+   what a customer sees — a preview drawn in console colours would be a
+   different page wearing the brand's button. */
+.cn-preview {
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius);
+  padding: 22px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 380px;
+}
+
+.cn-preview-head { display: flex; flex-direction: column; gap: 3px; }
+
+.cn-preview-mark {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.cn-preview-logo { display: block; height: 28px; width: auto; max-width: 200px; object-fit: contain; }
+
+.cn-preview-sub { font-size: 13px; color: #757575; }
+
+.cn-preview-h1 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  margin: 6px 0 0;
+}
+
+/* Defaults to the shopper surface's own black button, so an unset accent
+   previews exactly what an unset accent actually renders. */
+.cn-preview-btn {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: var(--cn-radius);
+  background: #000000;
+  color: #ffffff;
+  cursor: default;
+  width: 100%;
+}
+
+.cn-preview-foot {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #757575;
+  border-top: 1px solid #eeeeee;
+  padding-top: 12px;
+}
+
+/* The balance, at the size a shopper actually meets it.
+   Here because a figures face cannot be judged at label size: whether a 0
+   reads as a 0, and whether the face carries the weight, only show up
+   large. It is the same figure the wallet leads with, set the same way —
+   tabular figures and all — so the panel answers the tabular question by
+   demonstration rather than by claim. */
+.cn-preview-figure {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.cn-preview-rows { display: flex; flex-direction: column; gap: 7px; }
+
+.cn-preview-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.cn-preview-row span:last-child {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ---------- charts ----------
+ *
+ * The console's job is to answer "is this working", and a column of totals
+ * answers "what happened". A shape answers the first question in about a
+ * second, which is the whole argument for putting one here.
+ *
+ * Bars rather than a line: these are discrete periods, and a line between
+ * two weeks implies values in between that do not exist.
+ */
+
+.cn-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 44px;
+  margin-top: 10px;
+}
+
+.cn-chart > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  height: 100%;
+  min-width: 0;
+}
+
+.cn-chart i {
+  display: block;
+  width: 100%;
+  min-height: 2px;
+  background: var(--cn-line);
+  border-radius: 1px 1px 0 0;
+}
+
+/* The one mark that carries colour: the period being talked about. */
+.cn-chart i.cn-chart-now { background: var(--cn-data); }
+
+.cn-chart em {
+  font-style: normal;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: var(--cn-ink-3);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  white-space: nowrap;
+}
+
+/* A sparkline with no axis, for a metric cell. */
+.cn-spark { display: flex; align-items: flex-end; gap: 3px; height: 26px; margin-top: 8px; }
+.cn-spark i {
+  flex: 1;
+  /* Three pixels rather than two, so a zero day still reads as a bar at
+     the baseline rather than as a hairline that looks like a rule. */
+  min-height: 3px;
+  background: var(--cn-line);
+  border-radius: 1px;
+  display: block;
+}
+.cn-spark i.cn-chart-now { background: var(--cn-data); }
+
+/* ---------- segmented filter ----------
+   A filter that shows its options rather than hiding them behind a select:
+   a console screen has room, and a visible set of choices is faster to
+   scan than a menu that has to be opened to be read. */
+
+.cn-seg {
+  display: inline-flex;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius);
+  padding: 2px;
+  gap: 2px;
+}
+
+.cn-seg a,
+.cn-seg button {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 5px 11px;
+  border: 0;
+  border-radius: 1px;
+  background: transparent;
+  color: var(--cn-ink-3);
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cn-seg [aria-current="true"],
+.cn-seg .cn-seg-on {
+  background: var(--cn-ink);
+  color: var(--cn-surface);
+}
+
+/* ---------- a value that is missing on purpose ----------
+   "No ceiling" is not zero and not blank; it is a decision somebody made.
+   Drawn as an em dash in the warn colour so it reads as a state rather
+   than as an empty cell. */
+.cn-unset { color: var(--cn-warn); font-family: var(--font-mono), ui-monospace, monospace; }
+
+/* ---------- secondary text in a table cell ---------- */
+.cn-sub {
+  color: var(--cn-ink-2);
+  font-size: 13px;
+  line-height: 1.45;
+  margin-top: 2px;
+}
+
+/* ---------- performance screen ---------- */
+
+.cn-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cn-grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+
+.cn-chart-tall { height: 120px; }
+.cn-chart-tall em { min-height: 12px; }
+
+/* The repeat distribution as one bar. Three tones of ink rather than three
+   hues: they are parts of one quantity, not three unrelated categories, and
+   colouring them separately would imply they are. */
+.cn-stack {
+  display: flex;
+  height: 10px;
+  margin-top: 12px;
+  border-radius: 1px;
+  overflow: hidden;
+  background: var(--cn-line);
+}
+
+.cn-stack span { display: block; }
+.cn-seg-once { background: var(--cn-line-strong); }
+.cn-seg-twice { background: var(--cn-ink-3); }
+.cn-seg-more { background: var(--cn-data); }
+
+.cn-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--cn-ink-2);
+}
+
+.cn-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.cn-legend i { width: 9px; height: 9px; border-radius: 1px; display: inline-block; }
+.cn-legend b { font-weight: 600; color: var(--cn-ink); }
+
+/* A share, drawn. Reading a column of these answers "is it running
+   everywhere" faster than reading a column of percentages. */
+.cn-bar {
+  height: 6px;
+  background: var(--cn-line-soft);
+  border-radius: 1px;
+  overflow: hidden;
+  min-width: 60px;
+}
+
+.cn-bar span { display: block; height: 100%; background: var(--cn-ink-3); }
+.cn-bar span.cn-bar-warn { background: var(--cn-warn); }
+
+/* The change against the previous window.
+   Deliberately not coloured: on this page "issued more" is not good news
+   and "issued less" is not bad news, and a green arrow would be the
+   console making a judgement that belongs to the brand. */
+.cn-delta {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--cn-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.cn-head-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* The export control is an anchor so the browser handles the download, and
+   an anchor brings an underline that a button should not have. */
+a.cn-btn { text-decoration: none; display: inline-block; }

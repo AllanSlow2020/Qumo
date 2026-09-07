@@ -31,13 +31,120 @@ datasource db {
   provider = "postgresql"
 }
 
-model Brand {
-  id                    String   @id @default(cuid())
-  name                  String
-  slug                  String   @unique
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+enum SubscriptionStatus {
+  /// Onboarded, not yet paying. The pilot state.
+  TRIALING
+  /// Paying.
+  ACTIVE
+  /// Cancelled, and inside the window where redemption is still honoured.
+  /// Earning is frozen from the moment of cancellation, not from the end of
+  /// the window.
+  CANCELLED
+  /// The window has elapsed. The programme is over.
+  CLOSED
+}
 
+/// A brand's standing with Qumo, and what it means for their shoppers.
+///
+/// This models the *lifecycle*, not the billing. No payment provider is
+/// integrated, so nothing here takes money — it records what state a brand
+/// is in and the engine enforces the consequences. When billing lands it
+/// drives these transitions rather than replacing them.
+///
+/// The rule, decided before any of it was built: on cancellation earning
+/// freezes immediately and redemption is honoured for 60 days, then the
+/// programme closes. A shopper who earned R80 the week before a brand
+/// cancelled does not lose it on the day the invoice stops.
+model Subscription {
+  id      String @id @default(cuid())
+  brandId String @unique
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  status SubscriptionStatus @default(TRIALING)
+
+  startedAt        DateTime  @default(now())
+  /// End of the paid period or trial. Informational until billing exists.
+  currentPeriodEnd DateTime?
+
+  cancelledAt DateTime?
+
+  /// When redemption stops being honoured — stored, not computed.
+  ///
+  /// Deliberately a stored date rather than `cancelledAt + 60 days`
+  /// evaluated at read time. If the policy ever becomes 30 days, everybody
+  /// already cancelled under the 60-day promise keeps 60. The same reasoning
+  /// as versioning consent copy: what somebody was promised does not change
+  /// because the promise later did.
+  honourRedemptionUntil DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Brand {
+  id   String @id @default(cuid())
+  name String
+
+  /// Identity and address in one field, which is a decision worth stating.
+  ///
+  /// The slug is the subdomain: chicken-licken.qumo.co.za. Splitting them
+  /// would let a brand have a prettier host than their internal key, and it
+  /// would also give us two values to keep in step for a benefit nobody has
+  /// asked for. A prettier host is the custom-domain upsell, and that gets
+  /// its own field when it is real.
+  ///
+  /// Load-bearing and effectively immutable once anything is printed:
+  /// changing it dead-ends every poster, slip and tag already in a store.
+  /// Treat a rename as a migration with a redirect, not an edit.
+  slug String @unique
+
+  // ---- What a shopper sees ------------------------------------------------
+  // Every field below is optional and every reader falls back. A brand with
+  // none of them set renders as a plain, correct, unbranded page rather than
+  // a half-painted one.
+
+  /// The name to put on the page when the legal name is not the one on the
+  /// signage. Falls back to `name`.
+  displayName String?
+
+  /// One line under the mark: what the programme is, in the brand's words.
+  tagline String?
+
+  /// Absolute https URL. Validated where it is rendered and never trusted
+  /// straight out of the database — see lib/brand/theme.ts.
+  logoUrl String?
+
+  /// The single colour that carries the identity, and the ink that stays
+  /// legible on it. Two fields rather than one because contrast is a
+  /// judgement about the brand's own palette; deriving it from luminance
+  /// gets Chicken Licken's red wrong in exactly the case that matters.
+  ///
+  /// Stored as #rrggbb. These reach a style attribute, so they are matched
+  /// against a strict pattern before they go anywhere near CSS.
+  accentColor    String?
+  accentInkColor String?
+
+  /// Which faces the brand chose, as ids from the registry in
+  /// lib/brand/fonts.ts — never a font name and never a URL. The value ends
+  /// up in a style attribute, so what is stored here is a key we look up
+  /// rather than anything that reaches CSS directly; an id we no longer
+  /// recognise resolves to Qumo's default instead of to a broken page.
+  ///
+  /// Null on both by default, which is the house style: Instrument Sans for
+  /// everything a shopper reads, Martian Mono for every figure. A brand can
+  /// take over either, or both.
+  displayFont String?
+  figureFont  String?
+
+  /// Where a shopper takes a complaint. The brand is the responsible party
+  /// for this programme, so "contact us" has to reach them and not us.
+  supportEmail String?
+  supportUrl   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscription       Subscription?
   users              User[]
   brandMemberships   BrandMembership[]
   pointsTransactions PointsTransaction[]
@@ -51,6 +158,7 @@ model Brand {
   walletSpends       WalletSpend[]
   stores             Store[]
   purchaseScans      PurchaseScan[]
+  auditEvents        AuditEvent[]
 }
 
 enum Role {
@@ -73,6 +181,41 @@ model User {
   // "who redeemed/cancelled this" from the audit trail. Blocks login
   // (lib/auth/config.ts) without losing that history.
   isActive     Boolean  @default(true)
+
+  /// Set when an owner creates the account or resets its password, cleared
+  /// the first time the person chooses their own.
+  ///
+  /// There is no email in this product, so a new staff member is onboarded
+  /// by an owner reading them a one-time password. That is a credential two
+  /// people know, travelling over whatever channel they happen to use, and
+  /// the only thing that makes it acceptable is that it stops working the
+  /// moment it is used. This flag is what enforces that: the console will
+  /// not render anything else until it is cleared.
+  mustChangePassword Boolean @default(false)
+
+  // ---- Second factor -------------------------------------------------------
+
+  /// The TOTP shared secret, encrypted at rest with the same key as phone
+  /// numbers (lib/security/crypto.ts). Encrypted rather than hashed because
+  /// verifying a code requires the secret itself — this is the one
+  /// authentication value in the system that cannot be a one-way hash, and
+  /// it is why a database dump alone still does not produce a working second
+  /// factor: the key lives in the environment.
+  totpSecretEncrypted String?
+
+  /// Set when the person has proved they can produce a code, not when the
+  /// secret was generated. Enrolment that trusted the generation step would
+  /// lock out anybody whose app failed to scan, which is the most common way
+  /// a second factor goes wrong.
+  totpConfirmedAt DateTime?
+
+  /// The last thirty-second step accepted for this account.
+  ///
+  /// A code stays valid across a three-step window, so without this a code
+  /// read over a shoulder can be used again for up to ninety seconds.
+  /// Refusing anything at or below this step makes each code single-use.
+  totpLastStep Int?
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -80,8 +223,41 @@ model User {
   couponFraudEvents   CouponFraudEvent[]
   packBatches         PackBatch[]
   walletSpends        WalletSpend[]
+  staffSessions       StaffSession[]
+  recoveryCodes       StaffRecoveryCode[]
 
   @@index([brandId])
+}
+
+/**
+ * A single-use way back in when the phone with the authenticator on it is
+ * lost, broken or replaced.
+ *
+ * Every other part of this system refuses to let a brand lock itself out —
+ * the last owner cannot be demoted or deactivated — and a second factor
+ * without recovery codes reintroduces exactly that failure, only worse,
+ * because the way back in would be us editing the database.
+ *
+ * Stored as a hash, like a session token and unlike the TOTP secret: a
+ * recovery code is checked by comparison and never needs to be read back,
+ * so there is no reason for the plaintext to survive the screen that showed
+ * it once.
+ */
+model StaffRecoveryCode {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// sha256 of the normalised code. Unkeyed is right here and wrong for a
+  /// six-digit passcode: these carry enough entropy that a digest of one is
+  /// not brute-forceable, which is the same reasoning that separates
+  /// hashOtpCode from the session token hash.
+  codeHash String @unique
+
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
 
 // A one-time passcode for shopper login. Like PasswordResetToken, this is
@@ -141,6 +317,49 @@ enum ShopperSessionRevokeReason {
 // silent device fingerprinting to a table whose whole purpose is the
 // shopper's own safety would be a poor trade; createdAt is enough for
 // someone to recognise a session they did not start.
+enum StaffSessionRevokeReason {
+  SIGNED_OUT
+  SIGNED_OUT_EVERYWHERE
+  PASSWORD_CHANGED
+  DEACTIVATED
+}
+
+/// A signed-in member of a brand's staff.
+///
+/// Its own table rather than a nullable column on ShopperSession, and that
+/// is the whole point. One sessions table serving both principals means one
+/// row shape where `personId` and `userId` are both nullable, and a single
+/// confused lookup — or a single missing `AND userId IS NOT NULL` — turns a
+/// shopper into a brand administrator. Two tables make that mistake
+/// impossible to write rather than merely unlikely, and the cost is one
+/// model.
+///
+/// The two also want different lifetimes and different revocation triggers,
+/// which is the usual sign that they are different things wearing the same
+/// noun.
+model StaffSession {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Unique, so a lookup is an index hit and a collision is a database error
+  /// rather than two people sharing a session.
+  tokenHash String @unique
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  /// Revocation is a stamp, not a delete — same reasoning as ShopperSession,
+  /// with two extra triggers that only apply to staff: changing a password
+  /// and deactivating an account must both end every session that account
+  /// holds, or "I've removed their access" is not true until they log out.
+  revokedAt     DateTime?
+  revokedReason StaffSessionRevokeReason?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 model ShopperSession {
   id        String @id @default(cuid())
   personId  String
@@ -274,10 +493,27 @@ model PointsTransaction {
   // column the ledger could not answer it at all.
   campaignId        String?
   campaign          Campaign?       @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  // The scan this row came from, when it came from one.
+  //
+  // Added so a shopper's activity list can say "Sea Point" instead of
+  // "Purchase". A ledger row that cannot say where it happened is a row a
+  // shopper cannot check against their own memory of the week, and "is
+  // this mine?" is the first question anybody asks of a statement.
+  //
+  // A link rather than a copied storeId, because a copy can disagree with
+  // the scan it was copied from and this cannot. It also carries the
+  // basket amount along with it, which answers the second question — why
+  // that much — without a second column.
+  //
+  // Not unique: one scan writes the award and, when a card completes, the
+  // deduction too. Both belong to it.
+  purchaseScanId    String?
+  purchaseScan      PurchaseScan?   @relation(fields: [purchaseScanId], references: [id], onDelete: SetNull)
   createdAt         DateTime        @default(now())
 
   @@index([brandId])
   @@index([brandMembershipId])
+  @@index([purchaseScanId])
   // The liability ceiling sums every positive row for a campaign.
   @@index([campaignId])
   // The per-person daily ceiling scans one membership's recent rows. Without
@@ -509,6 +745,17 @@ model PackCode {
   status     PackCodeStatus @default(UNSCANNED)
 
   scannedAt             DateTime?
+  /// What this scan actually awarded, recorded so re-opening the page can
+  /// show the shopper what they got rather than telling them the code is
+  /// used up.
+  ///
+  /// The App Router fetches a page twice on one navigation, so the second
+  /// render is what a first-time scanner sees. Without this, every shopper
+  /// who scanned a sticker was told "this code has already been used" —
+  /// true of the row, and a lie about what had just happened to them. The
+  /// same fix PurchaseScan carries, for the same reason.
+  awardedAmount         Int?
+  awardedUnit           LedgerUnit?
   // Who claimed it. A membership rather than a Person: this is the
   // brand-scoped side of the relationship, and it is what a brand's staff
   // are allowed to see.
@@ -744,8 +991,115 @@ model PurchaseScan {
   awardedAmount Int?
   awardedUnit   LedgerUnit?
 
+  // The award, and the card completion when there was one.
+  ledgerEntries PointsTransaction[]
+
   @@unique([storeId, externalTxnId])
   @@index([brandId])
   @@index([brandMembershipId])
   @@index([campaignId])
+}
+
+/**
+ * A fixed-window rate-limit counter, shared by every instance of the app.
+ *
+ * The limiter this replaces counted in process memory, which meant the real
+ * limit was (configured limit) x (however many serverless instances Vercel
+ * happened to be running). Three OTP sends per fifteen minutes across four
+ * instances is twelve, and nobody could tell you the number in advance.
+ *
+ * Postgres rather than Redis on purpose. The counters are written on login
+ * attempts and scans — hundreds a day at pilot scale, not millions — and a
+ * database we already run beats a second vendor, a second bill and a second
+ * set of credentials to leak. The interface is one function, so moving to
+ * Redis later is one file and no call-site changes.
+ *
+ * `key` carries its own namespace ("otp:send:<phoneHash>"), so one table
+ * serves every limit without them colliding.
+ */
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  // The sweep deletes by expiry, and nothing ever reads by it, so this
+  // index exists for the delete rather than for any query a request makes.
+  @@index([resetAt])
+}
+
+/**
+ * What a member of a brand's staff did, and when.
+ *
+ * The console can create a promotion that awards money, rotate the secret
+ * that makes a till slip trustworthy, reset a colleague's password and
+ * cancel the programme. None of that left a trace. A brand asking "who
+ * changed this, and when?" had no answer, and neither did we.
+ *
+ * ── Append-only, and enforced rather than intended ───────────────────────
+ *
+ * A log that the people it watches can edit is not a log. Nothing in the
+ * app updates or deletes a row here, and lib/db/tenant.ts refuses the
+ * attempt outright for this model rather than trusting that nobody writes
+ * the call — the same reasoning that makes the tenant guard deny unknown
+ * operations by default.
+ *
+ * ── Why the actor's name is copied in ────────────────────────────────────
+ *
+ * `actorId` points at the User, but `actorName` and `actorEmail` are
+ * written at the time. A log is read months later, by which point the
+ * person may have been deactivated, renamed, or had their email changed —
+ * and "who did this" has to answer with who they were when they did it,
+ * not who the row points at today. The relation stays for joining; the
+ * copied fields are what the log actually means.
+ */
+model AuditEvent {
+  id      String @id @default(cuid())
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  // Nullable because not every recorded event has a person behind it — a
+  // scheduled programme closure is the system acting, and pretending some
+  // user did it would be a lie in the one table that must not contain any.
+  //
+  // Deliberately NOT a foreign key, for two reasons that both matter more
+  // than the convenience of a join:
+  //
+  //  - a relation needs a delete rule, and every available rule rewrites or
+  //    removes rows here when a User is deleted. This table is append-only;
+  //    a cascade that edits it on someone else's behalf is exactly the thing
+  //    append-only is supposed to prevent.
+  //  - the write must never fail for a reason unrelated to the event. An
+  //    audit entry is part of the action (see lib/audit/record.ts), so a
+  //    referential check standing between a privileged change and its record
+  //    is a way for the change to be refused for no good reason — or worse,
+  //    to happen unrecorded.
+  //
+  // The copied name and email are what the log means; the id is for
+  // correlating when the user still exists.
+  actorId    String?
+  actorName  String
+  actorEmail String?
+
+  // A dotted verb: "store.secret_rotated", "campaign.activated". A string
+  // rather than an enum so recording a new kind of event is one line at the
+  // call site instead of a migration — the cost of a typo is a mislabelled
+  // row, and the cost of a migration per event type is events that never
+  // get recorded.
+  action String
+
+  // What it happened to, in both forms: the id for joining, and a label for
+  // reading. The label is copied for the same reason the actor's name is.
+  targetId    String?
+  targetLabel String?
+
+  // Small, already-redacted context: which status, which role, what
+  // changed. Never a secret, never a phone number — see lib/audit/record.ts.
+  detail Json?
+
+  createdAt DateTime @default(now())
+
+  // Every read is "this brand's log, newest first", and there is no other
+  // access pattern worth an index.
+  @@index([brandId, createdAt])
+  @@index([actorId])
 }

@@ -9,6 +9,19 @@
  * What is left is the reset and the one thing a scoped stylesheet cannot do
  * for itself: paint the page behind it. */
 
+/* Qumo's set style, in one place.
+ *
+ * app/font-faces.ts declares every face the registry offers as its own
+ * custom property; these two say which of them the product uses by default.
+ * A brand's chosen face is an alias of the same shape, applied further down
+ * the tree (lib/brand/theme.ts), so a brand overrides these rather than
+ * competing with them — and a brand that chooses nothing gets a considered
+ * page rather than the browser's idea of one. */
+:root {
+  --font-display: var(--qf-instrument-sans);
+  --font-mono: var(--qf-martian-mono);
+}
+
 *,
 *::before,
 *::after {
@@ -23,17 +36,17 @@ body {
      behind it, so an unstyled or errored page is never a bright white flash
      in a dark theme. */
   background: #ffffff;
-  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) html,
   :root:not([data-theme="light"]) body {
-    background: #121212;
+    background: #0a0a0b;
   }
 }
 
 :root[data-theme="dark"] html,
 :root[data-theme="dark"] body {
-  background: #121212;
+  background: #0a0a0b;
 }

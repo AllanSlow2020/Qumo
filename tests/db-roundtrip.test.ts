@@ -17,7 +17,11 @@ describe("database round-trip", () => {
   });
 
   it("stores a Person's phone number encrypted, with a stable lookup hash", async () => {
-    const phone = "+27821234567";
+    // Unique per run, and it has to be. A fixed number collided with a real
+    // shopper created by signing in through a browser against the same dev
+    // database — a failure that says nothing about the code and everything
+    // about the test assuming it is the only thing using it.
+    const phone = `+2782${String(Date.now()).slice(-7)}`;
     const phoneHash = hashPhone(phone);
     const phoneEncrypted = encryptPhone(phone);
 

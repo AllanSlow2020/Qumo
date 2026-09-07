@@ -18,7 +18,13 @@ const SENSITIVE_KEYS = new Set([
 
 const REDACTED = "[redacted]";
 
-function redact(value: unknown, seen = new WeakSet<object>()): unknown {
+/**
+ * Exported because anything that ships an object off this machine — the
+ * error reporter's webhook, for one — has to strip the same keys the log
+ * line does. One list, one function, so a key added here is stripped
+ * everywhere rather than in whichever place someone remembered.
+ */
+export function redact(value: unknown, seen = new WeakSet<object>()): unknown {
   if (Array.isArray(value)) {
     return value.map((item) => redact(item, seen));
   }
@@ -42,11 +48,11 @@ function log(level: "info" | "warn" | "error", message: string, meta?: unknown) 
   const entry = redactedMeta === undefined ? { message } : { message, meta: redactedMeta };
   console[level](JSON.stringify(entry));
 
-  // CIOS forwarded every error here to Sentry. That is deliberately not
-  // wired up yet: error monitoring is worth having and is four files of
-  // configuration, and a first commit that claims to be a clean extraction
-  // should not also be quietly carrying a half-configured integration.
-  // Adding it is a small change, and this is the one place that changes.
+  // This stays a pure writer. Forwarding errors somebody will actually see
+  // is lib/observability/report.ts, which calls this for the log line and
+  // then decides separately whether the event is worth waking anyone for.
+  // Keeping the two apart means a failure in the reporter cannot swallow
+  // the log entry, which is the record of last resort.
 }
 
 export const logger = {

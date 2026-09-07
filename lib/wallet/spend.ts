@@ -5,6 +5,8 @@ import { forBrand } from "@/lib/db/tenant";
 import { forPerson } from "@/lib/consumer/scope";
 import { requireRole } from "@/lib/auth/rbac";
 import { isSerializationConflict, MAX_SERIALIZATION_ATTEMPTS } from "@/lib/db/serialization";
+import { getProgrammeState } from "@/lib/subscriptions/manage";
+import type { Actor } from "@/lib/staff/actor";
 
 /**
  * Spending a closed-loop wallet balance at a till, in two steps.
@@ -32,7 +34,7 @@ export const CONFIRM_SPEND_ROLES: Role[] = ["OWNER", "ADMIN", "MARKETING", "QUAL
 
 export class WalletSpendError extends Error {}
 
-export type StaffSessionLike = { user: { brandId: string; role: string; id: string } };
+export type StaffSessionLike = Actor;
 
 /** Long enough not to collide in a queue, short enough to read aloud. */
 const CODE_DIGITS = 6;
@@ -86,6 +88,17 @@ export async function createWalletSpend(
   });
   if (!membership) {
     throw new WalletSpendError("You don't have a balance with this brand yet.");
+  }
+
+  // The other half of the cancellation promise. Earning stops the day a
+  // brand cancels; spending keeps working for sixty days after it, and then
+  // stops too. Checked here rather than only at the till, so a shopper is
+  // told before they ask a cashier to honour something that will be refused.
+  const programme = await getProgrammeState(brandId, now);
+  if (!programme.canRedeem) {
+    throw new WalletSpendError(
+      "This brand's rewards programme has ended, so this balance can no longer be spent.",
+    );
   }
 
   const balance = await getWalletBalanceCents(prisma, membership.id);

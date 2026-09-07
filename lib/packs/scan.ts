@@ -1,6 +1,7 @@
 import type { LedgerUnit, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
 import { applyAccrual, AccrualRefused } from "@/lib/ledger/accrue";
+import { getProgrammeState } from "@/lib/subscriptions/manage";
 import { isSerializationConflict, MAX_SERIALIZATION_ATTEMPTS } from "@/lib/db/serialization";
 import { looksLikePackCode, normalisePackCode } from "./code";
 
@@ -22,12 +23,15 @@ import { looksLikePackCode, normalisePackCode } from "./code";
 
 export type ScanFailureReason =
   | "UNKNOWN_CODE"
+  | "WRONG_BRAND"
   | "ALREADY_SCANNED"
   | "VOID"
   | "CAMPAIGN_NOT_ACTIVE"
   | "CAMPAIGN_ENDED"
   | "CAMPAIGN_NOT_STARTED"
   | "NO_EARN_RULE"
+  | "NOT_A_SCAN_PROMOTION"
+  | "PROGRAMME_CLOSED"
   | "DAILY_LIMIT"
   | "DAILY_SCAN_LIMIT"
   | "CAMPAIGN_EXHAUSTED"
@@ -44,6 +48,13 @@ export type ScanResult =
       /** The shopper's balance in this unit at this brand, after the award. */
       newBalance: number;
       /**
+       * True when this code had already been redeemed by this same shopper
+       * and we are showing them the award again rather than making a new
+       * one. Not an error: the App Router fetches this page twice on one
+       * navigation, so a first-time scanner reaches this branch every time.
+       */
+      alreadyEarned: boolean;
+      /**
        * Set when this scan completed a stamp card. The card's worth of
        * stamps has already been deducted from newBalance above — the
        * surplus, if any, carries forward to the next card.
@@ -55,12 +66,15 @@ export type ScanResult =
 /** Messages a shopper reads. Every one says what happened and what to do. */
 export const SCAN_FAILURE_MESSAGES: Record<ScanFailureReason, string> = {
   UNKNOWN_CODE: "We don't recognise that code. Check the label and try again.",
+  WRONG_BRAND: "That code belongs to a different brand's rewards. Scan it again from the link on the pack.",
   ALREADY_SCANNED: "This code has already been used.",
   VOID: "This code is no longer valid.",
   CAMPAIGN_NOT_ACTIVE: "This promotion isn't running at the moment.",
   CAMPAIGN_ENDED: "This promotion has ended.",
   CAMPAIGN_NOT_STARTED: "This promotion hasn't started yet.",
   NO_EARN_RULE: "This promotion isn't set up to award anything yet.",
+  NOT_A_SCAN_PROMOTION: "This code isn't part of the promotion running right now. Hold on to it — it hasn't been used.",
+  PROGRAMME_CLOSED: "This brand's rewards programme has ended, so this code can't be used. Anything you already earned is still in your rewards.",
   DAILY_LIMIT: "You've reached today's limit for this promotion. Your code will still work tomorrow.",
   DAILY_SCAN_LIMIT: "You've scanned as many codes as this promotion allows today. Try again tomorrow.",
   CAMPAIGN_EXHAUSTED: "This promotion has reached its limit and isn't giving out any more.",
@@ -88,6 +102,7 @@ async function findCode(canonical: string) {
           endDate: true,
           earnRule: {
             select: {
+              type: true,
               unit: true,
               amount: true,
               completesAt: true,
@@ -139,7 +154,90 @@ export function checkCampaignWindow(campaign: CampaignGate, now: Date): ScanFail
  * first interaction with the brand: a membership is the record of a real
  * relationship, so it is created by a scan and never by signing up.
  */
-export async function redeemPackCode(rawCode: string, personId: string, now: Date = new Date()): Promise<ScanResult> {
+/**
+ * A code that is already scanned: whose was it, and what did it give them?
+ *
+ * A duplicate is only a refusal when the code belongs to somebody else.
+ * When the same shopper opens it again — which every shopper does, because
+ * one navigation renders this page twice — they should see what they
+ * earned, not be told the sticker is spent.
+ *
+ * Falls back to a refusal if the award was never recorded, which can only be
+ * a row from before that column existed.
+ */
+async function describeExistingScan(
+  packCode: {
+    id: string;
+    brandId: string;
+    campaignId: string;
+    awardedAmount: number | null;
+    awardedUnit: LedgerUnit | null;
+    scannedByMembershipId: string | null;
+    brand: { name: string };
+    campaign: { name: string };
+  },
+  personId: string,
+): Promise<ScanResult> {
+  if (!packCode.scannedByMembershipId || packCode.awardedAmount === null || packCode.awardedUnit === null) {
+    return { ok: false, reason: "ALREADY_SCANNED" };
+  }
+
+  const membership = await prisma.brandMembership.findFirst({
+    where: { id: packCode.scannedByMembershipId, personId },
+    select: { id: true },
+  });
+  // Somebody else's. A photographed label shared in a group chat is exactly
+  // this case, and it is a genuine refusal.
+  if (!membership) {
+    return { ok: false, reason: "ALREADY_SCANNED" };
+  }
+
+  const totals = await prisma.pointsTransaction.aggregate({
+    where: { brandMembershipId: membership.id, unit: packCode.awardedUnit },
+    _sum: { amount: true },
+  });
+
+  return {
+    ok: true,
+    brandId: packCode.brandId,
+    brandName: packCode.brand.name,
+    campaignName: packCode.campaign.name,
+    amount: packCode.awardedAmount,
+    unit: packCode.awardedUnit,
+    newBalance: totals._sum.amount ?? 0,
+    // Deliberately not re-issued on a repeat: a coupon shown twice reads as
+    // two coupons, and the shopper already has it in their rewards.
+    coupon: null,
+    alreadyEarned: true,
+  };
+}
+
+export async function redeemPackCode(
+  rawCode: string,
+  personId: string,
+  now: Date = new Date(),
+  /**
+   * The brand the *carrier* claims this scan is for — on the web, the brand
+   * named by the subdomain the shopper is standing on.
+   *
+   * Optional because not every carrier asserts one: an SMS arrives with a
+   * code and a phone number and no host at all, and there is nothing to
+   * cross-check. When a carrier does assert a brand it has to agree with the
+   * code, so a hand-crafted chicken-licken.qumo.co.za/s/<campari-code> is
+   * refused rather than rendering a Campari award under a Chicken Licken
+   * header.
+   *
+   * Worth being precise about what this is and is not. It is not what keeps
+   * the money right — the award is driven by the code's own brandId and
+   * always was, so a mismatched host could never misdirect value. It is what
+   * makes "a page under brand X shows only brand X" true rather than nearly
+   * true, and a shopper cannot tell those two apart by looking.
+   *
+   * Last parameter, after `now`, purely so the existing callers and their
+   * tests keep working unchanged.
+   */
+  expectedBrandId?: string | null,
+): Promise<ScanResult> {
   const canonical = normalisePackCode(rawCode);
 
   // Cheap rejection first — /s/<code> is public, and malformed guesses
@@ -156,7 +254,12 @@ export async function redeemPackCode(rawCode: string, personId: string, now: Dat
     return { ok: false, reason: "VOID" };
   }
   if (packCode.status === "SCANNED") {
-    return { ok: false, reason: "ALREADY_SCANNED" };
+    return describeExistingScan(packCode, personId);
+  }
+  // Before the campaign window, and long before anything is awarded: a
+  // refusal must not burn the code.
+  if (expectedBrandId && packCode.brandId !== expectedBrandId) {
+    return { ok: false, reason: "WRONG_BRAND" };
   }
 
   const windowFailure = checkCampaignWindow(packCode.campaign, now);
@@ -167,6 +270,20 @@ export async function redeemPackCode(rawCode: string, personId: string, now: Dat
   const earnRule = packCode.campaign.earnRule;
   if (!earnRule) {
     return { ok: false, reason: "NO_EARN_RULE" };
+  }
+  // Reachable even though generating such a batch is now refused: a brand
+  // can print flat-per-scan codes and later switch the same campaign to a
+  // share of spend, at which point every sticker already on a shelf would
+  // scan for zero and be consumed. Refusing here happens before the code is
+  // burned, so switching the rule back makes them work again.
+  if (earnRule.type === "PERCENT_OF_SPEND") {
+    return { ok: false, reason: "NOT_A_SCAN_PROMOTION" };
+  }
+  // Before the transaction, so a closed programme does not consume the
+  // shopper's single-use code on the way to refusing them. If the brand
+  // comes back, the sticker still works.
+  if (!(await getProgrammeState(packCode.brandId, now)).canEarn) {
+    return { ok: false, reason: "PROGRAMME_CLOSED" };
   }
 
   const brandId = packCode.brandId;
@@ -196,7 +313,13 @@ export async function redeemPackCode(rawCode: string, personId: string, now: Dat
           // the code is already used, which is exactly true.
           const burn = await tx.packCode.updateMany({
             where: { id: packCode.id, status: "UNSCANNED" },
-            data: { status: "SCANNED", scannedAt: now, scannedByMembershipId: membership.id },
+            data: {
+              status: "SCANNED",
+              scannedAt: now,
+              scannedByMembershipId: membership.id,
+              awardedAmount: earnRule.amount,
+              awardedUnit: earnRule.unit,
+            },
           });
           if (burn.count !== 1) {
             return null;
@@ -245,6 +368,7 @@ export async function redeemPackCode(rawCode: string, personId: string, now: Dat
 
   return {
     ok: true,
+    alreadyEarned: false,
     brandId,
     brandName: packCode.brand.name,
     campaignName: packCode.campaign.name,

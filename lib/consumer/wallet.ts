@@ -36,11 +36,19 @@ export type BrandWallet = {
  * Every brand this shopper holds a membership with, and what they have
  * with each. Brands they have never interacted with do not appear —
  * membership is created by a first scan, not by signing up.
+ *
+ * `brandId` narrows it to one, which is what every shopper-facing screen
+ * now passes: a shopper on chicken-licken.qumo.co.za is on Chicken Licken's
+ * site and should not be shown that they also drink Campari. The unfiltered
+ * form survives for the one caller entitled to the whole picture — the
+ * shopper's own data export, where withholding it would answer a different
+ * question than the one the law says they asked.
  */
-export async function getWallet(personId: string): Promise<BrandWallet[]> {
+export async function getWallet(personId: string, brandId?: string): Promise<BrandWallet[]> {
   const scoped = forPerson(personId);
 
   const memberships = await scoped.brandMembership.findMany({
+    where: brandId ? { brandId } : undefined,
     include: { brand: { select: { id: true, name: true, slug: true } } },
     orderBy: { joinedAt: "asc" },
   });
@@ -55,6 +63,11 @@ export async function getWallet(personId: string): Promise<BrandWallet[]> {
   // another person's rows even if brandMembershipId were wrong.
   const sums = await scoped.pointsTransaction.groupBy({
     by: ["brandMembershipId", "unit"],
+    // Narrowed by membership rather than by brandId, so the sums can only
+    // ever come from rows belonging to the memberships listed above. A
+    // brandId filter would give the same answer today and stop giving it the
+    // moment a row's brandId and its membership's brandId disagree.
+    where: { brandMembershipId: { in: memberships.map((m) => m.id) } },
     _sum: { amount: true },
   });
 
@@ -83,21 +96,62 @@ export type WalletEntry = {
   unit: LedgerUnit;
   reason: string;
   createdAt: Date;
+  /** The store this happened at, when it happened at one. */
+  storeName: string | null;
+  /** What the basket came to, for a row that came from a till slip. */
+  amountCents: number | null;
+  /** The promotion that produced it, when the row records one. */
+  campaignName: string | null;
 };
 
 /**
  * The ledger itself, newest first — the shopper's own audit trail. This is
  * why the ledger is immutable: every number on the wallet screen can be
  * explained by pointing at the rows that produced it.
+ *
+ * "Explained" is the operative word, and a reason code is not an
+ * explanation. A row reading "Purchase · 4 Sept · +R8.50" gives a shopper
+ * nothing to check it against; "Sea Point · 4 Sept · R170.00 basket" is a
+ * thing they either remember doing or do not, which is the whole point of
+ * showing them a history. So the store and the basket come back with it.
+ *
+ * Both are reached through the scan rather than copied onto the ledger row,
+ * so there is one answer to "where did this happen" and it cannot drift
+ * from the scan that decided it. Both are null for the paths with no till
+ * behind them — a pack code, a card completion arriving without its scan —
+ * and the caller falls back rather than inventing one.
  */
-export async function getWalletHistory(personId: string, limit = 50): Promise<WalletEntry[]> {
+export async function getWalletHistory(personId: string, limit = 50, brandId?: string): Promise<WalletEntry[]> {
   const rows = await forPerson(personId).pointsTransaction.findMany({
+    where: brandId ? { brandId } : undefined,
     orderBy: { createdAt: "desc" },
     take: limit,
-    select: { id: true, brandId: true, amount: true, unit: true, reason: true, createdAt: true },
+    select: {
+      id: true,
+      brandId: true,
+      amount: true,
+      unit: true,
+      reason: true,
+      createdAt: true,
+      // Safe to reach through without a scope filter of its own: the row it
+      // hangs off has already been narrowed to this person by forPerson(),
+      // so the only scan reachable here is one of theirs.
+      purchaseScan: { select: { amountCents: true, store: { select: { name: true } } } },
+      campaign: { select: { name: true } },
+    },
   });
 
-  return rows.map((row) => ({ ...row, reason: row.reason as string }));
+  return rows.map((row) => ({
+    id: row.id,
+    brandId: row.brandId,
+    amount: row.amount,
+    unit: row.unit,
+    reason: row.reason as string,
+    createdAt: row.createdAt,
+    storeName: row.purchaseScan?.store.name ?? null,
+    amountCents: row.purchaseScan?.amountCents ?? null,
+    campaignName: row.campaign?.name ?? null,
+  }));
 }
 
 /**
