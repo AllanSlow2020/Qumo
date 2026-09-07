@@ -55,6 +55,12 @@ function isPublic(pathname: string): boolean {
   return (
     pathname === SHOPPER_LOGIN ||
     pathname === JOIN_PATH ||
+    // The bare address. Public because the page behind it only decides
+    // where to send you — signed in to the wallet, otherwise to the join
+    // page — and a session check here would bounce a first-time visitor to
+    // a login form before anything had explained the programme, which is
+    // the exact thing JOIN_PATH exists to avoid.
+    pathname === "/" ||
     underRoot(pathname, SCAN_ROOT) ||
     underRoot(pathname, RECEIPT_ROOT) ||
     underRoot(pathname, LEGAL_ROOT) ||
