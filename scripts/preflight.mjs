@@ -125,6 +125,16 @@ if (!value("TWILIO_ACCOUNT_SID")) {
   );
 }
 
+// Not a mistake — it is a thing somebody switched on — but it is the one
+// setting here that makes the front door wider, so it says so on every
+// single build until it goes.
+if (value("DEMO_LOGIN_PHONES") && value("DEMO_LOGIN_CODE")) {
+  warn(
+    "Demo login is ON: the numbers in DEMO_LOGIN_PHONES can sign in with DEMO_LOGIN_CODE, no SMS needed.",
+    "Fine while there is no SMS account and the listed numbers are yours. Remove both the day one is connected.",
+  );
+}
+
 if (!value("ERROR_WEBHOOK_URL")) {
   warn(
     "ERROR_WEBHOOK_URL is not set.",

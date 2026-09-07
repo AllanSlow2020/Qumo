@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db/client";
 import { encryptPhone, hashOtpCode, hashPhone } from "@/lib/security/crypto";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { getSmsClient, SmsSendError, type SmsClient } from "@/lib/sms/client";
+import { logger } from "@/lib/security/logger";
+import { isDemoLogin, isDemoPhone } from "./demo-login";
 import { normaliseSaPhone } from "./phone";
 import { WEB_CONSENT_VERSION } from "./consent";
 import { PRODUCT_NAME } from "@/lib/product";
@@ -73,12 +75,22 @@ export async function requestOtp(rawPhone: string, smsClient: SmsClient = getSms
   const phoneE164 = normaliseSaPhone(rawPhone);
   const phoneHash = hashPhone(phoneE164);
 
-  // Keyed on the phone hash rather than an IP: the thing being protected is
-  // a specific person's handset (and our SMS bill), and an attacker rotating
-  // IPs should not get a fresh allowance for the same target.
-  const { allowed } = await rateLimit(`otp:send:${phoneHash}`, SEND_LIMIT, SEND_WINDOW_MS);
-  if (!allowed) {
-    throw new OtpError("Too many codes requested. Wait a few minutes and try again.");
+  // A number on the demo list gets no SMS and no send cap. Both of those
+  // exist to protect a third party's handset and our messaging spend, and
+  // neither is in play for a number somebody wrote into the configuration
+  // on purpose. It also removes a way for a demo to fail in a room: three
+  // sign-ins in a quarter of an hour is easy to do while showing something
+  // off, and being told to wait would be a poor answer.
+  const demo = isDemoPhone(phoneE164);
+
+  if (!demo) {
+    // Keyed on the phone hash rather than an IP: the thing being protected is
+    // a specific person's handset (and our SMS bill), and an attacker rotating
+    // IPs should not get a fresh allowance for the same target.
+    const { allowed } = await rateLimit(`otp:send:${phoneHash}`, SEND_LIMIT, SEND_WINDOW_MS);
+    if (!allowed) {
+      throw new OtpError("Too many codes requested. Wait a few minutes and try again.");
+    }
   }
 
   const code = generateCode();
@@ -99,6 +111,13 @@ export async function requestOtp(rawPhone: string, smsClient: SmsClient = getSms
       expiresAt: new Date(now.getTime() + CODE_TTL_MS),
     },
   });
+
+  // The real code is still generated and stored above, so a demo number can
+  // sign in the ordinary way too — reading it out of the log still works,
+  // and nothing about the normal path is special-cased away.
+  if (demo) {
+    return { phoneE164 };
+  }
 
   try {
     await smsClient.sendSms(phoneE164, `${code} is your ${PRODUCT_NAME} code. It expires in 10 minutes.`);
@@ -147,6 +166,25 @@ export async function verifyOtp(rawPhone: string, code: string, consented: boole
 
   const submitted = code.trim();
   const now = new Date();
+
+  // The demo bypass, and everything about where it sits is deliberate: after
+  // the consent check, after the verify rate limit, and before the real
+  // comparison. It cannot be reached by a number that is not on the list,
+  // it cannot be used to guess at one, and it leaves the normal path below
+  // exactly as it was.
+  if (isDemoLogin(phoneE164, submitted)) {
+    // Any live code is spent, so the demo sign-in behaves like a real one
+    // rather than leaving a usable passcode behind it.
+    await prisma.phoneOtp.updateMany({
+      where: { phoneHash, consumedAt: null },
+      data: { consumedAt: now },
+    });
+    // Logged every time. A bypass nobody can see in the record is a bypass
+    // nobody remembers to remove. The number itself is redacted by the
+    // logger, which is the point of routing it through there.
+    logger.warn("shopper signed in with the demo passcode", { phone: phoneE164 });
+    return findOrCreatePerson(phoneE164, phoneHash);
+  }
 
   // The compare-and-swap that is the actual enforcement — the same idiom
   // consumePasswordResetToken() and transitionCoupon() use. Matching and
