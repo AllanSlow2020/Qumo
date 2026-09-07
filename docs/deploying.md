@@ -48,15 +48,39 @@ somebody else; `qumo.co.za` is about R100 a year.
 
 [Neon](https://neon.tech) — free tier, real Postgres, commercial use fine.
 
-1. Sign up, create a project in the region nearest your users (`eu-central`
-   is the closest to South Africa on the free tier).
+1. Sign up and create a project.
 2. Copy the **pooled** connection string. It has `-pooler` in the host.
    That is the one that survives serverless: every request may be a new
    process, and a direct connection per process exhausts Postgres's
    connection limit under any real traffic.
 3. Keep it. It becomes `DATABASE_URL`.
 
+**On the region:** what matters is that the database and the app end up in
+the same one, not which one. A page makes several queries, and each of them
+crossing an ocean costs more than the whole render. The region is in the
+connection string — the label between the endpoint id and `.aws.neon.tech`,
+e.g. `us-east-2`. Vercel's default is `iad1` (Virginia, `us-east-1`), which
+is close enough to any US Neon region to ignore. If you put Neon in Europe,
+set Vercel → Settings → Functions → Region to `fra1` to match; Hobby allows
+one region of your choosing. Europe is the better pair for South African
+users, but a mismatched pair is worse than either.
+
 ## 2. The domain
+
+### Or no domain at all, for a first look
+
+You can skip this step entirely and still get a working shopper site.
+Vercel gives every project a `<project-name>.vercel.app` hostname, and Qumo
+reads the brand from the label to the left of the root domain — so name the
+project after the brand's slug, set `NEXT_PUBLIC_QUMO_ROOT_DOMAIN` to
+`vercel.app`, and `chicken-licken.vercel.app` resolves correctly.
+
+One brand, and no console: the console lives at `app.{root}`, and
+`app.vercel.app` is not yours to claim. Run the console locally against the
+same database and show it on a laptop. For a first demo — shopper site on a
+phone, console on a screen — that split is arguably the right one anyway.
+
+### The real thing
 
 Buy it wherever you like, then point it at Vercel's nameservers:
 
@@ -76,23 +100,61 @@ configuration — `vercel.json` is already in the repo and carries the cron
 schedule.
 
 Then add the environment variables, under Settings → Environment Variables.
-Generate each secret freshly; do not reuse the ones in your local `.env`,
-which have been on your laptop and in a terminal history.
 
-| Variable | Value |
-|---|---|
-| `DATABASE_URL` | the pooled Neon string from step 1 |
-| `NEXT_PUBLIC_QUMO_ROOT_DOMAIN` | `qumo.co.za` — bare hostname, no `https://`, no path |
-| `AUTH_SECRET` | `openssl rand -base64 32` |
-| `PHONE_HASH_SECRET` | `openssl rand -base64 32` |
-| `ENCRYPTION_KEY` | `openssl rand -base64 32` — must decode to exactly 32 bytes |
-| `AUTH_TRUST_HOST` | `true` |
-| `CRON_SECRET` | `openssl rand -hex 32` |
+**Generate every secret with the command in the table — do not invent one.**
+A typed passphrase is the single most common way this goes wrong:
+`ENCRYPTION_KEY` has to decode to exactly 32 bytes for AES-256, and anything
+you make up by hand almost certainly will not. The preflight check catches
+that one before it deploys; it cannot catch a weak `AUTH_SECRET`.
+
+| Variable | Value | Type |
+|---|---|---|
+| `DATABASE_URL` | the pooled Neon string from step 1 | Config |
+| `NEXT_PUBLIC_QUMO_ROOT_DOMAIN` | `qumo.co.za` — bare hostname, no `https://`, no path | Config |
+| `PHONE_HASH_SECRET` | `openssl rand -base64 32` | Config |
+| `ENCRYPTION_KEY` | `openssl rand -base64 32` | Config |
+| `AUTH_SECRET` | `openssl rand -base64 32` | Secret |
+| `AUTH_TRUST_HOST` | `true` | Config |
+| `CRON_SECRET` | `openssl rand -hex 32` | Secret |
+
+### The Type column matters more than it looks
+
+Vercel offers **Secret** and **Config**. Secret is write-only: once saved,
+nobody can ever read the value back — not the dashboard, not `vercel env
+pull`, not you. That is the right choice for a value nothing outside Vercel
+ever needs.
+
+`ENCRYPTION_KEY` and `PHONE_HASH_SECRET` are not those values. Your laptop
+needs them too, because seeding writes rows encrypted and hashed with them
+and the live site has to read those rows back. Save them as Secret and you
+will discover, at the moment you seed, that you cannot retrieve them — and
+the only way out is to regenerate both and set them again on both sides.
+Cheap on an empty database; not cheap once there is anything in it.
+
+So: **Config for anything your laptop also needs, Secret for the rest.**
+Nothing is really given away by that — anyone who can reach the Vercel
+dashboard could already deploy code that prints these.
 
 `NEXT_PUBLIC_QUMO_ROOT_DOMAIN` is compiled into the build rather than read
 at runtime, because `proxy.ts` runs in the Edge runtime where there is no
 runtime environment to read. Setting it after a build has no effect —
 change it and deploy again.
+
+Once they are set, this pulls the Config ones onto your laptop, so local and
+production cannot drift:
+
+```bash
+pnpm dlx vercel login
+pnpm dlx vercel link
+pnpm dlx vercel env pull .env --environment=production
+```
+
+It writes `[SENSITIVE]` in place of anything saved as Secret, which is the
+tell that a value was typed into the wrong box. It also writes a handful of
+Vercel's own variables and sets `NEXT_PUBLIC_QUMO_ROOT_DOMAIN` to the
+production domain, which will stop `chicken-licken.localhost:3000` working
+— so keep this `.env` for pointing at production, and run `pnpm bootstrap`
+to get a local one back.
 
 Leave `TWILIO_*` and `ERROR_WEBHOOK_URL` empty for now. What that costs you
 is in **Where the demo is thin** below.
@@ -118,20 +180,41 @@ Vercel issues the certificates itself once the nameservers have propagated.
 ## 5. The schema, and something to look at
 
 Migrations do not run on deploy, deliberately — a schema change should be a
-thing you do, not a side effect of pushing. From your laptop, pointed at
-the production database:
+thing you do, not a side effect of pushing. They run from your laptop,
+against the production database.
 
-```bash
-DATABASE_URL="<the pooled Neon string>" pnpm exec prisma migrate deploy
+**Put the connection details in `.env` rather than in front of each
+command.** Repeating `DATABASE_URL="…"` four times is four chances to paste
+the wrong thing, and every one of them fails in a different way. The `env
+pull` above already wrote the file; check it has these three lines and no
+`[SENSITIVE]`:
+
+```
+DATABASE_URL="postgresql://…-pooler.….neon.tech/neondb?sslmode=require"
+ENCRYPTION_KEY="…"
+PHONE_HASH_SECRET="…"
 ```
 
-Then the demo brand. `pnpm demo` reads the same `DATABASE_URL`, so the same
-prefix aims it at production:
+Then, in order:
 
 ```bash
-DATABASE_URL="<the pooled Neon string>" pnpm db:seed
-DATABASE_URL="<the pooled Neon string>" pnpm demo
+pnpm install
+pnpm exec prisma generate
+pnpm exec prisma migrate deploy
+pnpm db:seed
+pnpm demo
 ```
+
+`prisma generate` is not optional and is easy to miss: `pnpm install` does
+not run it, because generation happens inside `pnpm build`, which you have
+no reason to run locally when deploying. Skip it and the seed fails with
+`Cannot find module '.prisma/client/default'`, which reads like a broken
+checkout rather than a missing step.
+
+`db:seed` needs `ENCRYPTION_KEY` — it encrypts each store's receipt-signing
+secret before storing it — and `demo` needs `PHONE_HASH_SECRET` as well,
+for the members it creates. Both must be the same values the live site
+uses, which is the whole reason they are Config rather than Secret above.
 
 That gives you Chicken Licken with five stores, 280 members and three
 months of activity, at `https://chicken-licken.qumo.co.za`, and a console
@@ -179,9 +262,10 @@ cannot mint its own slips. Two ways round it, both fine:
 flow, because there is no cashier screen for one. `lib/wallet/availability.ts`
 gates it and the terms say so plainly.
 
-**One region.** The free tier runs the app in one place and the database in
-another. Put both in Europe and Cape Town sees a few hundred milliseconds.
-Nobody in a pitch will notice; it is worth knowing before a pilot.
+**One region.** The free tier runs the app in one place, and if the database
+is somewhere else every query pays for the gap. Put both in Europe and Cape
+Town sees a few hundred milliseconds. Nobody in a pitch will notice; it is
+worth knowing before a pilot.
 
 ---
 
