@@ -17,8 +17,8 @@ import { clearConsumerSession, getConsumerSession, revokeAllSessions } from "@/l
  * the page it is already on and the subdomain cannot be lost. It is the same
  * shape the login form has always used. See the sign-out button component.
  *
- * This shipped broken in Phase D — signing out landed a shopper on the
- * no-brand page — because the test asserted the session row was revoked,
+ * This shipped broken in Phase D - signing out landed a shopper on the
+ * no-brand page - because the test asserted the session row was revoked,
  * which it was, and never looked at the resulting screen.
  */
 
@@ -31,7 +31,7 @@ export async function signOut(): Promise<void> {
  *
  * The personId comes from the verified session rather than a form field,
  * because a form field would let anyone post someone else's id and sign
- * them out of everything — a denial of service that needs no stolen
+ * them out of everything - a denial of service that needs no stolen
  * credential at all.
  */
 export async function signOutEverywhere(): Promise<void> {

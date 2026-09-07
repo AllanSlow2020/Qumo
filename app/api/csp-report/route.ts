@@ -6,7 +6,7 @@ import { rateLimit } from "@/lib/security/rate-limit";
  * Where a browser posts a Content-Security-Policy violation.
  *
  * Worth having specifically because the policy is new. A CSP that is
- * slightly too strict does not fail loudly — it silently drops one script
+ * slightly too strict does not fail loudly - it silently drops one script
  * on one browser, and the first anyone hears is a brand saying the page
  * "doesn't work on my phone". This endpoint turns that into a log line with
  * the blocked URI and the directive that blocked it.

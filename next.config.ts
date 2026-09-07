@@ -6,7 +6,7 @@ import type { NextConfig } from "next";
 // per-request nonce, so it is built in proxy.ts (lib/security/csp.ts) and
 // set there. Setting it in both places would put two of the header on one
 // response, which browsers enforce as the intersection of the two policies
-// — a thing that is hard to reason about and easy to get wrong twice.
+// - a thing that is hard to reason about and easy to get wrong twice.
 const securityHeaders = [
   // Superseded by the policy's frame-ancestors for any current browser, and
   // kept for the ones that predate it. Costs a few bytes.
@@ -15,7 +15,7 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
   {
-    // Two years, and every brand subdomain with it — which is the whole
+    // Two years, and every brand subdomain with it - which is the whole
     // point here, because the shopper surface *is* subdomains and a brand
     // site reachable over http is a session cookie reachable over http.
     //

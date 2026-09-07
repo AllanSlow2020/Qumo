@@ -10,7 +10,7 @@ import { describeAction, isNotable, listAuditEvents, PAGE_SIZE } from "@/lib/aud
  * names actions, never secrets.
  *
  * There is no filter, no search and no export yet, and that is the right
- * amount for a first version — a brand's log is measured in tens of rows a
+ * amount for a first version - a brand's log is measured in tens of rows a
  * month, and the newest fifty answer almost every question anyone asks of
  * it. Paging exists so the fifty-first is reachable.
  */

@@ -37,7 +37,7 @@ export default async function ConsoleBillingPage() {
           {view.status === "UNMANAGED" && (
             // Said plainly rather than hidden. Billing is not integrated
             // yet, so this brand is running on nothing but our goodwill and
-            // a handshake — which is fine, and should not be a secret.
+            // a handshake - which is fine, and should not be a secret.
             <div className="cn-metric-note">Set up by hand. Billing isn&apos;t connected yet.</div>
           )}
         </div>
@@ -73,7 +73,7 @@ export default async function ConsoleBillingPage() {
           <p className="cn-body">
             You can stop at any time. Earning stops immediately; anything your shoppers have already earned stays
             spendable for {HONOUR_WINDOW_DAYS} days, then the programme closes. That window is fixed when you
-            cancel — changing our policy later won&apos;t shorten a promise already made to your customers.
+            cancel - changing our policy later won&apos;t shorten a promise already made to your customers.
           </p>
 
           {canManage ? (

@@ -11,7 +11,7 @@ import { BrandHeader } from "../brand-header";
  *
  * Query parameters rather than a path segment, because the payload is
  * several fields and a POS receipt template can concatenate a query string
- * far more easily than it can encode anything — see lib/stores/payload.ts.
+ * far more easily than it can encode anything - see lib/stores/payload.ts.
  */
 export default async function ReceiptScanPage({
   searchParams,
@@ -71,7 +71,7 @@ export default async function ReceiptScanPage({
         {/* Deliberately worded the same whether this is the first render or
             a repeat. The App Router fetches this page twice on one
             navigation, so the second render is what a first-time scanner
-            actually sees — "you already earned this" would then greet
+            actually sees - "you already earned this" would then greet
             everyone, which is worse than the problem it was fixing. The
             balance underneath carries the real information, and this
             sentence is true either way. `alreadyEarned` still does its job
@@ -84,7 +84,7 @@ export default async function ReceiptScanPage({
 
         {result.coupon && (
           <div className="sc-tile sc-tile-pos">
-            <p className="sc-label">Card complete — you&apos;ve earned</p>
+            <p className="sc-label">Card complete - you&apos;ve earned</p>
             <p className="sc-h2">{result.coupon.name}</p>
             <p className="sc-code-sm sc-pos">{result.coupon.code}</p>
           </div>

@@ -71,13 +71,13 @@ describe("running a promotion from the console", () => {
     expect((await prisma.campaign.findUniqueOrThrow({ where: { id: campaign.id } })).status).toBe("PAUSED");
   });
 
-  it("refuses a second live spend-based promotion — including by the back door", async () => {
+  it("refuses a second live spend-based promotion - including by the back door", async () => {
     // The hole this test exists for.
     //
     // setSpendRuleForSession refuses when another campaign is *already
     // active* with a spend rule, which blocks the obvious sequence. It does
-    // not block this one: configure both while both are paused — neither
-    // conflicts, because neither is live — and then switch them on one after
+    // not block this one: configure both while both are paused - neither
+    // conflicts, because neither is live - and then switch them on one after
     // the other. Nothing checked activation, so the second one went live
     // beside the first.
     //
@@ -139,7 +139,7 @@ describe("running a promotion from the console", () => {
 
     // Submitting empty boxes must actually clear them. Leaving the old
     // ceiling in place while the form shows an empty field is the worst of
-    // both — the brand believes there is no cap and there is, or believes
+    // both - the brand believes there is no cap and there is, or believes
     // there is one and there isn't.
     await setCampaignLimitsForSession(owner(brand.id), form({ campaignId: campaign.id }));
     rule = await prisma.earnRule.findUniqueOrThrow({ where: { campaignId: campaign.id } });
@@ -174,7 +174,7 @@ describe("running a promotion from the console", () => {
 
     const listed = (await listCampaignsForConsole(brand.id)).find((c) => c.id === campaign.id);
     // 400, not 250. maxTotalAmount caps what may be *issued*, so a
-    // redemption does not buy back headroom — and the number a brand reads
+    // redemption does not buy back headroom - and the number a brand reads
     // has to be the one the ceiling actually measures.
     expect(listed?.issued).toBe(400);
     expect(listed?.rule?.maxTotalAmount).toBe(10_000);
@@ -202,7 +202,7 @@ describe("running a promotion from the console", () => {
 /**
  * The ceilings exist and default to nothing, so a brand can switch on five
  * percent cashback with no bound at all. The console warned about unsigned
- * stores and said nothing about this — and worse, that warning told them
+ * stores and said nothing about this - and worse, that warning told them
  * their ceilings bounded the cost, which is true only if they set one. A
  * warning that promises a limit nobody set is worse than no warning.
  */

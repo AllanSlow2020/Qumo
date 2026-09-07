@@ -10,7 +10,7 @@ import { requestCode, submitCode } from "./actions";
 /**
  * Two steps in one component: enter a number, then enter the code. Kept
  * together rather than split across two routes so a mistyped number can be
- * corrected without losing the page — "Use a different number" moves back a
+ * corrected without losing the page - "Use a different number" moves back a
  * step instead of navigating.
  */
 export function ShopperLoginForm({ destination }: { destination: string }) {
@@ -54,7 +54,7 @@ export function ShopperLoginForm({ destination }: { destination: string }) {
     }
     router.push(destination);
     // The destination reads the session cookie on the server, and that
-    // cookie was set inside the action above — refresh so the navigation
+    // cookie was set inside the action above - refresh so the navigation
     // lands on freshly rendered content rather than a cached logged-out
     // view. It matters most for a scan: /s/<code> awards on render, and a
     // cached logged-out render would bounce straight back to login.
@@ -82,7 +82,7 @@ export function ShopperLoginForm({ destination }: { destination: string }) {
 
         {/* On the first step, not the second: this is a decision, and a
             decision belongs before someone has waited for an SMS. Shown to
-            everyone rather than only to new shoppers — asking only new ones
+            everyone rather than only to new shoppers - asking only new ones
             would reveal which numbers already have an account. */}
         <label className="sc-check">
           <input

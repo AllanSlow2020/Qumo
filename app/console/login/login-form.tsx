@@ -11,8 +11,8 @@ export function StaffLoginForm() {
   const [state, action, pending] = useActionState(signIn, INITIAL);
 
   // Held in component state, not a hidden input. The second attempt has to
-  // send the password again — the server re-verifies it rather than issuing
-  // a half-authenticated token — and a password in a hidden field would be
+  // send the password again - the server re-verifies it rather than issuing
+  // a half-authenticated token - and a password in a hidden field would be
   // sitting in the rendered HTML for anything that can read the DOM.
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +22,7 @@ export function StaffLoginForm() {
   useEffect(() => {
     // The action sets the cookie; navigating is this component's job. refresh
     // first so the destination renders against the new session rather than a
-    // cached signed-out view — the same reason the shopper login does it.
+    // cached signed-out view - the same reason the shopper login does it.
     if (state === INITIAL) return;
     if (state.ok) {
       router.replace("/");

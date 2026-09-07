@@ -14,7 +14,7 @@ export type JoinOutcome = "JOINED" | "NEEDS_SIGN_IN";
  * Neither is read from the form, so tampering with the request changes
  * nothing at all.
  *
- * Returns where to go rather than redirecting there — see the note in
+ * Returns where to go rather than redirecting there - see the note in
  * ../wallet/actions.ts on why a redirect() from a server action loses the
  * brand subdomain. The caller navigates.
  */

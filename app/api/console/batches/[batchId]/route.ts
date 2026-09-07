@@ -9,7 +9,7 @@ import { exportBatchCodes, toCsv } from "@/lib/packs/export";
  * Downloads one print run as CSV.
  *
  * Under /api, which the proxy deliberately lets through without a session
- * check — so this handler does its own, and it is not optional. It returns
+ * check - so this handler does its own, and it is not optional. It returns
  * every code in a batch, which is the whole print run.
  *
  * Three checks, not one. The staff session says who is asking;
@@ -18,11 +18,11 @@ import { exportBatchCodes, toCsv } from "@/lib/packs/export";
  * one required to create a batch.
  *
  * That third check was missing, and the comment that used to justify its
- * absence was wrong: "codes are not secret — they end up printed on the
+ * absence was wrong: "codes are not secret - they end up printed on the
  * outside of a box." True of a printed code, which costs a purchase to
  * obtain. Not true of the file: a batch that has not been printed yet is
  * every unredeemed code in one download, each one worth an award, and QUALITY
- * — the one role deliberately barred from creating a batch — could take the
+ * - the one role deliberately barred from creating a batch - could take the
  * lot.
  */
 export async function GET(req: Request, { params }: { params: Promise<{ batchId: string }> }) {

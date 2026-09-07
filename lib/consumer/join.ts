@@ -53,7 +53,7 @@ function unitWord(amount: number, unit: LedgerUnit): string {
  * Turns an earn rule into the sentence a shopper reads.
  *
  * Exported because it is the same sentence the console should show a brand
- * when they configure a promotion — a brand ought to see the words their
+ * when they configure a promotion - a brand ought to see the words their
  * customers will, not the basis points.
  */
 export function describeEarnRule(rule: {
@@ -75,7 +75,7 @@ export function describeEarnRule(rule: {
 
   if (rule.completesAt) {
     return {
-      headline: `Collect ${unitWord(rule.amount, rule.unit)} per purchase — ${rule.completesAt} earns a reward`,
+      headline: `Collect ${unitWord(rule.amount, rule.unit)} per purchase - ${rule.completesAt} earns a reward`,
       condition,
     };
   }
@@ -125,7 +125,7 @@ export async function getMembershipStatus(personId: string, brandId: string): Pr
  *
  * Rejoining clears the opt-out stamp, because arriving at this page and
  * pressing the button is exactly the affirmative act that withdrawal was the
- * opposite of. Their ledger is untouched either way — someone who left and
+ * opposite of. Their ledger is untouched either way - someone who left and
  * came back finds their balance where they put it.
  */
 export async function joinBrand(personId: string, brandId: string): Promise<void> {

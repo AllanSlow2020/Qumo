@@ -147,7 +147,7 @@ describe("what a shopper can do with their own data", () => {
   });
 
   it("refuses to opt somebody else out", async () => {
-    // brandId arrives from a form. personId never does — it comes from the
+    // brandId arrives from a form. personId never does - it comes from the
     // verified session, and the membership is resolved through the consumer
     // lens before anything is written.
     expect(await setOptOut(someoneElse.id, brandB.id, true)).toBe(false);

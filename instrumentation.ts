@@ -4,9 +4,9 @@ import { reportError } from "@/lib/observability/report";
 /**
  * Next's own hook for "something threw and the framework handled it".
  *
- * This is the seam that closes the gap. Every server error — a page that
+ * This is the seam that closes the gap. Every server error - a page that
  * throws while rendering, a server action that rejects, a route handler
- * that blows up — arrives here with the route that produced it, whether or
+ * that blows up - arrives here with the route that produced it, whether or
  * not anybody wrote a try/catch. Before this file existed, all of that
  * produced a digest for the user and nothing for us.
  *
@@ -26,7 +26,7 @@ export const onRequestError: Instrumentation.onRequestError = async (err, reques
 
 /**
  * Required for the instrumentation file to be picked up. Nothing to set up
- * — the reporter has no client to initialise — so this exists to say so out
+ * - the reporter has no client to initialise - so this exists to say so out
  * loud once per boot, which is also how you tell from a log whether the
  * hook is installed at all.
  */

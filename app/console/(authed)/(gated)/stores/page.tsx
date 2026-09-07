@@ -10,7 +10,7 @@ export default async function ConsoleStoresPage() {
 
   // The same list the engine enforces against, read here only to decide what
   // to render. The controls are hidden from a role that cannot use them, and
-  // every action re-checks server-side — hiding a button is courtesy, not
+  // every action re-checks server-side - hiding a button is courtesy, not
   // access control.
   const canManage = MANAGE_STORE_ROLES.includes(session.role as Role);
 
@@ -36,7 +36,7 @@ export default async function ConsoleStoresPage() {
             <p className="cn-body">
               At an unsigned store nothing binds a slip to the till that printed it, so a shopper who has seen one of
               their own receipts can invent others. Your promotion&apos;s per-person and per-campaign ceilings bound
-              what that costs — they don&apos;t prevent it. Turning signing on below is the fix, and it needs your
+              what that costs - they don&apos;t prevent it. Turning signing on below is the fix, and it needs your
               point of sale to compute the signature.
             </p>
           </div>

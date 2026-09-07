@@ -4,7 +4,7 @@
  * Off, and it is a correction rather than a caution.
  *
  * The redemption flow is half a flow. A shopper could generate a spend code
- * and there is no screen anywhere that confirms one — `confirmWalletSpend`
+ * and there is no screen anywhere that confirms one - `confirmWalletSpend`
  * in lib/wallet/spend.ts has a full engine implementation, a test suite,
  * and no caller in `app/`. So the shopper half was live, reachable, and led
  * to a code nobody could redeem: worse than an unbuilt feature, because an

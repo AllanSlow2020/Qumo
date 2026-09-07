@@ -78,7 +78,7 @@ export function decryptPhone(encoded: string): string {
  * OTP has a keyspace of one million, and an unkeyed digest of one is
  * reversible by brute force in about the time it takes to read this
  * sentence. Keying it with a secret that never leaves the environment
- * means a database dump alone reveals nothing — the same reasoning that
+ * means a database dump alone reveals nothing - the same reasoning that
  * put hashPhone() on an HMAC rather than a plain digest.
  *
  * phoneHash is mixed into the message so a stored code hash is bound to

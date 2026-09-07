@@ -41,7 +41,7 @@ describe("what a brand's standing means, decided from the row", () => {
 
   it("closes once the window elapses, whether or not anything ran", () => {
     // The property the whole design rests on. A nightly job that marks rows
-    // CLOSED is tidying; if it never runs, this still answers correctly —
+    // CLOSED is tidying; if it never runs, this still answers correctly -
     // otherwise a brand stops paying, a cron quietly fails, and the
     // programme keeps awarding for a month.
     const afterWindow = new Date(until.getTime() + 1);

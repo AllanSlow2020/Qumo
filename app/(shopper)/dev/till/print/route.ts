@@ -4,15 +4,15 @@ import { devOnly } from "@/lib/dev/guard";
 /**
  * Mint one slip and send you to it.
  *
- * The transaction id cannot be generated while the till page renders —
+ * The transaction id cannot be generated while the till page renders -
  * React refuses an impure render, and it is right to: every re-render
  * produced a different slip, so the QR could change while a phone was
  * pointed at it and the thing you scanned was not the thing on screen.
  *
  * It is a route handler rather than a server action because the server
  * action version did not stay on the brand's host. Printing a slip on
- * chicken-licken.localhost:3000 produced a render on localhost:3000 —
- * a host that names no brand — so the answer to "print a slip" was "this
+ * chicken-licken.localhost:3000 produced a render on localhost:3000 -
+ * a host that names no brand - so the answer to "print a slip" was "this
  * link needs a brand". The Location below is relative, and a browser
  * resolves a relative Location against the address it asked for, so
  * whatever host you print from is the host you land on. That property is

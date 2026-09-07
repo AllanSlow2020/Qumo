@@ -1,6 +1,6 @@
 // A thin wrapper around console.* that redacts known-sensitive keys before
 // anything is written out. Logs end up in third-party log aggregators,
-// error trackers, and CI output — none of which should ever see a phone
+// error trackers, and CI output - none of which should ever see a phone
 // number, password, or password hash, even accidentally via a stray
 // `console.log(user)` during debugging.
 
@@ -19,8 +19,8 @@ const SENSITIVE_KEYS = new Set([
 const REDACTED = "[redacted]";
 
 /**
- * Exported because anything that ships an object off this machine — the
- * error reporter's webhook, for one — has to strip the same keys the log
+ * Exported because anything that ships an object off this machine - the
+ * error reporter's webhook, for one - has to strip the same keys the log
  * line does. One list, one function, so a key added here is stripped
  * everywhere rather than in whichever place someone remembered.
  */

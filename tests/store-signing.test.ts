@@ -19,7 +19,7 @@ import {
  *
  * The engine functions existed and were tested for tenancy; what was never
  * asserted is the thing a brand actually experiences when they press the
- * button — that a rotation makes new slips work and old ones stop.
+ * button - that a rotation makes new slips work and old ones stop.
  */
 describe("issuing and rotating a store's signing secret", () => {
   const suffix = Date.now();
@@ -124,7 +124,7 @@ describe("issuing and rotating a store's signing secret", () => {
     expect(forged).toEqual({ ok: false, reason: "BAD_SIGNATURE" });
 
     // And an unsigned slip at a signed store is refused outright rather than
-    // quietly downgraded — otherwise turning signing on would achieve
+    // quietly downgraded - otherwise turning signing on would achieve
     // nothing at all.
     const unsigned = await redeemReceipt(slip(created.code, null), shopper.id, new Date(), brand.id);
     expect(unsigned).toEqual({ ok: false, reason: "SIGNATURE_REQUIRED" });
@@ -133,7 +133,7 @@ describe("issuing and rotating a store's signing secret", () => {
   it("rotation makes new slips work and old ones stop", async () => {
     // The consequence the console warns about before anyone clicks, asserted
     // rather than assumed. A slip in a shopper's pocket, signed minutes ago,
-    // stops verifying — which is the point of a rotation and also the reason
+    // stops verifying - which is the point of a rotation and also the reason
     // it is not a routine thing to do at lunchtime.
     const created = await createStoreForSession(
       owner(brand.id),
@@ -209,7 +209,7 @@ describe("issuing and rotating a store's signing secret", () => {
       form({ name: "Ours", code: `SGN-${suffix}-H`, signed: "on" }),
     );
     // Same id, wrong brand: the scoped query simply does not find it, so it
-    // reads as "doesn't exist" rather than "not yours" — which is also the
+    // reads as "doesn't exist" rather than "not yours" - which is also the
     // right thing to tell somebody probing for other brands' store ids.
     await expect(rotateStoreSecretForSession(owner(otherBrand.id), created.id)).rejects.toThrow(StoreError);
 
@@ -221,7 +221,7 @@ describe("issuing and rotating a store's signing secret", () => {
   it("refuses a duplicate store code without saying whose it is", async () => {
     await createStoreForSession(owner(brand.id), form({ name: "First", code: `SGN-${suffix}-DUP`, signed: "on" }));
     // Codes are globally unique because a scanned slip carries nothing else,
-    // so a clash can be with another brand's store — and the message must
+    // so a clash can be with another brand's store - and the message must
     // not confirm that another brand has taken it.
     await expect(
       createStoreForSession(owner(otherBrand.id), form({ name: "Second", code: `SGN-${suffix}-DUP`, signed: "on" })),

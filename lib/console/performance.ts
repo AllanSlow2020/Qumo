@@ -4,7 +4,7 @@ import { forBrand } from "@/lib/db/tenant";
 /**
  * The screen that answers "is this working".
  *
- * The overview answers "what is happening" — totals, counts, this week. That
+ * The overview answers "what is happening" - totals, counts, this week. That
  * is the question a brand asks in month one. From month two they ask a
  * harder one, and until now the console had no answer to it at all.
  *
@@ -12,7 +12,7 @@ import { forBrand } from "@/lib/db/tenant";
  *
  * **Repeat rate.** A loyalty programme where almost everybody scans once is
  * not a loyalty programme; it is a discount with extra steps. The totals
- * hide this completely — a thousand people scanning once and three hundred
+ * hide this completely - a thousand people scanning once and three hundred
  * scanning three times produce similar-looking figures and mean opposite
  * things. So the distribution is reported, not just the average: how many
  * came once, how many twice or three times, how many more than that.
@@ -28,7 +28,7 @@ import { forBrand } from "@/lib/db/tenant";
  *
  * A franchise's real question is whether the programme is running at all.
  * If three stores of forty produce most of the scans, that is not a
- * successful pilot, it is an accidental one — and the totals look fine
+ * successful pilot, it is an accidental one - and the totals look fine
  * while it happens. The by-store table is how that becomes visible.
  *
  * Everything is scoped through forBrand, like every other read: this page
@@ -72,7 +72,7 @@ export type CampaignRow = {
    * eighty percent over budget, and clamping it to 1 makes that look
    * identical to one that landed exactly on it.
    *
-   * It can exceed 1 in one real way — the ceiling is checked before each
+   * It can exceed 1 in one real way - the ceiling is checked before each
    * award, so nothing can breach it while it stands, but lowering a
    * ceiling below what has already been issued puts a campaign over it
    * immediately. A brand cutting a budget mid-campaign is exactly when
@@ -87,7 +87,7 @@ export type Performance = {
   from: Date;
   /** Credits issued during the period, per unit. */
   issued: UnitAmount[];
-  /** Everything still owed, right now, all time — not period-bound. */
+  /** Everything still owed, right now, all time - not period-bound. */
   outstanding: UnitAmount[];
   slips: number;
   packCodes: number;
@@ -108,7 +108,7 @@ export type Performance = {
    * The same window, immediately before this one.
    *
    * A figure with nothing to compare it to is not a finding. "42% came
-   * back" is unreadable on its own — the only question anybody has is
+   * back" is unreadable on its own - the only question anybody has is
    * whether that is better or worse than it was, and answering it needs
    * the window before.
    *
@@ -162,7 +162,7 @@ export async function getPerformance(
    * Both ends of the window, always.
    *
    * Every one of these filters started as `gte: from` with no upper bound,
-   * which is correct exactly once — for the current window, where "now" is
+   * which is correct exactly once - for the current window, where "now" is
    * the end of time anyway. The moment the same function is asked to
    * measure an *earlier* window it is wrong: an open-ended range from the
    * start of the previous period runs all the way to today and swallows
@@ -272,7 +272,7 @@ export async function getPerformance(
       scans: perStore.get(store.id) ?? 0,
       share: slipRows.length === 0 ? 0 : (perStore.get(store.id) ?? 0) / slipRows.length,
     }))
-    // Busiest first, because the question is which stores are carrying it —
+    // Busiest first, because the question is which stores are carrying it -
     // and the quiet ones at the bottom are the answer to the other half.
     .sort((a, b) => b.scans - a.scans || a.name.localeCompare(b.name));
 
@@ -320,7 +320,7 @@ export async function getPerformance(
       ceiling,
       // Measured against issued-all-time, because a ceiling is a lifetime
       // budget: a campaign three quarters spent is three quarters spent
-      // whichever window you happen to be looking at. Unclamped — see the
+      // whichever window you happen to be looking at. Unclamped - see the
       // note on the field.
       ceilingUsed: ceiling === null || ceiling === 0 ? null : ever / ceiling,
       members: memberCount.get(c.id) ?? 0,

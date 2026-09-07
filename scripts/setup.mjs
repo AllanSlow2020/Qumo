@@ -3,7 +3,7 @@
  * One command from a fresh clone to a running Qumo.
  *
  * Plain Node with nothing beyond the standard library and `pg`, which is
- * already a dependency — so it behaves the same on macOS, Linux and Windows
+ * already a dependency - so it behaves the same on macOS, Linux and Windows
  * PowerShell. In particular it generates secrets with node:crypto rather than
  * openssl, which is the step most likely to stop a Windows reader dead.
  *
@@ -40,7 +40,7 @@ step("1/5", "Checking Node");
 const major = Number(process.versions.node.split(".")[0]);
 if (major < 22) {
   die(
-    `Node ${process.versions.node} is too old — this needs 22 or newer.`,
+    `Node ${process.versions.node} is too old - this needs 22 or newer.`,
     "Install the LTS build from https://nodejs.org and run this again.",
   );
 }
@@ -61,7 +61,7 @@ function readEnvValue(key) {
 }
 
 /**
- * Tried in order against the `postgres` maintenance database — which always
+ * Tried in order against the `postgres` maintenance database - which always
  * exists, unlike the one we are about to create. The list covers every way
  * the README tells somebody to install it: a Mac with Postgres.app or
  * Homebrew (your own username, no password), the Docker one-liner, and a
@@ -138,14 +138,14 @@ if (existsSync(envPath)) {
   // Never clobber. Somebody's real Twilio credentials or a database they care
   // about could be in there, and a setup script that eats those is worse than
   // one that does nothing.
-  ok(".env already exists — left exactly as it is");
+  ok(".env already exists - left exactly as it is");
   const stale = ["AUTH_SECRET", "PHONE_HASH_SECRET", "ENCRYPTION_KEY"].filter((k) => {
     const v = readEnvValue(k);
     return !v || v.startsWith("replace-with");
   });
   if (stale.length > 0) {
     warn(`still on placeholder values: ${stale.join(", ")}`);
-    warn("the app won't start until those are real — delete .env and re-run to generate them");
+    warn("the app won't start until those are real - delete .env and re-run to generate them");
   }
 } else {
   const b64 = () => randomBytes(32).toString("base64");
@@ -193,7 +193,7 @@ try {
 
 say("\nReady. Start it with:\n");
 say("   pnpm dev\n");
-say("Then open these. Each brand is its own subdomain — that is the whole");
+say("Then open these. Each brand is its own subdomain - that is the whole");
 say("routing model, and *.localhost resolves to your own machine, so they");
 say("need no setup:\n");
 

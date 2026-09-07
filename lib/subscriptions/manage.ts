@@ -56,7 +56,7 @@ export async function getSubscriptionView(brandId: string, now: Date = new Date(
  * Cancels, and writes down exactly what was promised.
  *
  * The honour date is computed once, here, and stored. Changing
- * HONOUR_WINDOW_DAYS later moves nothing for anybody already cancelled — a
+ * HONOUR_WINDOW_DAYS later moves nothing for anybody already cancelled - a
  * shopper was told sixty days and gets sixty days.
  */
 export async function cancelForSession(session: SessionLike, now: Date = new Date()): Promise<void> {
@@ -76,7 +76,7 @@ export async function cancelForSession(session: SessionLike, now: Date = new Dat
   await prisma.subscription.upsert({
     where: { brandId: session.user.brandId },
     update: data,
-    // A brand that never had a row can still cancel — it is how an
+    // A brand that never had a row can still cancel - it is how an
     // unmanaged pilot brand leaves.
     create: { brandId: session.user.brandId, ...data },
   });
@@ -94,8 +94,8 @@ export async function cancelForSession(session: SessionLike, now: Date = new Dat
  * Brings a cancelled programme back.
  *
  * Allowed after the window has closed as well as during it. Nothing was
- * deleted at closure — balances are ledger rows and the ledger is immutable
- * — so resuming genuinely restores what shoppers had, which is the reason
+ * deleted at closure - balances are ledger rows and the ledger is immutable
+ * - so resuming genuinely restores what shoppers had, which is the reason
  * closure freezes rather than erases.
  */
 export async function resumeForSession(session: SessionLike): Promise<void> {
@@ -131,7 +131,7 @@ export async function setStatusForSession(
  * Marks elapsed windows CLOSED.
  *
  * Tidying, not enforcement. programmeState() already treats an elapsed
- * window as closed, so this changes no behaviour — it just stops a row
+ * window as closed, so this changes no behaviour - it just stops a row
  * saying CANCELLED forever, which makes the console and any future report
  * easier to read. Safe to never run.
  */

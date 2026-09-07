@@ -7,7 +7,7 @@ import { forPerson } from "./scope";
  *
  * The privacy notice already told them they could ask for this
  * (lib/consumer/consent.ts, "Your choices"). Nothing implemented it, which
- * made the notice a claim the code could not honour — the exact failure
+ * made the notice a claim the code could not honour - the exact failure
  * that file's own comment warns about. This is the code catching up with
  * what was promised.
  *

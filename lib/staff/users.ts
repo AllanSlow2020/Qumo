@@ -101,8 +101,8 @@ export async function inviteUserForSession(session: SessionLike, formData: FormD
 /**
  * The rule that stops a brand locking itself out.
  *
- * Every path that could remove the last owner — deactivating one, demoting
- * one — goes through here. Without it a single mis-click leaves a brand with
+ * Every path that could remove the last owner - deactivating one, demoting
+ * one - goes through here. Without it a single mis-click leaves a brand with
  * a console nobody can administer and no way back except us reaching into
  * the database, which is not a support process anyone should design on
  * purpose.
@@ -151,7 +151,7 @@ export async function setUserRoleForSession(session: SessionLike, userId: string
  *
  * Deactivating revokes every session the account holds, and that is the
  * whole point rather than a tidy-up. Session resolution already refuses a
- * deactivated user on the next request, so this is belt and braces — but the
+ * deactivated user on the next request, so this is belt and braces - but the
  * belt is what makes the audit trail say *why* those sessions ended, and an
  * ex-employee's laptop is exactly where that question gets asked.
  */
@@ -219,7 +219,7 @@ export async function resetPasswordForSession(session: SessionLike, userId: stri
 }
 
 /**
- * Somebody choosing their own password — the forced first one, and every
+ * Somebody choosing their own password - the forced first one, and every
  * later one.
  *
  * Requires the current password even when the account is under a forced

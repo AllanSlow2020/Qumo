@@ -4,7 +4,7 @@ import { forBrand } from "@/lib/db/tenant";
 /**
  * The numbers a brand opens the console to see.
  *
- * Every one of them is derived — there is no reporting table, no nightly
+ * Every one of them is derived - there is no reporting table, no nightly
  * rollup, no cached total. At this size that is simply correct: the ledger
  * is the truth and a summary that can disagree with it is worse than no
  * summary. When a brand's ledger is large enough for this to hurt, the fix
@@ -26,7 +26,7 @@ export type BrandOverview = {
    * never drift from the rows behind it.
    */
   outstanding: { unit: LedgerUnit; amount: number }[];
-  /** Total ever issued, before anything was spent — the gross cost so far. */
+  /** Total ever issued, before anything was spent - the gross cost so far. */
   issued: { unit: LedgerUnit; amount: number }[];
   members: number;
   optedOut: number;
@@ -40,7 +40,7 @@ export type BrandOverview = {
    * The ceilings exist and default to nothing, which means a brand can
    * switch on five percent cashback with no bound at all and the console
    * said nothing about it. Worse, the unsigned-stores warning on this page
-   * told them their ceilings bounded the cost — true only if they set one.
+   * told them their ceilings bounded the cost - true only if they set one.
    * A warning that promises a limit nobody set is worse than no warning.
    */
   uncappedCampaigns: number;
@@ -82,7 +82,7 @@ export async function getBrandOverview(brandId: string, now: Date = new Date()):
       scoped.pointsTransaction.groupBy({ by: ["unit"], _sum: { amount: true } }),
       // Credits only, so "issued" means what was handed out rather than what
       // is left after spending. Two different questions, and a brand asks
-      // both — one is a cost, the other is a liability.
+      // both - one is a cost, the other is a liability.
       scoped.pointsTransaction.groupBy({ by: ["unit"], where: { amount: { gt: 0 } }, _sum: { amount: true } }),
       scoped.brandMembership.count(),
       scoped.brandMembership.count({ where: { optedOutAt: { not: null } } }),
@@ -100,7 +100,7 @@ export async function getBrandOverview(brandId: string, now: Date = new Date()):
     ]);
 
   // One query for the series rather than seven counts. groupBy cannot bucket
-  // by day, so the dates come back raw and are counted in memory — seven
+  // by day, so the dates come back raw and are counted in memory - seven
   // days of one brand's scans is a small enough set that the alternative
   // (a raw SQL date_trunc) would be optimising the wrong thing.
   const scanDays = await scoped.purchaseScan.findMany({

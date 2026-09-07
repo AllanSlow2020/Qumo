@@ -27,7 +27,7 @@
  *
  * `style-src` allows inline. Brand theming sets colours through the `style`
  * attribute (lib/brand/theme.ts), so every themed element carries an inline
- * style, and a nonce cannot cover a style *attribute* — only a <style>
+ * style, and a nonce cannot cover a style *attribute* - only a <style>
  * block. The alternative is a stylesheet regenerated per brand per colour
  * change. Inline style is also a far weaker vector than inline script: it
  * can restyle a page, not run code on it.
@@ -44,7 +44,7 @@
 /**
  * The violation sink. Exported so proxy.ts can name the same path in the
  * Reporting-Endpoints header, and so the proxy's public-path list can let
- * it through without a session — a browser posting a violation report has
+ * it through without a session - a browser posting a violation report has
  * no cookie to offer and no way to be told to sign in.
  */
 export const REPORT_PATH = "/api/csp-report";
@@ -63,7 +63,7 @@ export function generateNonce(): string {
 export function buildCsp(nonce: string, secure: boolean): string {
   // Turbopack's dev server compiles with eval and injects its own inline
   // scripts, and hot reload talks over a websocket. None of that exists in
-  // a build, so the loosening is confined to the runtime that needs it —
+  // a build, so the loosening is confined to the runtime that needs it -
   // and the production policy is the one that ships.
   //
   // The cost of the split is that `next dev` does not exercise the real
@@ -106,7 +106,7 @@ export function buildCsp(nonce: string, secure: boolean): string {
     // Where a browser posts what it just blocked.
     //
     // report-uri only, and that is a finding rather than an oversight. The
-    // obvious thing is to send both spellings — report-uri for older
+    // obvious thing is to send both spellings - report-uri for older
     // browsers, report-to for newer ones. Doing that delivers nothing:
     // Chrome ignores report-uri whenever report-to is present, and the
     // report-to path then failed silently, which is the worst possible
@@ -130,9 +130,9 @@ export function buildCsp(nonce: string, secure: boolean): string {
       // Not on an http page, where it is actively harmful: the directive
       // upgrades same-origin *navigations* too, so on http://…:3000 every
       // link and form submission is rewritten to https://…:3000, which is
-      // not listening. That breaks the local run of a production build —
+      // not listening. That breaks the local run of a production build -
       // which is how this build gets shown to anyone before it is deployed
-      // — and it was found by driving one rather than by reading the spec.
+      // - and it was found by driving one rather than by reading the spec.
       //
       // Keyed on the request's own protocol rather than on NODE_ENV, so a
       // production build served over http locally behaves, and a staging

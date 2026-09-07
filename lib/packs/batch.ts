@@ -28,7 +28,7 @@ const createBatchSchema = z.object({
 // a single createMany builds a query large enough to be a problem, and
 // chunking keeps memory flat whatever the batch size.
 const INSERT_CHUNK = 5_000;
-// Codes are 31^12, so a collision is vanishingly rare — but "vanishingly
+// Codes are 31^12, so a collision is vanishingly rare - but "vanishingly
 // rare" over millions of inserts is not "never", and the unique constraint
 // is the thing that actually decides. On a clash the chunk is regenerated
 // rather than the whole batch.
@@ -38,7 +38,7 @@ const MAX_CHUNK_ATTEMPTS = 5;
  * Generates a batch of pack codes for a campaign.
  *
  * The testable core, taking a session as an argument rather than calling
- * auth() — same split as lib/products/create.ts, for the same reason: the
+ * auth() - same split as lib/products/create.ts, for the same reason: the
  * RBAC rejection has to be exercisable from Vitest, and the UI hiding a
  * button is never the security boundary.
  */
@@ -68,7 +68,7 @@ export async function createPackBatchForSession(session: SessionLike, formData: 
     throw new PackBatchError("Set up what this campaign awards per scan before generating codes for it.");
   }
   // A share-of-spend rule needs a basket to take a share of, and a pack code
-  // arrives without one — setSpendRuleForSession zeroes `amount` precisely
+  // arrives without one - setSpendRuleForSession zeroes `amount` precisely
   // because it is meaningless there. Printing against one produces codes
   // that scan successfully, award nothing, and are consumed doing it: the
   // shopper is told they earned R0.00 and the sticker is gone for good.
@@ -118,7 +118,7 @@ async function insertChunk(
   size: number,
 ): Promise<void> {
   for (let attempt = 0; attempt < MAX_CHUNK_ATTEMPTS; attempt += 1) {
-    // A Set, because randomness can repeat within one chunk too — and that
+    // A Set, because randomness can repeat within one chunk too - and that
     // collision would never reach the database to be caught by the
     // constraint, it would just silently insert fewer rows than ordered.
     const codes = new Set<string>();
@@ -167,7 +167,7 @@ export async function listPackBatches(brandId: string): Promise<PackBatchSummary
     return [];
   }
 
-  // One grouped count for every batch rather than a query each — a brand
+  // One grouped count for every batch rather than a query each - a brand
   // with a hundred print runs should still be two round trips.
   const scannedCounts = await scoped.packCode.groupBy({
     by: ["batchId"],

@@ -9,17 +9,17 @@ import { IDLE, type TeamActionState } from "./state";
 import { TempPassword } from "./temp-password";
 
 const ROLE_LABELS: Record<Role, string> = {
-  OWNER: "Owner — everything, including the team",
-  ADMIN: "Admin — everything except the team",
-  MARKETING: "Marketing — promotions and reporting",
-  QUALITY: "Quality — reporting only",
+  OWNER: "Owner - everything, including the team",
+  ADMIN: "Admin - everything except the team",
+  MARKETING: "Marketing - promotions and reporting",
+  QUALITY: "Quality - reporting only",
 };
 
 /**
  * One row's controls.
  *
  * Its own action state per person, so an error against one row cannot appear
- * against another — which matters here more than most places, because the
+ * against another - which matters here more than most places, because the
  * errors are refusals ("this is your only owner") that only make sense
  * beside the person they are about.
  */

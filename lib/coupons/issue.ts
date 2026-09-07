@@ -10,8 +10,8 @@ import { generateCouponCode } from "./code";
  * the same collision retry, and a second copy of it is how the two drift.
  *
  * The caller supplies the transaction, deliberately. A coupon is only ever
- * issued as part of a larger decision — deduct the threshold, check the
- * budget, write the ledger — and issuing one outside that transaction
+ * issued as part of a larger decision - deduct the threshold, check the
+ * budget, write the ledger - and issuing one outside that transaction
  * would let a coupon exist with no matching deduction behind it.
  */
 
@@ -41,7 +41,7 @@ export type IssueCouponInput = {
   campaignId: string;
   rewardId: string;
   brandMembershipId: string;
-  /** e.g. "FC" — prepended to the generated code when a reward sets one. */
+  /** e.g. "FC" - prepended to the generated code when a reward sets one. */
   codePrefix?: string | null;
   expiresAt?: Date | null;
 };
@@ -49,7 +49,7 @@ export type IssueCouponInput = {
 /**
  * Creates the coupon and returns its code. Retries on the unique-constraint
  * collision that generateCouponCode()'s keyspace makes unlikely but not
- * impossible — the constraint, not the odds, is what decides.
+ * impossible - the constraint, not the odds, is what decides.
  */
 export async function createCouponWithRetry(tx: CouponCreator, input: IssueCouponInput): Promise<string> {
   const { codePrefix, ...couponData } = input;

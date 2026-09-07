@@ -50,11 +50,11 @@ export function StoreActions({ store }: { store: Store }) {
       <div className="cn-confirm">
         {/* The consequence, before the click rather than after it. A slip in
             a shopper's pocket was signed with the old secret and stops
-            verifying the moment this lands — they would be told their slip
+            verifying the moment this lands - they would be told their slip
             couldn't be verified, with no idea why. */}
         <p className="cn-body">
           {store.isSigned
-            ? "Slips already printed at this till stop working immediately — anyone holding one can't earn from it. Do this when the till is quiet, and have your point of sale updated with the new secret before it reopens."
+            ? "Slips already printed at this till stop working immediately - anyone holding one can't earn from it. Do this when the till is quiet, and have your point of sale updated with the new secret before it reopens."
             : "This turns signing on and issues a secret. Slips printed before your point of sale is updated will still be accepted as unsigned."}
         </p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>

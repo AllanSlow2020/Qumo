@@ -3,7 +3,7 @@
  *
  * This matters more than it looks. hashPhone() is a deterministic HMAC, so
  * "082 123 4567", "0821234567" and "+27821234567" hash to three different
- * values and would become three different Qumo accounts for one person —
+ * values and would become three different Qumo accounts for one person -
  * with their points split across all three and no way to merge them after
  * the fact. Every path that turns a human-supplied number into a phoneHash
  * goes through here first.
@@ -36,8 +36,8 @@ export function normaliseSaPhone(input: string): string {
     throw new InvalidPhoneNumberError("Enter your mobile number.");
   }
 
-  // Strip everything a person might use as a separator — spaces, brackets,
-  // dots, hyphens — but keep a leading plus, which is meaningful.
+  // Strip everything a person might use as a separator - spaces, brackets,
+  // dots, hyphens - but keep a leading plus, which is meaningful.
   const hadPlus = trimmed.startsWith("+");
   const digits = trimmed.replace(/[^0-9]/g, "");
 
@@ -51,7 +51,7 @@ export function normaliseSaPhone(input: string): string {
     // 27821234567, with or without the plus.
     subscriber = digits.slice(SA_DIALLING_CODE.length);
   } else if (!hadPlus && digits.startsWith("0") && digits.length === SA_SUBSCRIBER_DIGITS + 1) {
-    // 0821234567 — the form almost everyone types.
+    // 0821234567 - the form almost everyone types.
     subscriber = digits.slice(1);
   } else {
     throw new InvalidPhoneNumberError("Enter a South African mobile number, like 082 123 4567.");

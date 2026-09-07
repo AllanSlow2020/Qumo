@@ -1,7 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
-// Prisma 7 requires an explicit driver adapter — there's no implicit
+// Prisma 7 requires an explicit driver adapter - there's no implicit
 // "just pass a URL" client anymore. One adapter instance, one pooled `pg`
 // Pool, reused across requests; re-creating it per request would open a
 // new connection pool every time, which is the classic way to exhaust

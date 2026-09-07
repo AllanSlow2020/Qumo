@@ -79,7 +79,7 @@ describe("lib/stores/manage", () => {
 
   it("rejects a duplicate store code", async () => {
     await createStoreForSession(owner(brand.id), formData({ name: "Dup", code: `sb-dup-${suffix}` }));
-    // Globally unique, so this also blocks another brand taking it — the
+    // Globally unique, so this also blocks another brand taking it - the
     // message deliberately doesn't say which.
     await expect(
       createStoreForSession(owner(rival.id), formData({ name: "Dup", code: `sb-dup-${suffix}` })),

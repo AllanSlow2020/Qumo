@@ -13,7 +13,7 @@ import { hashPassword } from "../lib/staff/password";
  * own, so without this DATABASE_URL is undefined here and the failure
  * arrives as an opaque database error rather than "you forgot the file".
  *
- * Idempotent — upserts on natural keys, so running it twice is harmless.
+ * Idempotent - upserts on natural keys, so running it twice is harmless.
  */
 
 const prisma = new PrismaClient({
@@ -33,7 +33,7 @@ const SIGNING_SECRET = "dev-only-store-signing-secret-not-for-production-use";
  * *.localhost resolves to 127.0.0.1 in every current browser.
  *
  * Colours are approximations chosen for contrast, not the brands' actual
- * palettes — nothing here is licensed artwork and no logo is fetched.
+ * palettes - nothing here is licensed artwork and no logo is fetched.
  */
 const BRANDS = [
   {
@@ -68,7 +68,7 @@ async function main() {
   });
 
   // The second brand exists to be switched to. It carries no campaign and no
-  // stores — its job is to prove that one deployment serves two identities,
+  // stores - its job is to prove that one deployment serves two identities,
   // and that a shopper signed in at one is not signed in at the other.
   const second = BRANDS[1];
   await prisma.brand.upsert({ where: { slug: second.slug }, update: { ...second }, create: { ...second } });
@@ -100,7 +100,7 @@ async function main() {
 
   // A second promotion, because pack codes cannot be printed against the
   // first one. A share-of-spend rule takes its cut from a till slip, and a
-  // code on a bottle carries no basket — so a brand needs a fixed-per-scan
+  // code on a bottle carries no basket - so a brand needs a fixed-per-scan
   // promotion before it can print anything, and a seed that omits one makes
   // the whole pack path untestable out of the box.
   const stampCampaign = await prisma.campaign.upsert({
@@ -150,7 +150,7 @@ async function main() {
   // localhost:3000 would land on the no-brand page, which is exactly the
   // failure this seed should not be teaching people to expect.
   // Somebody to sign into the console with. Weak on purpose and only ever
-  // here — the seed prints it, which is exactly what should never happen
+  // here - the seed prints it, which is exactly what should never happen
   // with a real credential.
   const staffPassword = "qumo-dev-password";
   await prisma.user.upsert({

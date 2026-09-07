@@ -9,7 +9,7 @@ import { toggleOptOut } from "./actions";
  * Asymmetric on purpose. Rejoining is harmless and instantly reversible, so
  * a dialog there is friction for its own sake. Leaving stops a shopper
  * earning on purchases they are about to make, and the balance staying put
- * is the thing they most need told before they decide — a fear of losing it
+ * is the thing they most need told before they decide - a fear of losing it
  * is the main reason someone hesitates, and it is unfounded.
  */
 export function OptOutForm({

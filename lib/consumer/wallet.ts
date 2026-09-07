@@ -2,7 +2,7 @@ import type { LedgerUnit } from "@prisma/client";
 import { forPerson } from "./scope";
 
 /**
- * A shopper's balances, derived — always — by summing the ledger.
+ * A shopper's balances, derived - always - by summing the ledger.
  *
  * There is no balance column anywhere in this file's reach, and there must
  * never be one. The schema comment on PointsTransaction already commits to
@@ -34,13 +34,13 @@ export type BrandWallet = {
 
 /**
  * Every brand this shopper holds a membership with, and what they have
- * with each. Brands they have never interacted with do not appear —
+ * with each. Brands they have never interacted with do not appear -
  * membership is created by a first scan, not by signing up.
  *
  * `brandId` narrows it to one, which is what every shopper-facing screen
  * now passes: a shopper on chicken-licken.qumo.co.za is on Chicken Licken's
  * site and should not be shown that they also drink Campari. The unfiltered
- * form survives for the one caller entitled to the whole picture — the
+ * form survives for the one caller entitled to the whole picture - the
  * shopper's own data export, where withholding it would answer a different
  * question than the one the law says they asked.
  */
@@ -58,7 +58,7 @@ export async function getWallet(personId: string, brandId?: string): Promise<Bra
   }
 
   // One grouped SUM for every brand at once, rather than a query per
-  // membership — a shopper with a dozen brands should still be one round
+  // membership - a shopper with a dozen brands should still be one round
   // trip. The scope filter is injected by forPerson(); this cannot see
   // another person's rows even if brandMembershipId were wrong.
   const sums = await scoped.pointsTransaction.groupBy({
@@ -75,7 +75,7 @@ export async function getWallet(personId: string, brandId?: string): Promise<Bra
   for (const row of sums) {
     const list = byMembership.get(row.brandMembershipId) ?? [];
     // A unit that has only ever netted to zero is still a real balance to
-    // show — "0 stamps" is information, an absent row is confusing.
+    // show - "0 stamps" is information, an absent row is confusing.
     list.push({ unit: row.unit, amount: row._sum.amount ?? 0 });
     byMembership.set(row.brandMembershipId, list);
   }
@@ -105,7 +105,7 @@ export type WalletEntry = {
 };
 
 /**
- * The ledger itself, newest first — the shopper's own audit trail. This is
+ * The ledger itself, newest first - the shopper's own audit trail. This is
  * why the ledger is immutable: every number on the wallet screen can be
  * explained by pointing at the rows that produced it.
  *
@@ -118,7 +118,7 @@ export type WalletEntry = {
  * Both are reached through the scan rather than copied onto the ledger row,
  * so there is one answer to "where did this happen" and it cannot drift
  * from the scan that decided it. Both are null for the paths with no till
- * behind them — a pack code, a card completion arriving without its scan —
+ * behind them - a pack code, a card completion arriving without its scan -
  * and the caller falls back rather than inventing one.
  */
 export async function getWalletHistory(personId: string, limit = 50, brandId?: string): Promise<WalletEntry[]> {
@@ -156,7 +156,7 @@ export async function getWalletHistory(personId: string, limit = 50, brandId?: s
 
 /**
  * Formats a ledger amount for display in its own unit. Cents become rands
- * here and nowhere else — the value stays an integer everywhere it is
+ * here and nowhere else - the value stays an integer everywhere it is
  * stored, summed or compared, and only becomes "R4.25" at the edge.
  */
 export function formatLedgerAmount(amount: number, unit: LedgerUnit): string {

@@ -15,8 +15,8 @@ const scrypt = promisify(scryptCb) as (
  * standard library, and the alternative here was a native module that has to
  * compile on every machine and every deploy target for a function this file
  * implements in forty lines. OWASP lists scrypt as an acceptable choice
- * where argon2id is unavailable, and a pure-JS bcrypt — the usual way people
- * dodge the native build — is markedly slower per unit of security, which
+ * where argon2id is unavailable, and a pure-JS bcrypt - the usual way people
+ * dodge the native build - is markedly slower per unit of security, which
  * means it gets tuned down until it is worse than this.
  *
  * Shopper accounts have no password at all: they authenticate with a phone
@@ -98,7 +98,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
     maxmem: 128 * n * r * 2,
   });
 
-  // Equal lengths by construction — derived is asked for expected.length —
+  // Equal lengths by construction - derived is asked for expected.length -
   // but timingSafeEqual throws rather than returning false on a mismatch, so
   // the guard stays.
   if (derived.length !== expected.length) return false;

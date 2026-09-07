@@ -227,7 +227,7 @@ describe("by promotion", () => {
   /**
    * Found by looking at a seeded campaign that read "100%" when it was
    * really at 179%. The ceiling is checked before every award, so nothing
-   * can breach it while it stands — but lowering a ceiling below what has
+   * can breach it while it stands - but lowering a ceiling below what has
    * already been issued puts a campaign over immediately, and that is
    * exactly the moment a brand needs to be told rather than reassured.
    */
@@ -311,8 +311,8 @@ describe("comparison with the previous window", () => {
    * The test that was missing, and the bug it would have caught.
    *
    * Every period filter started as `gte: from` with no upper bound. That is
-   * right exactly once — for the current window, where "now" is the end of
-   * time anyway — and wrong the moment the same function measures an
+   * right exactly once - for the current window, where "now" is the end of
+   * time anyway - and wrong the moment the same function measures an
    * earlier window: an open-ended range from the start of the previous
    * period runs to today and swallows the current one whole.
    *
@@ -325,7 +325,7 @@ describe("comparison with the previous window", () => {
     const p = await getPerformance(brand.id, 7);
 
     // Everything in this suite was scanned within the last five days, so a
-    // correctly bounded previous window — days 7 to 14 — contains none of
+    // correctly bounded previous window - days 7 to 14 - contains none of
     // it. Unbounded, it would contain all twelve.
     expect(p.previous!.slips).toBe(0);
     expect(p.previous!.membersReached).toBe(0);

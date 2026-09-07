@@ -25,12 +25,12 @@ import {
  */
 
 function unitLine(rows: UnitAmount[]): string {
-  if (rows.length === 0) return "—";
+  if (rows.length === 0) return "-";
   return rows.map((r) => formatLedgerAmount(r.amount, r.unit)).join(" · ");
 }
 
 function percent(value: number | null): string {
-  return value === null ? "—" : `${Math.round(value * 100)}%`;
+  return value === null ? "-" : `${Math.round(value * 100)}%`;
 }
 
 /**
@@ -38,7 +38,7 @@ function percent(value: number | null): string {
  * arrow and a colour.
  *
  * No green-up-red-down: on this page "issued more" is not good news and
- * "issued less" is not bad news — it depends entirely on what the brand is
+ * "issued less" is not bad news - it depends entirely on what the brand is
  * trying to do, and colouring it would be the console deciding for them.
  * The direction is in the sign, and the reader supplies the judgement.
  *
@@ -76,7 +76,7 @@ function Change({ change, unit }: { change: Delta; unit?: "percent" | "count" })
  * The scan chart, drawn against the busiest day.
  *
  * Relative rather than absolute, because the question is which way it is
- * going. Only every seventh label is drawn on the longer windows — ninety
+ * going. Only every seventh label is drawn on the longer windows - ninety
  * dates on one axis is not a chart, it is a wall.
  */
 function ScanChart({ series, days }: { series: { day: Date; count: number }[]; days: PeriodDays }) {
@@ -209,7 +209,7 @@ function CampaignTable({ rows }: { rows: CampaignRow[] }) {
               {c.name}
               <div className="cn-sub">{c.status.toLowerCase()}</div>
             </td>
-            <td className="cn-num">{c.unit ? formatLedgerAmount(c.issued, c.unit) : "—"}</td>
+            <td className="cn-num">{c.unit ? formatLedgerAmount(c.issued, c.unit) : "-"}</td>
             <td className="cn-num">{c.members.toLocaleString("en-ZA")}</td>
             <td>
               {c.ceilingUsed === null ? (
@@ -230,7 +230,7 @@ function CampaignTable({ rows }: { rows: CampaignRow[] }) {
                   </div>
                   <div className={`cn-sub cn-mono${c.ceilingUsed > 1 ? " cn-warn-note" : ""}`}>
                     {percent(c.ceilingUsed)}
-                    {c.ceilingUsed > 1 && " — over budget"}
+                    {c.ceilingUsed > 1 && " - over budget"}
                   </div>
                 </>
               )}
@@ -304,7 +304,7 @@ export default async function ConsolePerformancePage({
         </div>
 
         <div className="cn-metric">
-          <div className="cn-metric-v">{perMember === null ? "—" : formatLedgerAmount(perMember, "CENTS")}</div>
+          <div className="cn-metric-v">{perMember === null ? "-" : formatLedgerAmount(perMember, "CENTS")}</div>
           <div className="cn-metric-k">Cost per person reached</div>
           <div className="cn-metric-note">
             {perMember === null

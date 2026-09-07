@@ -10,16 +10,16 @@ export type LoginState = {
    * Explicit, and not inferred from "error is null".
    *
    * The form used to treat a null error as success. The second-factor
-   * prompt is also a null error — the password was right and nothing has
-   * gone wrong — so without this flag asking for a code would have been
+   * prompt is also a null error - the password was right and nothing has
+   * gone wrong - so without this flag asking for a code would have been
    * read as a successful sign-in and navigated straight to the console.
    */
   ok?: boolean;
   error: string | null;
   /**
    * The password was accepted and a code is wanted. The form keeps the
-   * password in component state rather than a hidden input — it is a client
-   * component, so the value never renders into the HTML — and sends all
+   * password in component state rather than a hidden input - it is a client
+   * component, so the value never renders into the HTML - and sends all
    * three on the next attempt.
    */
   secondFactorRequired?: boolean;
@@ -31,7 +31,7 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
   const code = String(formData.get("code") ?? "").trim();
 
   // Ahead of signInStaff, so a machine guessing passwords is stopped
-  // before it costs a scrypt verification each time — the work factor that
+  // before it costs a scrypt verification each time - the work factor that
   // makes the hash strong also makes an unlimited guess rate expensive for
   // us rather than for them.
   if (!(await loginAttemptAllowed("staff"))) {
@@ -55,7 +55,7 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
     secure: process.env.NODE_ENV === "production",
     path: "/",
     // Twelve hours, matching the session row's own expiry. The row is the
-    // authority — a cookie outliving it just means one wasted round trip —
+    // authority - a cookie outliving it just means one wasted round trip -
     // but a cookie that outlives it by weeks is a token sitting on a shared
     // desktop long after it stopped working, and there is no reason to keep
     // one.

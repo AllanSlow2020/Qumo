@@ -34,7 +34,7 @@ describe("lib/stores/payload", () => {
   });
 
   it("rejects an amount that isn't purely digits", () => {
-    // parseInt would read "85abc" as 85 — a basket total that quietly loses
+    // parseInt would read "85abc" as 85 - a basket total that quietly loses
     // its tail is the bug that pays out wrong amounts forever.
     for (const c of ["85abc", "85.00", "-100", "0"]) {
       expect(parseReceiptPayload(query({ s: "A", t: "1", c, d: "1755512582" })), `c=${c}`).toBe("BAD_AMOUNT");
@@ -70,7 +70,7 @@ describe("lib/stores/payload", () => {
 
   it("signs a stable, documented message", () => {
     // A POS vendor implements this from the written spec, not from this
-    // code — so the exact string has to be pinned by a test.
+    // code - so the exact string has to be pinned by a test.
     expect(
       signingMessage({ storeCode: "CL-SANDTON-04", externalTxnId: "884231", amountCents: 8500, purchasedAtUnix: 1755512582 }),
     ).toBe("CL-SANDTON-04|884231|8500|1755512582");
@@ -94,7 +94,7 @@ describe("lib/stores/payload", () => {
 
   it("rejects a truncated signature without throwing", () => {
     // timingSafeEqual throws on a length mismatch, so length is checked
-    // first — a short signature must be a false, not a 500.
+    // first - a short signature must be a false, not a 500.
     const sig = signReceipt(SECRET, "m");
     expect(() => verifySignature(SECRET, "m", sig.slice(0, 4))).not.toThrow();
     expect(verifySignature(SECRET, "m", sig.slice(0, 4))).toBe(false);
@@ -152,7 +152,7 @@ describe("percentOfSpend", () => {
   });
 
   it("stays exact at large baskets", () => {
-    // Integer arithmetic throughout — no float drift at scale.
+    // Integer arithmetic throughout - no float drift at scale.
     expect(percentOfSpend(1_234_567, 750)).toBe(92_592);
   });
 });

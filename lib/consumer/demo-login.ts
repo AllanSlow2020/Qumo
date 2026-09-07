@@ -11,7 +11,7 @@ import { normaliseSaPhone } from "./phone";
  *
  * Shopper login is a passcode over SMS, and with no aggregator account the
  * passcode is written to the server log instead. That is fine for a
- * developer and useless for anybody else — you cannot demonstrate a
+ * developer and useless for anybody else - you cannot demonstrate a
  * product by reading a log to a room. So a listed number can sign in with
  * a code you choose.
  *
@@ -20,7 +20,7 @@ import { normaliseSaPhone } from "./phone";
  * "Accept any code" and "accept this code for these numbers" are the same
  * amount of typing at a demo and nothing like the same exposure. The first
  * hands anyone who finds the address the ability to sign in as any phone
- * number in the country and read whatever that person has — a real
+ * number in the country and read whatever that person has - a real
  * shopper's history included, once there are any. The second is limited to
  * handsets you have written down, which are yours.
  *
@@ -36,7 +36,7 @@ import { normaliseSaPhone } from "./phone";
  * bypass is that it is only temporary if somebody is reminded of it.
  */
 
-/** Six digits, like a real one — so nothing downstream has to special-case its shape. */
+/** Six digits, like a real one - so nothing downstream has to special-case its shape. */
 const CODE_SHAPE = /^[0-9]{6}$/;
 
 type DemoLogin = { phones: Set<string>; code: string };
@@ -54,7 +54,7 @@ function read(): DemoLogin | null {
     if (!trimmed) continue;
     try {
       // Normalised on the way in, so the list can be written however it is
-      // easiest to type — 082 123 4567, 0821234567, +27821234567 — and
+      // easiest to type - 082 123 4567, 0821234567, +27821234567 - and
       // still match the E.164 form the login produces.
       phones.add(normaliseSaPhone(trimmed));
     } catch {

@@ -1,6 +1,6 @@
 /**
  * A shopper who scans a code before logging in has to be sent to the login
- * screen and then back to the code they scanned — otherwise the scan is
+ * screen and then back to the code they scanned - otherwise the scan is
  * lost and, since pack codes are single-use, they have to find another
  * pack. That round trip means putting a destination in a query parameter,
  * and a destination in a query parameter is an open redirect waiting to
@@ -24,7 +24,7 @@ export function safeShopperRedirect(next: string | undefined | null): string {
 
   // Must be a rooted path. "//evil.example" is protocol-relative and would
   // navigate off-site despite starting with a slash, and a backslash is
-  // read as a slash by some browsers — both are rejected rather than
+  // read as a slash by some browsers - both are rejected rather than
   // patched up into something that looks safe.
   if (!next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) {
     return SHOPPER_HOME;

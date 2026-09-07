@@ -64,7 +64,7 @@ describe("lib/packs/scan", () => {
     const newcomer = await prisma.person.create({
       data: { phoneHash: `scan-new-${suffix}`, phoneEncrypted: "x" },
     });
-    // A membership is the record of a real relationship — it must not exist
+    // A membership is the record of a real relationship - it must not exist
     // before the shopper has actually interacted with the brand.
     expect(await prisma.brandMembership.count({ where: { personId: newcomer.id } })).toBe(0);
 
@@ -88,12 +88,12 @@ describe("lib/packs/scan", () => {
 
   it("awards once, however many times the same shopper opens it", async () => {
     // Rewritten to the invariant that matters. It used to assert that the
-    // second call failed, which encoded a behaviour rather than a rule — and
+    // second call failed, which encoded a behaviour rather than a rule - and
     // the behaviour was wrong: the App Router renders this page twice on one
     // navigation, so the second call is what a first-time scanner actually
     // sees, and it told them the sticker was spent. What must be true is
-    // that the ledger moves once. The refusal that still matters — somebody
-    // else's code — is the test below.
+    // that the ledger moves once. The refusal that still matters - somebody
+    // else's code - is the test below.
     const code = await makeCode(campaign.id, brand.id);
 
     const first = await redeemPackCode(code, shopper.id);
@@ -202,7 +202,7 @@ describe("lib/packs/scan", () => {
     expect(result.reason).toBe("CAMPAIGN_NOT_ACTIVE");
 
     // A rejected scan must leave the code claimable once the campaign
-    // resumes — otherwise a brand pausing a campaign destroys stock.
+    // resumes - otherwise a brand pausing a campaign destroys stock.
     expect((await prisma.packCode.findUniqueOrThrow({ where: { code } })).status).toBe("UNSCANNED");
   });
 
@@ -230,7 +230,7 @@ describe("lib/packs/scan", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.unit).toBe("STAMPS");
-    // Stamps and points are separate balances at the same brand — the
+    // Stamps and points are separate balances at the same brand - the
     // 50 points earned earlier must not leak into this total.
     expect(result.newBalance).toBe(1);
   });
@@ -253,7 +253,7 @@ describe("checkCampaignWindow", () => {
   });
 
   it("tells a shopper who scanned early that it hasn't started", () => {
-    // Distinct from "not running" — the shopper should know to come back.
+    // Distinct from "not running" - the shopper should know to come back.
     expect(
       checkCampaignWindow({ status: "ACTIVE", startDate: new Date("2026-07-01"), endDate: null }, now),
     ).toBe("CAMPAIGN_NOT_STARTED");

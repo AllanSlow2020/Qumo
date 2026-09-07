@@ -5,7 +5,7 @@ import { getStaffSession, type StaffIdentity } from "./session";
  * The signed-in staff member, memoised for the request.
  *
  * `cache()` so a layout and three components asking cost one query, and
- * scoped to the request rather than the module — a module-level cache would
+ * scoped to the request rather than the module - a module-level cache would
  * outlive the request and hand one brand's staff identity to the next
  * caller, which on this surface means handing them another brand's data.
  */

@@ -3,7 +3,7 @@ import { formatPackCode, generatePackCode, looksLikePackCode, normalisePackCode 
 import { safeShopperRedirect } from "@/lib/consumer/redirect";
 
 describe("lib/packs/code", () => {
-  it("generates codes in canonical form — no separators, upper case", () => {
+  it("generates codes in canonical form - no separators, upper case", () => {
     for (let i = 0; i < 50; i += 1) {
       const code = generatePackCode();
       expect(code).toMatch(/^[A-Z0-9]{12}$/);

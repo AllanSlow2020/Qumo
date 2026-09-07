@@ -5,7 +5,7 @@ import { brandStyle, safeColor, safeLogoUrl, toBrandTheme } from "@/lib/brand/th
 /**
  * Which brand a request is for is decided entirely by these two files, and
  * everything else in the product trusts the answer. No database here on
- * purpose — this is the pure half, and it is the half that has to be right
+ * purpose - this is the pure half, and it is the half that has to be right
  * before the impure half can be safe.
  */
 describe("reading a brand out of a host", () => {
@@ -94,7 +94,7 @@ describe("what a brand is allowed to put on the page", () => {
     // Inert in a modern browser, and still not something to hand to an img.
     expect(safeLogoUrl("javascript:alert(1)")).toBeNull();
     expect(safeLogoUrl("data:image/svg+xml,<svg onload=alert(1)/>")).toBeNull();
-    // Not an attack — a mixed-content block, which presents as a brand with
+    // Not an attack - a mixed-content block, which presents as a brand with
     // no logo and nobody knowing why. Better to fall back deliberately.
     expect(safeLogoUrl("http://cdn.example/licken.svg")).toBeNull();
     expect(safeLogoUrl("/logo.svg")).toBeNull();

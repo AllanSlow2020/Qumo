@@ -4,7 +4,7 @@ import { getStaffSession } from "@/lib/staff/session";
 import { StaffLoginForm } from "./login-form";
 
 export default async function StaffLoginPage() {
-  // Already signed in — no reason to make somebody prove a password they
+  // Already signed in - no reason to make somebody prove a password they
   // proved this morning.
   if (await getStaffSession()) {
     redirect("/");

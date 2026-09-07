@@ -2,7 +2,7 @@
  * The faces a brand can choose from, as data.
  *
  * Deliberately no `next/font` import in this file. The registry is read by
- * the console's picker, by the validator, and by a test — none of which
+ * the console's picker, by the validator, and by a test - none of which
  * want a font loader dragged in behind them. The faces themselves are
  * loaded once, in app/font-faces.ts, and a test holds the two lists in
  * agreement so an id can never exist here without a face behind it.
@@ -17,8 +17,8 @@
  * tells a font CDN which brand's page they are looking at.
  *
  * The list is short on purpose and each entry is here for a reason a
- * marketing person would recognise. It is meant to grow — adding a face is
- * two lines and a test that already passes — and a brand's own licensed
+ * marketing person would recognise. It is meant to grow - adding a face is
+ * two lines and a test that already passes - and a brand's own licensed
  * typeface is a real ask that wants file storage and a licence question
  * answered, which is a different piece of work.
  */
@@ -46,7 +46,7 @@ export type FontFace = {
    * The distinction is narrower than it first looks, and worth stating
    * accurately because the console repeats it to a brand. Every figure on
    * the shopper surface is already set with `font-variant-numeric:
-   * tabular-nums`, which most proportional faces honour — so a column of
+   * tabular-nums`, which most proportional faces honour - so a column of
    * amounts usually holds still in one of those too. What a monospace
    * guarantees is that it holds still whether the face has that feature or
    * not.
@@ -65,7 +65,7 @@ export type FontFace = {
  * Instrument Sans has a real bold and enough character to not read as a
  * default; Martian Mono is a true monospace that is not one of the two or
  * three grotesques every product ships with. Together they are the house
- * style — a brand that never opens the appearance screen still gets a
+ * style - a brand that never opens the appearance screen still gets a
  * considered page rather than the browser's idea of one.
  */
 export const DEFAULT_DISPLAY_FONT: FontId = "instrument-sans";

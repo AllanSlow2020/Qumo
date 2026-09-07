@@ -9,7 +9,7 @@ export type SpendResult = { ok: true } | { ok: false; error: string };
 
 /**
  * Amounts arrive as rands from the form and become cents here, at the
- * edge — the same boundary formatLedgerAmount() sits on going the other
+ * edge - the same boundary formatLedgerAmount() sits on going the other
  * way. Nothing downstream of this line handles a fractional amount.
  */
 function randsToCents(raw: string): number {

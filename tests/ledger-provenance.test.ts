@@ -11,9 +11,9 @@ import { getWalletHistory } from "@/lib/consumer/wallet";
 /**
  * Where a ledger row says it came from.
  *
- * The shopper-facing symptom was small — an activity list reading
+ * The shopper-facing symptom was small - an activity list reading
  * "Purchase" four times where it should read "Sea Point", "Claremont",
- * "Sea Point", "Gardens" — but the cause was not: nothing in the ledger
+ * "Sea Point", "Gardens" - but the cause was not: nothing in the ledger
  * recorded which scan produced a row, so the history could not be checked
  * against anybody's memory of their own week. These tests hold the link in
  * place from both ends: the write path attaches it, and the read path
@@ -23,7 +23,7 @@ describe("ledger provenance", () => {
   const suffix = Date.now();
   const SECRET = "b".repeat(64);
   // 5% of R400.00 is R20.00, and a card that completes at R15.00 means one
-  // scan writes both rows — the award and the deduction — which is the
+  // scan writes both rows - the award and the deduction - which is the
   // case the completion branch has to get right.
   const BASKET_CENTS = 40_000;
   const CARD_CENTS = 1_500;
@@ -55,7 +55,7 @@ describe("ledger provenance", () => {
       },
     });
 
-    // The other earn path, which has no store behind it at all — the case
+    // The other earn path, which has no store behind it at all - the case
     // the null has to stay honest about.
     sleeve = await prisma.campaign.create({
       data: { brandId: brand.id, name: "Wing box sleeve", status: "ACTIVE" },

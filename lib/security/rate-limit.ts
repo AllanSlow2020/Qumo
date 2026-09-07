@@ -19,7 +19,7 @@ import { prisma } from "@/lib/db/client";
  *
  * ── Why one statement ────────────────────────────────────────────────────
  *
- * The obvious implementation — read the row, decide, write it back — has a
+ * The obvious implementation - read the row, decide, write it back - has a
  * race that defeats the entire feature: two requests read count = 2 against
  * a limit of 3, both decide they are allowed, both write 3. A limiter with
  * a race is a limiter an attacker can simply run in parallel, which is
@@ -57,7 +57,7 @@ type CounterRow = { count: number; resetAt: Date };
  * has a fixed end, so a climbing count changes nothing about when the
  * caller is let back in, and not counting blocked attempts would mean the
  * row cannot tell the difference between someone who stopped at the limit
- * and someone who is still hammering it — which is the more interesting of
+ * and someone who is still hammering it - which is the more interesting of
  * the two to be able to see later.
  */
 export async function rateLimit(
@@ -99,8 +99,8 @@ export async function rateLimit(
  * Deletes counters whose window has closed. Wired to the daily cron beside
  * the session sweep.
  *
- * A closed window's row is dead weight — the next check on that key resets
- * it anyway — so nothing is lost by deleting it, and leaving it means one
+ * A closed window's row is dead weight - the next check on that key resets
+ * it anyway - so nothing is lost by deleting it, and leaving it means one
  * row per phone number that ever attempted a login, forever.
  */
 export async function sweepExpiredRateLimits(now: Date = new Date()): Promise<number> {

@@ -75,8 +75,8 @@ describe("rateLimit under concurrency", () => {
   /**
    * Proves the statement is atomic under real concurrency.
    *
-   * A read-then-write limiter — Prisma's own upsert, or the obvious
-   * findUnique-then-update — lets N in-flight requests all read the same
+   * A read-then-write limiter - Prisma's own upsert, or the obvious
+   * findUnique-then-update - lets N in-flight requests all read the same
    * count, all decide they are under the limit, and all proceed, so a limit
    * of 3 admits as many attackers as arrive together. Twenty simultaneous
    * attempts against a limit of 3 must admit exactly 3.
@@ -98,8 +98,8 @@ describe("rateLimit under concurrency", () => {
    * The multi-instance case, which is the whole point of the change.
    *
    * `vi.resetModules()` between the two imports gives each copy of the
-   * limiter its own module scope — which is precisely where the old
-   * limiter's `Map` of counters lived — while both still reach the one
+   * limiter its own module scope - which is precisely where the old
+   * limiter's `Map` of counters lived - while both still reach the one
    * database. That is what two serverless instances of this app are: the
    * same code, separate memory, shared Postgres.
    *

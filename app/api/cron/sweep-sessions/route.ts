@@ -14,7 +14,7 @@ import { logger } from "@/lib/security/logger";
  * send threw is exactly the kind of failure nobody notices for a year.
  * Different job, different cadence, different blast radius.
  *
- * Guarded like the digest route — Vercel Cron attaches
+ * Guarded like the digest route - Vercel Cron attaches
  * `Authorization: Bearer $CRON_SECRET`. With CRON_SECRET unset no header
  * can match and this always 401s, which is the safe direction for a URL
  * whose whole purpose is deleting rows.
@@ -24,7 +24,7 @@ import { logger } from "@/lib/security/logger";
  *
  * `!==` on strings stops at the first differing byte, which in principle
  * hands the secret over one character at a time. Hard to exploit across a
- * network and completely free to avoid — and the inconsistency was the real
+ * network and completely free to avoid - and the inconsistency was the real
  * finding: every other comparison of a secret here already does this.
  */
 function secretMatches(supplied: string | null, expected: string): boolean {
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   // Two sweeps, one job, because they are the same job: rows kept only
   // until a window or a session closes. Sequential rather than
-  // Promise.all — a cron has no deadline worth racing for, and a failure
+  // Promise.all - a cron has no deadline worth racing for, and a failure
   // in one should not leave the other's outcome ambiguous.
   const deleted = await sweepExpiredSessions();
   const rateLimitsDeleted = await sweepExpiredRateLimits();

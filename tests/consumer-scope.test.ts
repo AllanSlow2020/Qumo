@@ -5,7 +5,7 @@ import { forPerson, ConsumerScopeViolation } from "@/lib/consumer/scope";
 
 /**
  * The guarantee under test: a shopper's lens can read their own rows across
- * every brand, and cannot reach anyone else's by any route — including by
+ * every brand, and cannot reach anyone else's by any route - including by
  * asking for them explicitly.
  */
 describe("lib/consumer/scope", () => {
@@ -63,7 +63,7 @@ describe("lib/consumer/scope", () => {
   });
 
   it("scopes ledger rows through the membership that owns them", async () => {
-    // PointsTransaction has no personId column — this is the relation-filter
+    // PointsTransaction has no personId column - this is the relation-filter
     // path, and it has to hold just as firmly as the column one.
     const rows = await forPerson(me.id).pointsTransaction.findMany();
     expect(rows).toHaveLength(1);

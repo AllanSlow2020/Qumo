@@ -27,7 +27,7 @@ export class MfaError extends Error {}
  *
  * Found by reviewing the finished feature, and it is the hole that would
  * have made the rest of it decorative. The only limit on a code guess was
- * the per-client login cap in lib/security/login-guard.ts — and that is
+ * the per-client login cap in lib/security/login-guard.ts - and that is
  * keyed on the caller's address precisely so it catches one machine working
  * through many accounts. It does nothing about many machines working on one
  * account, which is the shape of an attack on a second factor: whoever is
@@ -39,7 +39,7 @@ export class MfaError extends Error {}
  * requests a second. That is not a second factor.
  *
  * Keyed on the user, so no amount of address rotation buys another
- * allowance — the same two-limits-keyed-differently shape the shopper
+ * allowance - the same two-limits-keyed-differently shape the shopper
  * passcode already used (per phone number *and* per issued code), which is
  * exactly the design this path was missing.
  */
@@ -50,7 +50,7 @@ export const RECOVERY_CODE_COUNT = 10;
 
 /**
  * Codes people read off a screen and type into a phone, so no characters
- * that look like each other. Ten of them, at 32^10 each — the count is the
+ * that look like each other. Ten of them, at 32^10 each - the count is the
  * usability decision and the length is the security one.
  */
 const RECOVERY_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
@@ -86,7 +86,7 @@ export type EnrolmentOffer = {
  * The secret is stored immediately but `totpConfirmedAt` stays null, so
  * nothing about signing in changes yet. Storing it before it is confirmed is
  * what lets the confirm step work at all without holding a secret in a
- * session or a form field, and an unconfirmed secret is inert — every check
+ * session or a form field, and an unconfirmed secret is inert - every check
  * that matters reads totpConfirmedAt, not the secret's presence.
  */
 export async function beginEnrolment(actor: Actor, issuer: string): Promise<EnrolmentOffer> {
@@ -128,7 +128,7 @@ export async function confirmEnrolment(
     select: { totpSecretEncrypted: true, totpConfirmedAt: true },
   });
   if (!user?.totpSecretEncrypted) {
-    throw new MfaError("Start again — there's no pending setup for this account.");
+    throw new MfaError("Start again - there's no pending setup for this account.");
   }
   if (user.totpConfirmedAt) {
     throw new MfaError("Two-factor authentication is already on for this account.");
@@ -163,7 +163,7 @@ export async function confirmEnrolment(
  * Turning it off, which requires the current password.
  *
  * Without that, an unattended open console is enough to strip the factor
- * off the account and walk away with a password-only login — the same
+ * off the account and walk away with a password-only login - the same
  * reasoning that makes changeOwnPassword ask for the current one.
  */
 export async function disableMfa(actor: Actor, password: string): Promise<void> {
@@ -216,7 +216,7 @@ export async function regenerateRecoveryCodes(actor: Actor, password: string): P
 
 export type SecondFactorState = {
   enabled: boolean;
-  /** How many recovery codes are still unused — the number worth acting on. */
+  /** How many recovery codes are still unused - the number worth acting on. */
   recoveryCodesLeft: number;
 };
 

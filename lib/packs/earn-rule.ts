@@ -18,7 +18,7 @@ const setEarnRuleSchema = z.object({
 
 /**
  * What one scan of this campaign is worth. Separate from Reward, which
- * describes what a member is handed once they cross a threshold — this is
+ * describes what a member is handed once they cross a threshold - this is
  * what each scan contributes on the way there.
  *
  * Upserted rather than created: a campaign has at most one earn rule

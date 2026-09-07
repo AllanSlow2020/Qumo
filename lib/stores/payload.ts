@@ -5,7 +5,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  * read it back.
  *
  * The format is chosen for who has to implement it. A receipt template in a
- * POS is usually a text-substitution engine — it can concatenate fields into
+ * POS is usually a text-substitution engine - it can concatenate fields into
  * a string and, at best, call a hash function. It generally cannot build
  * JSON, base64-encode, or canonicalise anything. So the payload is a flat
  * query string with short keys, and the signed message is a plain
@@ -16,7 +16,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  *   https://qumo.app/r?s=CL04&t=884231&c=8500&d=1755512582&g=<hmac>
  *
  *   s  store code
- *   t  the till's own transaction id — opaque to us, must be unique per store
+ *   t  the till's own transaction id - opaque to us, must be unique per store
  *   c  basket total in cents
  *   d  unix seconds when the sale happened
  *   g  HMAC-SHA256 of "s|t|c|d" with the store's secret, hex, truncated
@@ -36,7 +36,7 @@ export const RECEIPT_PARAM = {
 } as const;
 
 /**
- * 20 hex characters — 80 bits. Full SHA-256 hex is 64 characters, which on
+ * 20 hex characters - 80 bits. Full SHA-256 hex is 64 characters, which on
  * a receipt QR is a real cost: more modules, denser code, worse scanning off
  * thermal paper that has been in a pocket. 80 bits is far beyond forging by
  * search, and the secret is per store, so the truncation is a size decision
@@ -61,7 +61,7 @@ export type PayloadParseFailure =
 /**
  * The exact string a POS must sign, and that we re-derive to verify. Order
  * is fixed and documented because a vendor implements it from the spec, not
- * from this code — anything order-dependent or locale-dependent here would
+ * from this code - anything order-dependent or locale-dependent here would
  * be a bug they cannot see.
  */
 export function signingMessage(fields: {
@@ -79,7 +79,7 @@ export function signReceipt(secret: string, message: string): string {
 
 /**
  * Parses the query parameters off a scanned URL. Returns a failure reason
- * rather than throwing — /r is a public endpoint and malformed input is an
+ * rather than throwing - /r is a public endpoint and malformed input is an
  * ordinary event there, not an exception.
  */
 export function parseReceiptPayload(params: URLSearchParams): ReceiptPayload | PayloadParseFailure {
@@ -140,7 +140,7 @@ export function verifySignature(secret: string, message: string, supplied: strin
   return timingSafeEqual(expectedBuf, suppliedBuf);
 }
 
-/** Builds a scan URL — used by the dashboard's spec page and by tests. */
+/** Builds a scan URL - used by the dashboard's spec page and by tests. */
 export function buildReceiptUrl(
   origin: string,
   fields: { storeCode: string; externalTxnId: string; amountCents: number; purchasedAt: Date },

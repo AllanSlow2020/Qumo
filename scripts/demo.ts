@@ -10,7 +10,7 @@ import { generatePackCode } from "../lib/packs/code";
 /**
  * A Chicken Licken worth showing someone.
  *
- * `prisma/seed.ts` makes the smallest database the app will run against —
+ * `prisma/seed.ts` makes the smallest database the app will run against -
  * two brands, a couple of stores, enough to boot. This makes one that looks
  * like a business: five Cape Town stores, a few hundred members, three
  * months of uneven activity, a stamp card partway through and a printed
@@ -18,7 +18,7 @@ import { generatePackCode } from "../lib/packs/code";
  *
  * Deliberately uneven, because the even version is a lie. Real programmes
  * have one store carrying half the volume, a long tail of people who came
- * once, and a small core who come every week — and those are exactly the
+ * once, and a small core who come every week - and those are exactly the
  * shapes the performance screen exists to show. Seeding a smooth
  * distribution would produce a demo where every chart says "fine".
  *
@@ -70,7 +70,7 @@ async function main() {
   await prisma.brandMembership.deleteMany({ where: { brandId: brand.id } });
   // Promotions this script did not write. The bootstrap seed leaves a stamp
   // card behind, and a demo brand carrying both it and the one below shows a
-  // shopper the same offer twice on the join page — the sort of thing nobody
+  // shopper the same offer twice on the join page - the sort of thing nobody
   // notices until it is on a screen in front of the brand. This script owns
   // the brand's whole promotion set, so anything else goes.
   await prisma.campaign.deleteMany({ where: { brandId: brand.id, name: { notIn: CAMPAIGNS } } });
@@ -222,12 +222,12 @@ async function main() {
    * Pack codes need their own promotion, and finding that out the hard way
    * is what this seed is for.
    *
-   * A printed code awards a fixed amount — it is on a sleeve, and nobody
+   * A printed code awards a fixed amount - it is on a sleeve, and nobody
    * knows what basket it will end up in. So it cannot hang off the
    * share-of-spend campaign, and the engine refuses to print or scan one
    * that does (lib/packs/earn-rule.ts). Attaching the batch to "5% back"
    * produced a demo where every pack code said "this code isn't part of the
-   * promotion running right now" — which is the guard working, and a seed
+   * promotion running right now" - which is the guard working, and a seed
    * that had not read it.
    */
   const existingSleeve = await prisma.campaign.findFirst({ where: { brandId: brand.id, name: "Wing box sleeve" } });

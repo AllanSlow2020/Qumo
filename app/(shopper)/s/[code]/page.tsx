@@ -9,7 +9,7 @@ import { BrandHeader } from "../../brand-header";
 /**
  * Where a QR code on a pack lands. Kept at /s/<code> rather than something
  * more descriptive because the whole URL is encoded into a QR printed at
- * label size — every character costs density, and density is what decides
+ * label size - every character costs density, and density is what decides
  * whether it scans first time in a badly lit aisle.
  *
  * Rendering this page awards the code. That is deliberate: asking a shopper
@@ -22,7 +22,7 @@ export default async function ScanPage({ params }: { params: Promise<{ code: str
   const personId = await getConsumerSession();
   if (!personId) {
     // Carry the code through login and come back to it. Without this the
-    // scan is simply lost — and a pack code is single-use, so "just scan it
+    // scan is simply lost - and a pack code is single-use, so "just scan it
     // again" is not available to them.
     redirect(`/wallet/login?next=${encodeURIComponent(`/s/${code}`)}`);
   }
@@ -61,11 +61,11 @@ export default async function ScanPage({ params }: { params: Promise<{ code: str
         </p>
 
         {/* A completed card is the moment the whole stamp mechanic exists
-            for — the shopper has to leave this screen knowing they earned
+            for - the shopper has to leave this screen knowing they earned
             something and what to show at the counter. */}
         {result.coupon && (
           <div className="sc-tile sc-tile-pos">
-            <p className="sc-label">Card complete — you&apos;ve earned</p>
+            <p className="sc-label">Card complete - you&apos;ve earned</p>
             <p className="sc-h2">{result.coupon.name}</p>
             <p className="sc-code-sm sc-pos">{result.coupon.code}</p>
             <p className="sc-label">Show this code to claim it. It&apos;s saved in your rewards too.</p>

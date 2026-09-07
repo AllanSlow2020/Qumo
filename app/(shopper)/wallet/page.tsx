@@ -30,7 +30,7 @@ const REASON_LABELS: Record<string, string> = {
 /**
  * The two rows where the event outranks the place.
  *
- * Everywhere else the most useful heading is where it happened — a shopper
+ * Everywhere else the most useful heading is where it happened - a shopper
  * checking a statement is matching it against their own week, and "Sea
  * Point" is a thing they either did or did not do. But a completed card and
  * a spend are events in their own right, and heading both with the store
@@ -47,8 +47,8 @@ const EVENT_TITLES: Record<string, string> = {
  *
  * The fallbacks are a ladder from most specific to least, and each rung is
  * the truth about a real path rather than a guess: a till slip knows its
- * store, a pack code knows only its promotion, and a row from neither — an
- * older one, or an adjustment — has nothing but its reason. Nothing is
+ * store, a pack code knows only its promotion, and a row from neither - an
+ * older one, or an adjustment - has nothing but its reason. Nothing is
  * invented to fill a gap; the line just gets shorter.
  */
 function describeEntry(entry: WalletEntry): { title: string; detail: string } {
@@ -63,7 +63,7 @@ function describeEntry(entry: WalletEntry): { title: string; detail: string } {
     entry.createdAt.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" }),
     // Only when the title is not already the store.
     entry.storeName && title !== entry.storeName ? entry.storeName : null,
-    // The answer to "why that much", and only on the row that earned it —
+    // The answer to "why that much", and only on the row that earned it -
     // on a card completion the basket explains the stamp, not the deduction.
     entry.amount > 0 && entry.amountCents != null
       ? `${formatLedgerAmount(entry.amountCents, "CENTS")} purchase`
@@ -118,7 +118,7 @@ function PendingSpendCard({ spend }: { spend: PendingSpendView }) {
  *
  * It used to carry a heading with the brand's name, because the screen was a
  * list of brands and each card had to say which one it was. There is exactly
- * one brand on this page now and its name is already at the top of it —
+ * one brand on this page now and its name is already at the top of it -
  * repeating it here would read as though there might be another.
  */
 function Balances({
@@ -240,7 +240,7 @@ export default async function WalletPage() {
             </p>
           ) : (
             <p className="sc-body">
-              This balance can no longer be spent. Nothing has been deleted — if {brand.name} starts again, it will
+              This balance can no longer be spent. Nothing has been deleted - if {brand.name} starts again, it will
               be here exactly as you left it.
             </p>
           )}

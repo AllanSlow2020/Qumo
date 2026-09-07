@@ -40,7 +40,7 @@ describe("what a promotion says on a poster", () => {
       minSpendCents: null,
       completesAt: 10,
     });
-    expect(headline).toBe("Collect 1 stamp per purchase — 10 earns a reward");
+    expect(headline).toBe("Collect 1 stamp per purchase - 10 earns a reward");
   });
 
   it("states the qualifying basket in rands, not cents", () => {

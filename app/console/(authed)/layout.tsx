@@ -23,7 +23,7 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
 
   // The brand's name for the masthead, so a staff member can see at a glance
   // whose data they are looking at. Read via the session's brandId, which
-  // came from the user row — never from the URL.
+  // came from the user row - never from the URL.
   const brand = await prisma.brand.findUnique({
     where: { id: session.brandId },
     select: { name: true },
@@ -34,7 +34,7 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
       {/* Two rows, not one.
           Nine nav items, an identity and a sign-out do not fit on one line
           at 1280px: the nav clipped mid-word into the brand name. Splitting
-          identity from navigation is also the more honest structure — who
+          identity from navigation is also the more honest structure - who
           you are signed in as does not belong in the same row as where you
           can go. */}
       <header className="cn-top">
@@ -43,7 +43,7 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
             {PRODUCT_NAME} <span>console</span>
           </Link>
           <div className="cn-who">
-            <div>{brand?.name ?? "—"}</div>
+            <div>{brand?.name ?? "-"}</div>
             <div>
               {session.name} · {session.role.toLowerCase()} ·{" "}
               <Link href="/change-password">password</Link> · <Link href="/security">security</Link>

@@ -7,13 +7,13 @@ import { prisma } from "@/lib/db/client";
  * The download that hands over a whole print run.
  *
  * Found by review: it checked that somebody was signed in and that the
- * batch belonged to their brand, and did not check their role — while
+ * batch belonged to their brand, and did not check their role - while
  * creating a batch requires OWNER, ADMIN or MARKETING. So QUALITY, the one
  * role deliberately barred from making codes, could download every code in
  * every batch.
  *
  * The comment that justified it was the actual error: "codes are not secret
- * — they end up printed on the outside of a box." True of a printed code,
+ * - they end up printed on the outside of a box." True of a printed code,
  * which costs a purchase to obtain. Not true of the file: an unprinted
  * batch is every unredeemed code in one download, each worth an award.
  */

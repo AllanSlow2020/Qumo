@@ -16,7 +16,7 @@ export async function toggleTheme(): Promise<void> {
   });
 
   // The theme lives on the <html> tag in the ROOT layout (app/layout.tsx),
-  // above the portal layout this action is called from — a plain
+  // above the portal layout this action is called from - a plain
   // revalidatePath() only invalidates the current route's layout, so this
   // needs the "layout" type pointed at "/" to reach up to the root.
   revalidatePath("/", "layout");

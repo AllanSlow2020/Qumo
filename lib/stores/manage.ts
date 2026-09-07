@@ -39,7 +39,7 @@ export type CreatedStore = {
   code: string;
   /**
    * The plaintext signing secret, returned exactly once at creation and
-   * never again — only the ciphertext is stored. A brand that loses it
+   * never again - only the ciphertext is stored. A brand that loses it
    * rotates rather than recovers, same as any other credential.
    */
   signingSecret: string | null;
@@ -78,7 +78,7 @@ export async function createStoreForSession(session: SessionLike, formData: Form
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
       // Codes are globally unique because a scanned slip carries nothing
-      // else — so a clash can be with another brand's store, and the
+      // else - so a clash can be with another brand's store, and the
       // message deliberately doesn't say which.
       throw new StoreError("That store code is already taken. Try another.");
     }
@@ -88,7 +88,7 @@ export async function createStoreForSession(session: SessionLike, formData: Form
 
 /**
  * Issues a new signing secret, or turns signing on for a store that was
- * created without it — which is the path a brand takes when their POS
+ * created without it - which is the path a brand takes when their POS
  * vendor comes back and says yes after all.
  *
  * Slips signed with the old secret stop verifying immediately. That is the
@@ -174,7 +174,7 @@ export type StoreSummary = {
   isSigned: boolean;
   isActive: boolean;
   scanCount: number;
-  /** Slips accepted without a signature — the exposure, stated as a number. */
+  /** Slips accepted without a signature - the exposure, stated as a number. */
   unsignedScanCount: number;
 };
 
@@ -207,7 +207,7 @@ export async function listStores(brandId: string): Promise<StoreSummary[]> {
 const spendRuleSchema = z.object({
   campaignId: z.string().trim().min(1),
   unit: z.enum(["POINTS", "CENTS", "STAMPS"]),
-  // 1 basis point to 100% — a brand giving away more than the basket is a
+  // 1 basis point to 100% - a brand giving away more than the basket is a
   // typo, not a promotion.
   basisPoints: z.coerce.number().int().min(1).max(10_000),
   minSpendCents: z.coerce.number().int().min(0).max(10_000_000).optional(),

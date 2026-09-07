@@ -108,7 +108,7 @@ describe("lib/stores/receipt", () => {
     const txn = nextTxn();
     await redeemReceipt(slip(signedStore, { txn }), shopper.id);
     const scan = await prisma.purchaseScan.findFirstOrThrow({ where: { externalTxnId: txn } });
-    // Recorded per scan, not inferred from the store's current setting — a
+    // Recorded per scan, not inferred from the store's current setting - a
     // store signed today may have been unsigned when this slip was scanned.
     expect(scan.wasSigned).toBe(true);
   });
@@ -117,7 +117,7 @@ describe("lib/stores/receipt", () => {
     // Found by driving the app: after sign-in the App Router fetches this
     // page twice on one navigation, so the second render hit the replay
     // guard and told an honest shopper their slip was already used. The
-    // ledger was right — the unique constraint held — but the message read
+    // ledger was right - the unique constraint held - but the message read
     // like theft. Re-opening your own slip is normal; the answer is a
     // receipt, not an accusation.
     const query = slip(signedStore, { cents: 8500 });
@@ -205,7 +205,7 @@ describe("lib/stores/receipt", () => {
   it("never awards the same slip twice", async () => {
     // The invariant, stated as the thing that actually matters. It used to
     // be written as "the second call fails", which was true but was not the
-    // point — and it stopped being true once re-opening your own slip
+    // point - and it stopped being true once re-opening your own slip
     // started showing you a receipt. What must never change is the money.
     const txn = nextTxn();
     const query = slip(signedStore, { txn });
@@ -221,7 +221,7 @@ describe("lib/stores/receipt", () => {
   it("awards once when one photographed slip is scanned by several people", async () => {
     // A receipt photographed and shared in a group chat is the obvious
     // attack, and it costs the brand real money. Written with several
-    // *different* shoppers, because that is what sharing means — the old
+    // *different* shoppers, because that is what sharing means - the old
     // version raced one person against themselves, which tests the
     // constraint but not the scenario its own comment described.
     const query = slip(signedStore, { txn: nextTxn(), cents: 2_000 });

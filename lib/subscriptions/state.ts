@@ -5,7 +5,7 @@ import type { SubscriptionStatus } from "@prisma/client";
  *
  * The important property: a cancelled programme closes when its window
  * elapses whether or not anything ran to notice. A nightly job that marks
- * rows CLOSED is an optimisation — if it fails for a week, this still gives
+ * rows CLOSED is an optimisation - if it fails for a week, this still gives
  * the right answer, because the answer is computed from the date rather than
  * looked up from a flag somebody was supposed to have set.
  *
@@ -17,7 +17,7 @@ import type { SubscriptionStatus } from "@prisma/client";
  * Decided before any of this was built, and stated in the plan: earning
  * freezes at cancellation, redemption is honoured for sixty days.
  *
- * Only ever read when a cancellation is *recorded* — the resulting date is
+ * Only ever read when a cancellation is *recorded* - the resulting date is
  * stored on the row. Changing this number does not move a promise already
  * made to somebody.
  */
@@ -44,7 +44,7 @@ export type ProgrammeState = {
 /**
  * A brand with no subscription row at all.
  *
- * Fails open — earning and redemption both continue — and that is a
+ * Fails open - earning and redemption both continue - and that is a
  * deliberate choice for right now, not an oversight. No billing provider is
  * integrated, brands are onboarded by hand, and an absent row means "not on
  * the billing system yet" rather than "has stopped paying". Failing closed
@@ -69,7 +69,7 @@ export function programmeState(row: SubscriptionRow, now: Date = new Date()): Pr
 
     case "CANCELLED": {
       // Earning stopped the moment they cancelled. Redemption continues
-      // until the window closes — and if it already has, this is CLOSED
+      // until the window closes - and if it already has, this is CLOSED
       // regardless of what the row still says.
       const until = row.honourRedemptionUntil;
       const stillHonoured = until !== null && until > now;

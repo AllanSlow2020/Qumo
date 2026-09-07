@@ -13,7 +13,7 @@ import {
 import type { TeamActionState } from "./state";
 
 function toState(err: unknown): TeamActionState {
-  // UserError messages are written for an owner to read — the last-owner
+  // UserError messages are written for an owner to read - the last-owner
   // refusal in particular explains a rule nobody would guess.
   if (err instanceof UserError) {
     return { ok: false, error: err.message };

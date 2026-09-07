@@ -6,7 +6,7 @@ import { isPreviewDeployment } from "@/lib/env/deployment";
  *
  * Written as an interface with a logging fallback for the same reason
  * EmailClient and WhatsAppClient are: the provider account (Twilio Verify
- * or Clickatell — still to be provisioned) is not something this build can
+ * or Clickatell - still to be provisioned) is not something this build can
  * create, and the whole login flow has to be runnable and testable before
  * it exists. With no credentials set, the passcode is logged instead of
  * sent and the flow works end to end locally.
@@ -18,15 +18,15 @@ export interface SmsClient {
 export class SmsSendError extends Error {}
 
 /**
- * Twilio's Messages API over plain fetch — no SDK, since one POST with
+ * Twilio's Messages API over plain fetch - no SDK, since one POST with
  * basic auth does not justify the dependency.
  *
  * Note this is Twilio *Messaging*, not Twilio *Verify*. Verify would own
  * code generation, expiry and attempt-counting itself, which sounds
  * appealing until you notice it puts the security properties of shopper
  * login inside a vendor we cannot test against and cannot audit. Keeping
- * the code lifecycle in lib/consumer/otp.ts — with its own hashing,
- * expiry, attempt cap and single-use guarantee — means the rules are in
+ * the code lifecycle in lib/consumer/otp.ts - with its own hashing,
+ * expiry, attempt cap and single-use guarantee - means the rules are in
  * this repository, covered by tests, and identical whichever provider ends
  * up sending the message. Switching to Clickatell is then one class here,
  * not a rewrite of the login flow.
@@ -50,7 +50,7 @@ export class TwilioSmsClient implements SmsClient {
 
     if (!response.ok) {
       // The provider's own error text can carry the destination number, so
-      // it is deliberately not echoed into the thrown message — the status
+      // it is deliberately not echoed into the thrown message - the status
       // is enough to diagnose, and the caller turns this into a generic
       // "we couldn't send that code" for the shopper anyway.
       throw new SmsSendError(`SMS provider rejected the send (HTTP ${response.status})`);
@@ -61,7 +61,7 @@ export class TwilioSmsClient implements SmsClient {
 /**
  * Stands in whenever no SMS credentials are configured. Logs the passcode
  * rather than sending it, so `pnpm dev` can complete a login by reading
- * the console — the same role LoggingEmailClient plays for reset links,
+ * the console - the same role LoggingEmailClient plays for reset links,
  * and held to the same standard: dev-only console output, never a path
  * that runs in production with real credentials absent by accident.
  */

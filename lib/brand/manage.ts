@@ -11,7 +11,7 @@ import type { Actor } from "@/lib/staff/actor";
  * Editing the face a brand shows its shoppers.
  *
  * The fields have existed since the brand layer landed and every shopper page
- * reads them — what was missing was any way to change them, which meant a
+ * reads them - what was missing was any way to change them, which meant a
  * brand's colours were set by whoever had database access. This is the screen
  * that makes "all we do is reskin" a thing a brand can do rather than a thing
  * we do for them.
@@ -45,7 +45,7 @@ const identitySchema = z.object({
     .max(500)
     .optional()
     .refine((v) => !v || /^https:\/\//i.test(v), {
-      message: "The logo address has to start with https:// — an http image is blocked as insecure and shows as nothing.",
+      message: "The logo address has to start with https:// - an http image is blocked as insecure and shows as nothing.",
     }),
   accentColor: z
     .string()
@@ -70,7 +70,7 @@ const identitySchema = z.object({
     .optional()
     .refine((v) => !v || /^https:\/\//i.test(v), { message: "The support address has to start with https://." }),
   // Checked against the registry rather than against a pattern. A font id is
-  // a key we look up, so "is this well-formed" is the wrong question — the
+  // a key we look up, so "is this well-formed" is the wrong question - the
   // only thing worth knowing is whether we have the face.
   displayFont: z
     .string()
@@ -126,7 +126,7 @@ export async function updateBrandIdentityForSession(session: SessionLike, formDa
       supportEmail: blankToNull(parsed.supportEmail),
       supportUrl: blankToNull(parsed.supportUrl),
       // Blank is "use Qumo's", which is a real choice rather than an absence
-      // — the picker's first option, not an empty select.
+      // - the picker's first option, not an empty select.
       displayFont: blankToNull(parsed.displayFont),
       figureFont: blankToNull(parsed.figureFont),
     },

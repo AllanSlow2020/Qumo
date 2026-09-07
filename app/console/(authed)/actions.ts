@@ -13,7 +13,7 @@ export async function signOut(): Promise<void> {
   const store = await cookies();
   const token = store.get(STAFF_SESSION_COOKIE)?.value;
   // Revoke the row before dropping the cookie. The other order leaves a live
-  // session nobody holds a reference to — harmless until the token was
+  // session nobody holds a reference to - harmless until the token was
   // copied off the machine first, which is the case that matters.
   if (token) {
     await revokeStaffSessionByToken(token, "SIGNED_OUT");

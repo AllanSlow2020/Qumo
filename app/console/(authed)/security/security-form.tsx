@@ -62,7 +62,7 @@ function Confirm({
   const [result, action, pending] = useActionState(confirmCode, state);
 
   // In an effect, not during render. Handing the new state up mid-render is
-  // a setState on a parent while a child is rendering — React warns about
+  // a setState on a parent while a child is rendering - React warns about
   // it today and reserves the right to make it fatal, and it is the kind of
   // thing that works in development and tears on a slow phone.
   useEffect(() => {
@@ -74,7 +74,7 @@ function Confirm({
   return (
     <form action={action} className="cn-form">
       <p className="cn-body">
-        Add this to your authenticator app — 1Password, Google Authenticator, Authy, whichever you already use — then
+        Add this to your authenticator app - 1Password, Google Authenticator, Authy, whichever you already use - then
         type the six digits it shows.
       </p>
 
@@ -167,7 +167,7 @@ function TurnOff({
         </strong>{" "}
         left.
         {recoveryCodesLeft <= 2 && (
-          <> That is not many — generate a fresh set before you need one.</>
+          <> That is not many - generate a fresh set before you need one.</>
         )}
       </p>
 

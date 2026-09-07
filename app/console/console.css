@@ -1,6 +1,6 @@
 /* Qumo brand console.
  *
- * Scoped under `.cn`, its own tokens, its own stylesheet — the same
+ * Scoped under `.cn`, its own tokens, its own stylesheet - the same
  * separation the shopper surface has, and for the same reason: these are two
  * products with two jobs, and restyling one must never reach the other.
  *
@@ -18,8 +18,8 @@
  * ── One system, two densities ────────────────────────────────────────────
  *
  * The two design directions differed on two axes, and the answer takes one
- * from each. The *surface* follows the shopper — the same near-white and
- * near-black, the same hairlines, the same two-pixel radius — because a
+ * from each. The *surface* follows the shopper - the same near-white and
+ * near-black, the same hairlines, the same two-pixel radius - because a
  * product whose two halves disagree about what a border looks like reads as
  * two products. The *structure* is the console's own: tables with real
  * column heads, charts, filters, figures aligned so they can be compared
@@ -29,7 +29,7 @@
  *
  * Achromatic, like the shopper surface, and for a related reason: colour
  * that appears everywhere means nothing anywhere. Actions are ink. Hue is
- * reserved for two jobs — a state that needs acting on (an unsigned store,
+ * reserved for two jobs - a state that needs acting on (an unsigned store,
  * an uncapped promotion) and the emphasised mark in a chart. Everything a
  * brand's staff sees in colour here is therefore something they can do
  * something about.
@@ -129,11 +129,11 @@
 }
 
 /* The identity row: mark on the left, who you are and the way out on the
- * right. Navigation lives on its own row below — see .cn-nav-row.
+ * right. Navigation lives on its own row below - see .cn-nav-row.
  *
  * This started as one row and did not survive contact with eight nav items:
  * at 1280px the nav clipped mid-word into the brand name. Two rows is not a
- * compromise, it is the more honest structure — where you can go and who
+ * compromise, it is the more honest structure - where you can go and who
  * you are signed in as answer different questions. */
 .cn-top-in {
   max-width: 1120px;
@@ -247,7 +247,7 @@
   letter-spacing: -0.025em;
   line-height: 1.1;
   /* Tabular figures so two metrics side by side line up rather than
-     wandering — the whole reason these are in a grid is comparison. */
+     wandering - the whole reason these are in a grid is comparison. */
   font-variant-numeric: tabular-nums;
 }
 
@@ -487,7 +487,7 @@ select.cn-input {
 
 /* A real render of the shopper surface, not a picture of one. It borrows the
    shopper palette rather than the console's, because the point is to show
-   what a customer sees — a preview drawn in console colours would be a
+   what a customer sees - a preview drawn in console colours would be a
    different page wearing the brand's button. */
 .cn-preview {
   background: #ffffff;
@@ -548,8 +548,8 @@ select.cn-input {
 /* The balance, at the size a shopper actually meets it.
    Here because a figures face cannot be judged at label size: whether a 0
    reads as a 0, and whether the face carries the weight, only show up
-   large. It is the same figure the wallet leads with, set the same way —
-   tabular figures and all — so the panel answers the tabular question by
+   large. It is the same figure the wallet leads with, set the same way -
+   tabular figures and all - so the panel answers the tabular question by
    demonstration rather than by claim. */
 .cn-preview-figure {
   font-size: 40px;

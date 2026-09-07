@@ -4,7 +4,7 @@ import { forBrand } from "@/lib/db/tenant";
  * Reading a brand's own log.
  *
  * Scoped through forBrand like everything else, so one brand's console
- * cannot read another's history — which matters more here than almost
+ * cannot read another's history - which matters more here than almost
  * anywhere, because this table names people and says what they did.
  */
 
@@ -18,7 +18,7 @@ export type AuditRow = {
   createdAt: Date;
 };
 
-/** One screenful. Paged by cursor rather than offset — the table only grows. */
+/** One screenful. Paged by cursor rather than offset - the table only grows. */
 export const PAGE_SIZE = 50;
 
 export async function listAuditEvents(
@@ -51,7 +51,7 @@ export async function listAuditEvents(
  * The stored value is a machine-sortable verb ("store.secret_rotated"); a
  * console shows a sentence. Kept as a lookup with a fallback rather than an
  * exhaustive map, so recording a new kind of event never renders a blank
- * row — an unknown action shows its raw name, which is ugly and honest.
+ * row - an unknown action shows its raw name, which is ugly and honest.
  */
 const PHRASES: Record<string, string> = {
   "brand.identity_changed": "Changed how the brand looks to shoppers",
@@ -84,7 +84,7 @@ export function describeAction(action: string): string {
 /**
  * Which entries deserve to stand out in a list.
  *
- * Not a severity — nothing here is an alert. It marks the changes an
+ * Not a severity - nothing here is an alert. It marks the changes an
  * auditor asks about first: the ones that move money, weaken verification,
  * or change who has access.
  */
