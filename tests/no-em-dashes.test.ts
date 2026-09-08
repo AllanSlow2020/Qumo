@@ -19,7 +19,9 @@ import { describe, expect, it } from "vitest";
  * En dashes and the box-drawing rules used in comment banners are a
  * different character and are left alone.
  */
-const EM_DASH = "—";
+// Built from its code point rather than typed, so this file is not itself
+// an offender: the walk below covers every tracked file, this one included.
+const EM_DASH = String.fromCharCode(0x2014);
 const ROOT = path.resolve(__dirname, "..");
 
 /** Tracked files only, so node_modules and build output are out of scope by construction. */
