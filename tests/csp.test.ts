@@ -22,7 +22,7 @@ describe("generateNonce", () => {
   });
 
   it("carries 128 bits", () => {
-    // 16 bytes, base64 — anything shorter would be guessable, and a
+    // 16 bytes, base64 - anything shorter would be guessable, and a
     // guessable nonce is the same as no policy at all.
     expect(atob(generateNonce())).toHaveLength(16);
   });
@@ -33,7 +33,7 @@ describe("the production policy", () => {
    * The assertion the whole change exists for. A policy that allows inline
    * script stops almost nothing, because making an injected <script> inert
    * is the entire job. This app has no inline scripts, so there is no
-   * excuse for the allowance — and this test is what stops one being added
+   * excuse for the allowance - and this test is what stops one being added
    * back for a quick fix.
    */
   it("never allows inline or eval'd script", () => {
@@ -82,7 +82,7 @@ describe("upgrade-insecure-requests", () => {
    * Found by driving a production build locally, not by reading the spec.
    * The directive upgrades same-origin *navigations* as well as
    * subresources, so on an http origin every link and form submission is
-   * rewritten to an https port nothing is listening on — which breaks the
+   * rewritten to an https port nothing is listening on - which breaks the
    * one way this build gets shown to anyone before it is deployed.
    */
   it("is absent on a request that arrived over http", () => {
@@ -108,7 +108,7 @@ describe("violation reporting", () => {
   /**
    * The regression guard for a finding that cost an afternoon.
    *
-   * Sending both spellings is the obvious, careful-looking thing to do —
+   * Sending both spellings is the obvious, careful-looking thing to do -
    * report-uri for older browsers, report-to for newer ones. It delivers
    * nothing. Chrome ignores report-uri whenever report-to is present, and
    * the report-to path then failed silently, so every violation vanished

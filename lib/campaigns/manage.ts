@@ -13,7 +13,7 @@ import type { Actor } from "@/lib/staff/actor";
  * The two rule-setting functions already existed (lib/stores/manage.ts for
  * percent-of-spend, lib/packs/earn-rule.ts for flat-per-scan). What did not
  * exist was any way to make a campaign at all, to activate one, or to set
- * the three ceilings — which meant the only thing standing between a brand
+ * the three ceilings - which meant the only thing standing between a brand
  * and unbounded liability could be configured by a seed script and nothing
  * else. That is what this file is for.
  */
@@ -21,7 +21,7 @@ import type { Actor } from "@/lib/staff/actor";
 /**
  * Deliberately tighter than MANAGE_EARN_RULE_ROLES, which lets MARKETING set
  * what a scan is worth. Everything here decides what a promotion can *cost*
- * — its ceilings, and whether it is live — and that is a finance decision
+ * - its ceilings, and whether it is live - and that is a finance decision
  * rather than a marketing one.
  *
  * Worth noting the inconsistency rather than quietly papering over it: a
@@ -81,8 +81,8 @@ export async function createCampaignForSession(session: SessionLike, formData: F
  *
  * setSpendRuleForSession refuses when another campaign is *already active*
  * with a spend rule, which blocks the obvious sequence. It does not block
- * this one: configure two campaigns while both are paused — neither
- * conflicts, because neither is live — then switch them on one after the
+ * this one: configure two campaigns while both are paused - neither
+ * conflicts, because neither is live - then switch them on one after the
  * other. Until this check existed, the second went live beside the first,
  * and a scanned slip became worth whichever row the database returned
  * first: the same purchase paying differently depending on nothing at all.
@@ -123,7 +123,7 @@ export async function setCampaignStatusForSession(
   await scoped.campaign.update({ where: { id: campaign.id }, data: { status } });
 
   // The status change is the event a brand asks about when their liability
-  // moves, so the previous status is recorded beside the new one — "who
+  // moves, so the previous status is recorded beside the new one - "who
   // switched this on" is only half an answer without "from what".
   await record(prisma, session.user, {
     action: `campaign.${status.toLowerCase()}`,
@@ -180,7 +180,7 @@ export async function setCampaignLimitsForSession(session: SessionLike, formData
   const limits = {
     // null rather than undefined, so clearing a field actually clears it.
     // undefined would leave the old ceiling in place while the form that
-    // submitted it showed an empty box — the worst of both.
+    // submitted it showed an empty box - the worst of both.
     maxPerPersonPerDay: parsed.maxPerPersonPerDay ?? null,
     maxScansPerPersonPerDay: parsed.maxScansPerPersonPerDay ?? null,
     maxTotalAmount: parsed.maxTotalAmount ?? null,

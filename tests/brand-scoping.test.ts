@@ -111,8 +111,8 @@ describe("what a brand's own site shows and refuses", () => {
 
   it("refuses the same slip on another brand's site, and awards nothing", async () => {
     // The hand-crafted URL: campari.qumo.co.za/r?s=<a Chicken Licken store>.
-    // Nothing about it could have misdirected value — the award has always
-    // been driven by the store's own brandId — but rendering a Chicken
+    // Nothing about it could have misdirected value - the award has always
+    // been driven by the store's own brandId - but rendering a Chicken
     // Licken award under a Campari header is indistinguishable, to a
     // shopper, from the two brands sharing a database.
     const before = await centsAt(licken);
@@ -143,7 +143,7 @@ describe("what a brand's own site shows and refuses", () => {
     // code is single-use, so burning one on a refusal costs the shopper a
     // pack they have already bought.
     // Its own campaign with a fixed-per-scan rule. A pack code carries no
-    // basket, so a share-of-spend promotion can never award on one — the
+    // basket, so a share-of-spend promotion can never award on one - the
     // engine refuses it, and this fixture used to build exactly that
     // impossible pairing.
     const packCampaign = await prisma.campaign.create({
@@ -179,7 +179,7 @@ describe("what a brand's own site shows and refuses", () => {
   it("still works for a carrier that asserts no brand", async () => {
     // SMS arrives with a code and a phone number and no host at all. There
     // is nothing to cross-check, and the absence of a claim is not a
-    // mismatched one — Phase G depends on this staying true.
+    // mismatched one - Phase G depends on this staying true.
     const result = await redeemReceipt(lickenSlip(4_000), shopper.id, new Date(), null);
     expect(result.ok).toBe(true);
   });

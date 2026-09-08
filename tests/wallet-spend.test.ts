@@ -95,7 +95,7 @@ describe("lib/wallet/spend", () => {
     const debit = await prisma.pointsTransaction.findFirst({
       where: { brandMembershipId: membership.id, reason: "WALLET_SPENT" },
     });
-    // Negative, and a ledger row like any other — not a decrement of a
+    // Negative, and a ledger row like any other - not a decrement of a
     // stored total.
     expect(debit?.amount).toBe(-2_500);
     expect(debit?.unit).toBe("CENTS");

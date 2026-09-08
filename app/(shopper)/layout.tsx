@@ -6,13 +6,13 @@ import "./shopper.css";
 
 /**
  * The shopper shell. Mobile-first because it is reached almost exclusively
- * by scanning something with a phone — the narrow column is the design, not
+ * by scanning something with a phone - the narrow column is the design, not
  * a small-screen concession.
  *
  * Everything below lives under `.sc`, which is where the shopper surface's
  * own tokens are defined (shopper.css). Brand theming is an override of four
- * of those tokens and nothing more — the button, its ink, and the two type
- * faces — applied here as inline custom properties so they cascade to every
+ * of those tokens and nothing more - the button, its ink, and the two type
+ * faces - applied here as inline custom properties so they cascade to every
  * child without a stylesheet per brand.
  *
  * A request whose host names no brand never reaches a page under here: the

@@ -63,7 +63,7 @@ export default async function ConsolePromotionsPage() {
           </p>
           <p className="cn-body">
             Put this behind the QR code on posters, table-talkers and shelf tags. It explains whatever is live and
-            takes a sign-up — it never awards anything, which is what makes it safe to print somewhere anybody can
+            takes a sign-up - it never awards anything, which is what makes it safe to print somewhere anybody can
             scan it.
           </p>
           <p className="cn-body">

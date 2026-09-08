@@ -21,7 +21,7 @@ function unitAmount(amount: number, unit: string): string {
  * One promotion: what it awards, what it may cost, and whether it is live.
  *
  * The three panels are in that order deliberately. A brand decides the offer
- * first, then bounds it, then switches it on — and the engine enforces the
+ * first, then bounds it, then switches it on - and the engine enforces the
  * same sequence, refusing to activate a promotion with no rule and refusing
  * a ceiling on one that awards nothing yet.
  */
@@ -31,7 +31,7 @@ function unitAmount(amount: number, unit: string): string {
  * Its own component so it can be remounted by key when the campaign
  * changes, which resets the action state. Without that, "set what this
  * promotion awards before switching it on" stayed on screen after the rule
- * had been set — an error describing a state that no longer existed.
+ * had been set - an error describing a state that no longer existed.
  */
 function StatusButton({ campaign, live }: { campaign: ConsoleCampaign; live: boolean }) {
   const router = useRouter();
@@ -130,7 +130,7 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
 
             <div className="cn-metric">
               <div className="cn-metric-v">
-                {rule.maxPerPersonPerDay ? unitAmount(rule.maxPerPersonPerDay, unit) : "—"}
+                {rule.maxPerPersonPerDay ? unitAmount(rule.maxPerPersonPerDay, unit) : "-"}
               </div>
               <div className="cn-metric-k">Per person, per day</div>
               <div className="cn-metric-note">
@@ -143,12 +143,12 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
         {/* Stated on the promotion itself, not only on the stores page,
             because this is where somebody is deciding what to give away.
             The ceilings are what stands between a store that can't sign its
-            slips and an unbounded payout — that is what the forgery suite
+            slips and an unbounded payout - that is what the forgery suite
             established, and a brand should read it at the moment it matters. */}
         {rule && !rule.maxTotalAmount && (
           <p className="cn-body cn-warn-note">
             No total budget. If any of your stores can&apos;t sign their slips, nothing bounds what this promotion can
-            issue — a shopper who has seen one of their own receipts can invent more.
+            issue - a shopper who has seen one of their own receipts can invent more.
           </p>
         )}
 
@@ -166,7 +166,7 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
           <div className="cn-edit">
             {/* Keyed on the rule that came back from the server.
                 defaultValue only applies at mount, so after saving a stamp
-                rule these selects still read "share of spend" and "rands" —
+                rule these selects still read "share of spend" and "rands" -
                 the card above said one thing and the form beneath said
                 another, and pressing save again would have quietly replaced
                 the stamp card with 5% cash. Remounting re-applies them. */}
@@ -186,8 +186,8 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
                   className="cn-input"
                   defaultValue={rule?.type ?? "PERCENT_OF_SPEND"}
                 >
-                  <option value="PERCENT_OF_SPEND">A share of what they spend — needs a till slip</option>
-                  <option value="FLAT_PER_SCAN">A fixed amount per scan — works on packs and stickers</option>
+                  <option value="PERCENT_OF_SPEND">A share of what they spend - needs a till slip</option>
+                  <option value="FLAT_PER_SCAN">A fixed amount per scan - works on packs and stickers</option>
                 </select>
               </div>
 
@@ -228,7 +228,7 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
                   min={1}
                   defaultValue={rule?.amount || 1}
                 />
-                <p className="cn-label">In the unit above — cents, points or stamps. Only used for a fixed promotion.</p>
+                <p className="cn-label">In the unit above - cents, points or stamps. Only used for a fixed promotion.</p>
               </div>
 
               <div className="cn-field">
@@ -249,7 +249,7 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
                 </p>
               )}
               <button type="submit" className="cn-btn" disabled={rulePending} style={{ alignSelf: "flex-start" }}>
-                {rulePending ? "Saving…" : ruleState.ok ? "Saved — save again" : "Save what it awards"}
+                {rulePending ? "Saving…" : ruleState.ok ? "Saved - save again" : "Save what it awards"}
               </button>
             </form>
 
@@ -273,7 +273,7 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
                   placeholder="e.g. 500000 for R5,000"
                 />
                 <p className="cn-label">
-                  In the promotion&apos;s own unit. Once reached, it stops awarding — it does not stop existing.
+                  In the promotion&apos;s own unit. Once reached, it stops awarding - it does not stop existing.
                 </p>
               </div>
 
@@ -326,7 +326,7 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
                 A box left empty means no ceiling at all. Saving with them empty removes any you had.
               </p>
               <button type="submit" className="cn-btn" disabled={limitPending} style={{ alignSelf: "flex-start" }}>
-                {limitPending ? "Saving…" : limitState.ok ? "Saved — save again" : "Save the ceilings"}
+                {limitPending ? "Saving…" : limitState.ok ? "Saved - save again" : "Save the ceilings"}
               </button>
             </form>
           </div>

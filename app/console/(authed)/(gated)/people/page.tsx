@@ -30,7 +30,7 @@ export default async function ConsolePeoplePage() {
               <ul style={{ margin: 0, paddingLeft: 18 }}>
                 {team.map((member) => (
                   <li key={member.id} className="cn-body">
-                    {member.name} — {member.role.toLowerCase()}
+                    {member.name} - {member.role.toLowerCase()}
                     {!member.isActive && " (no access)"}
                   </li>
                 ))}

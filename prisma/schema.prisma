@@ -1,23 +1,23 @@
-// Qumo — purchase loyalty, from the scan to the ledger row.
+// Qumo - purchase loyalty, from the scan to the ledger row.
 //
 // This schema was carved out of CIOS's rather than written fresh, and the
 // models kept their names deliberately. The extraction is a move with no
 // behaviour change, so that if something breaks it is obvious which commit
-// did it; renaming Campaign to Promotion — which it wants, because in CIOS
+// did it; renaming Campaign to Promotion - which it wants, because in CIOS
 // a campaign meant a product-feedback campaign and here it means a
-// promotion — is a second pass where each rename stands on its own.
+// promotion - is a second pass where each rename stands on its own.
 //
 // What did not come: everything WhatsApp and everything product feedback.
 // No Product, no CheckIn, no CampaignProduct, no journey templates, no
 // notifications. Person keeps a first name and drops gender, age band and
-// suburb — those were collected by a conversational profile flow that has
+// suburb - those were collected by a conversational profile flow that has
 // no counterpart on the web, and carrying columns nothing writes to would
 // be inventing a promise about data we do not hold.
 //
 // Design note kept from CIOS, because it still decides the shape here:
 // identity and brand relationship are split. Person is one row per real
 // human, brand-agnostic, holding the PII. BrandMembership is the join row
-// and the tenant boundary — a brand only ever reaches a Person through a
+// and the tenant boundary - a brand only ever reaches a Person through a
 // membership it is authorised to see, and never lists that person's other
 // memberships. On a brand-scoped site that is not just a privacy control,
 // it is the product: a shopper on chickenlicken.qumo.co.za sees Chicken
@@ -47,7 +47,7 @@ enum SubscriptionStatus {
 /// A brand's standing with Qumo, and what it means for their shoppers.
 ///
 /// This models the *lifecycle*, not the billing. No payment provider is
-/// integrated, so nothing here takes money — it records what state a brand
+/// integrated, so nothing here takes money - it records what state a brand
 /// is in and the engine enforces the consequences. When billing lands it
 /// drives these transitions rather than replacing them.
 ///
@@ -68,7 +68,7 @@ model Subscription {
 
   cancelledAt DateTime?
 
-  /// When redemption stops being honoured — stored, not computed.
+  /// When redemption stops being honoured - stored, not computed.
   ///
   /// Deliberately a stored date rather than `cancelledAt + 60 days`
   /// evaluated at read time. If the policy ever becomes 30 days, everybody
@@ -111,7 +111,7 @@ model Brand {
   tagline String?
 
   /// Absolute https URL. Validated where it is rendered and never trusted
-  /// straight out of the database — see lib/brand/theme.ts.
+  /// straight out of the database - see lib/brand/theme.ts.
   logoUrl String?
 
   /// The single colour that carries the identity, and the ink that stays
@@ -125,7 +125,7 @@ model Brand {
   accentInkColor String?
 
   /// Which faces the brand chose, as ids from the registry in
-  /// lib/brand/fonts.ts — never a font name and never a URL. The value ends
+  /// lib/brand/fonts.ts - never a font name and never a URL. The value ends
   /// up in a style attribute, so what is stored here is a key we look up
   /// rather than anything that reaches CSS directly; an id we no longer
   /// recognise resolves to Qumo's default instead of to a broken page.
@@ -197,7 +197,7 @@ model User {
 
   /// The TOTP shared secret, encrypted at rest with the same key as phone
   /// numbers (lib/security/crypto.ts). Encrypted rather than hashed because
-  /// verifying a code requires the secret itself — this is the one
+  /// verifying a code requires the secret itself - this is the one
   /// authentication value in the system that cannot be a one-way hash, and
   /// it is why a database dump alone still does not produce a working second
   /// factor: the key lives in the environment.
@@ -233,8 +233,8 @@ model User {
  * A single-use way back in when the phone with the authenticator on it is
  * lost, broken or replaced.
  *
- * Every other part of this system refuses to let a brand lock itself out —
- * the last owner cannot be demoted or deactivated — and a second factor
+ * Every other part of this system refuses to let a brand lock itself out -
+ * the last owner cannot be demoted or deactivated - and a second factor
  * without recovery codes reintroduces exactly that failure, only worse,
  * because the way back in would be us editing the database.
  *
@@ -262,7 +262,7 @@ model StaffRecoveryCode {
 
 // A one-time passcode for shopper login. Like PasswordResetToken, this is
 // deliberately not tenant-scoped: it is looked up by the phone number
-// alone, before any brand context exists — a shopper's Qumo account is
+// alone, before any brand context exists - a shopper's Qumo account is
 // platform-wide, and which brands they have a membership with is a
 // consequence of logging in, never a precondition of it.
 //
@@ -284,7 +284,7 @@ model PhoneOtp {
   // is stored.
   attempts   Int       @default(0)
   // Set on successful verification, and also on every older outstanding
-  // code when a new one is requested — a superseded code must stop working
+  // code when a new one is requested - a superseded code must stop working
   // the moment its replacement is sent.
   consumedAt DateTime?
   createdAt  DateTime  @default(now())
@@ -301,8 +301,8 @@ enum ShopperSessionRevokeReason {
 // A signed-in shopper, one row per device.
 //
 // Replaces a stateless signed cookie. That cookie was honest about its
-// trade-off — no server-side revocation, so a stolen one stayed valid for
-// its full 30 days — and explicitly said it should be revisited before a
+// trade-off - no server-side revocation, so a stolen one stayed valid for
+// its full 30 days - and explicitly said it should be revisited before a
 // session could spend a wallet balance. It then became able to, so this is
 // that revisit: a row that can be revoked, checked on every request.
 //
@@ -329,7 +329,7 @@ enum StaffSessionRevokeReason {
 /// Its own table rather than a nullable column on ShopperSession, and that
 /// is the whole point. One sessions table serving both principals means one
 /// row shape where `personId` and `userId` are both nullable, and a single
-/// confused lookup — or a single missing `AND userId IS NOT NULL` — turns a
+/// confused lookup - or a single missing `AND userId IS NOT NULL` - turns a
 /// shopper into a brand administrator. Two tables make that mistake
 /// impossible to write rather than merely unlikely, and the cost is one
 /// model.
@@ -349,7 +349,7 @@ model StaffSession {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  /// Revocation is a stamp, not a delete — same reasoning as ShopperSession,
+  /// Revocation is a stamp, not a delete - same reasoning as ShopperSession,
   /// with two extra triggers that only apply to staff: changing a password
   /// and deactivating an account must both end every session that account
   /// holds, or "I've removed their access" is not true until they log out.
@@ -389,7 +389,7 @@ model ShopperSession {
 // phoneHash is a deterministic HMAC, so a sign-in or an inbound SMS resolves
 // to a row by index without decrypting anything. phoneEncrypted is the
 // reversible ciphertext, read only where the real number is genuinely needed
-// — sending a passcode, and answering a data export. The plaintext number
+// - sending a passcode, and answering a data export. The plaintext number
 // and a key that reverses it never sit beside each other outside
 // lib/security/crypto.ts.
 model Person {
@@ -420,7 +420,7 @@ model BrandMembership {
   // promises and nothing implemented.
   //
   // Set on the membership rather than the Person, because opting out of
-  // one brand says nothing about the others — that is the whole point of a
+  // one brand says nothing about the others - that is the whole point of a
   // brand-scoped programme. While set, the accrual path refuses; the
   // ledger is left exactly as it was, so a shopper who opts back in finds
   // their balance where they left it and an audit can still explain every
@@ -443,14 +443,14 @@ enum PointsReason {
   // was actually spent and the award scales with it.
   PURCHASE_ACCRUAL
   // A closed-loop wallet balance spent at the till. Negative amount, and
-  // written only when a cashier confirms — see lib/wallet/spend.ts.
+  // written only when a cashier confirms - see lib/wallet/spend.ts.
   WALLET_SPENT
   // A code under a pack label, scanned by a shopper. The Campari path:
   // the brand owns no till, so the award is a flat amount configured on
   // the campaign's EarnRule rather than a share of any purchase.
   PACK_SCAN_AWARDED
   // Deducting the threshold when a coupon is issued is a transaction, not a
-  // special case — the "balance = sum of transactions" invariant holds
+  // special case - the "balance = sum of transactions" invariant holds
   // without modification. Negative amount.
   COUPON_UNLOCKED
 }
@@ -458,13 +458,13 @@ enum PointsReason {
 // What one ledger row counts. The ledger deliberately carries three
 // different things rather than three tables, because they are the same
 // mechanism: an immutable row per event, balance derived by summing.
-//   POINTS — the engagement currency Phase 1-3 already award for check-ins.
-//   CENTS  — a closed-loop wallet balance, in whole cents. Integer, never a
+//   POINTS - the engagement currency Phase 1-3 already award for check-ins.
+//   CENTS  - a closed-loop wallet balance, in whole cents. Integer, never a
 //            float or Decimal: a wallet balance is a sum of ledger rows, and
 //            that sum has to be exact. R4.25 is 425.
-//   STAMPS — a punch-card count ("buy 10, get the 10th free"). One row per
+//   STAMPS - a punch-card count ("buy 10, get the 10th free"). One row per
 //            stamp; how many a member has is a sum, never a column.
-// A balance is only ever meaningful for one (membership, unit) pair —
+// A balance is only ever meaningful for one (membership, unit) pair -
 // summing across units would be adding cents to stamps.
 enum LedgerUnit {
   POINTS
@@ -502,8 +502,8 @@ model PointsTransaction {
   //
   // A link rather than a copied storeId, because a copy can disagree with
   // the scan it was copied from and this cannot. It also carries the
-  // basket amount along with it, which answers the second question — why
-  // that much — without a second column.
+  // basket amount along with it, which answers the second question - why
+  // that much - without a second column.
   //
   // Not unique: one scan writes the award and, when a card completes, the
   // deduction too. Both belong to it.
@@ -553,7 +553,7 @@ model Campaign {
 }
 
 // Purely changes the copy shown to the member/staff about what's being
-// earned — every value here issues a coupon through the exact same
+// earned - every value here issues a coupon through the exact same
 // mechanism (a unique per-member single-use code). Only meaningful when a
 // coupon is actually configured (couponThresholdPoints set), same as every
 // other "coupon fields null together" rule on this model.
@@ -572,12 +572,12 @@ enum RewardType {
 
 // One-to-one with Campaign. couponThresholdPoints/couponName/maxCoupons are
 // null together for a points-only reward (no coupon offered). maxCoupons is
-// a hard cap enforced by the conversation engine before every issuance —
+// a hard cap enforced by the conversation engine before every issuance -
 // the budget guardrail, not just a UI validation.
 // What a completed stamp card hands over.
 //
 // Trimmed on the way across. Three gates that asked about check-in
-// behaviour — a minimum number of check-ins, a photo, a packaging concern —
+// behaviour - a minimum number of check-ins, a photo, a packaging concern -
 // went with the conversation that could answer them. pointsPerCheckIn and
 // couponThresholdPoints went too: EarnRule.amount and EarnRule.completesAt
 // say the same things for a scan, and two places to configure "how much,
@@ -593,28 +593,28 @@ model Reward {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
-  // What the member is told they've earned — distinct from couponName,
+  // What the member is told they've earned - distinct from couponName,
   // which is the internal/staff-facing label on the coupon itself.
   rewardName        String     @default("")
   rewardDescription String?
   rewardType        RewardType @default(DIGITAL_COUPON)
-  // Rand value of one reward instance — drives the budget math below and
+  // Rand value of one reward instance - drives the budget math below and
   // the member-facing confirmation message.
   rewardValueRand   Decimal?   @db.Decimal(10, 2)
 
   couponDescription String?
-  // e.g. "FC" — generateCouponCode() prepends it when set. Real formatting
+  // e.g. "FC" - generateCouponCode() prepends it when set. Real formatting
   // control, not a decorative selector.
   codePrefix        String?
   // Copied onto Coupon.expiresAt at issuance time (lib/ledger/accrue.ts).
   couponExpiryDate  DateTime?
-  // Free-form retailer tags, shown in the coupon terms text — where a
+  // Free-form retailer tags, shown in the coupon terms text - where a
   // shopper can actually redeem this.
   retailers         String[]  @default([])
 
   // Total rand cap for this reward. rewardValueRand * maxCoupons (the
   // committed liability if every coupon is redeemed) must not exceed this
-  // — validated at wizard Budget step and again at Publish. maxCoupons
+  // - validated at wizard Budget step and again at Publish. maxCoupons
   // already caps issuance count at runtime, so no separate runtime check
   // is needed once creation-time validation passes.
   budgetRand Decimal? @db.Decimal(10, 2)
@@ -644,13 +644,13 @@ model Coupon {
   brandMembership   BrandMembership @relation(fields: [brandMembershipId], references: [id], onDelete: Cascade)
   code              String          @unique
   // REDEEMED/CANCELLED are now reachable via manual staff action
-  // (lib/coupons/manage.ts) — real till-side POS integration is still the
+  // (lib/coupons/manage.ts) - real till-side POS integration is still the
   // mockup's own "Future Integration" placeholder, not built here.
   status            CouponStatus    @default(ISSUED)
   issuedAt          DateTime        @default(now())
   expiresAt         DateTime?
 
-  // Who moved this coupon out of ISSUED, and when — one pair covers both
+  // Who moved this coupon out of ISSUED, and when - one pair covers both
   // REDEEMED and CANCELLED since status is already exclusive, no need for
   // two separate audit pairs.
   statusChangedAt       DateTime?
@@ -671,7 +671,7 @@ enum CouponFraudReason {
   NOT_FOUND
 }
 
-// One row per rejected redemption/cancel attempt — same "don't cache what
+// One row per rejected redemption/cancel attempt - same "don't cache what
 // you can count" philosophy as VelocityBlock. couponId is nullable and
 // SetNull on delete: a NOT_FOUND attempt never resolves to a real Coupon
 // row, and a resolved one shouldn't disappear from the audit trail if the
@@ -684,7 +684,7 @@ model CouponFraudEvent {
   couponId          String?
   coupon            Coupon?           @relation(fields: [couponId], references: [id], onDelete: SetNull)
   reason            CouponFraudReason
-  // SetNull, not Cascade — same reasoning as Coupon.statusChangedByUserId:
+  // SetNull, not Cascade - same reasoning as Coupon.statusChangedByUserId:
   // a deactivated/removed staff account shouldn't blank out this audit
   // trail.
   attemptedByUserId String?
@@ -698,7 +698,7 @@ model CouponFraudEvent {
 enum PackCodeStatus {
   UNSCANNED
   SCANNED
-  // Printed but must never award — a misprinted run, a batch that went
+  // Printed but must never award - a misprinted run, a batch that went
   // missing in transit, codes recalled after a campaign was pulled. A
   // separate state from SCANNED because "someone claimed this" and "we
   // withdrew this" are different facts, and a fraud investigation needs to
@@ -717,7 +717,7 @@ model PackBatch {
   campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   label           String
   quantity        Int
-  // SetNull, not Cascade — same reasoning as Coupon.statusChangedByUserId:
+  // SetNull, not Cascade - same reasoning as Coupon.statusChangedByUserId:
   // a staff member leaving must not erase who ordered a print run.
   createdByUserId String?
   createdByUser   User?    @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
@@ -751,7 +751,7 @@ model PackCode {
   ///
   /// The App Router fetches a page twice on one navigation, so the second
   /// render is what a first-time scanner sees. Without this, every shopper
-  /// who scanned a sticker was told "this code has already been used" —
+  /// who scanned a sticker was told "this code has already been used" -
   /// true of the row, and a lie about what had just happened to them. The
   /// same fix PurchaseScan carries, for the same reason.
   awardedAmount         Int?
@@ -774,7 +774,7 @@ model PackCode {
 
 enum EarnRuleType {
   // A fixed award per scan, whatever the shopper spent. The only rule a
-  // brand without a till can run — and, usefully, also the right rule for
+  // brand without a till can run - and, usefully, also the right rule for
   // a pre-printed sticker on a box, where the value is decided when the
   // sticker is printed rather than when the basket is rung up.
   FLAT_PER_SCAN
@@ -808,7 +808,7 @@ model EarnRule {
   minSpendCents Int?
   // Stamp-card size: how much of `unit` completes a card and issues the
   // campaign's coupon ("buy 10, get the 10th free" is completesAt = 10).
-  // Null means the campaign only accrues — the balance grows and the
+  // Null means the campaign only accrues - the balance grows and the
   // shopper spends it some other way, which is what a wallet campaign
   // does. Completion writes a negative ledger entry for exactly this
   // amount rather than resetting a counter, so "balance is the sum of the
@@ -824,7 +824,7 @@ model EarnRule {
   // The reason they exist at all: a store whose point of sale cannot sign
   // its slips has nothing binding a payload to the till that printed it.
   // The unique constraint on (storeId, externalTxnId) stops a slip being
-  // *reused*, not invented — a shopper who has seen one of their own
+  // *reused*, not invented - a shopper who has seen one of their own
   // receipts knows the store code, and every other field is theirs to
   // choose. See tests/receipt-forgery.test.ts, which is the attack rather
   // than a hypothetical. Signed stores get these too: a compromised till
@@ -856,7 +856,7 @@ enum WalletSpendStatus {
   // Created by the shopper, waiting for a cashier. Nothing has been
   // debited yet.
   PENDING
-  // A cashier confirmed it. This — and only this — writes the ledger row.
+  // A cashier confirmed it. This - and only this - writes the ledger row.
   CONFIRMED
   // Lapsed unconfirmed. Nothing to release, because nothing was held.
   EXPIRED
@@ -868,8 +868,8 @@ enum WalletSpendStatus {
 // cashier's confirmation of it, as two separate steps.
 //
 // The split is the whole point. Debiting when the shopper generates the
-// code would mean that a code the cashier never honours — the queue moved
-// on, the app was closed, the phone died — silently destroys real money
+// code would mean that a code the cashier never honours - the queue moved
+// on, the app was closed, the phone died - silently destroys real money
 // belonging to a real person, with nothing to point at afterwards. So the
 // PENDING row is a promise, not a hold, and the ledger only moves when
 // someone at the till confirms the shopper actually got their discount.
@@ -877,7 +877,7 @@ enum WalletSpendStatus {
 // The consequence to watch: because nothing is held, a balance is only
 // checked against the ledger at confirmation time. That check, the status
 // transition and the ledger write all happen in one Serializable
-// transaction (lib/wallet/spend.ts) — otherwise two tills confirming at
+// transaction (lib/wallet/spend.ts) - otherwise two tills confirming at
 // once could each see enough balance and overdraw between them.
 model WalletSpend {
   id                String            @id @default(cuid())
@@ -896,7 +896,7 @@ model WalletSpend {
   expiresAt         DateTime
 
   confirmedAt       DateTime?
-  // SetNull, not Cascade — a staff member leaving must not erase who
+  // SetNull, not Cascade - a staff member leaving must not erase who
   // authorised a discount, same reasoning as Coupon.statusChangedByUserId.
   confirmedByUserId String?
   confirmedByUser   User?     @relation(fields: [confirmedByUserId], references: [id], onDelete: SetNull)
@@ -905,13 +905,13 @@ model WalletSpend {
 
   @@index([brandId])
   @@index([brandMembershipId])
-  // "Is there a live request for this member" — the query behind both the
+  // "Is there a live request for this member" - the query behind both the
   // shopper's screen and the one-at-a-time rule.
   @@index([brandMembershipId, status])
 }
 
 // One outlet. Exists because a till slip has to be attributed to somewhere
-// — for analytics, and because the signing secret below is per store, so a
+// - for analytics, and because the signing secret below is per store, so a
 // leak at one franchise doesn't forge receipts for the whole estate.
 model Store {
   id      String @id @default(cuid())
@@ -962,7 +962,7 @@ model PurchaseScan {
   campaign          Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   // The till's own transaction identifier, exactly as printed. Opaque to
-  // us — its only job is to be different for every sale at a store.
+  // us - its only job is to be different for every sale at a store.
   externalTxnId String
   // What the basket came to, in cents. Integer for the same reason the
   // ledger is: this number is multiplied and summed, and a float would
@@ -973,7 +973,7 @@ model PurchaseScan {
   purchasedAt   DateTime
   scannedAt     DateTime @default(now())
   // Whether the payload carried a valid signature, recorded per scan
-  // rather than inferred from the store's current setting — a store that
+  // rather than inferred from the store's current setting - a store that
   // is signed today may have been unsigned when this slip was scanned, and
   // a fraud investigation needs to know which.
   wasSigned     Boolean
@@ -1009,7 +1009,7 @@ model PurchaseScan {
  * instances is twelve, and nobody could tell you the number in advance.
  *
  * Postgres rather than Redis on purpose. The counters are written on login
- * attempts and scans — hundreds a day at pilot scale, not millions — and a
+ * attempts and scans - hundreds a day at pilot scale, not millions - and a
  * database we already run beats a second vendor, a second bill and a second
  * set of credentials to leak. The interface is one function, so moving to
  * Redis later is one file and no call-site changes.
@@ -1040,14 +1040,14 @@ model RateLimit {
  * A log that the people it watches can edit is not a log. Nothing in the
  * app updates or deletes a row here, and lib/db/tenant.ts refuses the
  * attempt outright for this model rather than trusting that nobody writes
- * the call — the same reasoning that makes the tenant guard deny unknown
+ * the call - the same reasoning that makes the tenant guard deny unknown
  * operations by default.
  *
  * ── Why the actor's name is copied in ────────────────────────────────────
  *
  * `actorId` points at the User, but `actorName` and `actorEmail` are
  * written at the time. A log is read months later, by which point the
- * person may have been deactivated, renamed, or had their email changed —
+ * person may have been deactivated, renamed, or had their email changed -
  * and "who did this" has to answer with who they were when they did it,
  * not who the row points at today. The relation stays for joining; the
  * copied fields are what the log actually means.
@@ -1057,7 +1057,7 @@ model AuditEvent {
   brandId String
   brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
 
-  // Nullable because not every recorded event has a person behind it — a
+  // Nullable because not every recorded event has a person behind it - a
   // scheduled programme closure is the system acting, and pretending some
   // user did it would be a lie in the one table that must not contain any.
   //
@@ -1071,7 +1071,7 @@ model AuditEvent {
   //  - the write must never fail for a reason unrelated to the event. An
   //    audit entry is part of the action (see lib/audit/record.ts), so a
   //    referential check standing between a privileged change and its record
-  //    is a way for the change to be refused for no good reason — or worse,
+  //    is a way for the change to be refused for no good reason - or worse,
   //    to happen unrecorded.
   //
   // The copied name and email are what the log means; the id is for
@@ -1082,7 +1082,7 @@ model AuditEvent {
 
   // A dotted verb: "store.secret_rotated", "campaign.activated". A string
   // rather than an enum so recording a new kind of event is one line at the
-  // call site instead of a migration — the cost of a typo is a mislabelled
+  // call site instead of a migration - the cost of a typo is a mislabelled
   // row, and the cost of a migration per event type is events that never
   // get recorded.
   action String
@@ -1093,7 +1093,7 @@ model AuditEvent {
   targetLabel String?
 
   // Small, already-redacted context: which status, which role, what
-  // changed. Never a secret, never a phone number — see lib/audit/record.ts.
+  // changed. Never a secret, never a phone number - see lib/audit/record.ts.
   detail Json?
 
   createdAt DateTime @default(now())

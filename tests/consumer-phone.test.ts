@@ -37,7 +37,7 @@ describe("lib/consumer/phone", () => {
 
   it("does not treat a leading-plus number as a local one", () => {
     // "+0821234567" is not a valid E.164 value and must not be silently
-    // read as the local 0821234567 — that would accept a typo as if it
+    // read as the local 0821234567 - that would accept a typo as if it
     // were deliberate.
     expect(() => normaliseSaPhone("+0821234567")).toThrow(InvalidPhoneNumberError);
   });

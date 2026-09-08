@@ -25,7 +25,7 @@ describe("exporting a print run", () => {
   let batchId: string;
 
   // A real row: PackBatch.createdByUserId is a foreign key, so a placeholder
-  // id fails the insert rather than being ignored — which is the schema
+  // id fails the insert rather than being ignored - which is the schema
   // doing its job, and worth the two extra lines here.
   const session = (brandId: string) => ({ user: { id: staff.id, brandId, role: "MARKETING", name: "Test Staff" } });
 
@@ -122,7 +122,7 @@ describe("exporting a print run", () => {
 
   it("won't print codes for a promotion that awards nothing", async () => {
     // The refusal that saves a brand printing 50,000 stickers which
-    // disappoint everyone who scans them — and the codes are single-use, so
+    // disappoint everyone who scans them - and the codes are single-use, so
     // that disappointment is permanent.
     const bare = await prisma.campaign.create({
       data: { brandId: brand.id, name: "Nothing yet", status: "DRAFT" },
@@ -146,7 +146,7 @@ describe("exporting a print run", () => {
  * setSpendRuleForSession zeroes `amount` for such a rule, because a share of
  * a basket is meaningless without a basket. A pack code carries no basket,
  * so those codes scanned successfully, awarded 0, and were consumed doing
- * it — the shopper was told they had earned R0.00 and the sticker was gone.
+ * it - the shopper was told they had earned R0.00 and the sticker was gone.
  * Confirmed by running it before either guard existed.
  */
 describe("pack codes and share-of-spend promotions don't mix", () => {
@@ -248,7 +248,7 @@ describe("pack codes and share-of-spend promotions don't mix", () => {
     expect(result).toEqual({ ok: false, reason: "NOT_A_SCAN_PROMOTION" });
 
     // Not burned. Switching the rule back has to make the sticker work
-    // again — a shopper should not lose a code to a brand's configuration
+    // again - a shopper should not lose a code to a brand's configuration
     // change.
     expect((await prisma.packCode.findUniqueOrThrow({ where: { id: code.id } })).status).toBe("UNSCANNED");
 

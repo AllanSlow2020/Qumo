@@ -113,7 +113,7 @@ describe("who can get into a brand's console", () => {
     await setUserRoleForSession(as(owner), owner.id, "MARKETING");
     expect((await prisma.user.findUniqueOrThrow({ where: { id: owner.id } })).role).toBe("MARKETING");
 
-    // Put it back — later tests need this session to be an owner.
+    // Put it back - later tests need this session to be an owner.
     const secondOwner = await prisma.user.findUniqueOrThrow({ where: { id: admin.id } });
     await setUserRoleForSession(as(secondOwner), owner.id, "OWNER");
     await setUserRoleForSession(as(secondOwner), admin.id, "ADMIN");
@@ -123,7 +123,7 @@ describe("who can get into a brand's console", () => {
   it("ends every session when access is switched off", async () => {
     // "I've removed their access" has to be true when it is said. Session
     // resolution already refuses a deactivated user, so this is belt and
-    // braces — but it is what makes the audit trail say why.
+    // braces - but it is what makes the audit trail say why.
     const token = await createStaffSession(admin.id);
     expect(await resolveStaffToken(token)).not.toBeNull();
 
@@ -140,7 +140,7 @@ describe("who can get into a brand's console", () => {
   });
 
   it("won't let an owner switch off their own access", async () => {
-    // Not a lockout — there may be other owners — but there is no version of
+    // Not a lockout - there may be other owners - but there is no version of
     // this that is what somebody meant to do.
     await expect(setUserActiveForSession(as(owner), owner.id, false)).rejects.toThrow(UserError);
   });

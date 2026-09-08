@@ -5,8 +5,8 @@ import { programmeState, type SubscriptionRow } from "@/lib/subscriptions/state"
 /**
  * The one place a scan turns into ledger movement.
  *
- * There are two ways to earn now — a code under a pack label, and a share
- * of a scanned till slip — and the design note's whole premise is that they
+ * There are two ways to earn now - a code under a pack label, and a share
+ * of a scanned till slip - and the design note's whole premise is that they
  * are the same event past the point where the amount is decided. Keeping
  * two copies of "write the row, re-read the balance, complete the card,
  * deduct it" is how that premise quietly stops being true: one of them
@@ -15,13 +15,13 @@ import { programmeState, type SubscriptionRow } from "@/lib/subscriptions/state"
  *
  * Runs inside a caller-supplied transaction, always. It reads a balance and
  * writes based on it, so it must be inside the same Serializable
- * transaction that claimed whatever is being redeemed — otherwise two
+ * transaction that claimed whatever is being redeemed - otherwise two
  * concurrent scans could each see nine stamps and issue two coupons for
  * one card.
  */
 
 /**
- * Structural, so both scan paths can pass their own transaction client —
+ * Structural, so both scan paths can pass their own transaction client -
  * they reach here with clients extended in different ways and naming a
  * concrete Prisma type would force one of them into a cast.
  *
@@ -76,7 +76,7 @@ export type AccrualRefusal =
  * Thrown, not returned, and deliberately.
  *
  * Every caller reaches applyAccrual having already written something that
- * must not survive a refusal — the PurchaseScan row that the replay guard
+ * must not survive a refusal - the PurchaseScan row that the replay guard
  * keys on, or the claim on a single-use pack code. Throwing rolls the whole
  * transaction back, so a shopper who hits a ceiling keeps a slip they can
  * scan tomorrow instead of one silently burnt on an award they never got.
@@ -95,8 +95,8 @@ export class AccrualRefused extends Error {
 /**
  * A rolling twenty-four hours rather than a calendar day. A calendar
  * boundary hands anyone who notices it a doubled allowance at midnight, and
- * the shopper it inconveniences — someone who bought lunch at 13:00
- * yesterday and again today — is exactly the one it should not.
+ * the shopper it inconveniences - someone who bought lunch at 13:00
+ * yesterday and again today - is exactly the one it should not.
  */
 const WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -136,7 +136,7 @@ export type AccrualResult = {
  * Serializable. That is the whole design: read the totals and write the row
  * as one indivisible step, so two scans arriving together cannot each read a
  * total below the ceiling and both write. Checked outside the transaction
- * these are decoration — the race they exist to stop is precisely the one an
+ * these are decoration - the race they exist to stop is precisely the one an
  * attacker will drive.
  *
  * Only positive rows count toward a ceiling. Spending a wallet balance and
@@ -156,7 +156,7 @@ async function assertWithinCeilings(
   const { campaignId, brandMembershipId, rule, optedOutAt, now } = input;
 
   // Read from the row the caller upserted inside this same transaction, so
-  // it is as transactional as a query here would be — and one round trip
+  // it is as transactional as a query here would be - and one round trip
   // cheaper on every scan.
   if (optedOutAt) {
     throw new AccrualRefused("OPTED_OUT");
@@ -219,7 +219,7 @@ export async function applyAccrual(
     reason: PointsReason;
     /**
      * The scan that caused this, when there was one. Carried onto every row
-     * written here — the award and the card completion alike — so the
+     * written here - the award and the card completion alike - so the
      * shopper's activity list can name the store instead of saying
      * "Purchase", and so a query can get from a ledger row back to the
      * basket that produced it.
@@ -239,8 +239,8 @@ export async function applyAccrual(
   // A backstop, not the primary check. Both scan paths already refuse a
   // closed programme *before* they burn anything, which is what stops a
   // single-use code being destroyed on the way to a refusal. This is here so
-  // that a caller added later — an SMS adapter, an import, a manual
-  // adjustment — cannot accrue for a brand that has stopped paying just by
+  // that a caller added later - an SMS adapter, an import, a manual
+  // adjustment - cannot accrue for a brand that has stopped paying just by
   // forgetting to ask. Reading it inside the transaction also closes the
   // window where a brand cancels between the outer check and the write.
   const subscription = await tx.subscription.findUnique({
@@ -274,7 +274,7 @@ export async function applyAccrual(
   let coupon: AccrualResult["coupon"] = null;
 
   // A completed card: issue the campaign's coupon and deduct the card's
-  // worth. At most one card per scan — a rule whose award exceeds a whole
+  // worth. At most one card per scan - a rule whose award exceeds a whole
   // card leaves the surplus on the balance, carrying toward the next one,
   // rather than issuing a handful of coupons from a single scan.
   if (rule.completesAt != null && reward && balance >= rule.completesAt) {
@@ -291,7 +291,7 @@ export async function applyAccrual(
         expiresAt: reward.couponExpiryDate,
       });
 
-      // Deducted as a ledger row, never as a reset of a counter — so
+      // Deducted as a ledger row, never as a reset of a counter - so
       // "balance = sum of transactions" survives completion, and the
       // shopper's history explains where the stamps went.
       await tx.pointsTransaction.create({

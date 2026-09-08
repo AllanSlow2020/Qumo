@@ -25,7 +25,7 @@ import { redact } from "@/lib/security/logger";
  *
  * Every caller that already runs inside a transaction passes its client, so
  * the entry and the change commit together or not at all. Where there is no
- * transaction the entry is written immediately after the change — the
+ * transaction the entry is written immediately after the change - the
  * narrow window where a crash could separate them is named here rather than
  * papered over, and closing it means wrapping single-statement updates in
  * transactions for a failure mode nobody has met.
@@ -40,7 +40,7 @@ import { redact } from "@/lib/security/logger";
  * keep out of places like this.
  */
 
-/** A Prisma client or an open transaction — the entry goes wherever the change went. */
+/** A Prisma client or an open transaction - the entry goes wherever the change went. */
 type Writer = Pick<typeof prisma, "auditEvent"> | Prisma.TransactionClient;
 
 export type AuditActor = {
@@ -67,7 +67,7 @@ export type AuditEntry = {
  * Write one entry as a signed-in staff member.
  *
  * The actor's name and email are copied in rather than joined at read time
- * — see the note on the model. A log answers "who did this" with who they
+ * - see the note on the model. A log answers "who did this" with who they
  * were at the time, not who the row points at today.
  */
 export async function record(writer: Writer, actor: AuditActor, entry: AuditEntry): Promise<void> {
@@ -89,7 +89,7 @@ export async function record(writer: Writer, actor: AuditActor, entry: AuditEntr
 }
 
 /**
- * Write one entry for something the system did on its own — a scheduled
+ * Write one entry for something the system did on its own - a scheduled
  * programme closure, a sweep.
  *
  * Separate from `record` rather than an optional actor, because "no actor"

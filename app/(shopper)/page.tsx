@@ -4,12 +4,12 @@ import { getConsumerSession } from "@/lib/consumer/session";
 /**
  * The bare address, typed rather than scanned.
  *
- * Almost nobody arrives here — the whole product is reached by pointing a
+ * Almost nobody arrives here - the whole product is reached by pointing a
  * camera at something, and every one of those codes carries a path. But
  * "almost nobody" is not nobody: a shopper who saw the address on a poster
  * and typed it later, or who bookmarked it, lands exactly here, and until
  * now they got a login form. That was the proxy doing its job on a route
- * nobody had thought about — `/` was not in the public list, so a request
+ * nobody had thought about - `/` was not in the public list, so a request
  * with no session was bounced to /wallet/login, which asks for a phone
  * number before saying what the offer is. The join page exists precisely so
  * that never happens.

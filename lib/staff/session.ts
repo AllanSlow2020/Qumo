@@ -5,8 +5,8 @@ import { prisma } from "@/lib/db/client";
 import { STAFF_SESSION_COOKIE } from "./session-cookie";
 
 /**
- * Sessions for brand staff. Deliberately the same design as the shopper's —
- * opaque random token, only its hash stored, revocable by stamp — and
+ * Sessions for brand staff. Deliberately the same design as the shopper's -
+ * opaque random token, only its hash stored, revocable by stamp - and
  * deliberately not the same code, because the two must never be able to
  * resolve each other's tokens.
  *
@@ -21,7 +21,7 @@ import { STAFF_SESSION_COOKIE } from "./session-cookie";
  *
  * A shopper's session lives on their own phone and unlocks their own
  * balance. A staff session lives on whatever machine is at the desk and
- * unlocks a brand's stores, campaigns and signing secrets — including the
+ * unlocks a brand's stores, campaigns and signing secrets - including the
  * ability to rotate the secret that makes till slips forgeable. Those do not
  * deserve the same window, and a console that asks for a password each
  * morning is a normal thing to work with.
@@ -34,7 +34,7 @@ export const STAFF_SESSION_RETENTION_MS = 90 * 24 * 60 * 60 * 1000;
 /**
  * Unkeyed sha256, and correct here for the same reason it is on the shopper
  * side: the token is 32 bytes from a CSPRNG, so there is no guessable
- * preimage for a keyed hash to protect. HMAC is for low-entropy secrets —
+ * preimage for a keyed hash to protect. HMAC is for low-entropy secrets -
  * the six-digit passcode in lib/consumer/otp.ts is keyed, and must be.
  */
 function hashToken(rawToken: string): string {
@@ -56,7 +56,7 @@ export type StaffIdentity = {
   email: string;
 };
 
-/** Mints a session and returns the raw token — the only time it exists. */
+/** Mints a session and returns the raw token - the only time it exists. */
 export async function createStaffSession(userId: string, now: Date = new Date()): Promise<string> {
   const rawToken = randomBytes(32).toString("base64url");
   await prisma.staffSession.create({
@@ -74,7 +74,7 @@ export async function createStaffSession(userId: string, now: Date = new Date())
  *
  * The join onto User is not incidental. A session is only as live as the
  * account behind it, so a deactivated user's session stops working on the
- * next request rather than at its expiry — "I've removed their access" has
+ * next request rather than at its expiry - "I've removed their access" has
  * to be true when it is said, not twelve hours later.
  */
 export async function resolveStaffToken(rawToken: string, now: Date = new Date()): Promise<StaffIdentity | null> {
@@ -140,7 +140,7 @@ export async function revokeAllStaffSessions(
   reason: "SIGNED_OUT_EVERYWHERE" | "PASSWORD_CHANGED" | "DEACTIVATED" = "SIGNED_OUT_EVERYWHERE",
   now: Date = new Date(),
   /**
-   * A session to leave alone — the one doing the revoking.
+   * A session to leave alone - the one doing the revoking.
    *
    * Used when somebody changes their own password: the point is to end the
    * sessions they are *not* holding, and signing them out of the browser

@@ -12,7 +12,7 @@ import { randomBytes } from "node:crypto";
  * its own row, so nothing writes it to the database.
  */
 
-// Same unambiguous alphabet as lib/coupons/code.ts — no 0/O or 1/I/L, so a
+// Same unambiguous alphabet as lib/coupons/code.ts - no 0/O or 1/I/L, so a
 // code read off a label doesn't get mistyped.
 const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 const GROUP_LENGTH = 4;
@@ -20,8 +20,8 @@ const GROUP_LENGTH = 4;
 // the two defend against different things: a coupon code is handed to one
 // named member and checked by a cashier who can see them, while a pack code
 // sits on a shelf in its millions and anyone who guesses one gets a free
-// award with nobody watching. Three groups is 31^12 — roughly 7.9e17
-// combinations — so even after ten million codes are in circulation, a
+// award with nobody watching. Three groups is 31^12 - roughly 7.9e17
+// combinations - so even after ten million codes are in circulation, a
 // blind guess lands under once in a billion attempts.
 const GROUP_COUNT = 3;
 const CODE_LENGTH = GROUP_LENGTH * GROUP_COUNT;
@@ -38,7 +38,7 @@ function randomGroup(): string {
 /**
  * A new code in canonical form. Collisions are astronomically unlikely at
  * this size, but generation still runs against a unique constraint and
- * retries rather than assuming they cannot happen — see lib/packs/batch.ts.
+ * retries rather than assuming they cannot happen - see lib/packs/batch.ts.
  */
 export function generatePackCode(): string {
   return Array.from({ length: GROUP_COUNT }, randomGroup).join("");
@@ -46,7 +46,7 @@ export function generatePackCode(): string {
 
 /**
  * Canonicalises anything a shopper or a URL might carry. Codes come back
- * lower-cased, with hyphens or spaces, or with neither — all of which have
+ * lower-cased, with hyphens or spaces, or with neither - all of which have
  * to find the same row rather than tell someone their real code is invalid.
  */
 export function normalisePackCode(input: string): string {

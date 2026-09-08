@@ -21,8 +21,8 @@ describe("lib/packs/batch", () => {
   let brandOwner: User;
   let rivalOwner: User;
 
-  // PackBatch.createdByUserId is a real foreign key — a print run records
-  // who ordered it — so these have to be real staff rows, not stand-ins.
+  // PackBatch.createdByUserId is a real foreign key - a print run records
+  // who ordered it - so these have to be real staff rows, not stand-ins.
   const owner = (brandId: string, userId: string) => ({ user: { id: userId, brandId, role: "OWNER", name: "Test Owner" } });
 
   beforeAll(async () => {
@@ -102,7 +102,7 @@ describe("lib/packs/batch", () => {
 
   it("enforces role permissions at the function, not just in the UI", async () => {
     // This is reachable as a real network endpoint through the server
-    // action — hiding the button is not the boundary.
+    // action - hiding the button is not the boundary.
     await expect(
       createPackBatchForSession(
         { user: { id: "u1", brandId: brand.id, role: "QUALITY", name: "Test Quality" } },

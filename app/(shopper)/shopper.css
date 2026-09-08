@@ -11,7 +11,7 @@
  * printed till receipt, so the screen is one. Hairline and dotted rules
  * instead of card chrome, figures in a true monospace so every amount lines
  * up down the page, almost no radius, and one full-width button that says
- * what happens. Dark mode goes to near-black rather than #000 — a pure
+ * what happens. Dark mode goes to near-black rather than #000 - a pure
  * black on an OLED phone at night reads as a hole in the screen, and the
  * surfaces need somewhere to sit.
  *
@@ -20,14 +20,14 @@
  * **The brand's colour marks action and progress. Money is always ink.**
  *
  * The first pass had earned amounts render in the brand accent. That works
- * until the brand is Chicken Licken, whose colour is red — and a column of
+ * until the brand is Chicken Licken, whose colour is red - and a column of
  * red money reads as money lost to anyone who has ever opened a banking
  * app. It is the kind of thing that only shows up when you put a real
  * brand's palette into it.
  *
  * So amounts are ink and carry their emphasis by weight, the accent is
  * reserved for buttons and for progress marks (a stamp filling up), and the
- * system is then immune to whichever colour a brand picks — including the
+ * system is then immune to whichever colour a brand picks - including the
  * ones that already mean something.
  */
 
@@ -51,7 +51,7 @@
   --sc-radius: 2px;
 }
 
-/* System setting, no explicit choice stamped — the state most viewers are
+/* System setting, no explicit choice stamped - the state most viewers are
    in. Guarded so an explicit "light" still wins over a dark OS. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .sc {
@@ -96,7 +96,7 @@
   /* Instrument Sans sets a narrow word space, which ran dates together
      ("04Sept2026") at small sizes as well as headings. Corrected once at
      the root, because it is a property of the face rather than of any one
-     component — and it is inherited by anything a brand's face replaces it
+     component - and it is inherited by anything a brand's face replaces it
      with, which is the wrong default only if their face is wide. */
   word-spacing: 0.05em;
   min-height: 100vh;
@@ -127,7 +127,7 @@
   font-weight: 700;
   /* Instrument Sans is narrower than the Inter this was tuned for, and has
      a narrow word space to match. The tracking that gave Inter its
-     tightness ran Instrument's words into each other — "Chicken Licken"
+     tightness ran Instrument's words into each other - "Chicken Licken"
      set as one word. Tracking sits at zero at display sizes and the word
      space is opened slightly instead, which is the pair of adjustments a
      narrower face wants. This is the whole argument for owning the type
@@ -212,7 +212,7 @@
 
 /* ---------- figures ----------
    Every number in the product goes through the monospace, which is what
-   makes a column of amounts line up down the page — the whole reason this
+   makes a column of amounts line up down the page - the whole reason this
    direction is called Slip. Applied by selector rather than by asking each
    component to remember a class. */
 .sc-figure,
@@ -423,7 +423,7 @@
 
 /* Excludes buttons deliberately. This rule sits after .sc-btn and outranks
    it on specificity (0,1,1 against 0,1,0), so without the :not() an anchor
-   styled as a button renders ink-on-ink — invisible text on a solid block.
+   styled as a button renders ink-on-ink - invisible text on a solid block.
    The ghost variants survived it only because they happen to set the same
    colour, which is why it stayed hidden until the first primary link-button. */
 .sc a:not(.sc-btn) { color: var(--sc-ink); text-underline-offset: 2px; }

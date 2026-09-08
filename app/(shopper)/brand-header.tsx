@@ -6,7 +6,7 @@ import { toggleTheme } from "../theme-actions";
  * The top of every shopper screen, and the whole point of Phase D.
  *
  * It used to say "Qumo". It now says Chicken Licken, because that is who
- * the shopper thinks they are dealing with — they scanned a code at a
+ * the shopper thinks they are dealing with - they scanned a code at a
  * Chicken Licken till, on a Chicken Licken poster, for a Chicken Licken
  * promotion, and a page that leads with an infrastructure vendor's name is
  * asking them to trust a company they have never heard of with their phone
@@ -14,7 +14,7 @@ import { toggleTheme } from "../theme-actions";
  *
  * It fetches the brand itself rather than taking it as a prop. currentBrand()
  * is request-cached, so six components asking cost one query, and the
- * alternative — threading a brand through every page — is six chances to
+ * alternative - threading a brand through every page - is six chances to
  * forget.
  */
 export async function BrandHeader({ caption }: { caption?: string }) {
@@ -32,7 +32,7 @@ export async function BrandHeader({ caption }: { caption?: string }) {
           // A plain img, not next/image. The source is a brand's own CDN,
           // which means an arbitrary remote host, and next/image would need
           // every one of them declared in next.config.ts before a brand
-          // could go live — a deploy in the middle of onboarding. The
+          // could go live - a deploy in the middle of onboarding. The
           // trade-off is no automatic optimisation; the logo is one small
           // asset and the brand controls it.
           // eslint-disable-next-line @next/next/no-img-element

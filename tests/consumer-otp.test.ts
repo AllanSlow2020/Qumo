@@ -29,7 +29,7 @@ class FailingSmsClient implements SmsClient {
 }
 
 // The rate limiter is in-memory and shared across this whole test file, so
-// every test needs a phone number nobody else used — otherwise one test's
+// every test needs a phone number nobody else used - otherwise one test's
 // three requests exhaust another's allowance and the failure looks like a
 // logic bug.
 let counter = 0;
@@ -64,7 +64,7 @@ describe("lib/consumer/otp", () => {
     expect(person.consentGivenAt).toBeInstanceOf(Date);
     // Consent is stamped with a version, so an audit can say what wording
     // this person actually agreed to.
-    // Names the wording actually shown — the WhatsApp door stamps "wa-v1"
+    // Names the wording actually shown - the WhatsApp door stamps "wa-v1"
     // for its own, different, script.
     expect(person.consentVersion).toBe(WEB_CONSENT_VERSION);
     // The plaintext number is never stored.
@@ -219,14 +219,14 @@ describe("lib/consumer/otp", () => {
     await requestOtp(phone, sms);
 
     // The checkbox being `required` in the markup stops an honest mistake,
-    // not a crafted request — so the server has to be the boundary.
+    // not a crafted request - so the server has to be the boundary.
     await expect(verifyOtp(phone, sms.lastCode(), false)).rejects.toThrow(OtpError);
     expect(await prisma.person.count({ where: { phoneHash: hashPhone(`+27${phone.slice(1)}`) } })).toBe(0);
   });
 
   it("asks for consent identically whether the account is new or returning", async () => {
     // Requiring it only of new accounts would leak which numbers already
-    // have accounts — the exact signal the rest of this module withholds.
+    // have accounts - the exact signal the rest of this module withholds.
     const phone = trackedPhone();
     const sms = new FakeSmsClient();
 
@@ -264,7 +264,7 @@ describe("lib/consumer/otp", () => {
     const second = await verifyOtp(phone, sms.lastCode(), true);
 
     // The version they are re-stamped with is whatever the current copy
-    // is, not a literal — a bump is a routine event and a test that fails
+    // is, not a literal - a bump is a routine event and a test that fails
     // on one teaches people to edit tests when they change wording.
     expect(second.consentVersion).toBe(WEB_CONSENT_VERSION);
     expect(second.consentGivenAt!.getTime()).toBeGreaterThan(new Date("2020-01-01").getTime());

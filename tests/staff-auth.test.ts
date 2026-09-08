@@ -134,8 +134,8 @@ describe("the console and the shopper surface are different doors", () => {
 
     await prisma.user.update({ where: { id: staffB.id }, data: { isActive: false } });
 
-    // Both halves matter. The login door closes, and — because resolution
-    // joins onto the user rather than trusting the session row alone — the
+    // Both halves matter. The login door closes, and - because resolution
+    // joins onto the user rather than trusting the session row alone - the
     // session they are already holding stops working on the very next
     // request. "I've removed their access" has to be true when it is said,
     // not twelve hours later.

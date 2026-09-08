@@ -13,7 +13,7 @@ import { devOnly } from "@/lib/dev/guard";
  *
  * The one thing standing between "I can look at Qumo" and "I can use Qumo"
  * is a slip. A real one comes off a point of sale that knows the store's
- * signing secret; there is no point of sale here, so this is one — pick a
+ * signing secret; there is no point of sale here, so this is one - pick a
  * store, name a basket, and it prints a slip you can scan with a phone or
  * click on a laptop.
  *
@@ -23,7 +23,7 @@ import { devOnly } from "@/lib/dev/guard";
  * the point: testing against a special case proves nothing about the real
  * one.
  *
- * Dev only, and hard about it — see lib/dev/guard.ts.
+ * Dev only, and hard about it - see lib/dev/guard.ts.
  */
 
 const BASKETS = [4_500, 8_900, 17_000, 24_000, 46_000];
@@ -63,9 +63,9 @@ export default async function DevTillPage({
   // domain and a hardcoded :3000, which was correct exactly once.
   //
   // QUMO_TILL_ORIGIN overrides it, and that is the useful case rather than
-  // an escape hatch: /dev/till does not exist on a deployed site — it hands
+  // an escape hatch: /dev/till does not exist on a deployed site - it hands
   // out validly signed slips, which is the artefact the whole verification
-  // scheme exists to make unforgeable — so the way to demo a deployed Qumo
+  // scheme exists to make unforgeable - so the way to demo a deployed Qumo
   // is to run this locally against the deployed database and point the
   // codes at the deployed site. The slip is signed with the store's real
   // secret either way, so the deployed site accepts it. See
@@ -161,7 +161,7 @@ export default async function DevTillPage({
           <h2 className="sc-h2">Scan it</h2>
           <p className="sc-label">
             {chosen.name} · R{(cents / 100).toFixed(2)} ·{" "}
-            {chosen.signingSecretEncrypted ? "signed" : "UNSIGNED — this store cannot prove the sale"}
+            {chosen.signingSecretEncrypted ? "signed" : "UNSIGNED - this store cannot prove the sale"}
           </p>
           {/* Our own SVG, built from a URL this component made: nothing in
               it comes from a request. */}

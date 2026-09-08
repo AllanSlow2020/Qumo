@@ -1,6 +1,6 @@
 /* Deliberately almost empty.
  *
- * CIOS's globals.css carried a staff portal's whole identity — navy, orange,
+ * CIOS's globals.css carried a staff portal's whole identity - navy, orange,
  * a condensed display face. None of that came across, and nothing here should
  * replace it: every shopper-facing style lives under `.sc` in
  * app/(shopper)/shopper.css, and per-brand theming (Phase D) resolves on top
@@ -15,7 +15,7 @@
  * custom property; these two say which of them the product uses by default.
  * A brand's chosen face is an alias of the same shape, applied further down
  * the tree (lib/brand/theme.ts), so a brand overrides these rather than
- * competing with them — and a brand that chooses nothing gets a considered
+ * competing with them - and a brand that chooses nothing gets a considered
  * page rather than the browser's idea of one. */
 :root {
   --font-display: var(--qf-instrument-sans);

@@ -8,7 +8,7 @@ import { buildCsp, generateNonce, REPORT_PATH } from "@/lib/security/csp";
  * Edge routing for the shopper surface.
  *
  * Two principals, and the first thing this file does is decide which one it
- * is looking at — by hostname, before anything else. `app.{root}` is the
+ * is looking at - by hostname, before anything else. `app.{root}` is the
  * brand console; `{slug}.{root}` is a brand's shopper surface; anything else
  * is neither.
  *
@@ -24,7 +24,7 @@ const SHOPPER_LOGIN = "/wallet/login";
 // Where a QR on a pack or sticker lands. Short because the whole URL is
 // encoded into a code printed at label size and every character costs scan
 // reliability. Public because the page has to run in order to redirect to
-// login carrying the scanned code — a pack code is single-use, so bouncing
+// login carrying the scanned code - a pack code is single-use, so bouncing
 // it costs the shopper a pack.
 const SCAN_ROOT = "/s";
 // Where a QR printed on a till slip lands. Separate from /s because the
@@ -56,8 +56,8 @@ function isPublic(pathname: string): boolean {
     pathname === SHOPPER_LOGIN ||
     pathname === JOIN_PATH ||
     // The bare address. Public because the page behind it only decides
-    // where to send you — signed in to the wallet, otherwise to the join
-    // page — and a session check here would bounce a first-time visitor to
+    // where to send you - signed in to the wallet, otherwise to the join
+    // page - and a session check here would bounce a first-time visitor to
     // a login form before anything had explained the programme, which is
     // the exact thing JOIN_PATH exists to avoid.
     pathname === "/" ||
@@ -65,7 +65,7 @@ function isPublic(pathname: string): boolean {
     underRoot(pathname, RECEIPT_ROOT) ||
     underRoot(pathname, LEGAL_ROOT) ||
     // Called by the scheduler with no browser session to carry. Protected by
-    // its own CRON_SECRET check inside the handler instead — the same
+    // its own CRON_SECRET check inside the handler instead - the same
     // "public URL, real auth in the route" shape a webhook uses.
     pathname.startsWith("/api/cron") ||
     // A browser posting a blocked-resource report has no session and cannot
@@ -73,7 +73,7 @@ function isPublic(pathname: string): boolean {
     // capped, and answering 204 to everything.
     pathname === REPORT_PATH ||
     // The till simulator, which has to be reachable before you have signed
-    // in — producing a slip is how you get something to sign in *for*. It
+    // in - producing a slip is how you get something to sign in *for*. It
     //404s outside development regardless of what happens here; see
     // lib/dev/guard.ts. This list only decides whether a request is sent to
     // the page at all.
@@ -82,7 +82,7 @@ function isPublic(pathname: string): boolean {
 }
 
 // Where a request on a host that names no brand is sent. Its own route
-// rather than a flag on every page — see below.
+// rather than a flag on every page - see below.
 const NO_BRAND = "/no-brand";
 
 /**
@@ -90,7 +90,7 @@ const NO_BRAND = "/no-brand";
  *
  * Generated once per request and threaded through every branch below,
  * because a nonce that appeared in the response header but not on the
- * script tags — or the other way round — would produce a page whose own
+ * script tags - or the other way round - would produce a page whose own
  * scripts are blocked.
  */
 type Security = { nonce: string; csp: string };
@@ -131,7 +131,7 @@ function brandHeaders(req: NextRequest, security: Security): { headers: Headers;
  *
  * Every path is rewritten under /console, so a staff member types
  * app.qumo.co.za/stores and the app directory keeps its routes namespaced.
- * The namespace is what makes the guard on the other side cheap — a brand
+ * The namespace is what makes the guard on the other side cheap - a brand
  * host asking for /console/anything is asking for something no brand URL
  * ever produces, so it can be refused without a list of console routes to
  * keep in step.
@@ -139,7 +139,7 @@ function brandHeaders(req: NextRequest, security: Security): { headers: Headers;
 function consoleRoute(req: NextRequest, pathname: string, security: Security): NextResponse {
   // The brand header is never set on this surface, and is stripped like
   // everywhere else. The console's tenant comes from the signed-in user's
-  // row, not from a hostname — a console that read its brand from the
+  // row, not from a hostname - a console that read its brand from the
   // address bar would let staff of one brand reach another's data by
   // editing it.
   const headers = withSecurity(new Headers(req.headers), security);
@@ -171,7 +171,7 @@ function consoleRoute(req: NextRequest, pathname: string, security: Security): N
  *
  * Set only on documents: the matcher at the bottom of this file excludes
  * static assets and images, which have no scripts to govern. The headers
- * that do apply to everything — HSTS, nosniff, referrer policy — are in
+ * that do apply to everything - HSTS, nosniff, referrer policy - are in
  * next.config.ts, and the policy is deliberately not repeated there. Two
  * Content-Security-Policy headers on one response are enforced as the
  * intersection of both, which is a hard thing to reason about and an easy
@@ -198,7 +198,7 @@ function route(req: NextRequest, security: Security): NextResponse {
   // cannot share between instances, so the limit was really the limit
   // times however many copies were running. It now lives in
   // lib/security/login-guard.ts, against a counter in Postgres, called from
-  // the login actions themselves — the nearest place to here that can read
+  // the login actions themselves - the nearest place to here that can read
   // a number every instance agrees on.
 
   // Which surface, decided by hostname and nothing else, before any question
@@ -221,14 +221,14 @@ function route(req: NextRequest, security: Security): NextResponse {
 
   // The brand decision comes before the session one, and the order matters.
   // With it the other way round, /wallet on the apex redirected to
-  // /wallet/login and *then* discovered there was no brand — so a shopper
+  // /wallet/login and *then* discovered there was no brand - so a shopper
   // ended up at a login URL reading "this link needs a brand", which
   // explains the problem at an address that has nothing to do with it.
   // Nothing under the shopper surface means anything without a brand, so
   // that is the first question asked.
   if (!slug) {
     // Two exceptions. The cron sweep is called by a scheduler at whatever
-    // host it was configured with — very likely the apex — and
+    // host it was configured with - very likely the apex - and
     // authenticates itself with CRON_SECRET rather than a brand. The privacy
     // notice is Qumo's own document, linked from the footer of every page
     // including the no-brand one; rewriting it made that link point back at
@@ -250,8 +250,8 @@ function route(req: NextRequest, security: Security): NextResponse {
 
   // Presence only, deliberately. Verifying a session means a database read,
   // and this runs in the Edge runtime where the Prisma client is not
-  // available. So this is the cheap half — it turns "no cookie at all" into a
-  // redirect rather than a rendered page — and the real check happens in the
+  // available. So this is the cheap half - it turns "no cookie at all" into a
+  // redirect rather than a rendered page - and the real check happens in the
   // page or route, which runs in Node and calls getConsumerSession(). A
   // forged or revoked cookie gets past here and fails there.
   if (!req.cookies.get(CONSUMER_SESSION_COOKIE)) {

@@ -12,7 +12,7 @@ import { getPerformance, isPeriod, type PeriodDays } from "@/lib/console/perform
  * brand's finance team will not take a screenshot into a budget meeting.
  *
  * Under /api, which the proxy lets through without a session, so this does
- * its own check — and it is scoped through the same getPerformance every
+ * its own check - and it is scoped through the same getPerformance every
  * screen uses, so an export can never contain a row the screen would not
  * show.
  *
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest): Promise<Response> {
   }
 
   for (const c of p.byCampaign) {
-    rows.push(["promotion issued", c.name, c.unit ? formatLedgerAmount(c.issued, c.unit) : "—"]);
+    rows.push(["promotion issued", c.name, c.unit ? formatLedgerAmount(c.issued, c.unit) : "-"]);
     rows.push(["promotion people", c.name, String(c.members)]);
     rows.push([
       "promotion budget used",

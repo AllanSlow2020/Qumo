@@ -51,7 +51,7 @@ const VERIFY_WINDOW_MS = 15 * 60 * 1000;
  * randomInt, not Math.random: this is a credential. Math.random is
  * seeded predictably enough that a determined attacker who sees a few
  * codes can narrow the next one, and it costs nothing to avoid.
- * Zero-padded so every code is exactly six digits — "004821" is a valid
+ * Zero-padded so every code is exactly six digits - "004821" is a valid
  * code, and trimming it to "4821" would quietly shrink the keyspace.
  */
 function generateCode(): string {
@@ -65,12 +65,12 @@ export type OtpRequestResult = {
 
 /**
  * Issues a passcode and sends it. Throws OtpError for anything the shopper
- * can act on (bad number, too many requests, provider down) — every one of
+ * can act on (bad number, too many requests, provider down) - every one of
  * those messages is safe to render.
  */
 export async function requestOtp(rawPhone: string, smsClient: SmsClient = getSmsClient()): Promise<OtpRequestResult> {
   // normaliseSaPhone throws InvalidPhoneNumberError, whose message is
-  // already written for a shopper — let it through rather than flattening
+  // already written for a shopper - let it through rather than flattening
   // it into a vaguer one here.
   const phoneE164 = normaliseSaPhone(rawPhone);
   const phoneHash = hashPhone(phoneE164);
@@ -113,7 +113,7 @@ export async function requestOtp(rawPhone: string, smsClient: SmsClient = getSms
   });
 
   // The real code is still generated and stored above, so a demo number can
-  // sign in the ordinary way too — reading it out of the log still works,
+  // sign in the ordinary way too - reading it out of the log still works,
   // and nothing about the normal path is special-cased away.
   if (demo) {
     return { phoneE164 };
@@ -123,7 +123,7 @@ export async function requestOtp(rawPhone: string, smsClient: SmsClient = getSms
     await smsClient.sendSms(phoneE164, `${code} is your ${PRODUCT_NAME} code. It expires in 10 minutes.`);
   } catch (err) {
     // A provider outage is not the shopper's fault and not something they
-    // can fix by retyping — say so plainly. The underlying error keeps its
+    // can fix by retyping - say so plainly. The underlying error keeps its
     // own detail for the logs; only this sentence reaches the screen.
     if (err instanceof SmsSendError) {
       throw new OtpError("We couldn't send your code right now. Please try again in a moment.");
@@ -137,7 +137,7 @@ export async function requestOtp(rawPhone: string, smsClient: SmsClient = getSms
 /**
  * Verifies a passcode and returns the Person it belongs to, creating that
  * Person on a first-ever login. A shopper's first successful code *is*
- * their registration — there is no separate sign-up step to abandon.
+ * their registration - there is no separate sign-up step to abandon.
  *
  * Every failure returns the same message. Distinguishing "no code
  * outstanding" from "wrong code" from "expired" would tell an attacker
@@ -186,7 +186,7 @@ export async function verifyOtp(rawPhone: string, code: string, consented: boole
     return findOrCreatePerson(phoneE164, phoneHash);
   }
 
-  // The compare-and-swap that is the actual enforcement — the same idiom
+  // The compare-and-swap that is the actual enforcement - the same idiom
   // consumePasswordResetToken() and transitionCoupon() use. Matching and
   // consuming in one statement is what makes a code single-use even when
   // two requests arrive together; a findFirst-then-update would let both
@@ -217,8 +217,8 @@ export async function verifyOtp(rawPhone: string, code: string, consented: boole
 }
 
 /**
- * Person is platform-wide, not brand-scoped — one phone number is one
- * account no matter how many brands it later touches — so this is read and
+ * Person is platform-wide, not brand-scoped - one phone number is one
+ * account no matter how many brands it later touches - so this is read and
  * written directly rather than through forBrand(), exactly as the schema
  * comment on Person describes. No BrandMembership is created here: a
  * shopper who has logged in but not yet scanned anything belongs to no
@@ -226,7 +226,7 @@ export async function verifyOtp(rawPhone: string, code: string, consented: boole
  * list before they ever interacted with it.
  *
  * Consent is stamped on creation, and re-stamped for a returning shopper
- * whose recorded version is behind the current one — they have just
+ * whose recorded version is behind the current one - they have just
  * re-affirmed against today's wording, and the record should say so. A
  * shopper already on the current version is left untouched, so
  * consentGivenAt keeps meaning "when they agreed to this text" rather than

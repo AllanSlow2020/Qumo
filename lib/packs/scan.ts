@@ -56,7 +56,7 @@ export type ScanResult =
       alreadyEarned: boolean;
       /**
        * Set when this scan completed a stamp card. The card's worth of
-       * stamps has already been deducted from newBalance above — the
+       * stamps has already been deducted from newBalance above - the
        * surplus, if any, carries forward to the next card.
        */
       coupon: { code: string; name: string } | null;
@@ -73,7 +73,7 @@ export const SCAN_FAILURE_MESSAGES: Record<ScanFailureReason, string> = {
   CAMPAIGN_ENDED: "This promotion has ended.",
   CAMPAIGN_NOT_STARTED: "This promotion hasn't started yet.",
   NO_EARN_RULE: "This promotion isn't set up to award anything yet.",
-  NOT_A_SCAN_PROMOTION: "This code isn't part of the promotion running right now. Hold on to it — it hasn't been used.",
+  NOT_A_SCAN_PROMOTION: "This code isn't part of the promotion running right now. Hold on to it - it hasn't been used.",
   PROGRAMME_CLOSED: "This brand's rewards programme has ended, so this code can't be used. Anything you already earned is still in your rewards.",
   DAILY_LIMIT: "You've reached today's limit for this promotion. Your code will still work tomorrow.",
   DAILY_SCAN_LIMIT: "You've scanned as many codes as this promotion allows today. Try again tomorrow.",
@@ -83,7 +83,7 @@ export const SCAN_FAILURE_MESSAGES: Record<ScanFailureReason, string> = {
 
 /**
  * A pack code arrives as nothing but a string in a URL, so it has to be
- * resolved before any brand context exists — the same narrow exception to
+ * resolved before any brand context exists - the same narrow exception to
  * "tenant tables only through forBrand()" that the login-by-email lookup
  * already documents. Everything downstream of this read is brand-scoped by
  * the code's own brandId, never by anything the caller supplied.
@@ -158,8 +158,8 @@ export function checkCampaignWindow(campaign: CampaignGate, now: Date): ScanFail
  * A code that is already scanned: whose was it, and what did it give them?
  *
  * A duplicate is only a refusal when the code belongs to somebody else.
- * When the same shopper opens it again — which every shopper does, because
- * one navigation renders this page twice — they should see what they
+ * When the same shopper opens it again - which every shopper does, because
+ * one navigation renders this page twice - they should see what they
  * earned, not be told the sticker is spent.
  *
  * Falls back to a refusal if the award was never recorded, which can only be
@@ -217,7 +217,7 @@ export async function redeemPackCode(
   personId: string,
   now: Date = new Date(),
   /**
-   * The brand the *carrier* claims this scan is for — on the web, the brand
+   * The brand the *carrier* claims this scan is for - on the web, the brand
    * named by the subdomain the shopper is standing on.
    *
    * Optional because not every carrier asserts one: an SMS arrives with a
@@ -228,7 +228,7 @@ export async function redeemPackCode(
    * header.
    *
    * Worth being precise about what this is and is not. It is not what keeps
-   * the money right — the award is driven by the code's own brandId and
+   * the money right - the award is driven by the code's own brandId and
    * always was, so a mismatched host could never misdirect value. It is what
    * makes "a page under brand X shows only brand X" true rather than nearly
    * true, and a shopper cannot tell those two apart by looking.
@@ -240,7 +240,7 @@ export async function redeemPackCode(
 ): Promise<ScanResult> {
   const canonical = normalisePackCode(rawCode);
 
-  // Cheap rejection first — /s/<code> is public, and malformed guesses
+  // Cheap rejection first - /s/<code> is public, and malformed guesses
   // should never reach the table.
   if (!looksLikePackCode(canonical)) {
     return { ok: false, reason: "UNKNOWN_CODE" };
@@ -291,14 +291,14 @@ export async function redeemPackCode(
   const reward = packCode.campaign.reward;
 
   // Everything from here is one transaction: the code is burned, the
-  // ledger row written, and any completed stamp card settled together —
+  // ledger row written, and any completed stamp card settled together -
   // or none of it happens.
   //
   // Serializable, because the completion check reads a balance and then
   // writes based on it. Without it, two scans landing together could each
   // see nine stamps, each decide the card is complete, and issue two
   // coupons for one card. Postgres refuses that interleaving and the
-  // attempt is retried — see lib/db/serialization.ts.
+  // attempt is retried - see lib/db/serialization.ts.
   let claimed: { newBalance: number; coupon: { code: string; name: string } | null } | null = null;
 
   for (let attempt = 0; attempt < MAX_SERIALIZATION_ATTEMPTS; attempt += 1) {
@@ -309,7 +309,7 @@ export async function redeemPackCode(
 
           // The real enforcement. Conditioning the update on the status we
           // believe the row has means two concurrent scans of one code
-          // cannot both succeed — the loser updates zero rows and is told
+          // cannot both succeed - the loser updates zero rows and is told
           // the code is already used, which is exactly true.
           const burn = await tx.packCode.updateMany({
             where: { id: packCode.id, status: "UNSCANNED" },
@@ -327,7 +327,7 @@ export async function redeemPackCode(
 
           // Both scan sources write the ledger through one function, so a
           // stamp earned from a pack behaves identically to one earned at
-          // a till — see lib/ledger/accrue.ts.
+          // a till - see lib/ledger/accrue.ts.
           return applyAccrual(tx, {
             brandId,
             campaignId: packCode.campaignId,
@@ -385,7 +385,7 @@ type TxClient = Parameters<Parameters<PrismaClient["$transaction"]>[0]>[0];
  * Find-or-create the membership. upsert rather than a read-then-create,
  * because two codes scanned at once by a brand-new shopper would otherwise
  * both try to create the first membership and one would fail on the
- * unique constraint — losing an award for no reason the shopper could
+ * unique constraint - losing an award for no reason the shopper could
  * understand.
  */
 async function upsertMembership(tx: TxClient, brandId: string, personId: string) {

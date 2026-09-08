@@ -43,7 +43,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://qumo:qumo@localhost:5432/qumo_test
       # Test-only values. Real ones live in the host's secret manager and
-      # never in a repository — these exist so the crypto layer has
+      # never in a repository - these exist so the crypto layer has
       # well-formed inputs, not to protect anything.
       PHONE_HASH_SECRET: ci-phone-hash-secret-not-a-real-one
       ENCRYPTION_KEY: TdmDVWuwzHOa3JLJ0xLoNzZQNRpQwBGpLxDkWQMPDPQ=
@@ -86,7 +86,7 @@ jobs:
 
       # Last because it is the slowest, and because a build failure that the
       # three checks above did not catch is nearly always a Next.js-specific
-      # problem — a server action exporting a constant, a route that only
+      # problem - a server action exporting a constant, a route that only
       # fails when it is compiled for production.
       - name: Build
         run: pnpm build

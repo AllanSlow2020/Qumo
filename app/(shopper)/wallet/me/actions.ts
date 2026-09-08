@@ -11,7 +11,7 @@ export type ProgrammeResult = { ok: true } | { ok: false; error: string };
  * Leaving or rejoining one brand's programme.
  *
  * The personId comes from the verified session and never from the form.
- * A brandId in a form field is fine — it only ever selects among the
+ * A brandId in a form field is fine - it only ever selects among the
  * memberships this person already has, and setOptOut resolves it through
  * the consumer lens before writing. A personId in a form field would let
  * anyone opt anyone out of anything.

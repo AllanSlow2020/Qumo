@@ -1,6 +1,6 @@
 /**
  * A separate file from actions.ts because a `"use server"` module may only
- * export async functions — a type or a constant beside them compiles, lints,
+ * export async functions - a type or a constant beside them compiles, lints,
  * and throws in the browser at render time. That is a mistake this codebase
  * has already made once.
  */

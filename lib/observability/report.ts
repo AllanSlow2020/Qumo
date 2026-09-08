@@ -4,7 +4,7 @@ import { logger, redact } from "@/lib/security/logger";
  * Where an unexpected failure goes.
  *
  * Until now it went nowhere. Handled refusals are logged and shown to
- * whoever caused them, but an actual bug — a throw nobody expected —
+ * whoever caused them, but an actual bug - a throw nobody expected -
  * produced a Next.js error digest for the user and silence for us. A
  * platform holding other people's loyalty balances cannot find out about
  * its own outages from a brand's phone call.
@@ -13,7 +13,7 @@ import { logger, redact } from "@/lib/security/logger";
  *
  * 1. **A structured line on stdout, always.** Vercel captures stdout,
  *    indexes it, and can drain it anywhere later. It needs no account, no
- *    key and no signup, so it works today — which matters, because the
+ *    key and no signup, so it works today - which matters, because the
  *    alternative to "works today" here is the current state of knowing
  *    nothing.
  *
@@ -33,7 +33,7 @@ import { logger, redact } from "@/lib/security/logger";
  * turns one error into two and loses the first.
  *
  * **It cannot leak.** The event goes through the same redaction the logger
- * uses, because a webhook body leaves this machine — a stack frame quoting
+ * uses, because a webhook body leaves this machine - a stack frame quoting
  * a phone number would be a privacy incident caused by the privacy tooling.
  *
  * **It cannot depend on the database.** The throttle below counts in
@@ -76,7 +76,7 @@ function describe(err: unknown): Described {
  * A short stable id for "this same failure again", so a channel shows one
  * recurring problem rather than four hundred unrelated-looking lines.
  *
- * Name, message and the first stack frame — not the whole stack, because
+ * Name, message and the first stack frame - not the whole stack, because
  * two calls into the same broken function from different pages are the same
  * bug, and not the message alone, because two different bugs often share a
  * generic one. djb2 rather than a crypto hash: this is a grouping key, not
@@ -102,7 +102,7 @@ function shouldAlert(id: string, now: number): boolean {
   lastAlerted.set(id, now);
 
   // The map is bounded by the number of distinct bugs in a window, which is
-  // small — but "small" is an assumption about correct code, and this runs
+  // small - but "small" is an assumption about correct code, and this runs
   // on the path where that assumption has already failed once.
   if (lastAlerted.size > 500) {
     for (const [key, at] of lastAlerted) {

@@ -99,12 +99,12 @@ export default async function JoinPage() {
           <>
             {/* Said before the button, not after it, and said plainly.
                 Somebody standing at a till who taps Join and then finds
-                nothing in their balance has been misled by omission — the
+                nothing in their balance has been misled by omission - the
                 poster is the invitation, the slip is what pays. Shown only
                 to somebody who has not joined: telling an existing member
                 that joining is free reads as though they had not. */}
             <p className="sc-label">
-              Joining is free and takes a phone number. You start earning from your next till slip — scan the code
+              Joining is free and takes a phone number. You start earning from your next till slip - scan the code
               printed on it.
             </p>
             <JoinButton label={status.optedOut ? `Rejoin ${brand.name} rewards` : `Join ${brand.name} rewards`} />

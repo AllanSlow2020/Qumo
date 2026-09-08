@@ -22,7 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
  *
  * It said a shopper could ask what is held about them, and stop taking
  * part, at any time. Both were true on paper and neither existed. Putting
- * them on one page — rather than behind a support address — is the
+ * them on one page - rather than behind a support address - is the
  * difference between a right and a form to request one.
  */
 export default async function MePage() {
@@ -85,14 +85,14 @@ export default async function MePage() {
       <section className="sc-card">
         <h2 className="sc-h2">Your data</h2>
         <p className="sc-body">
-          Download everything {PRODUCT_NAME} holds about you — your number, every scan, every reward, and every time
+          Download everything {PRODUCT_NAME} holds about you - your number, every scan, every reward, and every time
           you signed in. It comes as a file you can keep.
         </p>
         {/* Said out loud because it is the one thing on this page wider than
             the page: the rest of this screen shows {brand.name} only, and
             the export deliberately does not. Narrowing it to match would be
             tidier and would answer a different question than the one a
-            request for your data actually asks. {brand.name} never sees it —
+            request for your data actually asks. {brand.name} never sees it -
             it is generated for the signed-in shopper and sent to them. */}
         <p className="sc-label">
           This covers every brand you&apos;ve joined through {PRODUCT_NAME}, not just {brand.name}.
@@ -104,10 +104,10 @@ export default async function MePage() {
         </a>
         <p className="sc-label">
           {/* Explicit space: the transform drops a literal one that follows
-              an element here, and "privacy notice— deletion" is what shipped
+              an element here, and "privacy notice- deletion" is what shipped
               on the stores page for the same reason. */}
           Want your account deleted instead? Read the <Link href="/legal/privacy">privacy notice</Link>{" "}
-          — deletion has to reckon with rewards a brand has already honoured, so it isn&apos;t instant.
+          - deletion has to reckon with rewards a brand has already honoured, so it isn&apos;t instant.
         </p>
       </section>
 

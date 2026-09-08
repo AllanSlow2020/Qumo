@@ -9,7 +9,7 @@ import { rateLimit } from "./rate-limit";
  *
  * It used to be. The proxy runs in the Edge runtime, where there is no
  * database connection, so the only limiter available there was an
- * in-process Map — the very thing that made the limit meaningless across
+ * in-process Map - the very thing that made the limit meaningless across
  * instances. Keeping the check at the edge would have meant keeping the
  * counter that cannot be shared, so the check moved to where the shared
  * counter can be read.

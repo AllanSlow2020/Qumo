@@ -9,7 +9,7 @@ out/
 build/
 dist/
 
-# env — never commit real secrets, only .env.example is tracked
+# env - never commit real secrets, only .env.example is tracked
 .env
 .env*.local
 

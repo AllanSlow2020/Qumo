@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 
-// Unambiguous alphabet — no 0/O or 1/I/L, so a code read off a phone screen
+// Unambiguous alphabet - no 0/O or 1/I/L, so a code read off a phone screen
 // at a till doesn't get mistyped.
 const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 const GROUP_LENGTH = 4;
@@ -17,7 +17,7 @@ function randomGroup(): string {
 
 /** e.g. "7XQP-928K", or "FC-7XQP-928K" when a reward configures a
  * codePrefix. At this alphabet/length, collisions are astronomically
- * unlikely (31^8 combinations) — callers still retry on the rare unique
+ * unlikely (31^8 combinations) - callers still retry on the rare unique
  * -constraint violation rather than assume it can't happen. */
 export function generateCouponCode(prefix?: string): string {
   const code = Array.from({ length: GROUP_COUNT }, randomGroup).join("-");

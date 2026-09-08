@@ -13,8 +13,8 @@ import { OPERATOR_NAME, PRODUCT_NAME } from "@/lib/product";
  * ─────────────────────────────────────────────────────────────────────────
  *  NOT YET REVIEWED BY A LAWYER. Written in good faith to describe what the
  *  system actually does, and deliberately claiming nothing it does not. It
- *  must be reviewed against POPIA — and rewritten to match whichever
- *  position the business takes — BEFORE the first real shopper registers.
+ *  must be reviewed against POPIA - and rewritten to match whichever
+ *  position the business takes - BEFORE the first real shopper registers.
  *  See docs/qumo-design.md §3: the operator vs responsible party decision
  *  changes what this copy has to say, and retrofitting consent onto people
  *  who already signed up is materially harder than getting it right once.
@@ -29,7 +29,7 @@ export const WEB_CONSENT_VERSION = "web-v3";
 
 /**
  * web-v1 said the same things under the product's old working title. That
- * is not a change of substance in what is collected or who holds it — but
+ * is not a change of substance in what is collected or who holds it - but
  * the *rendered string* changed, so leaving the version alone would make a
  * web-v1 row resolve to copy naming a product that person never saw. That
  * is precisely the question the version exists to answer, so it is bumped.
@@ -37,7 +37,7 @@ export const WEB_CONSENT_VERSION = "web-v3";
  *
  * web-v2 named a different operating company. Qumo is the entity now, and
  * "who holds my phone number" is the one fact in this notice a person is
- * most entitled to have been told correctly — so it is a change of
+ * most entitled to have been told correctly - so it is a change of
  * substance, not just of string. The same bump also picks up the terms,
  * which the tick box now points at alongside the notice: the two documents
  * arrived at different times and rewriting versioned consent copy twice is
@@ -49,7 +49,7 @@ export const CONSENT_CHECKBOX_LABEL = `I agree to ${PRODUCT_NAME} storing my mob
 
 /**
  * The fuller notice, rendered at /legal/privacy and linked from the tick
- * box. Each point describes something the code genuinely does — if a claim
+ * box. Each point describes something the code genuinely does - if a claim
  * here stops being true, the code changed and this list is now a lie.
  */
 export const CONSENT_POINTS: { heading: string; body: string }[] = [
@@ -59,7 +59,7 @@ export const CONSENT_POINTS: { heading: string; body: string }[] = [
   },
   {
     heading: "What brands can see",
-    body: "A brand can see your activity with that brand only — the scans you made, the rewards you earned and what you have spent with them. A brand cannot see your activity with any other brand, or that you use any other brand at all.",
+    body: "A brand can see your activity with that brand only - the scans you made, the rewards you earned and what you have spent with them. A brand cannot see your activity with any other brand, or that you use any other brand at all.",
   },
   {
     heading: "Who operates it",
@@ -75,6 +75,6 @@ export const CONSENT_POINTS: { heading: string; body: string }[] = [
   },
   {
     heading: "Marketing",
-    body: "We will send you the one-time codes you ask for. We will not send you marketing messages on the strength of this agreement alone — if a brand wants to market to you, you will be asked separately.",
+    body: "We will send you the one-time codes you ask for. We will not send you marketing messages on the strength of this agreement alone - if a brand wants to market to you, you will be asked separately.",
   },
 ];

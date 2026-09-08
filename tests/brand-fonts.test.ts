@@ -8,7 +8,7 @@ import { toBrandTheme, brandStyle, safeFont } from "@/lib/brand/theme";
  *
  * A brand's chosen face is a reference to a custom property that
  * app/font-faces.ts is supposed to have defined. If the two files disagree
- * about the property's name, nothing errors — the reference resolves to
+ * about the property's name, nothing errors - the reference resolves to
  * nothing and the page renders in the browser's default font, on the one
  * screen whose entire job is looking like the brand.
  *
@@ -16,7 +16,7 @@ import { toBrandTheme, brandStyle, safeFont } from "@/lib/brand/theme";
  * a face cannot be missing or invented. What it cannot see is the string
  * inside the `variable:` option, which is what actually names the property.
  * So that half is checked against the source text, because that is where
- * the fact lives — app/font-faces.ts cannot be imported here at all, since
+ * the fact lives - app/font-faces.ts cannot be imported here at all, since
  * `next/font` only exists as a build-time transform.
  */
 const FACES_SOURCE = readFileSync(new URL("../app/font-faces.ts", import.meta.url), "utf8");
@@ -70,7 +70,7 @@ describe("a font a brand did not choose", () => {
     supportUrl: null,
   };
 
-  it("is looked up, not sanitised — an unknown id is Qumo's own", () => {
+  it("is looked up, not sanitised - an unknown id is Qumo's own", () => {
     // The value reaches a font-family, which will happily accept a bare
     // word, so nothing a brand stored is allowed through. A row written
     // straight into the database gets the default, not a broken page.

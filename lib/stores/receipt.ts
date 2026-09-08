@@ -8,7 +8,7 @@ import { checkCampaignWindow } from "@/lib/packs/scan";
 import { parseReceiptPayload, signingMessage, verifySignature } from "./payload";
 
 /**
- * Redeeming a scanned till slip — the shopper-facing half of the
+ * Redeeming a scanned till slip - the shopper-facing half of the
  * Chicken Licken path.
  *
  * Three defences, and it is worth being clear which one does what, because
@@ -24,7 +24,7 @@ import { parseReceiptPayload, signingMessage, verifySignature } from "./payload"
  *   3. The freshness window stops a hoard of old slips being scanned the
  *      day a campaign launches. Always available.
  *
- * An unsigned store therefore still gets real protection — a slip works
+ * An unsigned store therefore still gets real protection - a slip works
  * once, and only once, and only if it is recent. What it loses is
  * protection against a shopper who edits the amount on their own receipt.
  * That is a meaningful downgrade and the dashboard names it, but it is a
@@ -95,7 +95,7 @@ export const RECEIPT_FAILURE_MESSAGES: Record<ReceiptFailureReason, string> = {
 /**
  * How long a slip stays scannable. Generous, because a shopper who finds a
  * receipt in a coat pocket a fortnight later and earns from it is a good
- * outcome — but not unbounded, or a campaign launch invites everyone to
+ * outcome - but not unbounded, or a campaign launch invites everyone to
  * scan a year of hoarded slips at once.
  */
 const MAX_RECEIPT_AGE_MS = 30 * 24 * 60 * 60 * 1000;
@@ -104,7 +104,7 @@ const MAX_CLOCK_SKEW_MS = 10 * 60 * 1000;
 
 /**
  * A slip resolves to a store by its code alone, before any brand context
- * exists — the same narrow, documented exception to forBrand() that pack
+ * exists - the same narrow, documented exception to forBrand() that pack
  * codes and the login-by-email lookup already are. Everything after this is
  * scoped by the store's own brandId.
  */
@@ -117,7 +117,7 @@ async function findStore(storeCode: string) {
 
 /**
  * The brand's live percent-of-spend campaign. At most one can be active at
- * a time — enforced when a rule is configured (lib/stores/manage.ts), so
+ * a time - enforced when a rule is configured (lib/stores/manage.ts), so
  * that this resolution is never ambiguous and a slip can never be worth a
  * different amount depending on which campaign happened to be found first.
  */
@@ -143,7 +143,7 @@ async function findSpendCampaign(brandId: string, now: Date) {
  * The distinction that matters is whose it was. For the person who redeemed
  * it, this is a receipt: the same award, shown again, flagged so the page
  * can word it as history rather than news. For anyone else it is exactly
- * the refusal the unique constraint exists to produce — a photographed or
+ * the refusal the unique constraint exists to produce - a photographed or
  * shared slip earning twice is the thing being stopped.
  */
 async function describeExistingScan(
@@ -278,7 +278,7 @@ export async function redeemReceipt(
           });
 
           // The replay guard. Inserted before anything is awarded, so the
-          // unique constraint — not a prior read — is what decides whether
+          // unique constraint - not a prior read - is what decides whether
           // this slip has been seen. A duplicate throws P2002 and the whole
           // transaction rolls back, awarding nothing.
           const scan = await tx.purchaseScan.create({
@@ -352,9 +352,9 @@ export async function redeemReceipt(
       }
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
         // The replay guard fired. Before calling that a failure, ask whose
-        // scan it was: a shopper re-opening their own slip — by refreshing,
+        // scan it was: a shopper re-opening their own slip - by refreshing,
         // by going back, or because the framework rendered this page twice
-        // on one navigation — has done nothing wrong and should see what
+        // on one navigation - has done nothing wrong and should see what
         // they earned, not an accusation.
         return describeExistingScan(store.id, parsed.externalTxnId, personId, store, campaign, rule.unit);
       }

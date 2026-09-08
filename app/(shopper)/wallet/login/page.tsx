@@ -11,12 +11,12 @@ export default async function ShopperLoginPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const { next } = await searchParams;
-  // Validated here rather than trusted straight into the form — see
+  // Validated here rather than trusted straight into the form - see
   // lib/consumer/redirect.ts on why a destination in a query parameter is
   // never taken at face value.
   const destination = safeShopperRedirect(next);
 
-  // Already signed in — send them where they were going rather than making
+  // Already signed in - send them where they were going rather than making
   // them prove a phone number they proved last month.
   if (await getConsumerSession()) {
     redirect(destination);

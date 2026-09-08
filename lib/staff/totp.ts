@@ -8,7 +8,7 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
  * A second factor for staff was the gap: an account that can generate value
  * and export member data was protected by a password alone. SMS would have
  * been the obvious choice given we already send passcodes to shoppers, and
- * it is the wrong one here — it costs money per login, it depends on an
+ * it is the wrong one here - it costs money per login, it depends on an
  * aggregator account that does not exist yet, and SIM swap is a live and
  * well-documented attack in this market. TOTP costs nothing per use, works
  * offline, and every authenticator app already implements it.
@@ -25,7 +25,7 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 // SHA-1 is correct here rather than a compromise. RFC 6238 defines it, every
 // authenticator app implements it, and the security of a TOTP does not rest
-// on collision resistance — it rests on the shared secret and a thirty
+// on collision resistance - it rests on the shared secret and a thirty
 // second window. Choosing SHA-256 would be stronger on paper and unreadable
 // by the apps people actually have.
 const ALGORITHM = "sha1";
@@ -171,8 +171,8 @@ export function verifyTotp(secretBase32: string, code: string, at: Date = new Da
 /**
  * The otpauth:// URI an authenticator app reads.
  *
- * The issuer appears twice — once as a label prefix and once as a parameter
- * — which looks redundant and is what the apps actually expect: older ones
+ * The issuer appears twice - once as a label prefix and once as a parameter
+ * - which looks redundant and is what the apps actually expect: older ones
  * read the prefix, newer ones the parameter, and getting it wrong means an
  * entry in somebody's phone labelled with an email address and no hint of
  * what it unlocks.

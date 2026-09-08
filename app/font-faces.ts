@@ -16,7 +16,7 @@ import { FONTS, type FontId } from "@/lib/brand/fonts";
  * Every face the registry offers, loaded once.
  *
  * Separate from lib/brand/fonts.ts because `next/font` is a build-time
- * transform that has to be called at module scope with literal arguments —
+ * transform that has to be called at module scope with literal arguments -
  * it cannot be handed a value from the database, which is the whole reason
  * the choice is an id from a list rather than a font name in a text box.
  * Keeping the metadata in a plain file also means the console's picker and

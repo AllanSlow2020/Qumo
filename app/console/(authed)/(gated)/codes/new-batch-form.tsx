@@ -20,7 +20,7 @@ export function NewBatchForm({ campaigns }: { campaigns: Option[] }) {
   }, [state, router]);
 
   // Only promotions that award a fixed amount per scan. A share-of-spend
-  // rule needs a basket, which a pack code does not carry — the engine
+  // rule needs a basket, which a pack code does not carry - the engine
   // refuses those, and offering them here would only be an invitation to
   // read an error message.
   const printable = campaigns.filter((c) => c.canPrint);
@@ -61,7 +61,7 @@ export function NewBatchForm({ campaigns }: { campaigns: Option[] }) {
           maxLength={120}
           placeholder="Campari 750ml neck tags, March"
         />
-        <p className="cn-label">For your own records — it names the download too.</p>
+        <p className="cn-label">For your own records - it names the download too.</p>
       </div>
 
       <div className="cn-field">

@@ -3,7 +3,7 @@ import { PRODUCT_NAME } from "@/lib/product";
 import "./console.css";
 
 /**
- * The console's outer shell — stylesheet and ground, nothing else.
+ * The console's outer shell - stylesheet and ground, nothing else.
  *
  * No session check here, deliberately: the login page lives under this
  * layout and cannot require the thing it exists to obtain. The check is one

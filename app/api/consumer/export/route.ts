@@ -7,7 +7,7 @@ import { getConsumerSession } from "@/lib/consumer/session";
  *
  * A route rather than a server action because the answer is a file, and a
  * server action cannot set Content-Disposition. The identity comes from the
- * session cookie and nothing in the request selects whose data this is —
+ * session cookie and nothing in the request selects whose data this is -
  * there is no id to pass, so there is no id to tamper with.
  *
  * no-store because the response is one person's complete personal record;

@@ -4,7 +4,7 @@ import { PRODUCT_NAME } from "@/lib/product";
  * What a host that names no brand gets.
  *
  * Reached by the apex, by a reserved subdomain, and by a slug that does not
- * resolve — the last of which is what someone probing for brand names sees,
+ * resolve - the last of which is what someone probing for brand names sees,
  * which is why all three get the identical page. It says nothing about
  * whether the name they tried exists.
  *
@@ -14,7 +14,7 @@ import { PRODUCT_NAME } from "@/lib/product";
  * actually helps them.
  *
  * Reached only by the proxy's rewrite, which means the address bar still
- * shows whatever the shopper typed — the thing they need to look at.
+ * shows whatever the shopper typed - the thing they need to look at.
  */
 export default function NoBrandPage() {
   return (
@@ -29,7 +29,7 @@ export default function NoBrandPage() {
           the poster, the till slip or the tag again, or open the link exactly as it was printed.
         </p>
         <p className="sc-label">
-          Nothing is wrong with your account — this address just doesn&apos;t belong to a programme.
+          Nothing is wrong with your account - this address just doesn&apos;t belong to a programme.
         </p>
       </section>
     </>

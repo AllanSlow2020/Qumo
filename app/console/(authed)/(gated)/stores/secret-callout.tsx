@@ -6,7 +6,7 @@ import { useState } from "react";
  * A signing secret, on screen for the only time it will ever be on screen.
  *
  * Only the ciphertext is stored, so this is genuinely the last chance to
- * copy it — which is why the panel is loud, says so in plain words, and
+ * copy it - which is why the panel is loud, says so in plain words, and
  * makes copying a single click rather than a careful drag across 64
  * characters of hex.
  *
@@ -20,7 +20,7 @@ export function SecretCallout({ secret, storeCode }: { secret: string; storeCode
   return (
     <div className="cn-secret">
       <p className="cn-h2">
-        Signing secret{storeCode ? ` for ${storeCode}` : ""} — copy it now
+        Signing secret{storeCode ? ` for ${storeCode}` : ""} - copy it now
       </p>
       <p className="cn-body">
         This is the only time it will be shown. We store it encrypted and can&apos;t read it back to you, so if it
@@ -40,7 +40,7 @@ export function SecretCallout({ secret, storeCode }: { secret: string; storeCode
             } catch {
               // Clipboard access needs a secure context and can be refused
               // outright. Saying so beats a button that silently does
-              // nothing — the value is right there to select by hand.
+              // nothing - the value is right there to select by hand.
               setCopied(false);
               alert("Couldn't copy automatically. Select the value above and copy it.");
             }

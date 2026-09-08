@@ -33,7 +33,7 @@ function Metric({
  *
  * Heights are relative to the busiest day rather than to an absolute scale,
  * because the question this answers is "which way is it going", not "how
- * many exactly" — the exact number is the figure directly above it. A brand
+ * many exactly" - the exact number is the figure directly above it. A brand
  * with one scan a day and a brand with a thousand both get a readable shape.
  *
  * The last bar carries the only colour on the page that is not a warning:
@@ -62,7 +62,7 @@ function Sparkline({ series }: { series: { day: Date; count: number }[] }) {
 
 /** Cents, points and stamps do not add up, so they are never added up. */
 function unitLine(rows: { unit: LedgerUnit; amount: number }[]): string {
-  if (rows.length === 0) return "—";
+  if (rows.length === 0) return "-";
   return rows.map((r) => formatLedgerAmount(r.amount, r.unit)).join(" · ");
 }
 
@@ -86,7 +86,7 @@ export default async function ConsoleOverviewPage() {
             disagree with the rows behind it. */}
         <Metric
           value={unitLine(o.outstanding)}
-          label="Outstanding — owed to shoppers"
+          label="Outstanding - owed to shoppers"
           note={redeemed > 0 ? `${formatLedgerAmount(redeemed, "CENTS")} already redeemed` : undefined}
         />
         <Metric value={unitLine(o.issued)} label="Issued in total" note="Before anything was spent" />

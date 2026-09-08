@@ -33,16 +33,16 @@ export function InviteForm() {
         <div className="cn-field">
           <label htmlFor="invite-email">Work email</label>
           <input id="invite-email" name="email" className="cn-input" type="email" required maxLength={200} />
-          <p className="cn-label">This is what they sign in with. We don&apos;t send email — you pass on the password.</p>
+          <p className="cn-label">This is what they sign in with. We don&apos;t send email - you pass on the password.</p>
         </div>
 
         <div className="cn-field">
           <label htmlFor="invite-role">Role</label>
           <select id="invite-role" name="role" className="cn-input" defaultValue="MARKETING">
-            <option value="OWNER">Owner — everything, including the team</option>
-            <option value="ADMIN">Admin — everything except the team</option>
-            <option value="MARKETING">Marketing — promotions and reporting</option>
-            <option value="QUALITY">Quality — reporting only</option>
+            <option value="OWNER">Owner - everything, including the team</option>
+            <option value="ADMIN">Admin - everything except the team</option>
+            <option value="MARKETING">Marketing - promotions and reporting</option>
+            <option value="QUALITY">Quality - reporting only</option>
           </select>
         </div>
 

@@ -5,7 +5,7 @@ import { prisma as basePrisma } from "@/lib/db/client";
  * facing code reads the database.
  *
  * forBrand() answers "every person, for one brand". Qumo asks the
- * opposite question — "every brand, for one person" — and it must never be
+ * opposite question - "every brand, for one person" - and it must never be
  * answered with the brand-scoped client. Reaching for forBrand() to build
  * a shopper's wallet would require inventing a brandId to scope to, and
  * the natural way to list balances across brands would be to loop it over
@@ -16,20 +16,20 @@ import { prisma as basePrisma } from "@/lib/db/client";
  *
  * 1. It is READ-ONLY. Every write operation is rejected outright. A
  *    shopper's reads are a lens over their own data, but their writes are
- *    always someone else's business rule — awarding points, spending a
- *    wallet, burning a scan code — with validation and atomicity of their
+ *    always someone else's business rule - awarding points, spending a
+ *    wallet, burning a scan code - with validation and atomicity of their
  *    own. Letting this client create a PointsTransaction would put "how
  *    many points is this worth" on the shopper's side of the boundary.
  *
  * 2. Scoping is by relationship, not just by column. PointsTransaction,
- *    Coupon and WalletSpend have no personId — they hang off
- *    BrandMembership — so those are scoped with a relation filter. The guarantee is the same either
+ *    Coupon and WalletSpend have no personId - they hang off
+ *    BrandMembership - so those are scoped with a relation filter. The guarantee is the same either
  *    way: the query cannot name another person.
  *
  * Anything not listed here is not reachable through this client at all.
  * Note the sharp edge that applies to forBrand() too: this only guards the
  * models named below. Adding a person-owned model to the schema without
- * adding it here does not half-protect it — it leaves it entirely outside
+ * adding it here does not half-protect it - it leaves it entirely outside
  * the lens.
  */
 
@@ -49,7 +49,7 @@ export class ConsumerScopeViolation extends Error {
 // operation that would use them: Prisma types the $allOperations callback
 // against the union of *all* a model's argument shapes, including creates,
 // and a type carrying only `where` has no property in common with a create
-// arg — which TypeScript reports as an incompatibility. forBrand()'s
+// arg - which TypeScript reports as an incompatibility. forBrand()'s
 // equivalent type has the same three fields for the same reason.
 type ScopeableArgs = {
   where?: Record<string, unknown>;
@@ -82,7 +82,7 @@ function scopeArgs(
   if (!READ_OPS.has(operation)) {
     throw new ConsumerScopeViolation(
       model,
-      `operation "${operation}" is not permitted — forPerson() is a read-only lens, so writes must go through a server action that owns the rule being applied`,
+      `operation "${operation}" is not permitted - forPerson() is a read-only lens, so writes must go through a server action that owns the rule being applied`,
     );
   }
 

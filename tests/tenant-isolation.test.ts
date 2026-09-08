@@ -8,8 +8,8 @@ import { encryptPhone, hashPhone } from "@/lib/security/crypto";
 // client, no matter what a call site tries to pass in.
 //
 // Store stands in for "any tenant-owned table" here, where CIOS used
-// Product. The guard does not care which model it is — it rewrites the same
-// `where` for every name in TENANT_SCOPED_MODELS — so one representative is
+// Product. The guard does not care which model it is - it rewrites the same
+// `where` for every name in TENANT_SCOPED_MODELS - so one representative is
 // enough, and a store is the one a brand actually configures.
 
 describe("tenant isolation", () => {
@@ -107,8 +107,8 @@ describe("tenant isolation", () => {
 /**
  * The guard has two halves that must agree: the list of models it claims to
  * scope, and the `$extends` block that actually intercepts them. They are
- * deliberately separate — a literal object per model, so a typo in a name
- * is a type error rather than a silent no-op — and separate things drift.
+ * deliberately separate - a literal object per model, so a typo in a name
+ * is a type error rather than a silent no-op - and separate things drift.
  *
  * They did. `auditEvent` was added to the list and not to the block, which
  * left an entire table listed as tenant-scoped while every query against it

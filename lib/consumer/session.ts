@@ -8,7 +8,7 @@ import { CONSUMER_SESSION_COOKIE } from "./session-cookie";
  * Shopper sessions, kept deliberately separate from staff sessions.
  *
  * Staff auth is NextAuth (lib/auth/config.ts) and every staff session
- * carries brandId and role — the two values the tenant guard trusts to
+ * carries brandId and role - the two values the tenant guard trusts to
  * decide what a request may see. A shopper is a fundamentally different
  * principal: a Person, belonging to no brand, who may hold memberships at
  * several. Putting both through one session mechanism would mean one
@@ -23,7 +23,7 @@ import { CONSUMER_SESSION_COOKIE } from "./session-cookie";
  * with arithmetic and no database read. It said plainly that it had no
  * revocation list, so a stolen cookie stayed valid for its full 30 days,
  * and that this was acceptable *only* while a shopper session could do
- * nothing but read balances and history — to be revisited before it could
+ * nothing but read balances and history - to be revisited before it could
  * spend a wallet balance.
  *
  * It then became able to spend one, and the note did not get revisited.
@@ -32,7 +32,7 @@ import { CONSUMER_SESSION_COOKIE } from "./session-cookie";
  * "sign out" cleared the thief's victim's cookie, not the thief's.
  *
  * So: an opaque random token, a row per session, and a check on every
- * request. The costs are real and worth naming — one indexed SELECT on
+ * request. The costs are real and worth naming - one indexed SELECT on
  * every shopper page render, and a table that needs sweeping
  * (sweepExpiredSessions, wired to a daily cron). What it buys is that
  * "sign out" and "sign out everywhere" now actually end a session for
@@ -41,7 +41,7 @@ import { CONSUMER_SESSION_COOKIE } from "./session-cookie";
  *
  * The token carries no claims. There is no personId to swap and no expiry
  * to extend, because both now live in a row that the holder of the cookie
- * cannot reach — the class of attack the old token's tests were mostly
+ * cannot reach - the class of attack the old token's tests were mostly
  * about simply does not exist in this shape.
  */
 
@@ -49,7 +49,7 @@ export { CONSUMER_SESSION_COOKIE } from "./session-cookie";
 
 /**
  * Not routed through forBrand() or forPerson(): a session is looked up by
- * its token before any person context exists — that lookup is how the
+ * its token before any person context exists - that lookup is how the
  * person is established. The same narrow, already-documented exception
  * that PasswordResetToken and the User-by-email lookup at login take. Every
  * *other* query here names an explicit personId supplied by an already
@@ -82,7 +82,7 @@ function hashToken(rawToken: string): string {
 }
 
 /**
- * Creates a session row and returns the raw token — the only moment it
+ * Creates a session row and returns the raw token - the only moment it
  * exists in plaintext anywhere. Only its hash is stored.
  */
 export async function createSession(personId: string, now: Date = new Date()): Promise<string> {
@@ -101,7 +101,7 @@ export async function createSession(personId: string, now: Date = new Date()): P
 export type SessionIdentity = { sessionId: string; personId: string };
 
 /**
- * Resolves a token to a live session, or null for anything that fails —
+ * Resolves a token to a live session, or null for anything that fails -
  * unknown, revoked, expired or malformed. Callers get no detail about
  * which, because none of them can act on the difference and the difference
  * is exactly what someone probing stolen cookies would like to learn.
@@ -149,7 +149,7 @@ export async function setConsumerSession(personId: string): Promise<void> {
  *
  * The sessionId is what lets the wallet screen say "this device" against
  * one row in the list. Worth having because the alternative ways to tell
- * two sessions apart — user-agent, IP — are personal data this product
+ * two sessions apart - user-agent, IP - are personal data this product
  * does not collect, and a list of identical-looking rows is not something
  * anyone can act on.
  */
@@ -198,7 +198,7 @@ export async function revokeAllSessions(
   return result.count;
 }
 
-/** Live sessions for a person, newest first — what the wallet screen shows. */
+/** Live sessions for a person, newest first - what the wallet screen shows. */
 export async function listActiveSessions(
   personId: string,
   now: Date = new Date(),
@@ -216,7 +216,7 @@ export async function clearConsumerSession(): Promise<void> {
   const token = store.get(CONSUMER_SESSION_COOKIE)?.value;
   if (token) {
     // Revoke before clearing. The other order would delete the only copy of
-    // the token this request has and leave the row live forever — a session
+    // the token this request has and leave the row live forever - a session
     // nobody can see and nobody can end.
     await revokeSessionByToken(token);
   }
@@ -229,7 +229,7 @@ export async function clearConsumerSession(): Promise<void> {
  *
  * Keyed on expiresAt rather than revokedAt so one condition covers both
  * ways a session dies. A revoked session keeps its original expiry, so it
- * is swept on the same schedule as one that simply lapsed — and a row is
+ * is swept on the same schedule as one that simply lapsed - and a row is
  * never deleted while it could still be the answer to "is this cookie
  * valid?", because an unexpired row is never in range.
  */

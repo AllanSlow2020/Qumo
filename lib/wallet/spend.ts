@@ -15,8 +15,8 @@ import type { Actor } from "@/lib/staff/actor";
  * for a few minutes. Nothing is debited. Step two is a cashier confirming
  * they actually handed over the discount, and *that* writes the ledger.
  *
- * Doing it the other way round — debiting when the shopper generates the
- * code — looks simpler and is wrong. A code the cashier never honours
+ * Doing it the other way round - debiting when the shopper generates the
+ * code - looks simpler and is wrong. A code the cashier never honours
  * (the queue moved on, the phone locked, they changed their mind at the
  * counter) would silently destroy real money belonging to a real person,
  * with no event anyone could point at afterwards. An unconfirmed request
@@ -44,7 +44,7 @@ const SPEND_TTL_MS = 5 * 60 * 1000;
  * Digits, not the pack-code alphabet: a cashier types this from a
  * shopper's screen while people wait, and a numeric keypad is faster and
  * less error-prone than hunting for letters. Guessing is not the threat
- * here the way it is for a pack code — a guessed spend code only lets
+ * here the way it is for a pack code - a guessed spend code only lets
  * someone spend *another shopper's* balance at a till where staff can see
  * both of them, and it dies in five minutes.
  */
@@ -66,7 +66,7 @@ export type PendingSpend = {
  *
  * Only one request can be live at a time per membership. A shopper at a
  * till is doing one transaction, and allowing several would mean several
- * codes that individually fit the balance but together exceed it — every
+ * codes that individually fit the balance but together exceed it - every
  * one of which would pass its own check. Starting a new request cancels
  * the previous one.
  */
@@ -103,7 +103,7 @@ export async function createWalletSpend(
 
   const balance = await getWalletBalanceCents(prisma, membership.id);
   if (amountCents > balance) {
-    // A friendly early rejection. It is not the enforcement — that happens
+    // A friendly early rejection. It is not the enforcement - that happens
     // again at confirmation, because the balance can move in between.
     throw new WalletSpendError("That's more than your balance.");
   }
@@ -148,7 +148,7 @@ export async function createWalletSpend(
   };
 }
 
-/** The shopper's live request at a brand, if any — for rendering the code. */
+/** The shopper's live request at a brand, if any - for rendering the code. */
 export async function getPendingSpend(personId: string, brandId: string, now: Date = new Date()) {
   return forPerson(personId).walletSpend.findFirst({
     where: { brandId, status: "PENDING", expiresAt: { gt: now } },
@@ -195,7 +195,7 @@ export type ConfirmResult = {
 
 /**
  * Business outcomes are returned from the transaction rather than thrown
- * inside it. Throwing would roll the transaction back — which silently
+ * inside it. Throwing would roll the transaction back - which silently
  * undid the EXPIRED marking below, leaving a lapsed code sitting at
  * PENDING forever and the shopper's screen disagreeing with the brand's
  * records. Anything the transaction needs to persist on its way to
@@ -306,7 +306,7 @@ export async function confirmWalletSpend(session: StaffSessionLike, rawCode: str
       const { outcome: _outcome, ...confirmed } = result;
       return confirmed;
     } catch (err) {
-      // A refused interleaving is the system working — retry the whole
+      // A refused interleaving is the system working - retry the whole
       // attempt. A WalletSpendError is a real answer for the cashier.
       if (isSerializationConflict(err) && attempt < MAX_SERIALIZATION_ATTEMPTS - 1) {
         continue;
@@ -319,9 +319,9 @@ export async function confirmWalletSpend(session: StaffSessionLike, rawCode: str
 }
 
 /**
- * Marks lapsed requests EXPIRED. Nothing depends on this running — an
+ * Marks lapsed requests EXPIRED. Nothing depends on this running - an
  * expired PENDING row is already refused at confirmation, and no money was
- * ever held — so it exists only to keep the shopper's screen and the
+ * ever held - so it exists only to keep the shopper's screen and the
  * brand's records honest rather than to protect a balance.
  */
 export async function expireLapsedSpends(brandId: string, now: Date = new Date()): Promise<number> {

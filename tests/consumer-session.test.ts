@@ -15,7 +15,7 @@ import { encryptPhone, hashPhone } from "@/lib/security/crypto";
 
 /**
  * Sessions hang off a real Person by foreign key, so these need real rows.
- * Numbers are untruncated and tracked for teardown — a truncated timestamp
+ * Numbers are untruncated and tracked for teardown - a truncated timestamp
  * repeats every hundred seconds or so, and two runs a minute apart then
  * collide in a way that reads as a logic bug.
  */

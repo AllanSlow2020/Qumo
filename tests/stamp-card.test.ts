@@ -5,7 +5,7 @@ import { generatePackCode } from "@/lib/packs/code";
 import { redeemPackCode } from "@/lib/packs/scan";
 
 /**
- * "Buy 10, get the 10th free" — the stamp card, which is the same ledger
+ * "Buy 10, get the 10th free" - the stamp card, which is the same ledger
  * as everything else with a threshold on it.
  */
 describe("stamp card completion", () => {
@@ -97,7 +97,7 @@ describe("stamp card completion", () => {
     // The brand's code prefix is honoured, same as any other coupon.
     expect(result.coupon?.code.startsWith("CC-")).toBe(true);
 
-    // Deducted as a ledger row, not reset — so balance is still a pure sum.
+    // Deducted as a ledger row, not reset - so balance is still a pure sum.
     expect(result.newBalance).toBe(0);
     expect(await stampBalance(shopper.id)).toBe(0);
 
@@ -130,7 +130,7 @@ describe("stamp card completion", () => {
   });
 
   it("respects the reward's coupon budget", async () => {
-    // maxCoupons is the brand's liability cap — crossing the threshold must
+    // maxCoupons is the brand's liability cap - crossing the threshold must
     // not issue past it, even though the stamps were legitimately earned.
     await prisma.reward.update({ where: { id: reward.id }, data: { maxCoupons: 2 } });
 
@@ -139,7 +139,7 @@ describe("stamp card completion", () => {
     }
 
     expect(await prisma.coupon.count({ where: { brandId: brand.id } })).toBe(2);
-    // The stamps stay on the balance rather than vanishing — the shopper
+    // The stamps stay on the balance rather than vanishing - the shopper
     // earned them, and the brand can raise the cap later.
     expect(await stampBalance(shopper.id)).toBe(CARD_SIZE);
 

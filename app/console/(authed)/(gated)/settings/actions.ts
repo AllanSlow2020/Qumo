@@ -15,7 +15,7 @@ export async function saveIdentity(_prev: IdentityState, formData: FormData): Pr
     if (err instanceof BrandIdentityError) {
       return { ok: false, error: err.message };
     }
-    // The schema's messages are written for a brand to read — "use a
+    // The schema's messages are written for a brand to read - "use a
     // six-digit colour like #C8102E" is more use than "invalid input", so
     // the first one is surfaced rather than swallowed.
     if (err instanceof ZodError) {

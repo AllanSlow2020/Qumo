@@ -1,24 +1,24 @@
 import { prisma as basePrisma } from "./client";
 
 // The core multi-tenancy guarantee for this app: every tenant-owned table
-// (product, user, brandMembership — anything with a brandId column) is only
+// (product, user, brandMembership - anything with a brandId column) is only
 // ever touched through forBrand(brandId), which rewrites every query to
 // force that brandId, and throws immediately if a caller's own args disagree
 // with the scope instead of silently overwriting it (a silent overwrite
 // would hide the bug that put the wrong brandId there in the first place).
 //
-// Person is deliberately NOT in this list — it has no brandId column by
+// Person is deliberately NOT in this list - it has no brandId column by
 // design (see prisma/schema.prisma), and is only reachable through a
 // BrandMembership the caller is authorised to see.
 //
 // Nor is ShopperSession: it belongs to a person, not a tenant, and a brand
-// has no business reading one. PhoneOtp likewise — it is resolved by phone
+// has no business reading one. PhoneOtp likewise - it is resolved by phone
 // hash before any brand context exists.
 //
 // Known limitation: on `create`/`createMany`, Prisma's generated input types
 // still require `brandId` at the type level (it's a required relation column
 // in the schema), even though the guard below will inject and verify it at
-// runtime. So callers must still pass the matching brandId on creates — the
+// runtime. So callers must still pass the matching brandId on creates - the
 // guard's job there is to reject a *mismatched* brandId, not to make the
 // field optional. The full guarantee (brandId never needs to be supplied,
 // and can't be gotten wrong) applies to reads, updates, and deletes, where
@@ -26,8 +26,8 @@ import { prisma as basePrisma } from "./client";
 
 /**
  * Exported so a test can assert that every name here is actually wired into
- * the `$extends` block below. The two are separate on purpose — see the
- * note on forBrand — and separate things drift: `auditEvent` was added to
+ * the `$extends` block below. The two are separate on purpose - see the
+ * note on forBrand - and separate things drift: `auditEvent` was added to
  * this list and not to that block, which left the model listed as scoped
  * while every query against it ran unscoped and unguarded. The type on
  * makeHandler cannot catch that, because the omission is a missing line
@@ -163,7 +163,7 @@ function scopeArgs(
   // running unscoped.
   throw new TenantScopeViolation(
     model,
-    `operation "${operation}" is not covered by the tenant guard yet — extend scopeArgs() before using it`,
+    `operation "${operation}" is not covered by the tenant guard yet - extend scopeArgs() before using it`,
   );
 }
 
@@ -184,7 +184,7 @@ function makeHandler(model: TenantScopedModel, brandId: string) {
  *
  * The query block is written as a literal object (not built from
  * TENANT_SCOPED_MODELS via a loop) because Prisma's `$extends` typing
- * expects a statically-shaped object per model — an `as any` cast here would
+ * expects a statically-shaped object per model - an `as any` cast here would
  * silently swallow a typo in a model name, which is exactly the kind of
  * mistake this guard exists to catch.
  */

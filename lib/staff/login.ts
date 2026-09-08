@@ -43,7 +43,7 @@ export type LoginResult =
   | { ok: true; token: string; userId: string }
   /**
    * The password was right and this account has a second factor. No session
-   * exists yet and nothing about the account has changed — the caller asks
+   * exists yet and nothing about the account has changed - the caller asks
    * for a code and calls again with all three values.
    *
    * Deliberately not an intermediate token in a cookie. A half-authenticated
@@ -84,7 +84,7 @@ export async function signInStaff(
 
   if (user.totpConfirmedAt) {
     // Asked for only after the password is known to be right, so the prompt
-    // never reveals which addresses have a second factor — or exist.
+    // never reveals which addresses have a second factor - or exist.
     if (!secondFactorCode) {
       return { ok: false, secondFactorRequired: true, error: null };
     }

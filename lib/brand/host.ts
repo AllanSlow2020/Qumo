@@ -6,8 +6,8 @@
  * and the database lookup happens later in Node (lib/brand/current.ts).
  *
  * The whole reskin requirement rests on this function. Getting it wrong in
- * the permissive direction — accepting a host we do not control, or letting
- * a client choose its own brand — hands one brand's shoppers to another.
+ * the permissive direction - accepting a host we do not control, or letting
+ * a client choose its own brand - hands one brand's shoppers to another.
  */
 
 /**
@@ -32,7 +32,7 @@ export const ROOT_DOMAIN = process.env.NEXT_PUBLIC_QUMO_ROOT_DOMAIN?.toLowerCase
  * them with it.
  *
  * Enforced here rather than only at brand creation, so a row that predates
- * the rule — or one written straight into the database — still cannot claim
+ * the rule - or one written straight into the database - still cannot claim
  * a reserved host.
  */
 export const RESERVED_SUBDOMAINS = new Set([
@@ -62,9 +62,9 @@ const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
  * no brand. Callers decide what to do about it (app/(shopper)/no-brand).
  *
  * Deliberately strict. Only a host that is *exactly* one label deeper than
- * the root domain resolves, so `evil.chicken-licken.qumo.co.za` — which an
+ * the root domain resolves, so `evil.chicken-licken.qumo.co.za` - which an
  * attacker with a wildcard record beneath their own name could otherwise
- * arrange — does not.
+ * arrange - does not.
  */
 export function brandSlugFromHost(host: string | null | undefined, rootDomain = ROOT_DOMAIN): string | null {
   if (!host) return null;
@@ -78,7 +78,7 @@ export function brandSlugFromHost(host: string | null | undefined, rootDomain = 
 
   const root = (rootDomain.split(":")[0] ?? "").trim().toLowerCase().replace(/\.$/, "");
   if (!hostname.endsWith(`.${root}`)) {
-    // The apex itself, or a host we do not serve — a preview URL, an IP, or
+    // The apex itself, or a host we do not serve - a preview URL, an IP, or
     // somebody else's domain pointed at us. None of them name a brand.
     return null;
   }
@@ -99,14 +99,14 @@ export function brandSlugFromHost(host: string | null | undefined, rootDomain = 
  * exception. A header is the one part of a request a client fully controls,
  * so if the proxy ever merely *added* it, sending
  * `X-Qumo-Brand: some-other-brand` would be enough to read another brand's
- * page — and, once the console lands, to aim a write at another brand's
+ * page - and, once the console lands, to aim a write at another brand's
  * tenant. Stripping is not defence in depth here; it is the defence.
  */
 export const BRAND_HEADER = "x-qumo-brand";
 
 /**
  * The console's own subdomain. In RESERVED_SUBDOMAINS above, so no brand can
- * ever claim it — that reservation and this constant have to agree, and they
+ * ever claim it - that reservation and this constant have to agree, and they
  * do by construction because this is the string in that set.
  */
 export const CONSOLE_SUBDOMAIN = "app";

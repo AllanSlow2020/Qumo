@@ -14,7 +14,7 @@ function formatDate(d: Date): string {
  *
  * The confirmation is not ceremony. Cancelling stops every shopper earning
  * the moment it lands and starts a clock on balances they have already been
- * promised — so the screen says both halves, with the actual date, before
+ * promised - so the screen says both halves, with the actual date, before
  * anybody clicks.
  */
 export function ProgrammeControls({
@@ -54,7 +54,7 @@ export function ProgrammeControls({
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <p className="cn-body">
           {status === "CLOSED"
-            ? "This programme is closed. Shoppers can't earn and can no longer spend what they had — though nothing was deleted, so restarting brings every balance back exactly as it was."
+            ? "This programme is closed. Shoppers can't earn and can no longer spend what they had - though nothing was deleted, so restarting brings every balance back exactly as it was."
             : `Earning has stopped. Shoppers can still spend what they'd already earned until ${honourDate}.`}
         </p>
         <button type="button" className="cn-btn" disabled={pending} onClick={() => run(resumeProgramme)}>
@@ -68,7 +68,7 @@ export function ProgrammeControls({
   if (confirming) {
     return (
       <div className="cn-confirm">
-        {/* Deliberately not a restatement of the paragraph above it — that
+        {/* Deliberately not a restatement of the paragraph above it - that
             explains the rule, and a confirmation that repeats the rule is
             read as boilerplate and clicked through. This says what happens
             to this brand, today, with the date on it. */}

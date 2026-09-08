@@ -6,7 +6,7 @@ import { requireStaff } from "@/lib/staff/current";
  * Everything an account gets to see only once it owns its own password.
  *
  * A route group rather than a check in each page, and rather than reading
- * the pathname in the layout above — a layout is not given one. Nesting is
+ * the pathname in the layout above - a layout is not given one. Nesting is
  * the mechanism that already gates login from the rest of the console, and
  * it has the property that matters: a page added under here inherits the
  * gate, and a page that renders is one that passed it.

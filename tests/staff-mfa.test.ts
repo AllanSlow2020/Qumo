@@ -170,7 +170,7 @@ describe("signing in with a second factor", () => {
     const result = await signInStaff(user.email, "not-the-password", totpCode(secret, now), now);
     expect(result.ok).toBe(false);
     // And says nothing about the second factor, because the password never
-    // matched — the prompt must not become an oracle for which accounts have
+    // matched - the prompt must not become an oracle for which accounts have
     // one, or which exist.
     expect(result.ok === false && result.secondFactorRequired).toBeFalsy();
   });
@@ -197,7 +197,7 @@ describe("recovery codes", () => {
   });
 
   /**
-   * Using one means a phone was lost — or somebody else has the codes.
+   * Using one means a phone was lost - or somebody else has the codes.
    * Either way every other session should end.
    */
   it("ends every other session", async () => {
@@ -297,7 +297,7 @@ describe("a session is still a session", () => {
  * The only limit on guessing a code was the per-client login cap, which is
  * keyed on the caller's address precisely so it catches one machine working
  * through many accounts. It does nothing about many machines working on one
- * account — which is the shape of an attack on a second factor, because
+ * account - which is the shape of an attack on a second factor, because
  * whoever is guessing already has the password.
  *
  * The arithmetic is why it mattered: a six-digit code across a three-step
@@ -315,7 +315,7 @@ describe("guessing the second factor", () => {
       expect(await consumeSecondFactor(user.id, String(100000 + i), now)).toBe(false);
     }
 
-    // The eleventh is refused before any comparison happens — and the proof
+    // The eleventh is refused before any comparison happens - and the proof
     // is that the *correct* code is refused too. Without the cap this would
     // pass, and so would the ten thousandth guess.
     expect(await consumeSecondFactor(user.id, totpCode(secret, now), now)).toBe(false);
@@ -345,7 +345,7 @@ describe("guessing the second factor", () => {
     expect(await consumeSecondFactor(user.id, totpCode(secret, now), now)).toBe(false);
 
     // Somebody who fat-fingered their code ten times is not locked out
-    // permanently — the window closes and they try again.
+    // permanently - the window closes and they try again.
     const later = new Date(now.getTime() + 15 * 60 * 1000 + 1_000);
     expect(await consumeSecondFactor(user.id, totpCode(secret, later), later)).toBe(true);
   });

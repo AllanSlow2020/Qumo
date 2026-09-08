@@ -6,8 +6,8 @@ import type { Role } from "@prisma/client";
  * This existed eight times, once per engine module, and had drifted: five
  * copies carried `{ brandId, role }` and three also carried `id`. That was
  * survivable while nothing needed the id. The audit log needs it
- * everywhere — an entry that cannot say who did the thing is not worth
- * writing — so the shape is settled here and imported rather than
+ * everywhere - an entry that cannot say who did the thing is not worth
+ * writing - so the shape is settled here and imported rather than
  * re-declared.
  *
  * Still a structural type rather than the full StaffIdentity: the engine

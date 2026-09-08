@@ -13,7 +13,7 @@ import { toBrandTheme, type BrandTheme } from "./theme";
  * already stripped a client-supplied header.
  *
  * `cache()` scopes memoisation to the request, so a layout, a page and three
- * components asking for the brand cost one query. Not a module-level cache —
+ * components asking for the brand cost one query. Not a module-level cache -
  * that would outlive the request and serve one brand's identity to the next
  * shopper.
  */
@@ -49,7 +49,7 @@ export const currentBrand = cache(async (): Promise<BrandTheme | null> => {
 });
 
 /**
- * For the pages that cannot mean anything without a brand — a wallet, a
+ * For the pages that cannot mean anything without a brand - a wallet, a
  * scan, an opt-out. Throwing is right here: every one of these routes is
  * reached from a link or a code that carried a brand host, so arriving
  * without one is a routing bug, not a shopper mistake.

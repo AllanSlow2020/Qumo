@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { join } from "./actions";
 
 /**
- * Opts in, then goes to the wallet — or to sign-in first, carrying the
+ * Opts in, then goes to the wallet - or to sign-in first, carrying the
  * destination so the shopper comes back here rather than being dropped
  * somewhere they did not ask for.
  *

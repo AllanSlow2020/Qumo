@@ -9,7 +9,7 @@ export class ForbiddenError extends Error {
 
 /**
  * Call at the top of any server action / route handler that needs more than
- * "logged in" — e.g. only OWNER/ADMIN may manage users. Throws rather than
+ * "logged in" - e.g. only OWNER/ADMIN may manage users. Throws rather than
  * returning a boolean so a forgotten check fails loudly (an uncaught
  * exception / 500) instead of silently letting the request through.
  */

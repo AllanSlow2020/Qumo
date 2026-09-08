@@ -13,7 +13,7 @@ import { PRODUCT_NAME } from "@/lib/product";
  *
  * Support points at the brand first. They run the programme, they decide
  * what it pays, and a shopper with a complaint about a missing R6 needs the
- * people who owe it to them — not us.
+ * people who owe it to them - not us.
  */
 export async function QumoFooter() {
   const brand = await currentBrand();

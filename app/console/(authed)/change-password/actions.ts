@@ -18,7 +18,7 @@ export async function changePassword(_prev: PasswordState, formData: FormData): 
   }
 
   try {
-    // The current session id is passed through so it survives — the other
+    // The current session id is passed through so it survives - the other
     // devices are what a password change is meant to sign out.
     await changeOwnPassword(staff.userId, current, next, staff.sessionId);
     return { ok: true };

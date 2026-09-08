@@ -20,7 +20,7 @@ import type { PromoActionState } from "./state";
  */
 
 function toState(err: unknown): PromoActionState {
-  // These three carry messages written for a brand to read — the conflict
+  // These three carry messages written for a brand to read - the conflict
   // between two spend-based promotions in particular explains a rule nobody
   // would guess. Passing them through is the point of having them.
   if (err instanceof CampaignError || err instanceof StoreError || err instanceof EarnRuleError) {
@@ -30,7 +30,7 @@ function toState(err: unknown): PromoActionState {
     return { ok: false, error: "Your role can't change promotions. Ask an owner or admin." };
   }
   if (err instanceof Error && err.name === "ZodError") {
-    return { ok: false, error: "Check the numbers — each one has to be a whole number above zero." };
+    return { ok: false, error: "Check the numbers - each one has to be a whole number above zero." };
   }
   console.error("[console/promotions]", err);
   return { ok: false, error: "Something went wrong. Try again." };
@@ -66,8 +66,8 @@ export async function setStatus(_prev: PromoActionState, formData: FormData): Pr
 /**
  * One action for both rule shapes, dispatching on the type the form chose.
  *
- * The two engine functions stay separate — they have different validation
- * and, for now, different role lists — but a brand is doing one thing
+ * The two engine functions stay separate - they have different validation
+ * and, for now, different role lists - but a brand is doing one thing
  * ("decide what this promotion awards") and should fill in one form.
  */
 export async function setRule(_prev: PromoActionState, formData: FormData): Promise<PromoActionState> {

@@ -27,7 +27,7 @@ import { redeemReceipt } from "@/lib/stores/receipt";
  * These tests assert the bound, not the vulnerability, so they keep their
  * meaning after the caps land.
  */
-describe("lib/stores/receipt — forged slips at an unsigned store", () => {
+describe("lib/stores/receipt - forged slips at an unsigned store", () => {
   const suffix = Date.now();
 
   /** What a brand is willing to hand one person in a day, in cents. */
@@ -123,7 +123,7 @@ describe("lib/stores/receipt — forged slips at an unsigned store", () => {
     const balance = await balanceFor(attacker);
     expect(balance).toBeLessThanOrEqual(DAILY_CENTS_CAP);
 
-    // And the refusal has to be legible, not a silent zero award — a shopper
+    // And the refusal has to be legible, not a silent zero award - a shopper
     // who has genuinely hit the ceiling deserves to be told which one.
     const refusals = results.filter((r) => !r.ok);
     expect(refusals.length).toBeGreaterThan(0);
@@ -218,7 +218,7 @@ describe("lib/stores/receipt — forged slips at an unsigned store", () => {
   it("holds the ceiling when scans arrive together", async () => {
     // The reason every check sits inside the serializable transaction. Run
     // in parallel and outside it, each of these reads a total below the
-    // ceiling and all of them write — which is the race an attacker drives
+    // ceiling and all of them write - which is the race an attacker drives
     // deliberately rather than hits by accident.
     const person = await prisma.person.create({
       data: { phoneHash: `forge-race-${suffix}`, phoneEncrypted: "x" },

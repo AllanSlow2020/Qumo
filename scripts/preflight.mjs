@@ -11,7 +11,7 @@
  * brand", because the host names no brand and nothing else decides which
  * brand a shopper is looking at.
  *
- * Strict only where it can tell it is building for real — on Vercel, or
+ * Strict only where it can tell it is building for real - on Vercel, or
  * when asked. `next build` sets NODE_ENV=production even for a local build,
  * so keying on that would fail every `pnpm build` on a laptop, and a check
  * people learn to work around is worse than no check.
@@ -29,7 +29,7 @@ const strict = Boolean(process.env.VERCEL) || process.env.QUMO_PREFLIGHT === "st
 /**
  * Loads .env, if there is one, without overwriting anything already set.
  *
- * Next loads .env itself, but this runs before Next does — so without this
+ * Next loads .env itself, but this runs before Next does - so without this
  * a local `pnpm build` reports every secret missing, which is both wrong
  * and the fastest way to teach somebody to ignore the output. A host that
  * supplies real environment variables always wins: nothing here overwrites
@@ -98,7 +98,7 @@ const root = value("NEXT_PUBLIC_QUMO_ROOT_DOMAIN");
 if (!root) {
   fail(
     "NEXT_PUBLIC_QUMO_ROOT_DOMAIN is not set, so it defaults to localhost.",
-    "Every request would land on the no-brand page. Set it to the apex you serve brands under, before the build — it is compiled in.",
+    "Every request would land on the no-brand page. Set it to the apex you serve brands under, before the build - it is compiled in.",
   );
 } else if (root === "localhost" || root.endsWith(".localhost")) {
   fail(
@@ -125,7 +125,7 @@ if (!value("TWILIO_ACCOUNT_SID")) {
   );
 }
 
-// Not a mistake — it is a thing somebody switched on — but it is the one
+// Not a mistake - it is a thing somebody switched on - but it is the one
 // setting here that makes the front door wider, so it says so on every
 // single build until it goes.
 if (value("DEMO_LOGIN_PHONES") && value("DEMO_LOGIN_CODE")) {
@@ -138,13 +138,13 @@ if (value("DEMO_LOGIN_PHONES") && value("DEMO_LOGIN_CODE")) {
 if (!value("ERROR_WEBHOOK_URL")) {
   warn(
     "ERROR_WEBHOOK_URL is not set.",
-    "Errors are still written to stdout, which Vercel keeps — nothing is lost, but nothing tells you either.",
+    "Errors are still written to stdout, which Vercel keeps - nothing is lost, but nothing tells you either.",
   );
 }
 
 // --------------------------------------------------------------- report
 
-const label = strict ? "Preflight" : "Preflight (advisory — not a real deployment)";
+const label = strict ? "Preflight" : "Preflight (advisory - not a real deployment)";
 console.log(`\n${label}`);
 
 for (const w of warnings) console.log(`   !   ${w}`);
