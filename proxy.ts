@@ -68,6 +68,13 @@ function isPublic(pathname: string): boolean {
     // its own CRON_SECRET check inside the handler instead - the same
     // "public URL, real auth in the route" shape a webhook uses.
     pathname.startsWith("/api/cron") ||
+    // The aggregator posting an inbound SMS. Same shape as cron and for
+    // the same reason: a network has no cookie to carry, so the URL is
+    // public and the route checks its own shared secret. It also arrives
+    // on whatever host the aggregator was given, which names no brand -
+    // fine, because an SMS asserts no brand and the code it carries
+    // already knows its own.
+    pathname.startsWith("/api/sms") ||
     // A browser posting a blocked-resource report has no session and cannot
     // be told to sign in. It defends itself instead: rate limited, size
     // capped, and answering 204 to everything.

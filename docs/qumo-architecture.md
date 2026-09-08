@@ -384,6 +384,45 @@ system. For Chicken Licken's customer base this may matter more than the web
 path. Registration works the same way: an unknown number gets the terms and
 "reply YES to join", which is a better consent record than a tick box.
 
+### What the SMS channel actually shipped, and where it differs from the above
+
+Built in `lib/sms/inbound.ts` and `app/api/sms/inbound/route.ts`. Three
+decisions came out differently once it was real, and each is a narrowing
+rather than a change of direction.
+
+**Balance, not history.** The section above says "Balance and history, yes."
+The channel sends balances only. The entitlement is not in question, the
+medium is: a wallet page sits behind a one-time code and closes when the
+shopper leaves it, while an SMS sits in an inbox on a handset that in this
+market is frequently shared, borrowed or handed to a child. "R240 with
+Chicken Licken" is an amount. A list of scans is a record of which shops
+somebody used and when, which is a different disclosure and not the one that
+was asked for. The full history stays one authenticated tap away.
+
+**Pack codes earn over SMS. Slips do not, yet.** A pack code is twelve
+characters from an unambiguous alphabet and is typeable by design, so
+SMS-to-earn on packs works today through `redeemPackCode()` with no changes
+anywhere. A slip is a different shape: `lib/stores/payload.ts` carries a
+store code, a till transaction id, a total, a timestamp and a 20-character
+HMAC, and nobody is typing that into a feature phone. Making slips earn over
+SMS needs a short signed token printed beside the QR, which is a change to
+the receipt payload and to every till template already deployed. That is a
+real piece of work with a real cost to the brand, so it waits for a brand
+that wants it rather than being guessed at now.
+
+**STOP is answered and changes nothing.** Honouring it literally would
+suppress the one-time codes a person needs to sign in, on the say-so of a
+channel this document has just finished saying cannot be authenticated - a
+free denial of service against any number an attacker cares to name. So it
+is acknowledged, the real way to leave a programme is explained, and no
+state moves. Ignoring the keyword entirely was the other option and is
+worse.
+
+**No aggregator is chosen.** The webhook reads the encodings and field names
+all of them use, and is authenticated by a shared secret. What remains
+provider-specific is the reply envelope - TwiML, JSON, plain text - which is
+one function written on the day the account exists.
+
 **SMS first, USSD later.** SMS also needs no data, is far cheaper and simpler
 to provision, and request/response suits "check my balance". USSD earns its
 place when an interactive menu is wanted and when the interaction must cost the
