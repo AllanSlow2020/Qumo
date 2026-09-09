@@ -9,6 +9,7 @@ import { PRODUCT_NAME } from "@/lib/product";
 import { BrandHeader } from "../../brand-header";
 import { signOutEverywhere } from "../actions";
 import { SignOutButton } from "../sign-out-button";
+import { DeleteAccountForm } from "./delete-account-form";
 import { OptOutForm } from "./opt-out-form";
 
 // Async, because the title has to name the brand: a static one would put
@@ -102,13 +103,23 @@ export default async function MePage() {
         <a href="/api/consumer/export" className="sc-btn" download>
           Download my data
         </a>
-        <p className="sc-label">
-          {/* Explicit space: the transform drops a literal one that follows
-              an element here, and "privacy notice- deletion" is what shipped
-              on the stores page for the same reason. */}
-          Want your account deleted instead? Read the <Link href="/legal/privacy">privacy notice</Link>{" "}
-          - deletion has to reckon with rewards a brand has already honoured, so it isn&apos;t instant.
+      </section>
+
+      {/* Its own card rather than a line under the export. They read as one
+          pair - "what you hold" and "stop holding it" - and putting the
+          irreversible one inside the same box as a download invites the
+          wrong click. */}
+      <section className="sc-card">
+        <h2 className="sc-h2">Delete my account</h2>
+        <p className="sc-body">
+          This removes your number, your name and everything else that identifies you, across every brand you have
+          joined through {PRODUCT_NAME}. It cannot be undone, and any rewards you have not used go with it.
         </p>
+        <p className="sc-label">
+          Download your data first if you want a copy. The <Link href="/legal/privacy">privacy notice</Link>{" "}
+          explains what each brand keeps afterwards and why.
+        </p>
+        <DeleteAccountForm productName={PRODUCT_NAME} />
       </section>
 
       {sessions.length > 1 && (

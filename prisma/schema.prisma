@@ -403,6 +403,23 @@ model Person {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
+  // When this person asked to be erased.
+  //
+  // The row survives its own deletion, and that is the point rather than a
+  // compromise. Every ledger entry hangs off a BrandMembership that hangs
+  // off this row, so deleting it would take a brand's record of what it
+  // issued with it - their liability for last quarter would change because
+  // somebody left this quarter, and their books would stop reconciling for
+  // a reason no accountant could find. What is deleted is everything that
+  // makes the row a person: the number, its hash, the name, the suburb.
+  // What is left cannot be tied back to anybody.
+  //
+  // Set at the same moment phoneHash is overwritten with a value no real
+  // number can hash to, so the account is unreachable by construction and
+  // not merely by this flag. The flag exists to say it was deliberate and
+  // when - see lib/consumer/erase.ts.
+  erasedAt DateTime?
+
   brandMemberships BrandMembership[]
   shopperSessions  ShopperSession[]
 }

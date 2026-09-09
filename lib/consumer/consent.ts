@@ -25,7 +25,7 @@ import { OPERATOR_NAME, PRODUCT_NAME } from "@/lib/product";
  * always answer what a given person actually saw. A shopper whose recorded
  * version is behind re-affirms on their next sign-in (lib/consumer/otp.ts).
  */
-export const WEB_CONSENT_VERSION = "web-v3";
+export const WEB_CONSENT_VERSION = "web-v4";
 
 /**
  * web-v1 said the same things under the product's old working title. That
@@ -42,6 +42,19 @@ export const WEB_CONSENT_VERSION = "web-v3";
  * which the tick box now points at alongside the notice: the two documents
  * arrived at different times and rewriting versioned consent copy twice is
  * worse than rewriting it once.
+ *
+ * web-v3 said we would delete an account and its history on request. That
+ * was more than this system can do and more than it should: every ledger
+ * entry hangs off the person, so deleting the row would take a brand's
+ * record of what it issued with it and move their liability for a quarter
+ * that has already closed. What deletion actually does is erase everything
+ * identifying and leave an anonymous financial record - see
+ * lib/consumer/erase.ts. Narrowing a promise is the clearest case there is
+ * of a change in substance, so it is a bump, not an edit.
+ *
+ * The same correction moved deletion from "contact us and we will action
+ * it" to a button on the shopper's own details page, which is the part of
+ * this change that is in their favour.
  */
 
 /** The single line beside the tick box. Kept short enough to actually be read. */
@@ -71,7 +84,7 @@ export const CONSENT_POINTS: { heading: string; body: string }[] = [
   },
   {
     heading: "Your choices",
-    body: `You can ask us for a copy of what we hold about you, ask us to correct it, or ask us to delete your account and its history. Contact ${OPERATOR_NAME} and we will action it.`,
+    body: `You can download a copy of everything we hold about you, leave any brand's programme, or delete your account, all from your own details page and without asking anyone. Deleting removes your number, your name and anything else that identifies you. The record that a reward was earned on a date stays with the brand, because it is their financial record and once your details are gone it is no longer about you.`,
   },
   {
     heading: "Marketing",
@@ -102,7 +115,26 @@ export const CONSENT_POINTS: { heading: string; body: string }[] = [
  * to the message. TERMS costs nothing when nobody sends it, and works on the
  * handset the person is already holding.
  */
-export const SMS_CONSENT_VERSION = "sms-v1";
+/**
+ * sms-v1 pointed at a notice that promised outright deletion, because
+ * SMS_TERMS_BODY is built from CONSENT_POINTS and CONSENT_POINTS said so.
+ * The same correction that produced web-v4 changed what a TERMS reply
+ * sends, and the joiner was told TERMS is where the full notice lives, so
+ * it is part of what they agreed to and this bumps with it.
+ *
+ * ── A gap this exposes, named rather than papered over ───────────────────
+ *
+ * A web shopper on a stale version re-affirms on their next sign-in
+ * (lib/consumer/otp.ts). An SMS joiner has no next sign-in: they text a
+ * code and it earns. So there is currently no path by which somebody who
+ * joined under sms-v1 is ever shown sms-v2, and bumping the constant does
+ * not create one. It costs nothing today because no aggregator is
+ * connected and nobody has joined this way. It has to be built before that
+ * stops being true, and the natural shape is the same one the web uses:
+ * check the version on the next inbound message and send the change before
+ * acting on it.
+ */
+export const SMS_CONSENT_VERSION = "sms-v2";
 
 /**
  * Sent to an unrecognised number before any account exists for it.
