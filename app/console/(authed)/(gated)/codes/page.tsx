@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Role } from "@prisma/client";
 import { listCampaignsForConsole } from "@/lib/campaigns/manage";
 import { listPackBatches, MANAGE_PACK_BATCH_ROLES } from "@/lib/packs/batch";
@@ -39,7 +40,7 @@ export default async function ConsoleCodesPage() {
                   <th className="cn-num">Codes</th>
                   <th className="cn-num">Scanned</th>
                   <th>Generated</th>
-                  <th>Download</th>
+                  <th>Print run</th>
                 </tr>
               </thead>
               <tbody>
@@ -62,11 +63,28 @@ export default async function ConsoleCodesPage() {
                       })}
                     </td>
                     <td>
-                      {/* A plain link, not a button: it is a file download,
-                          and the browser already does that well. */}
-                      <a href={`/api/console/batches/${batch.id}`} className="cn-btn cn-btn-quiet" download>
-                        CSV
-                      </a>
+                      {/* Both links are hidden from a role that cannot have
+                          the codes, rather than shown and then refused. The
+                          routes behind them check the role themselves and are
+                          what actually enforces it - this only stops the
+                          console offering somebody a door that will not
+                          open. */}
+                      {canManage && (
+                        <div className="cn-actions">
+                          {/* A plain link, not a button: it is a file
+                              download, and the browser already does that
+                              well. */}
+                          <a href={`/api/console/batches/${batch.id}`} className="cn-btn cn-btn-quiet" download>
+                            CSV
+                          </a>
+                          {/* The same codes as something you can scan. What
+                              a vendor needs is the CSV; what everybody else
+                              needs is this. */}
+                          <Link href={`/codes/${batch.id}/sheet`} className="cn-btn cn-btn-quiet">
+                            Labels
+                          </Link>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db/client";
-import { ROOT_DOMAIN } from "@/lib/brand/host";
+import { brandOrigin } from "@/lib/brand/host";
 import { getStaffSession } from "@/lib/staff/session";
 import { requireRole, ForbiddenError } from "@/lib/auth/rbac";
 import { MANAGE_PACK_BATCH_ROLES } from "@/lib/packs/batch";
@@ -47,11 +47,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ batchId:
   }
 
   const brand = await prisma.brand.findUnique({ where: { id: staff.brandId }, select: { slug: true } });
-  // The brand's own host, not the console's: a code scanned at app.qumo… or
-  // at the apex lands on a page that names no brand.
-  const proto = req.headers.get("x-forwarded-proto") ?? (ROOT_DOMAIN === "localhost" ? "http" : "https");
-  const port = ROOT_DOMAIN === "localhost" ? ":3000" : "";
-  const origin = `${proto}://${brand?.slug}.${ROOT_DOMAIN}${port}`;
+  if (!brand) {
+    return new Response("Not found", { status: 404 });
+  }
+  const origin = brandOrigin(brand.slug, req.headers.get("x-forwarded-proto"));
 
   const safeLabel = data.label.replace(/[^a-zA-Z0-9-_]+/g, "-").slice(0, 60) || "batch";
 

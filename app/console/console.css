@@ -760,3 +760,68 @@ select.cn-input {
 /* The export control is an anchor so the browser handles the download, and
    an anchor brings an underline that a button should not have. */
 a.cn-btn { text-decoration: none; display: inline-block; }
+
+/* ── Printable label sheets ───────────────────────────────────────────────
+   The one screen in the console whose real output is paper. Everything here
+   is sized in millimetres rather than pixels, because the thing being
+   specified is a physical label and mm is what a printer and a label
+   supplier both speak. */
+
+.cn-sheet {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6mm;
+  margin-top: 20px;
+}
+
+.cn-label-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2mm;
+  padding: 3mm;
+  border: 1px dashed var(--cn-line);
+  /* Never split a label across a page break. Half a QR on each of two sheets
+     is two wasted labels and a scan that fails in a shop. */
+  break-inside: avoid;
+}
+
+/* 28mm is the smallest a 12-character code at error correction M reliably
+   scans from, allowing for a phone camera at arm's length and a label that
+   has been round a distribution centre. Below that the modules get smaller
+   than the print process can hold. */
+.cn-label-qr { width: 28mm; height: 28mm; }
+.cn-label-qr svg { width: 100%; height: 100%; display: block; }
+
+.cn-label-code {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9pt;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+@media print {
+  /* The console's own chrome is screen furniture. A nav bar printed onto a
+     sheet of stickers costs a label. */
+  .cn-noprint,
+  .cn-top,
+  .cn-nav-row {
+    display: none !important;
+  }
+
+  /* Black on white regardless of the theme the operator happens to be in.
+     A QR printed in a dark theme's inverted palette does not scan. */
+  :root, body, .cn-main {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .cn-main { max-width: none; margin: 0; padding: 0; }
+
+  .cn-sheet { gap: 4mm; margin: 0; }
+
+  /* Solid rather than dashed once it is real: a cut line. */
+  .cn-label-cell { border: 1px solid #ccc; }
+
+  @page { size: A4; margin: 10mm; }
+}
