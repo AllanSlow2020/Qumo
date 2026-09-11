@@ -186,8 +186,8 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
                   className="cn-input"
                   defaultValue={rule?.type ?? "PERCENT_OF_SPEND"}
                 >
-                  <option value="PERCENT_OF_SPEND">A share of what they spend - needs a till slip</option>
-                  <option value="FLAT_PER_SCAN">A fixed amount per scan - works on packs and stickers</option>
+                  <option value="PERCENT_OF_SPEND">A share of what they spend, needs a till slip</option>
+                  <option value="FLAT_PER_SCAN">A fixed amount per scan, works on packs and stickers</option>
                 </select>
               </div>
 
@@ -228,7 +228,7 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
                   min={1}
                   defaultValue={rule?.amount || 1}
                 />
-                <p className="cn-label">In the unit above - cents, points or stamps. Only used for a fixed promotion.</p>
+                <p className="cn-label">In the unit above: cents, points or stamps. Only used for a fixed promotion.</p>
               </div>
 
               <div className="cn-field">
@@ -249,7 +249,7 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
                 </p>
               )}
               <button type="submit" className="cn-btn" disabled={rulePending} style={{ alignSelf: "flex-start" }}>
-                {rulePending ? "Saving…" : ruleState.ok ? "Saved - save again" : "Save what it awards"}
+                {rulePending ? "Saving…" : ruleState.ok ? "Saved. Save again" : "Save what it awards"}
               </button>
             </form>
 
@@ -273,7 +273,7 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
                   placeholder="e.g. 500000 for R5,000"
                 />
                 <p className="cn-label">
-                  In the promotion&apos;s own unit. Once reached, it stops awarding - it does not stop existing.
+                  In the promotion&apos;s own unit. Once reached, it stops awarding, but it does not stop existing.
                 </p>
               </div>
 
@@ -326,7 +326,7 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
                 A box left empty means no ceiling at all. Saving with them empty removes any you had.
               </p>
               <button type="submit" className="cn-btn" disabled={limitPending} style={{ alignSelf: "flex-start" }}>
-                {limitPending ? "Saving…" : limitState.ok ? "Saved - save again" : "Save the ceilings"}
+                {limitPending ? "Saving…" : limitState.ok ? "Saved. Save again" : "Save the ceilings"}
               </button>
             </form>
           </div>

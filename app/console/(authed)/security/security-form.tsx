@@ -74,7 +74,7 @@ function Confirm({
   return (
     <form action={action} className="cn-form">
       <p className="cn-body">
-        Add this to your authenticator app - 1Password, Google Authenticator, Authy, whichever you already use - then
+        Add this to your authenticator app (1Password, Google Authenticator, Authy, whichever you already use), then
         type the six digits it shows.
       </p>
 
@@ -167,7 +167,7 @@ function TurnOff({
         </strong>{" "}
         left.
         {recoveryCodesLeft <= 2 && (
-          <> That is not many - generate a fresh set before you need one.</>
+          <> That is not many. Generate a fresh set before you need one.</>
         )}
       </p>
 

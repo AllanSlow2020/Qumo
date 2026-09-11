@@ -20,7 +20,7 @@ export default async function ConsoleSettingsPage() {
       <h1 className="cn-h1">Appearance</h1>
       <p className="cn-body">
         Your name, your colour, your type and your logo, on the pages your customers actually see. The same
-        mechanic runs underneath for every brand - this is the part that makes it yours. Everything here has a
+        mechanic runs underneath for every brand. This is the part that makes it yours. Everything here has a
         Qumo default already set, so changing nothing still gets you a considered page.
       </p>
 
@@ -34,7 +34,7 @@ export default async function ConsoleSettingsPage() {
               greying out a field. */}
           <p className="cn-body">
             This is fixed. It goes into every QR code you print, so changing it would dead-end every poster, slip and
-            tag already out in a store. If you need a different one, that is a move rather than an edit - talk to us
+            tag already out in a store. If you need a different one, that is a move rather than an edit. Talk to us
             and we will redirect the old one.
           </p>
         </div>

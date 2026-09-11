@@ -30,7 +30,7 @@ function toState(err: unknown): PromoActionState {
     return { ok: false, error: "Your role can't change promotions. Ask an owner or admin." };
   }
   if (err instanceof Error && err.name === "ZodError") {
-    return { ok: false, error: "Check the numbers - each one has to be a whole number above zero." };
+    return { ok: false, error: "Check the numbers. Each one has to be a whole number above zero." };
   }
   console.error("[console/promotions]", err);
   return { ok: false, error: "Something went wrong. Try again." };

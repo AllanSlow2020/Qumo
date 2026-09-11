@@ -72,7 +72,7 @@ export const CONSENT_POINTS: { heading: string; body: string }[] = [
   },
   {
     heading: "What brands can see",
-    body: "A brand can see your activity with that brand only - the scans you made, the rewards you earned and what you have spent with them. A brand cannot see your activity with any other brand, or that you use any other brand at all.",
+    body: "A brand can see your activity with that brand only: the scans you made, the rewards you earned and what you have spent with them. A brand cannot see your activity with any other brand, or that you use any other brand at all.",
   },
   {
     heading: "Who operates it",
@@ -88,7 +88,7 @@ export const CONSENT_POINTS: { heading: string; body: string }[] = [
   },
   {
     heading: "Marketing",
-    body: "We will send you the one-time codes you ask for. We will not send you marketing messages on the strength of this agreement alone - if a brand wants to market to you, you will be asked separately.",
+    body: "We will send you the one-time codes you ask for. We will not send you marketing messages on the strength of this agreement alone. If a brand wants to market to you, you will be asked separately.",
   },
 ];
 

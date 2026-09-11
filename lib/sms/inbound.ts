@@ -109,9 +109,9 @@ function fit(reply: string): string {
  * campaign ended or never started, only that this code is not earning and
  * their own code was not spent finding out.
  */
-const SCAN_FAILURE_REPLY: Record<ScanFailureReason, string> = {
-  UNKNOWN_CODE: "We don't recognise that code. Check it and send it again - nothing has been used.",
-  WRONG_BRAND: "We don't recognise that code. Check it and send it again - nothing has been used.",
+export const SCAN_FAILURE_REPLY: Record<ScanFailureReason, string> = {
+  UNKNOWN_CODE: "We don't recognise that code. Check it and send it again. Nothing has been used.",
+  WRONG_BRAND: "We don't recognise that code. Check it and send it again. Nothing has been used.",
   ALREADY_SCANNED: "That code has already been used. Each one only counts once.",
   VOID: "That code isn't valid. Nothing has been used, so keep it if you want to query it.",
   CAMPAIGN_NOT_ACTIVE: "That promotion isn't running right now. Hold on to the code, it hasn't been used.",
@@ -120,8 +120,8 @@ const SCAN_FAILURE_REPLY: Record<ScanFailureReason, string> = {
   NO_EARN_RULE: "That promotion isn't running right now. Hold on to the code, it hasn't been used.",
   NOT_A_SCAN_PROMOTION: "That code isn't part of the promotion running now. Hold on to it, it hasn't been used.",
   PROGRAMME_CLOSED: "That rewards programme has closed. Your code hasn't been used.",
-  DAILY_LIMIT: "You've reached today's limit for this brand. Try again tomorrow - your code hasn't been used.",
-  DAILY_SCAN_LIMIT: "You've reached today's limit for this brand. Try again tomorrow - your code hasn't been used.",
+  DAILY_LIMIT: "You've reached today's limit for this brand. Try again tomorrow. Your code hasn't been used.",
+  DAILY_SCAN_LIMIT: "You've reached today's limit for this brand. Try again tomorrow. Your code hasn't been used.",
   CAMPAIGN_EXHAUSTED: "This promotion has given out everything it had. Your code hasn't been used.",
   OPTED_OUT: "You've left this brand's programme. Rejoin on their site and send the code again.",
 };

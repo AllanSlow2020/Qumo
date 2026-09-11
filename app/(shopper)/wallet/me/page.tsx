@@ -86,7 +86,7 @@ export default async function MePage() {
       <section className="sc-card">
         <h2 className="sc-h2">Your data</h2>
         <p className="sc-body">
-          Download everything {PRODUCT_NAME} holds about you - your number, every scan, every reward, and every time
+          Download everything {PRODUCT_NAME} holds about you: your number, every scan, every reward, and every time
           you signed in. It comes as a file you can keep.
         </p>
         {/* Said out loud because it is the one thing on this page wider than

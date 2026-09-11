@@ -178,7 +178,7 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
           {/* Said plainly, because a brand reasonably expects "colours" to
               mean the whole page. It doesn't, and that is deliberate. */}
           <p className="cn-label">
-            This colours the button that says what happens next - and only that. Type, background and rules stay as
+            This colours the button that says what happens next, and only that. Type, background and rules stay as
             they are, so a promotion can&apos;t end up unreadable.
           </p>
         </div>
@@ -204,7 +204,7 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
           </div>
           {ratio !== null && ratio < 4.5 && (
             <p className="cn-label cn-warn-note">
-              Contrast is {ratio.toFixed(1)}:1. Below 4.5:1 this is hard to read on a phone in daylight - which is
+              Contrast is {ratio.toFixed(1)}:1. Below 4.5:1 this is hard to read on a phone in daylight, which is
               exactly where it gets read.
             </p>
           )}
@@ -219,7 +219,7 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
           defaultFontId={DEFAULT_DISPLAY_FONT}
           help={
             <p className="cn-label">
-              Everything a shopper reads - your name, headings and body. Leave it on Qumo&apos;s and you get our
+              Everything a shopper reads: your name, headings and body. Leave it on Qumo&apos;s and you get our
               house style rather than the browser&apos;s.
             </p>
           }
@@ -241,7 +241,7 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
                  most faces have them, so the preview is the real answer. */
               <p className="cn-label cn-warn-note">
                 {figureFace?.label} isn&apos;t a monospace. Amounts ask for fixed-width digits and most faces have
-                them - look at the two in the preview: if their decimal points line up, yours do too.
+                them. Look at the two in the preview: if their decimal points line up, yours do too.
               </p>
             ) : (
               <p className="cn-label">
@@ -277,7 +277,7 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
             defaultValue={brand.supportEmail ?? ""}
           />
           <p className="cn-label">
-            Shoppers with a problem are sent to you, not to us - you run the programme, so you own the complaint.
+            Shoppers with a problem are sent to you, not to us. You run the programme, so you own the complaint.
           </p>
         </div>
 
@@ -293,7 +293,7 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
         )}
 
         <button type="submit" className="cn-btn" disabled={pending} style={{ alignSelf: "flex-start" }}>
-          {pending ? "Saving…" : state.ok ? "Saved - save again" : "Save appearance"}
+          {pending ? "Saving…" : state.ok ? "Saved. Save again" : "Save appearance"}
         </button>
       </form>
 
@@ -345,7 +345,7 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
           </p>
         </div>
         <p className="cn-label">
-          Saved changes are live on your site immediately - there is nothing to publish.
+          Saved changes are live on your site immediately. There is nothing to publish.
         </p>
       </div>
     </div>

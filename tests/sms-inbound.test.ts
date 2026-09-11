@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/client";
 import { SMS_CONSENT_VERSION } from "@/lib/consumer/consent";
 import { generatePackCode, formatPackCode } from "@/lib/packs/code";
 import { hashPhone } from "@/lib/security/crypto";
-import { handleInboundSms } from "@/lib/sms/inbound";
+import { handleInboundSms, SCAN_FAILURE_REPLY } from "@/lib/sms/inbound";
 
 /**
  * The no-data channel, driven the way a network drives it: a number and a
@@ -176,7 +176,10 @@ describe("inbound SMS", () => {
       const { reply } = await send({ from: KNOWN, text: "ZZZZ-ZZZZ-ZZZZ" });
 
       expect(reply).toContain("don't recognise");
-      expect(reply).toContain("nothing has been used");
+      // Case-insensitive: the reassurance is the point, and whether it opens
+      // a sentence or continues one is a punctuation decision the copy is
+      // allowed to change without this test having an opinion.
+      expect(reply.toLowerCase()).toContain("nothing has been used");
       expect(reply.length).toBeLessThanOrEqual(160);
     });
   });
@@ -264,6 +267,40 @@ describe("inbound SMS", () => {
       // An apology is a message the brand pays for. A throttle that replies
       // has doubled the traffic it was meant to cap.
       expect(last.reply).toBe("");
+    });
+  });
+
+  describe("what every reply costs", () => {
+    it("fits one segment, for every reason a code can fail", async () => {
+      // Each of these is a message the brand pays for, and a segment is 160
+      // GSM-7 characters. A reply that spills to 161 costs double for one
+      // word, which nobody notices until an invoice.
+      //
+      // Checked against the table rather than by driving fourteen scans,
+      // because the thing under test is the copy, not the dispatch.
+      for (const [reason, text] of Object.entries(SCAN_FAILURE_REPLY)) {
+        expect(text.length, `${reason} is ${text.length} characters`).toBeLessThanOrEqual(160);
+      }
+    });
+
+    it("keeps every other reply inside a segment too", async () => {
+      const replies = await Promise.all([
+        send({ from: KNOWN, text: "HELP" }),
+        send({ from: KNOWN, text: "BALANCE" }),
+        send({ from: KNOWN, text: "STOP" }),
+        send({ from: KNOWN, text: "ZZZZ-ZZZZ-ZZZZ" }),
+      ]);
+
+      for (const { command, reply } of replies) {
+        expect(reply.length, `${command} is ${reply.length} characters`).toBeLessThanOrEqual(160);
+      }
+
+      // TERMS and the join notice are the two deliberate exceptions: one is
+      // somebody asking for the detail, the other is all a person will have
+      // read when they agree. Both are allowed to run long, and both would
+      // be pointless cut to fit.
+      const terms = await send({ from: KNOWN, text: "TERMS" });
+      expect(terms.reply.length).toBeGreaterThan(160);
     });
   });
 

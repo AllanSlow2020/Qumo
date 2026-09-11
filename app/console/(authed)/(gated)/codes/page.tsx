@@ -18,7 +18,7 @@ export default async function ConsoleCodesPage() {
     <>
       <h1 className="cn-h1">Pack codes</h1>
       <p className="cn-body">
-        Unique codes to print on packs, neck tags and stickers. Unlike a poster, each one is single-use - which is
+        Unique codes to print on packs, neck tags and stickers. Unlike a poster, each one is single-use, which is
         what lets it be worth something.
       </p>
 
@@ -123,7 +123,7 @@ export default async function ConsoleCodesPage() {
           </p>
           <p className="cn-body">
             The URL already carries your own address, so a shopper who scans it lands on your page rather than
-            ours. Print the QR and the readable code together - a scuffed label still works if somebody can type it.
+            ours. Print the QR and the readable code together. A scuffed label still works if somebody can type it.
           </p>
         </div>
       </section>

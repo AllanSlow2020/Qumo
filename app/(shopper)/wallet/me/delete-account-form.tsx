@@ -58,7 +58,7 @@ export function DeleteAccountForm({ productName }: { productName: string }) {
       </p>
       <p className="sc-body">
         Any rewards you have not used are gone with it. Each brand keeps its own record that a reward was earned on a
-        date, because that is their financial record - with your details deleted it is no longer about you.
+        date, because that is their financial record, and with your details deleted it is no longer about you.
       </p>
       {/* sc-field, like every other labelled input here: it owns the gap
           between a label and its box, and pairing them by hand put this one

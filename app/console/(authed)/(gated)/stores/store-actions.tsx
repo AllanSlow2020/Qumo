@@ -54,7 +54,7 @@ export function StoreActions({ store }: { store: Store }) {
             couldn't be verified, with no idea why. */}
         <p className="cn-body">
           {store.isSigned
-            ? "Slips already printed at this till stop working immediately - anyone holding one can't earn from it. Do this when the till is quiet, and have your point of sale updated with the new secret before it reopens."
+            ? "Slips already printed at this till stop working immediately. Anyone holding one can't earn from it. Do this when the till is quiet, and have your point of sale updated with the new secret before it reopens."
             : "This turns signing on and issues a secret. Slips printed before your point of sale is updated will still be accepted as unsigned."}
         </p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>

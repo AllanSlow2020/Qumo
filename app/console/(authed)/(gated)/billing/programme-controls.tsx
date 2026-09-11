@@ -54,7 +54,7 @@ export function ProgrammeControls({
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <p className="cn-body">
           {status === "CLOSED"
-            ? "This programme is closed. Shoppers can't earn and can no longer spend what they had - though nothing was deleted, so restarting brings every balance back exactly as it was."
+            ? "This programme is closed. Shoppers can't earn and can no longer spend what they had, though nothing was deleted, so restarting brings every balance back exactly as it was."
             : `Earning has stopped. Shoppers can still spend what they'd already earned until ${honourDate}.`}
         </p>
         <button type="button" className="cn-btn" disabled={pending} onClick={() => run(resumeProgramme)}>

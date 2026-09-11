@@ -80,7 +80,7 @@ export default async function LabelSheetPage({
         </p>
         <p className="cn-label">
           Print this, or save it as a PDF from the print dialogue. A full run goes to your printer as the CSV
-          instead - this is for a short run, a sample, or checking one scans before you commit to the lot.
+          instead. This is for a short run, a sample, or checking one scans before you commit to the lot.
         </p>
 
         <div className="cn-actions">

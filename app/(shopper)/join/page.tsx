@@ -104,7 +104,7 @@ export default async function JoinPage() {
                 to somebody who has not joined: telling an existing member
                 that joining is free reads as though they had not. */}
             <p className="sc-label">
-              Joining is free and takes a phone number. You start earning from your next till slip - scan the code
+              Joining is free and takes a phone number. You start earning from your next till slip: scan the code
               printed on it.
             </p>
             <JoinButton label={status.optedOut ? `Rejoin ${brand.name} rewards` : `Join ${brand.name} rewards`} />

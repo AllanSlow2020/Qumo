@@ -128,7 +128,7 @@ export async function confirmEnrolment(
     select: { totpSecretEncrypted: true, totpConfirmedAt: true },
   });
   if (!user?.totpSecretEncrypted) {
-    throw new MfaError("Start again - there's no pending setup for this account.");
+    throw new MfaError("Start again. There's no pending setup for this account.");
   }
   if (user.totpConfirmedAt) {
     throw new MfaError("Two-factor authentication is already on for this account.");
