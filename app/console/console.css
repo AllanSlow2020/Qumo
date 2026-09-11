@@ -825,3 +825,35 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 
   @page { size: A4; margin: 10mm; }
 }
+
+/* The poster QR, shown beside its address so it can be checked with a phone
+   before anybody sends it to a printer. */
+.cn-poster { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+
+.cn-poster-qr {
+  width: 140px;
+  height: 140px;
+  flex: none;
+  padding: 10px;
+  /* White behind it always, whatever the console theme is doing. A QR
+     rendered dark-on-dark is not a subtle problem, it simply does not
+     scan. */
+  background: #fff;
+  border: 1px solid var(--cn-line);
+  border-radius: 6px;
+}
+
+.cn-poster-qr svg { width: 100%; height: 100%; display: block; }
+
+/* Takes the rest, and keeps a sensible measure when the panel is wide.
+   align-items keeps the download sized to its own label: a column
+   stretches its children by default, which made a secondary action
+   span the panel and read as the primary one. */
+.cn-poster-main {
+  flex: 1 1 320px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
