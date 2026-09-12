@@ -109,6 +109,121 @@ if (!root) {
   fail(`NEXT_PUBLIC_QUMO_ROOT_DOMAIN is "${root}", which looks like a URL.`, "It is a bare hostname: qumo.co.za");
 }
 
+// ------------------------------------------------------- database reachable
+
+/**
+ * Whether the database answers, rather than whether a string that looks
+ * like a connection is present.
+ *
+ * This is the check the rest of the file was written for and did not have.
+ * DATABASE_URL passing the "is it set" test above says nothing about
+ * whether anything is listening, and an unreachable database is invisible
+ * at build time: Next compiles every page, the deployment goes green, and
+ * then every single request renders a server error because resolving which
+ * brand a host belongs to is a query. The failure arrives in front of
+ * whoever opened the site first.
+ *
+ * Two passes, because they catch different mistakes and one of them needs
+ * no network at all.
+ */
+
+/** Hosts that can never be right for a deployment, whatever is listening on them. */
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "0.0.0.0", "host.docker.internal"]);
+
+/** The connection variables a hosting provider's Postgres integration injects under its own names. */
+const ALTERNATIVE_URL_VARS = ["POSTGRES_PRISMA_URL", "POSTGRES_URL", "DATABASE_POSTGRES_URL", "POSTGRES_URL_NON_POOLING"];
+
+function parseDatabaseUrl(raw) {
+  try {
+    // The password is commonly a URL-encoded blob with characters that make
+    // a naive split wrong, so this is parsed rather than pattern-matched.
+    const url = new URL(raw);
+    return { host: decodeURIComponent(url.hostname), port: url.port || "5432", search: url.search };
+  } catch {
+    return null;
+  }
+}
+
+async function checkDatabase() {
+  const raw = value("DATABASE_URL");
+  if (!raw || isPlaceholder(raw)) return; // already failed above
+
+  const parsed = parseDatabaseUrl(raw);
+  if (!parsed) {
+    fail("DATABASE_URL is not a URL that can be parsed.", "Expected postgresql://user:password@host:port/database");
+    return;
+  }
+
+  // Pass one, free and offline. A connection string pointing at the machine
+  // that built it is the single most common way this goes wrong, because it
+  // is what a working local .env contains and copying it up feels like
+  // configuration rather than a mistake.
+  //
+  // Only when this is a real deployment: on a laptop localhost is not a
+  // mistake, it is the answer, and a check that cries wolf on every local
+  // build is one people learn to scroll past.
+  if (strict && LOCAL_HOSTS.has(parsed.host)) {
+    const alternatives = ALTERNATIVE_URL_VARS.filter((name) => value(name));
+    fail(
+      `DATABASE_URL points at ${parsed.host}, which on a deployment means the machine serving the request.`,
+      alternatives.length > 0
+        ? `Nothing is listening there. This project also has ${alternatives.join(" and ")} set, which a Postgres integration adds under its own name - point DATABASE_URL at the same database.`
+        : "Nothing is listening there. Use the connection string from your hosted database, not the local one.",
+    );
+    return;
+  }
+
+  // Pass two, the real thing. Imported dynamically and skipped if it cannot
+  // be loaded, so this file keeps the property that it runs with nothing
+  // installed - a check that crashes the build when it cannot run is worse
+  // than no check.
+  let Client;
+  try {
+    ({ Client } = (await import("pg")).default ?? (await import("pg")));
+  } catch {
+    warn("Could not load the pg driver, so the database was not actually contacted.", "Checked the connection string only.");
+    return;
+  }
+
+  const client = new Client({ connectionString: raw, connectionTimeoutMillis: 8000 });
+  try {
+    await client.connect();
+    await client.query("select 1");
+  } catch (err) {
+    const message = String(err && err.message ? err.message : err);
+    // Translated where the driver's own wording sends people the wrong way.
+    // "no pg_hba.conf entry" in particular reads as a server misconfiguration
+    // and is nearly always a missing sslmode from a host that requires TLS.
+    const hint = /self.signed|SSL|sslmode|pg_hba/i.test(message)
+      ? "The server appears to want TLS. Append ?sslmode=require to DATABASE_URL."
+      : /timeout|ETIMEDOUT|ENOTFOUND|EHOSTUNREACH|ECONNREFUSED/i.test(message)
+        ? `Nothing answered at ${parsed.host}:${parsed.port}. Check the host is right and that the database is not restricted to an IP allowlist, which cannot work from a platform with no fixed egress address.`
+        : /password|authentication|role .* does not exist/i.test(message)
+          ? "The host answered and refused the credentials. Check the user and password."
+          : "";
+    fail(`The database at ${parsed.host}:${parsed.port} could not be reached: ${message}`, hint || "The site would render a server error on every page.");
+    return;
+  } finally {
+    await client.end().catch(() => {});
+  }
+
+  // Connected, but a direct connection string on a platform that runs one
+  // function per request exhausts the server's connection limit under any
+  // real traffic. Not fatal, because it works until it does not.
+  if (process.env.VERCEL && /neon\.tech/i.test(parsed.host) && !/-pooler/.test(parsed.host)) {
+    warn(
+      "This looks like a direct Neon connection rather than the pooled one.",
+      "Serverless opens a connection per request. Use the host with -pooler in it.",
+    );
+  }
+  if (process.env.VERCEL && /supabase/i.test(parsed.host) && parsed.port !== "6543") {
+    warn(
+      "This looks like a direct Supabase connection rather than the pooled one.",
+      "Serverless opens a connection per request. Use the pooler on port 6543.",
+    );
+  }
+}
+
 // -------------------------------------------------------------- warnings
 
 if (!value("CRON_SECRET")) {
@@ -186,6 +301,11 @@ if (!value("ERROR_WEBHOOK_URL")) {
 }
 
 // --------------------------------------------------------------- report
+
+// Awaited here rather than at the top so every offline check has already
+// run: when the database is unreachable *and* something else is missing,
+// both are worth printing in one pass, since a deploy cycle is minutes.
+await checkDatabase();
 
 const label = strict ? "Preflight" : "Preflight (advisory - not a real deployment)";
 console.log(`\n${label}`);
