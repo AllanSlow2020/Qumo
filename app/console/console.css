@@ -857,3 +857,31 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   align-items: flex-start;
   gap: 12px;
 }
+
+/* The handover list on the provisioning screen: four facts an operator
+   copies out of the browser and into a message, one of which they can never
+   get back. A definition list rather than a table because it is pairs, not
+   rows, and it has to stay readable on a phone. */
+.cn-handover {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 20px;
+  margin: 16px 0;
+  align-items: baseline;
+}
+
+.cn-handover dt {
+  font-size: 13px;
+  color: var(--cn-ink-3);
+}
+
+.cn-handover dd {
+  margin: 0;
+  /* These are pasted, so they must break rather than overflow. */
+  word-break: break-all;
+}
+
+@media (max-width: 560px) {
+  .cn-handover { grid-template-columns: 1fr; gap: 2px 0; }
+  .cn-handover dd { margin-bottom: 10px; }
+}

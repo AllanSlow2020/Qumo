@@ -47,6 +47,20 @@ const CONSOLE_ROOT = "/console";
 // What a staff member actually types, on app.{root}.
 const CONSOLE_LOGIN = "/login";
 
+/**
+ * Console paths reachable without a staff cookie.
+ *
+ * A set rather than a chain of comparisons, because the chain is how the
+ * second exception gets bolted on and the third gets bolted on wrong.
+ *
+ * /provision creates a brand and therefore has no brand to be a member of
+ * yet, so it cannot be behind a staff session by definition. Its auth is a
+ * shared secret checked in the action itself - the same shape the cron
+ * routes and the SMS webhook use, and the same rule that an unset secret
+ * refuses everything. See lib/brand/provision.ts.
+ */
+const CONSOLE_PUBLIC = new Set([CONSOLE_LOGIN, "/provision"]);
+
 function underRoot(pathname: string, root: string): boolean {
   return pathname === root || pathname.startsWith(`${root}/`);
 }
@@ -162,7 +176,7 @@ function consoleRoute(req: NextRequest, pathname: string, security: Security): N
   // a database read and this runs in the Edge runtime. The real check is
   // getStaffSession() in the layout, which also refuses a revoked session
   // and a deactivated account.
-  if (pathname !== CONSOLE_LOGIN && !req.cookies.get(STAFF_SESSION_COOKIE)) {
+  if (!CONSOLE_PUBLIC.has(pathname) && !req.cookies.get(STAFF_SESSION_COOKIE)) {
     return NextResponse.redirect(new URL(CONSOLE_LOGIN, req.nextUrl.origin));
   }
 

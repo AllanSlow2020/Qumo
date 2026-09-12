@@ -104,3 +104,16 @@ export async function verifyPassword(password: string, stored: string): Promise<
   if (derived.length !== expected.length) return false;
   return timingSafeEqual(derived, expected);
 }
+
+/**
+ * A one-time password, read aloud or pasted into a message by whoever
+ * created the account.
+ *
+ * Base64url of 12 random bytes: unguessable, and short enough to dictate
+ * over a phone without anybody losing their place. It is a credential two
+ * people know from the moment it exists, which is exactly why the account
+ * it belongs to cannot do anything until it has been replaced.
+ */
+export function generateTempPassword(): string {
+  return randomBytes(12).toString("base64url");
+}

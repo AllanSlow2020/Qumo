@@ -84,6 +84,22 @@ export const RESERVED_SUBDOMAINS = new Set([...ALWAYS_RESERVED, CONSOLE_SUBDOMAI
 const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 
 /**
+ * Whether a slug could ever be a working brand address.
+ *
+ * Exported so provisioning asks the resolver rather than reimplementing it.
+ * A brand created with a slug this rejects would have a console, a console
+ * would show it its own poster URL, and that URL would resolve to nothing:
+ * brandSlugFromHost() below applies exactly these two rules, and a slug that
+ * fails either is a tenant nobody can reach.
+ *
+ * Says nothing about whether the slug is already taken. That is a question
+ * for the database and a unique constraint, not for a regular expression.
+ */
+export function isValidBrandSlug(slug: string): boolean {
+  return SLUG.test(slug) && !RESERVED_SUBDOMAINS.has(slug);
+}
+
+/**
  * The brand slug in a host, or null if the host does not name one.
  *
  * Null is a normal answer, not an error: the apex, `www`, a bare

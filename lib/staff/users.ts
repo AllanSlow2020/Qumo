@@ -1,5 +1,5 @@
-import { randomBytes } from "node:crypto";
 import { z } from "zod";
+import { generateTempPassword } from "@/lib/staff/password";
 import { Prisma, type Role } from "@prisma/client";
 import { requireRole } from "@/lib/auth/rbac";
 import { forBrand } from "@/lib/db/tenant";
@@ -39,18 +39,6 @@ const inviteSchema = z.object({
   name: z.string().trim().min(1).max(120),
   role: z.enum(["OWNER", "ADMIN", "MARKETING", "QUALITY"]),
 });
-
-/**
- * A one-time password, read aloud or pasted into a message by an owner.
- *
- * Base64url of 12 random bytes: unguessable, and short enough to dictate
- * over a phone without anybody losing their place. It is a credential two
- * people know from the moment it exists, which is exactly why the account
- * it belongs to cannot do anything until it has been replaced.
- */
-function generateTempPassword(): string {
-  return randomBytes(12).toString("base64url");
-}
 
 export type InvitedUser = { id: string; email: string; temporaryPassword: string };
 

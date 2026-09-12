@@ -91,6 +91,21 @@ describe("signing in with the demo passcode", () => {
     for (const hash of created) {
       await prisma.phoneOtp.deleteMany({ where: { phoneHash: hash } });
       await prisma.person.deleteMany({ where: { phoneHash: hash } });
+      // The counters too, and this is the one that was missing.
+      //
+      // lib/security/rate-limit.ts moved from a Map in module scope to a
+      // table, which was the right change and made its counters outlive the
+      // process. These tests drive a fixed number through requestOtp and
+      // verifyOtp several times each, so a second run of the suite inside
+      // the same fifteen-minute window found the limit already spent and
+      // failed with "Too many attempts".
+      //
+      // It looked like flakiness and was not: it was deterministic on the
+      // second run. A test that only passes if nobody re-runs it is a test
+      // that fails the first time CI retries a job.
+      await prisma.rateLimit.deleteMany({
+        where: { key: { in: [`otp:send:${hash}`, `otp:verify:${hash}`] } },
+      });
     }
     created.length = 0;
   });
