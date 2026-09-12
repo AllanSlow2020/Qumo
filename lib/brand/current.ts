@@ -54,8 +54,11 @@ export const currentBrand = cache(async (): Promise<BrandTheme | null> => {
  * reached from a link or a code that carried a brand host, so arriving
  * without one is a routing bug, not a shopper mistake.
  *
- * The layout catches the shopper-facing case first (app/(shopper)/layout.tsx
- * renders the no-brand page), so in practice this never throws in a browser.
+ * app/(shopper)/layout.tsx renders the no-brand notice rather than its
+ * children when there is no brand, so in practice this never throws on a
+ * shopper page. It said that before the layout actually did it, and the
+ * gap was a server error on every page of a deployment whose first brand
+ * had not been created yet.
  */
 export async function requireBrand(): Promise<BrandTheme> {
   const brand = await currentBrand();

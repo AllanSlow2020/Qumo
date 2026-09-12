@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "bootstrap": "node scripts/setup.mjs",
-    "build": "node scripts/preflight.mjs && prisma generate && next build",
+    "build": "node scripts/preflight.mjs && prisma migrate deploy && prisma generate && next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",

@@ -15,12 +15,30 @@ import { prisma } from "@/lib/db/client";
 describe("the health check", () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it("says the database answered", async () => {
+  it("says the database answered and the schema is there", async () => {
     const response = await GET();
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body).toMatchObject({ ok: true, database: true });
+    expect(body).toMatchObject({ ok: true, database: true, schema: true });
+  });
+
+  it("catches a database that answers but has no tables", async () => {
+    // The case that made this route worth rewriting an hour after shipping
+    // it. A reachable database with no migrations applied passes `select 1`
+    // happily while every page in the app fails on a table that was never
+    // created, which is exactly the outage this was written during. With
+    // only the connection check, this returned a healthy 200 throughout.
+    vi.spyOn(prisma.brand, "count").mockRejectedValue(
+      new Error("The table `public.Brand` does not exist in the current database."),
+    );
+
+    const response = await GET();
+
+    expect(response.status).toBe(503);
+    // Reported apart, because the fixes are different: a connection string
+    // for one, a deploy step for the other.
+    expect(await response.json()).toMatchObject({ ok: false, database: true, schema: false });
   });
 
   it("says it did not, with a status a monitor can act on", async () => {
@@ -31,7 +49,7 @@ describe("the health check", () => {
 
     const response = await GET();
     expect(response.status).toBe(503);
-    expect(await response.json()).toMatchObject({ ok: false, database: false });
+    expect(await response.json()).toMatchObject({ ok: false, database: false, schema: false });
   });
 
   it("tells a stranger nothing beyond whether it worked", async () => {

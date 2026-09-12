@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { currentBrand } from "@/lib/brand/current";
 import { brandStyle, brandTitle } from "@/lib/brand/theme";
+import { NoBrandNotice } from "./no-brand-notice";
 import { QumoFooter } from "./qumo-footer";
 import "./shopper.css";
 
@@ -15,10 +16,19 @@ import "./shopper.css";
  * faces - applied here as inline custom properties so they cascade to every
  * child without a stylesheet per brand.
  *
- * A request whose host names no brand never reaches a page under here: the
- * proxy rewrites it to /no-brand first. So this layout does not branch, and
- * requireBrand() throwing is a genuine invariant violation rather than a
- * routine case dressed up as one.
+ * ── Why this branches on a missing brand ─────────────────────────────────
+ *
+ * It used to say that a request whose host names no brand never reaches a
+ * page under here, because the proxy rewrites it to /no-brand first. That
+ * is true of the apex and of a reserved subdomain, and false of the case
+ * that matters: a host whose slug is perfectly well formed and matches no
+ * row. The proxy cannot tell, because it runs in the Edge runtime and
+ * deciding needs a database read.
+ *
+ * So those requests arrived here, every page below called requireBrand(),
+ * and the shopper got a server error. That is the state a deployment is in
+ * between its first successful build and its first brand being created,
+ * which is to say the first thing anybody sees.
  */
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -38,7 +48,13 @@ export default async function ShopperLayout({ children }: { children: React.Reac
   return (
     <div className="sc" style={brandStyle(brand)}>
       <div className="sc-shell">
-        {children}
+        {/*
+          Rendered instead of the children, not alongside a redirect: the
+          address the shopper typed is the thing they need to look at, and
+          sending them somewhere else takes it out of the bar. Same reason
+          the proxy rewrites rather than redirects.
+        */}
+        {brand ? children : <NoBrandNotice />}
         <QumoFooter />
       </div>
     </div>

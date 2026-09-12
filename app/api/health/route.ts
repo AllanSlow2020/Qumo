@@ -11,6 +11,22 @@ import { logger } from "@/lib/security/logger";
  * database that is down and an application that is broken look identical
  * from outside, and the error page is deliberately vague about both.
  *
+ ── Why it asks twice ───────────────────────────────────────────────────
+ *
+ * `select 1` proves a connection and nothing else, and this shipped with
+ * only that for about an hour. It was wrong in the worst direction: a
+ * database that answers but has no tables returns a healthy 200 here while
+ * every page in the app fails on a missing one, which is precisely the
+ * outage this route was written during. A green check during an outage is
+ * worse than no check, because it sends the next person looking somewhere
+ * else.
+ *
+ * So there are two questions, reported separately because they have
+ * different fixes. The connection is the network, the credentials and the
+ * host. The schema is whether migrations have run. Either one failing is a
+ * 503, but knowing which tells you whether to look at a connection string
+ * or at a deploy step.
+ *
  * ── What it will not say ─────────────────────────────────────────────────
  *
  * No host, no port, no driver message, no version, no counts. Those are the
@@ -34,24 +50,35 @@ const TIMEOUT_MS = 5000;
 // worse than not having one.
 export const dynamic = "force-dynamic";
 
+/** Rejects rather than hanging, so an unreachable host reports instead of holding the function open. */
+function withTimeout<T>(work: Promise<T>): Promise<T> {
+  return Promise.race([
+    work,
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timed out")), TIMEOUT_MS)),
+  ]);
+}
+
 export async function GET(): Promise<NextResponse> {
   const started = Date.now();
 
   try {
-    // The cheapest possible round trip. Deliberately not a count or a table
-    // read: this is asking whether the connection works, and a query that
-    // depends on a migration having run would conflate two different
-    // failures.
-    await Promise.race([
-      prisma.$queryRaw`select 1`,
-      new Promise((_, reject) => setTimeout(() => reject(new Error("timed out")), TIMEOUT_MS)),
-    ]);
+    await withTimeout(prisma.$queryRaw`select 1`);
   } catch (err) {
-    // The detail goes here, where it is already going for every other
-    // failure, and not into the response.
-    logger.error("health check failed", { err: String(err), ms: Date.now() - started });
-    return NextResponse.json({ ok: false, database: false }, { status: 503 });
+    logger.error("health check failed to connect", { err: String(err), ms: Date.now() - started });
+    return NextResponse.json({ ok: false, database: false, schema: false }, { status: 503 });
   }
 
-  return NextResponse.json({ ok: true, database: true, ms: Date.now() - started });
+  try {
+    // The cheapest question that still needs the schema to exist. Brand
+    // because it is the table every single page reads before it can render
+    // anything: resolving which brand a host belongs to is the first query
+    // of every request, so if this one is missing the site is entirely down
+    // whatever else is true.
+    await withTimeout(prisma.brand.count());
+  } catch (err) {
+    logger.error("health check found no schema", { err: String(err), ms: Date.now() - started });
+    return NextResponse.json({ ok: false, database: true, schema: false }, { status: 503 });
+  }
+
+  return NextResponse.json({ ok: true, database: true, schema: true, ms: Date.now() - started });
 }
