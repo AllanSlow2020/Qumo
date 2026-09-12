@@ -118,10 +118,43 @@ if (!value("CRON_SECRET")) {
   );
 }
 
-if (!value("TWILIO_ACCOUNT_SID")) {
+// Mirrors resolveTwilioCredentials() in lib/sms/client.ts. Kept as its own
+// few lines rather than imported because this file is plain Node with no
+// build step and runs before anything is compiled; the cost of the
+// duplication is that the two can drift, and tests/sms-client.test.ts owns
+// the real rules.
+const smsAccount = value("TWILIO_ACCOUNT_SID");
+const smsFrom = value("TWILIO_FROM_NUMBER");
+const smsKeySid = value("TWILIO_API_KEY_SID");
+const smsKeySecret = value("TWILIO_API_KEY_SECRET");
+const smsAuthToken = value("TWILIO_AUTH_TOKEN");
+const smsKeyComplete = Boolean(smsKeySid && smsKeySecret);
+const smsCanSend = Boolean(smsAccount && smsFrom && (smsKeyComplete || (!smsKeySid && !smsKeySecret && smsAuthToken)));
+
+if (!smsCanSend) {
+  // Told apart deliberately. Nothing set is a state somebody chose and
+  // knows about. Something set that still cannot send is the failure this
+  // whole file exists for: the site builds, deploys, accepts a phone
+  // number, says a code is on its way, and no handset ever rings.
+  if (smsAccount || smsFrom || smsKeySid || smsKeySecret || smsAuthToken) {
+    warn(
+      "Twilio is half configured, so passcodes are STILL only written to the deployment log.",
+      smsKeySid && !smsKeySecret
+        ? "TWILIO_API_KEY_SID is set without TWILIO_API_KEY_SECRET. Twilio shows the secret once, at creation - if it is gone, make a new key."
+        : smsKeySecret && !smsKeySid
+          ? "TWILIO_API_KEY_SECRET is set without TWILIO_API_KEY_SID."
+          : "Needs TWILIO_ACCOUNT_SID, TWILIO_FROM_NUMBER, and either the API key pair or TWILIO_AUTH_TOKEN.",
+    );
+  } else {
+    warn(
+      "No SMS account, so sign-in passcodes are written to the deployment log.",
+      "Fine for a demo with numbers you own. Not fine once a real shopper signs in: anyone who can read the logs can sign in as them.",
+    );
+  }
+} else if (!smsKeyComplete) {
   warn(
-    "No SMS account, so sign-in passcodes are written to the deployment log.",
-    "Fine for a demo with numbers you own. Not fine once a real shopper signs in: anyone who can read the logs can sign in as them.",
+    "SMS sends on the account auth token, which is the master credential for the whole Twilio account.",
+    "It can buy numbers, spend money and read every message ever sent, and it cannot be scoped or rotated on its own. Create a restricted API key and set TWILIO_API_KEY_SID and TWILIO_API_KEY_SECRET instead.",
   );
 }
 
@@ -129,10 +162,20 @@ if (!value("TWILIO_ACCOUNT_SID")) {
 // setting here that makes the front door wider, so it says so on every
 // single build until it goes.
 if (value("DEMO_LOGIN_PHONES") && value("DEMO_LOGIN_CODE")) {
-  warn(
-    "Demo login is ON: the numbers in DEMO_LOGIN_PHONES can sign in with DEMO_LOGIN_CODE, no SMS needed.",
-    "Fine while there is no SMS account and the listed numbers are yours. Remove both the day one is connected.",
-  );
+  if (smsCanSend) {
+    // The reason this existed has gone. Said as its own warning rather
+    // than a softer clause on the old one, because "remove it eventually"
+    // is what every permanent workaround was told once.
+    warn(
+      "Demo login is ON and there is now a working SMS account, so it is pure attack surface.",
+      "The numbers in DEMO_LOGIN_PHONES sign in with DEMO_LOGIN_CODE and never receive a passcode. It existed only while nothing could send one. Clear both.",
+    );
+  } else {
+    warn(
+      "Demo login is ON: the numbers in DEMO_LOGIN_PHONES can sign in with DEMO_LOGIN_CODE, no SMS needed.",
+      "Fine while there is no SMS account and the listed numbers are yours. Remove both the day one is connected.",
+    );
+  }
 }
 
 if (!value("ERROR_WEBHOOK_URL")) {

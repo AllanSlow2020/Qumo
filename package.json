@@ -19,6 +19,7 @@
     "prisma:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "demo": "tsx scripts/demo.ts",
+    "sms:test": "tsx scripts/sms-test.ts",
     "preflight": "QUMO_PREFLIGHT=strict node scripts/preflight.mjs"
   },
   "dependencies": {
