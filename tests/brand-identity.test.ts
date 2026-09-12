@@ -58,7 +58,88 @@ describe("a brand editing its own appearance", () => {
     // The legal name is what the row holds; the signage name is what a
     // shopper reads.
     expect(theme.name).toBe("Chicken Licken");
-    expect(brandStyle(theme)).toEqual({ "--sc-btn": "#c8102e", "--sc-btn-ink": "#ffffff" });
+    expect(brandStyle(theme)).toEqual({ "--sc-brand-accent": "#c8102e", "--sc-brand-ink": "#ffffff" });
+  });
+
+  describe("the dark mode pair", () => {
+    it("saves a second pair and emits it alongside the first", async () => {
+      await updateBrandIdentityForSession(
+        owner(brand.id),
+        form({
+          accentColor: "#C8102E",
+          accentInkColor: "#FFFFFF",
+          accentColorDark: "#FF3355",
+          accentInkColorDark: "#0A0A0B",
+        }),
+      );
+
+      const theme = toBrandTheme({ id: brand.id, ...(await getBrandIdentity(brand.id))! });
+      expect(brandStyle(theme)).toEqual({
+        "--sc-brand-accent": "#c8102e",
+        "--sc-brand-ink": "#ffffff",
+        "--sc-brand-accent-dark": "#ff3355",
+        "--sc-brand-ink-dark": "#0a0a0b",
+      });
+    });
+
+    it("writes no dark tokens when a brand did not choose one", async () => {
+      await updateBrandIdentityForSession(
+        owner(brand.id),
+        form({ accentColor: "#C8102E", accentInkColor: "#FFFFFF" }),
+      );
+
+      // The absence is the feature. With no dark token written, shopper.css
+      // falls through to the light pair, which is exactly what every brand
+      // got before this existed - so adding the columns changed nothing for
+      // anybody who ignores them.
+      const theme = toBrandTheme({ id: brand.id, ...(await getBrandIdentity(brand.id))! });
+      const style = brandStyle(theme) as Record<string, string>;
+      expect(style["--sc-brand-accent-dark"]).toBeUndefined();
+      expect(style["--sc-brand-ink-dark"]).toBeUndefined();
+    });
+
+    it("refuses a dark colour with no light one to be a variant of", async () => {
+      // Otherwise a brand gets its identity on one theme and Qumo's black on
+      // the other, which reads as a fault rather than a choice.
+      await expect(
+        updateBrandIdentityForSession(owner(brand.id), form({ accentColorDark: "#FF3355" })),
+      ).rejects.toThrow(/light mode/i);
+    });
+
+    it("refuses dark ink with no dark button under it", async () => {
+      await expect(
+        updateBrandIdentityForSession(
+          owner(brand.id),
+          form({ accentColor: "#C8102E", accentInkColorDark: "#000000" }),
+        ),
+      ).rejects.toThrow(/dark mode button colour/i);
+    });
+
+    it("drops a dark colour on the render path rather than half-painting a page", async () => {
+      // The render path never throws - a shopper in a queue gets a page. So
+      // a row that somehow holds a dark colour with no light one (written
+      // directly, or predating the rule) resolves to no brand colour at all
+      // rather than to an accent that only appears at night.
+      const theme = toBrandTheme({
+        id: "b1",
+        slug: "x",
+        name: "X",
+        displayName: null,
+        tagline: null,
+        logoUrl: null,
+        accentColor: null,
+        accentInkColor: null,
+        accentColorDark: "#ff3355",
+        accentInkColorDark: "#0a0a0b",
+        displayFont: null,
+        figureFont: null,
+        supportEmail: null,
+        supportUrl: null,
+      });
+
+      expect(theme.accentDark).toBeNull();
+      expect(brandStyle(theme)).toBeUndefined();
+    });
   });
 
   it("refuses a malformed colour instead of quietly dropping it", async () => {

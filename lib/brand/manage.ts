@@ -57,6 +57,19 @@ const identitySchema = z.object({
     .trim()
     .optional()
     .refine((v) => !v || HEX.test(v), { message: "Use a six-digit colour like #FFFFFF." }),
+  // The same pair again, for dark mode. Optional in the same way and for
+  // the same reason: a brand that sets neither keeps its light colours in
+  // both themes, which is what every brand had before these existed.
+  accentColorDark: z
+    .string()
+    .trim()
+    .optional()
+    .refine((v) => !v || HEX.test(v), { message: "Use a six-digit colour like #C8102E." }),
+  accentInkColorDark: z
+    .string()
+    .trim()
+    .optional()
+    .refine((v) => !v || HEX.test(v), { message: "Use a six-digit colour like #FFFFFF." }),
   supportEmail: z
     .string()
     .trim()
@@ -99,6 +112,8 @@ export async function updateBrandIdentityForSession(session: SessionLike, formDa
     logoUrl: formData.get("logoUrl")?.toString(),
     accentColor: formData.get("accentColor")?.toString(),
     accentInkColor: formData.get("accentInkColor")?.toString(),
+    accentColorDark: formData.get("accentColorDark")?.toString(),
+    accentInkColorDark: formData.get("accentInkColorDark")?.toString(),
     supportEmail: formData.get("supportEmail")?.toString(),
     supportUrl: formData.get("supportUrl")?.toString(),
     displayFont: formData.get("displayFont")?.toString(),
@@ -107,12 +122,25 @@ export async function updateBrandIdentityForSession(session: SessionLike, formDa
 
   const accentColor = blankToNull(parsed.accentColor);
   const accentInkColor = blankToNull(parsed.accentInkColor);
+  const accentColorDark = blankToNull(parsed.accentColorDark);
+  const accentInkColorDark = blankToNull(parsed.accentInkColorDark);
 
   // Ink without an accent recolours the default black button's text and can
   // land white on white. The render path drops it silently; here, where
   // somebody is watching, say so instead.
   if (accentInkColor && !accentColor) {
     throw new BrandIdentityError("Pick a button colour before choosing the text colour that sits on it.");
+  }
+
+  // The same two rules one level down. A dark colour with no light one to be
+  // a variant of would give the brand its identity on one theme and Qumo's
+  // black on the other, which reads as a fault rather than a choice, and the
+  // render path drops it for exactly that reason.
+  if ((accentColorDark || accentInkColorDark) && !accentColor) {
+    throw new BrandIdentityError("Pick a button colour for light mode before setting the dark mode one.");
+  }
+  if (accentInkColorDark && !accentColorDark) {
+    throw new BrandIdentityError("Pick a dark mode button colour before choosing the text colour that sits on it.");
   }
 
   await forBrand(session.user.brandId).brand.update({
@@ -123,6 +151,8 @@ export async function updateBrandIdentityForSession(session: SessionLike, formDa
       logoUrl: blankToNull(parsed.logoUrl),
       accentColor: accentColor?.toLowerCase() ?? null,
       accentInkColor: accentInkColor?.toLowerCase() ?? null,
+      accentColorDark: accentColorDark?.toLowerCase() ?? null,
+      accentInkColorDark: accentInkColorDark?.toLowerCase() ?? null,
       supportEmail: blankToNull(parsed.supportEmail),
       supportUrl: blankToNull(parsed.supportUrl),
       // Blank is "use Qumo's", which is a real choice rather than an absence
@@ -145,6 +175,8 @@ export async function updateBrandIdentityForSession(session: SessionLike, formDa
         logoUrl: blankToNull(parsed.logoUrl),
         accentColor,
         accentInkColor,
+        accentColorDark,
+        accentInkColorDark,
         supportEmail: blankToNull(parsed.supportEmail),
         supportUrl: blankToNull(parsed.supportUrl),
         displayFont: blankToNull(parsed.displayFont),
@@ -164,6 +196,8 @@ export type BrandIdentity = {
   logoUrl: string | null;
   accentColor: string | null;
   accentInkColor: string | null;
+  accentColorDark: string | null;
+  accentInkColorDark: string | null;
   displayFont: string | null;
   figureFont: string | null;
   supportEmail: string | null;
@@ -181,6 +215,8 @@ export async function getBrandIdentity(brandId: string): Promise<BrandIdentity |
       logoUrl: true,
       accentColor: true,
       accentInkColor: true,
+      accentColorDark: true,
+      accentInkColorDark: true,
       displayFont: true,
       figureFont: true,
       supportEmail: true,

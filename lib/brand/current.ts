@@ -27,6 +27,8 @@ const SELECT = {
   logoUrl: true,
   accentColor: true,
   accentInkColor: true,
+  accentColorDark: true,
+  accentInkColorDark: true,
   displayFont: true,
   figureFont: true,
   supportEmail: true,

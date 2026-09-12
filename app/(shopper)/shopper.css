@@ -39,8 +39,11 @@
   --sc-ink-3: #8a8a90;
   --sc-line: #e4e4e0;
   --sc-line-soft: #efefec;
-  --sc-btn: #0a0a0a;
-  --sc-btn-ink: #ffffff;
+  /* The brand's colour if it set one, otherwise Qumo's. See brandStyle() in
+     lib/brand/theme.ts for why the brand's value arrives under its own name
+     instead of being written straight into --sc-btn. */
+  --sc-btn: var(--sc-brand-accent, #0a0a0a);
+  --sc-btn-ink: var(--sc-brand-ink, #ffffff);
   /* Not a colour any more. Money is ink; see the note at the top of this
      file. The variable stays so every existing call site keeps working and
      the decision lives in one place. */
@@ -62,8 +65,12 @@
     --sc-ink-3: #71717a;
     --sc-line: #232326;
     --sc-line-soft: #1a1a1d;
-    --sc-btn: #f7f7f5;
-    --sc-btn-ink: #0a0a0b;
+    /* Three deep on purpose. A brand that set a dark accent gets it; one
+       that set only a light accent keeps its identity here rather than
+       reverting to Qumo's white, which is what every brand got before the
+       dark pair existed; a brand that set nothing gets Qumo's. */
+    --sc-btn: var(--sc-brand-accent-dark, var(--sc-brand-accent, #f7f7f5));
+    --sc-btn-ink: var(--sc-brand-ink-dark, var(--sc-brand-ink, #0a0a0b));
     --sc-pos: var(--sc-ink);
     --sc-pos-bg: #131315;
     --sc-neg: #f87171;
@@ -80,8 +87,9 @@
   --sc-ink-3: #71717a;
   --sc-line: #232326;
   --sc-line-soft: #1a1a1d;
-  --sc-btn: #f7f7f5;
-  --sc-btn-ink: #0a0a0b;
+  /* Same three-deep fallback as the media-query block above. */
+  --sc-btn: var(--sc-brand-accent-dark, var(--sc-brand-accent, #f7f7f5));
+  --sc-btn-ink: var(--sc-brand-ink-dark, var(--sc-brand-ink, #0a0a0b));
   --sc-pos: var(--sc-ink);
   --sc-pos-bg: #131315;
   --sc-neg: #f87171;

@@ -104,6 +104,8 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
   const [tagline, setTagline] = useState(brand.tagline ?? "");
   const [accent, setAccent] = useState(brand.accentColor ?? "");
   const [ink, setInk] = useState(brand.accentInkColor ?? "");
+  const [accentDark, setAccentDark] = useState(brand.accentColorDark ?? "");
+  const [inkDark, setInkDark] = useState(brand.accentInkColorDark ?? "");
   const [logoUrl, setLogoUrl] = useState(brand.logoUrl ?? "");
   const [displayFont, setDisplayFont] = useState(brand.displayFont ?? "");
   const [figureFont, setFigureFont] = useState(brand.figureFont ?? "");
@@ -115,6 +117,15 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
   const accentOk = HEX.test(accent);
   const inkOk = HEX.test(ink);
   const ratio = accentOk && inkOk ? contrastRatio(accent, ink) : null;
+
+  // What dark mode will actually use, which is not always what is typed in
+  // the dark fields: leaving them empty means the light pair is used in both
+  // themes, so the preview has to show that rather than a black rectangle.
+  const accentDarkOk = HEX.test(accentDark);
+  const inkDarkOk = HEX.test(inkDark);
+  const shownDarkAccent = accentDarkOk ? accentDark : accentOk ? accent : null;
+  const shownDarkInk = accentDarkOk ? (inkDarkOk ? inkDark : "#ffffff") : inkOk ? ink : "#ffffff";
+  const darkRatio = shownDarkAccent ? contrastRatio(shownDarkAccent, shownDarkInk) : null;
 
   // What the preview renders in. Falls through to Qumo's own, exactly as
   // the shopper surface does when the column is null.
@@ -206,6 +217,64 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
             <p className="cn-label cn-warn-note">
               Contrast is {ratio.toFixed(1)}:1. Below 4.5:1 this is hard to read on a phone in daylight, which is
               exactly where it gets read.
+            </p>
+          )}
+        </div>
+
+        {/*
+          Optional, and said so, because most brands will never need it. A
+          colour chosen against white often goes muddy on near-black, but
+          plenty of colours are fine in both and filling these in for the
+          sake of it is how a brand ends up with two identities.
+        */}
+        <div className="cn-field">
+          <label htmlFor="accentColorDark">Button colour in dark mode</label>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              type="color"
+              aria-label="Pick the button colour for dark mode"
+              value={accentDarkOk ? accentDark : accentOk ? accent : "#000000"}
+              onChange={(e) => setAccentDark(e.target.value)}
+              style={{ width: 44, height: 42, padding: 2, border: "1px solid var(--cn-line)", borderRadius: 8, background: "var(--cn-surface)" }}
+            />
+            <input
+              id="accentColorDark"
+              name="accentColorDark"
+              className="cn-input cn-mono"
+              placeholder="Same as above"
+              value={accentDark}
+              onChange={(e) => setAccentDark(e.target.value)}
+            />
+          </div>
+          <p className="cn-label">
+            Optional. Leave it empty and your colour above is used in both themes, which is right for most.
+            Set it when a colour chosen against white loses its punch on a dark screen.
+          </p>
+        </div>
+
+        <div className="cn-field">
+          <label htmlFor="accentInkColorDark">Text on the dark mode button</label>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              type="color"
+              aria-label="Pick the text colour for the dark mode button"
+              value={inkDarkOk ? inkDark : "#ffffff"}
+              onChange={(e) => setInkDark(e.target.value)}
+              style={{ width: 44, height: 42, padding: 2, border: "1px solid var(--cn-line)", borderRadius: 8, background: "var(--cn-surface)" }}
+            />
+            <input
+              id="accentInkColorDark"
+              name="accentInkColorDark"
+              className="cn-input cn-mono"
+              placeholder="#FFFFFF"
+              value={inkDark}
+              onChange={(e) => setInkDark(e.target.value)}
+            />
+          </div>
+          {darkRatio !== null && darkRatio < 4.5 && (
+            <p className="cn-label cn-warn-note">
+              Contrast in dark mode is {darkRatio.toFixed(1)}:1, below 4.5:1. Most people read at night on a dark
+              screen, so this is not the rarer case.
             </p>
           )}
         </div>
@@ -343,6 +412,34 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
           <p className="cn-preview-foot">
             {displayName || brand.name} rewards, run on Qumo.
           </p>
+
+          {/*
+            The same button on the other theme, because the whole point of
+            the two fields above is a comparison and nobody can make it by
+            imagining one. Drawn on the shopper surface's actual dark
+            background rather than a grey, so what is judged here is what
+            ships.
+          */}
+          <div
+            style={{
+              marginTop: 14,
+              padding: "12px 12px 14px",
+              borderRadius: 10,
+              background: "#0a0a0b",
+            }}
+          >
+            <p style={{ margin: "0 0 8px", fontSize: "0.72rem", color: "#a1a1a8", letterSpacing: "0.02em" }}>
+              In dark mode
+            </p>
+            <button
+              type="button"
+              className="cn-preview-btn"
+              style={shownDarkAccent ? { background: shownDarkAccent, color: shownDarkInk } : { background: "#f7f7f5", color: "#0a0a0b" }}
+              onClick={(e) => e.preventDefault()}
+            >
+              Join {displayName || brand.name} rewards
+            </button>
+          </div>
         </div>
         <p className="cn-label">
           Saved changes are live on your site immediately. There is nothing to publish.

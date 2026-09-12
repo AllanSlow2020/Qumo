@@ -124,6 +124,23 @@ model Brand {
   accentColor    String?
   accentInkColor String?
 
+  /// The same pair again, for when the shopper is reading in dark mode.
+  ///
+  /// One accent used in both themes was the original design and it is wrong
+  /// for exactly the brand this was built for. Chicken Licken's red is a
+  /// deep, warm #c8102e that sits confidently on white and goes muddy and
+  /// low-contrast on near-black, where the same identity wants to be lifted
+  /// a few points. A brand cannot fix that with one field, and deriving the
+  /// dark variant from the light one by adjusting luminance is the same
+  /// mistake as deriving the ink: it is a judgement about a palette, not a
+  /// calculation.
+  ///
+  /// Both null is the normal case and means "use the light pair in both",
+  /// which is precisely what every brand got before these existed. So this
+  /// is additive: nothing changes for a brand that never opens the screen.
+  accentColorDark    String?
+  accentInkColorDark String?
+
   /// Which faces the brand chose, as ids from the registry in
   /// lib/brand/fonts.ts - never a font name and never a URL. The value ends
   /// up in a style attribute, so what is stored here is a key we look up

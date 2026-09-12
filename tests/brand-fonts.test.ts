@@ -66,6 +66,8 @@ describe("a font a brand did not choose", () => {
     logoUrl: null,
     accentColor: null,
     accentInkColor: null,
+    accentColorDark: null,
+    accentInkColorDark: null,
     supportEmail: null,
     supportUrl: null,
   };
