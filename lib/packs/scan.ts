@@ -73,7 +73,7 @@ export const SCAN_FAILURE_MESSAGES: Record<ScanFailureReason, string> = {
   CAMPAIGN_ENDED: "This promotion has ended.",
   CAMPAIGN_NOT_STARTED: "This promotion hasn't started yet.",
   NO_EARN_RULE: "This promotion isn't set up to award anything yet.",
-  NOT_A_SCAN_PROMOTION: "This code isn't part of the promotion running right now. Hold on to it - it hasn't been used.",
+  NOT_A_SCAN_PROMOTION: "This code isn't part of the promotion running right now. Hold on to it. It hasn't been used.",
   PROGRAMME_CLOSED: "This brand's rewards programme has ended, so this code can't be used. Anything you already earned is still in your rewards.",
   DAILY_LIMIT: "You've reached today's limit for this promotion. Your code will still work tomorrow.",
   DAILY_SCAN_LIMIT: "You've scanned as many codes as this promotion allows today. Try again tomorrow.",

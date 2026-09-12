@@ -29,7 +29,7 @@ export default function NoBrandPage() {
           the poster, the till slip or the tag again, or open the link exactly as it was printed.
         </p>
         <p className="sc-label">
-          Nothing is wrong with your account - this address just doesn&apos;t belong to a programme.
+          Nothing is wrong with your account. This address just doesn&apos;t belong to a programme.
         </p>
       </section>
     </>

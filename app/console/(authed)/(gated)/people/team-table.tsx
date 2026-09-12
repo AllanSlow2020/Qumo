@@ -9,10 +9,10 @@ import { IDLE, type TeamActionState } from "./state";
 import { TempPassword } from "./temp-password";
 
 const ROLE_LABELS: Record<Role, string> = {
-  OWNER: "Owner - everything, including the team",
-  ADMIN: "Admin - everything except the team",
-  MARKETING: "Marketing - promotions and reporting",
-  QUALITY: "Quality - reporting only",
+  OWNER: "Owner: everything, including the team",
+  ADMIN: "Admin: everything except the team",
+  MARKETING: "Marketing: promotions and reporting",
+  QUALITY: "Quality: reporting only",
 };
 
 /**

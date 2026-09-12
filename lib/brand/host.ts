@@ -35,7 +35,7 @@ export const ROOT_DOMAIN = process.env.NEXT_PUBLIC_QUMO_ROOT_DOMAIN?.toLowerCase
  * the rule - or one written straight into the database - still cannot claim
  * a reserved host.
  */
-export const RESERVED_SUBDOMAINS = new Set([
+const ALWAYS_RESERVED = [
   "www",
   "app",
   "admin",
@@ -49,10 +49,55 @@ export const RESERVED_SUBDOMAINS = new Set([
   "docs",
   "help",
   "support",
-]);
+];
+
+/**
+ * The console's own subdomain. "app" everywhere we control the root domain.
+ *
+ * Configurable because of one deployment shape that is otherwise impossible:
+ * a project hosted on a root somebody else owns. With
+ * NEXT_PUBLIC_QUMO_ROOT_DOMAIN=vercel.app the console would live at
+ * app.vercel.app, which is not ours and never will be, so the console is
+ * simply unreachable until a real domain is bought. Pointing this at the
+ * project's own hostname makes the whole product usable before that
+ * purchase, which is the difference between a demo and a deck.
+ *
+ * Set it to a bare label, not a hostname: the value is the one label in
+ * front of the root domain.
+ */
+export const CONSOLE_SUBDOMAIN =
+  process.env.NEXT_PUBLIC_QUMO_CONSOLE_SUBDOMAIN?.trim().toLowerCase() || "app";
+
+/**
+ * Subdomains no brand can claim, including whichever one the console is on.
+ *
+ * The console's label is added here rather than assumed to be in the list,
+ * which used to be true by construction and stopped being true the moment
+ * the value came from an environment variable. Without this a deployment
+ * that moved the console could sell a brand the slug the console answers on,
+ * and the brand's shopper site and the staff login would then be the same
+ * host - the two principals this system keeps apart, sharing an address.
+ */
+export const RESERVED_SUBDOMAINS = new Set([...ALWAYS_RESERVED, CONSOLE_SUBDOMAIN]);
 
 /** What a slug is allowed to look like, and therefore what a host label is. */
 const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+
+/**
+ * Whether a slug could ever be a working brand address.
+ *
+ * Exported so provisioning asks the resolver rather than reimplementing it.
+ * A brand created with a slug this rejects would have a console, a console
+ * would show it its own poster URL, and that URL would resolve to nothing:
+ * brandSlugFromHost() below applies exactly these two rules, and a slug that
+ * fails either is a tenant nobody can reach.
+ *
+ * Says nothing about whether the slug is already taken. That is a question
+ * for the database and a unique constraint, not for a regular expression.
+ */
+export function isValidBrandSlug(slug: string): boolean {
+  return SLUG.test(slug) && !RESERVED_SUBDOMAINS.has(slug);
+}
 
 /**
  * The brand slug in a host, or null if the host does not name one.
@@ -104,12 +149,6 @@ export function brandSlugFromHost(host: string | null | undefined, rootDomain = 
  */
 export const BRAND_HEADER = "x-qumo-brand";
 
-/**
- * The console's own subdomain. In RESERVED_SUBDOMAINS above, so no brand can
- * ever claim it - that reservation and this constant have to agree, and they
- * do by construction because this is the string in that set.
- */
-export const CONSOLE_SUBDOMAIN = "app";
 
 /**
  * True when this host is the brand console rather than a shopper surface.
@@ -125,4 +164,25 @@ export function isConsoleHost(host: string | null | undefined, rootDomain = ROOT
   const hostname = (host.split(":")[0] ?? "").trim().toLowerCase().replace(/\.$/, "");
   const root = (rootDomain.split(":")[0] ?? "").trim().toLowerCase().replace(/\.$/, "");
   return hostname === `${CONSOLE_SUBDOMAIN}.${root}`;
+}
+
+/**
+ * The absolute origin of a brand's own shopper site.
+ *
+ * Needed wherever we hand out a link that will be opened somewhere else: a
+ * CSV for a print vendor, a QR on a label. Both used to build this inline
+ * and one of them would eventually have got it subtly wrong, which is a bad
+ * failure to have printed onto fifty thousand stickers.
+ *
+ * The brand's host, never the console's and never the apex: a code scanned
+ * at either lands on a page that names no brand, and the shopper's first
+ * experience of the programme is being told the link is broken.
+ */
+export function brandOrigin(slug: string, forwardedProto?: string | null): string {
+  const local = ROOT_DOMAIN.split(":")[0] === "localhost";
+  const proto = forwardedProto ?? (local ? "http" : "https");
+  // The dev server's port survives in ROOT_DOMAIN only if somebody put it
+  // there, so it is added here for the one case that needs it.
+  const port = local && !ROOT_DOMAIN.includes(":") ? ":3000" : "";
+  return `${proto}://${slug}.${ROOT_DOMAIN}${port}`;
 }

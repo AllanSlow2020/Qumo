@@ -58,7 +58,17 @@ export type PersonExport = {
  */
 export async function exportPerson(personId: string): Promise<PersonExport | null> {
   const person = await prisma.person.findUnique({ where: { id: personId } });
-  if (!person) {
+  // An erased account exports as nothing, the same as one that never
+  // existed, because after lib/consumer/erase.ts there is genuinely nothing
+  // here that is about anybody.
+  //
+  // Unreachable in practice - erasure deletes every session, and this is
+  // only ever called with a personId a live session supplied - but it is
+  // one null check against a 500 waiting for the first caller that arrives
+  // another way. Without it decryptPhone() throws on the emptied
+  // ciphertext, which is the right behaviour for decryptPhone and the wrong
+  // answer to give a shopper.
+  if (!person || person.erasedAt) {
     return null;
   }
 

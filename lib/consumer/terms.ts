@@ -41,27 +41,27 @@ export const TERMS_POINTS: { heading: string; body: string }[] = [
   },
   {
     heading: "What a balance is",
-    body: "Points, stamps and wallet value are a record of what you have earned with one brand. They are not money and not a deposit. They cannot be exchanged for cash, transferred to anyone else, or used with a different brand - not because of a rule we could waive, but because value earned with one brand is held against that brand and nowhere else.",
+    body: "Points, stamps and wallet value are a record of what you have earned with one brand. They are not money and not a deposit. They cannot be exchanged for cash, transferred to anyone else, or used with a different brand, and not because of a rule we could waive: but because value earned with one brand is held against that brand and nowhere else.",
   },
   {
     heading: "How you earn",
-    body: `Scan a code that proves a purchase - a till slip, a pack, a sticker - and the brand's promotion decides what it is worth. Each slip and each code earns once, ever. A slip more than 30 days old is too old to scan. A promotion may cap what one person can earn in a day and what it will hand out in total, and those caps are applied at the moment of the scan.`,
+    body: `Scan a code that proves a purchase (a till slip, a pack, a sticker) and the brand's promotion decides what it is worth. Each slip and each code earns once, ever. A slip more than 30 days old is too old to scan. A promotion may cap what one person can earn in a day and what it will hand out in total, and those caps are applied at the moment of the scan.`,
   },
   {
     heading: "When a scan does not earn",
-    body: "A code we cannot verify earns nothing. That covers a slip whose signature does not check out, a code already used, a total that has been edited, and a scan for a promotion that is not running. Nothing is deducted from you when this happens - the scan simply does not count, and the screen says why.",
+    body: "A code we cannot verify earns nothing. That covers a slip whose signature does not check out, a code already used, a total that has been edited, and a scan for a promotion that is not running. Nothing is deducted from you when this happens. The scan simply does not count, and the screen says why.",
   },
   {
     heading: "Using what you have earned",
-    body: "Redemption is not open yet. What you earn is recorded and held for you; the brand decides how you eventually use it and will tell you when that opens. Your balance does not expire while the programme is running. An individual reward - a coupon for a completed card, say - can carry its own expiry date, and where it does, that date is shown on the reward itself.",
+    body: "Redemption is not open yet. What you earn is recorded and held for you; the brand decides how you eventually use it and will tell you when that opens. Your balance does not expire while the programme is running. An individual reward, such as a coupon for a completed card, can carry its own expiry date, and where it does, that date is shown on the reward itself.",
   },
   {
     heading: "If the brand ends the programme",
-    body: `Earning stops the day the brand ends it. Anything you have already earned stays yours to use for ${HONOUR_WINDOW_DAYS} days after that, and then the programme closes. Nothing is deleted - if the brand starts again, your balance is where you left it.`,
+    body: `Earning stops the day the brand ends it. Anything you have already earned stays yours to use for ${HONOUR_WINDOW_DAYS} days after that, and then the programme closes. Nothing is deleted. If the brand starts again, your balance is where you left it.`,
   },
   {
     heading: "Leaving",
-    body: "You can leave a brand's programme whenever you like, from your own details page, without asking anyone. Leaving stops you earning immediately. You can also ask for a copy of everything held about you, or ask for it to be deleted - the privacy notice covers how.",
+    body: "You can leave a brand's programme whenever you like, from your own details page, without asking anyone. Leaving stops you earning immediately. You can also ask for a copy of everything held about you, or ask for it to be deleted. The privacy notice covers how.",
   },
   {
     heading: "Getting it wrong on purpose",

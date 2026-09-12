@@ -36,7 +36,7 @@ export default async function ConsoleStoresPage() {
             <p className="cn-body">
               At an unsigned store nothing binds a slip to the till that printed it, so a shopper who has seen one of
               their own receipts can invent others. Your promotion&apos;s per-person and per-campaign ceilings bound
-              what that costs - they don&apos;t prevent it. Turning signing on below is the fix, and it needs your
+              what that costs. They don&apos;t prevent it. Turning signing on below is the fix, and it needs your
               point of sale to compute the signature.
             </p>
           </div>

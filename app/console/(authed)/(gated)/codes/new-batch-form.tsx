@@ -61,7 +61,7 @@ export function NewBatchForm({ campaigns }: { campaigns: Option[] }) {
           maxLength={120}
           placeholder="Campari 750ml neck tags, March"
         />
-        <p className="cn-label">For your own records - it names the download too.</p>
+        <p className="cn-label">For your own records. It names the download too.</p>
       </div>
 
       <div className="cn-field">

@@ -86,7 +86,7 @@ export default async function ConsoleOverviewPage() {
             disagree with the rows behind it. */}
         <Metric
           value={unitLine(o.outstanding)}
-          label="Outstanding - owed to shoppers"
+          label="Outstanding, owed to shoppers"
           note={redeemed > 0 ? `${formatLedgerAmount(redeemed, "CENTS")} already redeemed` : undefined}
         />
         <Metric value={unitLine(o.issued)} label="Issued in total" note="Before anything was spent" />

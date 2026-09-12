@@ -73,7 +73,7 @@ export default async function ConsoleBillingPage() {
           <p className="cn-body">
             You can stop at any time. Earning stops immediately; anything your shoppers have already earned stays
             spendable for {HONOUR_WINDOW_DAYS} days, then the programme closes. That window is fixed when you
-            cancel - changing our policy later won&apos;t shorten a promise already made to your customers.
+            cancel, so changing our policy later won&apos;t shorten a promise already made to your customers.
           </p>
 
           {canManage ? (

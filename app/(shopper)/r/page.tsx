@@ -84,7 +84,7 @@ export default async function ReceiptScanPage({
 
         {result.coupon && (
           <div className="sc-tile sc-tile-pos">
-            <p className="sc-label">Card complete - you&apos;ve earned</p>
+            <p className="sc-label">Card complete, you&apos;ve earned</p>
             <p className="sc-h2">{result.coupon.name}</p>
             <p className="sc-code-sm sc-pos">{result.coupon.code}</p>
           </div>

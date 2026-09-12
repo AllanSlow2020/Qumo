@@ -240,7 +240,7 @@ export default async function WalletPage() {
             </p>
           ) : (
             <p className="sc-body">
-              This balance can no longer be spent. Nothing has been deleted - if {brand.name} starts again, it will
+              This balance can no longer be spent. Nothing has been deleted, and if {brand.name} starts again it will
               be here exactly as you left it.
             </p>
           )}

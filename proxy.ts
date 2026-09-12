@@ -47,6 +47,25 @@ const CONSOLE_ROOT = "/console";
 // What a staff member actually types, on app.{root}.
 const CONSOLE_LOGIN = "/login";
 
+/**
+ * Console paths reachable without a staff cookie.
+ *
+ * A set rather than a chain of comparisons, because the chain is how the
+ * second exception gets bolted on and the third gets bolted on wrong.
+ *
+ * /provision creates a brand and therefore has no brand to be a member of
+ * yet, so it cannot be behind a staff session by definition. Its auth is a
+ * shared secret checked in the action itself - the same shape the cron
+ * routes and the SMS webhook use, and the same rule that an unset secret
+ * refuses everything. See lib/brand/provision.ts.
+ *
+ * /forgot and /reset are for somebody who cannot sign in, so requiring a
+ * session would be a closed loop. Neither trusts anything the caller sends:
+ * /forgot answers identically whether or not the address exists, and /reset
+ * only carries the token, which is checked and spent in its action.
+ */
+const CONSOLE_PUBLIC = new Set([CONSOLE_LOGIN, "/provision", "/forgot", "/reset"]);
+
 function underRoot(pathname: string, root: string): boolean {
   return pathname === root || pathname.startsWith(`${root}/`);
 }
@@ -68,6 +87,13 @@ function isPublic(pathname: string): boolean {
     // its own CRON_SECRET check inside the handler instead - the same
     // "public URL, real auth in the route" shape a webhook uses.
     pathname.startsWith("/api/cron") ||
+    // The aggregator posting an inbound SMS. Same shape as cron and for
+    // the same reason: a network has no cookie to carry, so the URL is
+    // public and the route checks its own shared secret. It also arrives
+    // on whatever host the aggregator was given, which names no brand -
+    // fine, because an SMS asserts no brand and the code it carries
+    // already knows its own.
+    pathname.startsWith("/api/sms") ||
     // A browser posting a blocked-resource report has no session and cannot
     // be told to sign in. It defends itself instead: rate limited, size
     // capped, and answering 204 to everything.
@@ -155,7 +181,7 @@ function consoleRoute(req: NextRequest, pathname: string, security: Security): N
   // a database read and this runs in the Edge runtime. The real check is
   // getStaffSession() in the layout, which also refuses a revoked session
   // and a deactivated account.
-  if (pathname !== CONSOLE_LOGIN && !req.cookies.get(STAFF_SESSION_COOKIE)) {
+  if (!CONSOLE_PUBLIC.has(pathname) && !req.cookies.get(STAFF_SESSION_COOKIE)) {
     return NextResponse.redirect(new URL(CONSOLE_LOGIN, req.nextUrl.origin));
   }
 

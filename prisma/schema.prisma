@@ -225,6 +225,7 @@ model User {
   walletSpends        WalletSpend[]
   staffSessions       StaffSession[]
   recoveryCodes       StaffRecoveryCode[]
+  passwordResets      StaffPasswordReset[]
 
   @@index([brandId])
 }
@@ -274,6 +275,36 @@ model StaffRecoveryCode {
 // a secret that lives only in the environment means a stolen database
 // yields nothing. The phone hash is mixed into the message as well, so a
 // code hash from one account can never be replayed against another.
+/// A staff password reset in flight.
+///
+/// Its own table rather than a column on User, because a reset is an event
+/// with a lifetime and a User is not. Two of them can be outstanding, the
+/// older stops working the moment the newer is issued, and an expired one
+/// is a row to sweep rather than a field to remember to clear.
+///
+/// The token is stored as a hash for the same reason a session token and an
+/// OTP are: a database dump must not be a list of live account takeovers.
+model StaffPasswordReset {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// SHA-256 of the token in the link. Unique, so a lookup is an index hit
+  /// and a collision is a database error rather than two people sharing a
+  /// reset.
+  tokenHash String @unique
+
+  expiresAt DateTime
+  /// Set when spent, and on every older outstanding reset when a new one is
+  /// requested. A superseded link must stop working the moment its
+  /// replacement is sent.
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 model PhoneOtp {
   id         String    @id @default(cuid())
   phoneHash  String
@@ -402,6 +433,23 @@ model Person {
   consentVersion String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  // When this person asked to be erased.
+  //
+  // The row survives its own deletion, and that is the point rather than a
+  // compromise. Every ledger entry hangs off a BrandMembership that hangs
+  // off this row, so deleting it would take a brand's record of what it
+  // issued with it - their liability for last quarter would change because
+  // somebody left this quarter, and their books would stop reconciling for
+  // a reason no accountant could find. What is deleted is everything that
+  // makes the row a person: the number, its hash, the name, the suburb.
+  // What is left cannot be tied back to anybody.
+  //
+  // Set at the same moment phoneHash is overwritten with a value no real
+  // number can hash to, so the account is unreachable by construction and
+  // not merely by this flag. The flag exists to say it was deliberate and
+  // when - see lib/consumer/erase.ts.
+  erasedAt DateTime?
 
   brandMemberships BrandMembership[]
   shopperSessions  ShopperSession[]

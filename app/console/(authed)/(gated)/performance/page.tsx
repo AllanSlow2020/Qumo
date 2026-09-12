@@ -230,7 +230,7 @@ function CampaignTable({ rows }: { rows: CampaignRow[] }) {
                   </div>
                   <div className={`cn-sub cn-mono${c.ceilingUsed > 1 ? " cn-warn-note" : ""}`}>
                     {percent(c.ceilingUsed)}
-                    {c.ceilingUsed > 1 && " - over budget"}
+                    {c.ceilingUsed > 1 && ", over budget"}
                   </div>
                 </>
               )}

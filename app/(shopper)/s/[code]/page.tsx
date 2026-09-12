@@ -65,7 +65,7 @@ export default async function ScanPage({ params }: { params: Promise<{ code: str
             something and what to show at the counter. */}
         {result.coupon && (
           <div className="sc-tile sc-tile-pos">
-            <p className="sc-label">Card complete - you&apos;ve earned</p>
+            <p className="sc-label">Card complete, you&apos;ve earned</p>
             <p className="sc-h2">{result.coupon.name}</p>
             <p className="sc-code-sm sc-pos">{result.coupon.code}</p>
             <p className="sc-label">Show this code to claim it. It&apos;s saved in your rewards too.</p>
