@@ -58,8 +58,13 @@ const CONSOLE_LOGIN = "/login";
  * shared secret checked in the action itself - the same shape the cron
  * routes and the SMS webhook use, and the same rule that an unset secret
  * refuses everything. See lib/brand/provision.ts.
+ *
+ * /forgot and /reset are for somebody who cannot sign in, so requiring a
+ * session would be a closed loop. Neither trusts anything the caller sends:
+ * /forgot answers identically whether or not the address exists, and /reset
+ * only carries the token, which is checked and spent in its action.
  */
-const CONSOLE_PUBLIC = new Set([CONSOLE_LOGIN, "/provision"]);
+const CONSOLE_PUBLIC = new Set([CONSOLE_LOGIN, "/provision", "/forgot", "/reset"]);
 
 function underRoot(pathname: string, root: string): boolean {
   return pathname === root || pathname.startsWith(`${root}/`);

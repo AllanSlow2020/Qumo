@@ -885,3 +885,11 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   .cn-handover { grid-template-columns: 1fr; gap: 2px 0; }
   .cn-handover dd { margin-bottom: 10px; }
 }
+
+/* A way out of a form that is not a button competing with its submit. */
+.cn-quiet-link {
+  align-self: center;
+  font-size: 13px;
+  color: var(--cn-ink-3);
+}
+.cn-quiet-link:hover { color: var(--cn-ink); }

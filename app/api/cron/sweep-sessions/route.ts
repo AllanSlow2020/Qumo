@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { sweepExpiredSessions } from "@/lib/consumer/session";
 import { sweepExpiredRateLimits } from "@/lib/security/rate-limit";
+import { sweepExpiredResets } from "@/lib/staff/reset";
 import { logger } from "@/lib/security/logger";
 
 /**
@@ -48,7 +49,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // in one should not leave the other's outcome ambiguous.
   const deleted = await sweepExpiredSessions();
   const rateLimitsDeleted = await sweepExpiredRateLimits();
+  // Same family: a row kept only until a window closes. A spent or expired
+  // reset is useless, and keeping it is keeping a record of who forgot their
+  // password and when.
+  const resetsDeleted = await sweepExpiredResets();
 
-  logger.info("session sweep: run complete", { deleted, rateLimitsDeleted });
-  return NextResponse.json({ deleted, rateLimitsDeleted });
+  logger.info("session sweep: run complete", { deleted, rateLimitsDeleted, resetsDeleted });
+  return NextResponse.json({ deleted, rateLimitsDeleted, resetsDeleted });
 }

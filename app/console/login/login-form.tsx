@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn, type LoginState } from "./actions";
@@ -92,6 +94,16 @@ export function StaffLoginForm() {
       <button type="submit" className="cn-btn" disabled={pending}>
         {pending ? "Checking…" : awaitingCode ? "Confirm code" : "Sign in"}
       </button>
+
+      {/* Hidden once they are past the password and onto the second factor:
+          at that point they have proved they know it, and a reset link would
+          be an invitation to route around the second factor rather than use
+          it. */}
+      {!awaitingCode && (
+        <Link className="cn-quiet-link" href="/forgot">
+          Forgotten your password?
+        </Link>
+      )}
     </form>
   );
 }

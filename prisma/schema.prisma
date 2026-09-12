@@ -225,6 +225,7 @@ model User {
   walletSpends        WalletSpend[]
   staffSessions       StaffSession[]
   recoveryCodes       StaffRecoveryCode[]
+  passwordResets      StaffPasswordReset[]
 
   @@index([brandId])
 }
@@ -274,6 +275,36 @@ model StaffRecoveryCode {
 // a secret that lives only in the environment means a stolen database
 // yields nothing. The phone hash is mixed into the message as well, so a
 // code hash from one account can never be replayed against another.
+/// A staff password reset in flight.
+///
+/// Its own table rather than a column on User, because a reset is an event
+/// with a lifetime and a User is not. Two of them can be outstanding, the
+/// older stops working the moment the newer is issued, and an expired one
+/// is a row to sweep rather than a field to remember to clear.
+///
+/// The token is stored as a hash for the same reason a session token and an
+/// OTP are: a database dump must not be a list of live account takeovers.
+model StaffPasswordReset {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// SHA-256 of the token in the link. Unique, so a lookup is an index hit
+  /// and a collision is a database error rather than two people sharing a
+  /// reset.
+  tokenHash String @unique
+
+  expiresAt DateTime
+  /// Set when spent, and on every older outstanding reset when a new one is
+  /// requested. A superseded link must stop working the moment its
+  /// replacement is sent.
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 model PhoneOtp {
   id         String    @id @default(cuid())
   phoneHash  String
