@@ -47,6 +47,42 @@ export default async function ScanPage({ params }: { params: Promise<{ code: str
     );
   }
 
+  /*
+   * A repeat scan of a code this same shopper already used.
+   *
+   * The engine has always told these apart - someone else's used code is
+   * refused outright, and only your own comes back as a success carrying
+   * `alreadyEarned` - and this page ignored the flag and rendered both the
+   * same. So a second scan said "+R10.00, added to your balance", which is
+   * true of the first scan and reads as a second award. It never was one:
+   * the ledger has a single row and the balance underneath is unchanged.
+   *
+   * Worth more than tidiness. The first thing anybody does with a loyalty
+   * QR is scan it twice to see whether it pays twice, and the honest answer
+   * has to be on the screen rather than only in the database.
+   */
+  if (result.alreadyEarned) {
+    return (
+      <>
+        <BrandHeader />
+        <section className="sc-card">
+          <p className="sc-label">
+            {result.brandName} · {result.campaignName}
+          </p>
+          <h1 className="sc-h1">You already claimed this one</h1>
+          <p className="sc-body">
+            This code gave you {formatLedgerAmount(result.amount, result.unit)} when you first scanned it. Each code
+            works once. Your balance is{" "}
+            <strong style={{ color: "var(--sc-ink)" }}>{formatLedgerAmount(result.newBalance, result.unit)}</strong>.
+          </p>
+          <Link href="/wallet" className="sc-btn">
+            See my rewards
+          </Link>
+        </section>
+      </>
+    );
+  }
+
   return (
     <>
       <BrandHeader />
