@@ -490,7 +490,12 @@
    360px screen. */
 .sc-brandmark {
   display: block;
-  height: 30px;
+  /* 30px was tuned against a plain wordmark and is too small for the thing
+     brands actually send: Chicken Licken's is a rooster roundel beside script
+     type, and at 30px the type was unreadable. The binding constraint here
+     was never height, it is the width below - the mark must not push the
+     theme toggle off a 360px screen. */
+  height: 40px;
   width: auto;
   max-width: 220px;
   object-fit: contain;
