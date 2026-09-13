@@ -15,7 +15,8 @@ import { forPerson } from "./scope";
  * is a poster that pays out to everyone who walks past it.
  *
  * What it can do is what a poster is actually for: explain the promotion and
- * let somebody opt in. Earning starts at the next till slip.
+ * let somebody opt in. Earning starts at the next unique code, whether that
+ * is printed under a pack or on a till slip.
  *
  * (The plan allows a capped welcome bonus here. Deliberately not built: it
  * would make this the one unproven carrier that can move the ledger, and the

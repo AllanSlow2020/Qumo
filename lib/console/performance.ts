@@ -186,7 +186,7 @@ export async function getPerformance(
     outstandingRows,
     slipRows,
     slipsPerStore,
-    packCodes,
+    packRows,
     newMembers,
     perMember,
     campaigns,
@@ -214,7 +214,14 @@ export async function getPerformance(
         where: { scannedAt: window },
         _count: { _all: true },
       }),
-      scoped.packCode.count({ where: { status: "SCANNED", scannedAt: window } }),
+      // Timestamps, not a count, for the same reason the slips above are
+      // fetched: an on-pack scan belongs on the day chart. A brand whose
+      // whole mechanism is a QR on the box would otherwise read a flat
+      // line while its campaign ran.
+      scoped.packCode.findMany({
+        where: { status: "SCANNED", scannedAt: window },
+        select: { scannedAt: true },
+      }),
       scoped.brandMembership.count({ where: { joinedAt: window } }),
       // Earn events per member in the period, which is what the repeat
       // distribution is built from. Counted over ledger credits rather than
@@ -256,8 +263,20 @@ export async function getPerformance(
     // from `now`, so the buckets line up with the range the query used.
     buckets.set(new Date(now.getTime() - i * DAY_MS).toISOString().slice(0, 10), 0);
   }
-  for (const scan of slipRows) {
-    const key = scan.scannedAt.toISOString().slice(0, 10);
+  // Both mechanisms, one chart. A till slip and a code on a box are the
+  // same event to the shopper - they scanned something and earned - and
+  // splitting them into two charts would ask the brand to add up two lines
+  // to answer "was it busy last Tuesday".
+  // `PackCode.scannedAt` is nullable in the schema even though the query
+  // above only asks for SCANNED rows, so the null is filtered rather than
+  // asserted away: a row that somehow lacks a date belongs in no bucket,
+  // not in today's.
+  const scanTimes = [
+    ...slipRows.map((r) => r.scannedAt),
+    ...packRows.map((r) => r.scannedAt).filter((d): d is Date => d !== null),
+  ];
+  for (const at of scanTimes) {
+    const key = at.toISOString().slice(0, 10);
     if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
   }
   const perStore = new Map(slipsPerStore.map((r) => [r.storeId, r._count._all]));
@@ -333,7 +352,7 @@ export async function getPerformance(
     issued: toUnitRows(issuedRows),
     outstanding: toUnitRows(outstandingRows),
     slips: slipRows.length,
-    packCodes,
+    packCodes: packRows.length,
     membersReached,
     newMembers,
     repeat,

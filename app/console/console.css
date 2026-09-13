@@ -17,112 +17,197 @@
  *
  * ── One system, two densities ────────────────────────────────────────────
  *
- * The two design directions differed on two axes, and the answer takes one
- * from each. The *surface* follows the shopper - the same near-white and
- * near-black, the same hairlines, the same two-pixel radius - because a
- * product whose two halves disagree about what a border looks like reads as
- * two products. The *structure* is the console's own: tables with real
+ * The console and the shopper surface share a temperament and not a
+ * stylesheet. Both are quiet, both let type and hairlines do the work, and
+ * neither decorates. The *structure* is the console's own: tables with real
  * column heads, charts, filters, figures aligned so they can be compared
  * down a column rather than admired one at a time.
  *
  * ── Where colour is allowed here ─────────────────────────────────────────
  *
- * Achromatic, like the shopper surface, and for a related reason: colour
- * that appears everywhere means nothing anywhere. Actions are ink. Hue is
- * reserved for two jobs - a state that needs acting on (an unsigned store,
- * an uncapped promotion) and the emphasised mark in a chart. Everything a
- * brand's staff sees in colour here is therefore something they can do
- * something about.
+ * Three jobs, and no fourth.
+ *
+ *   1. The one primary action on a screen. Blue, filled, and if two things
+ *      on a page are that colour then neither of them is the thing to do.
+ *   2. A state somebody has to act on: an unsigned store, an uncapped
+ *      promotion, a destructive button.
+ *   3. Telling apart things in a chart that are genuinely different - a
+ *      shopper who came once from one who came five times, one promotion
+ *      from another. Never a share of a single quantity, which is one thing
+ *      in parts and reads as one colour in tones.
+ *
+ * Nothing else gets a hue. In particular no chart colour is ever the accent
+ * blue: somebody who has learned that blue means "press this" should not
+ * meet it again on a bar that does nothing.
+ *
+ * ── Light by default, dark on a toggle ───────────────────────────────────
+ *
+ * Both are first-class and both are in the masthead, because a console is
+ * read at a desk by a window at midday and on a laptop at eleven at night,
+ * and neither of those is the edge case. Light is what an unset preference
+ * gets. The toggle writes the same cookie the shopper surface uses, so the
+ * choice is one choice across the product.
+ *
+ * Note what did NOT change: the shopper surface. It stays brand-led, and
+ * light or dark by the shopper's own setting, because the whole premise is
+ * that a customer is dealing with Chicken Licken rather than with us.
+ * The `.cn-preview-*` and `.cn-prev-*` blocks near the bottom of this file
+ * simulate that shopper surface inside the console, which is exactly why
+ * they hardcode white and near-black and must not be retheemed with the
+ * rest of it.
  */
 
 .cn {
-  --cn-bg: #fafaf9;
+  /* Three tonal steps and a hairline, light-first.
+     Canvas is the broadest layer, the card is the brightest thing on it,
+     and the step between them is what says "container" - with a hairline
+     to draw the edge, because the step alone is too quiet to define one. */
+  --cn-bg: #f5f5f5;
   --cn-surface: #ffffff;
+  --cn-raised: #fafafa;
   --cn-ink: #0a0a0a;
-  --cn-ink-2: #52525b;
-  --cn-ink-3: #8a8a90;
-  --cn-line: #e4e4e0;
-  --cn-line-soft: #efefec;
-  /* Actions are ink, not a hue. See the note at the top of this file. */
-  --cn-accent: #0a0a0a;
+  --cn-ink-2: #525252;
+  --cn-ink-3: #737373;
+  --cn-line: #e5e5e5;
+  --cn-line-soft: #ededed;
+
+  /* The one thing on a screen that is coloured because it is the thing to
+     press. Blue rather than the reference's black fill: Qumo has a colour
+     and this is where a product gets to say so. It clears 4.5:1 with white
+     type on both themes, so one value serves both and there is no second
+     decision to get wrong. */
+  --cn-accent: #2563eb;
   --cn-accent-ink: #ffffff;
-  /* The emphasised mark in a chart, and only that. Deliberately deeper and
-     less saturated than the default product blue, which is the one colour
-     every dashboard already uses. */
-  --cn-data: #1e4b8f;
-  --cn-pos: #0a7d47;
-  --cn-warn: #8a5a00;
-  --cn-warn-bg: #fdf6e6;
-  --cn-neg: #b91c1c;
-  --cn-radius: 2px;
-  /* One step darker than a rule, for the largest segment of a stacked
-     bar: it has to read as a quantity rather than as an empty track. */
-  --cn-line-strong: #cbcbc6;
+  /* The tonal sibling to the primary - same shape, same type, less weight.
+     Not a muted alternative: a secondary action is still an action. */
+  --cn-quiet: #f5f5f5;
+
+  /* ---- charts ----
+     Colour here is doing a job the greyscale could not: telling apart
+     things that are genuinely different (a shopper who came once from one
+     who came five times, one promotion from another). It stops at that.
+     Nothing that is a share of a single quantity gets a hue, and none of
+     these is the accent - a reader who has learned that blue means "press
+     this" must not meet it on a bar. */
+  --cn-c1: #0d9488;
+  --cn-c2: #7c3aed;
+  --cn-c3: #d97706;
+  --cn-c4: #16a34a;
+  --cn-c5: #e11d48;
+  /* The emphasised mark in a chart: today, or the segment being explained. */
+  --cn-data: #0d9488;
+
+  --cn-pos: #16a34a;
+  --cn-warn: #a16207;
+  --cn-warn-bg: #fefce8;
+  /* Destructive only, never decoration. */
+  --cn-neg: #e7000b;
+
+  /* Two radii carry the system: a pill for anything interactive, a generous
+     round for anything that contains. Plus one small value for the handful
+     of marks too short to take a pill without becoming a lozenge. */
+  --cn-radius: 18px;
+  --cn-radius-card: 24px;
+  --cn-radius-badge: 18px;
+  --cn-radius-small: 6px;
+
+  /* A hairline plus the faintest lift. The border defines the card; the
+     shadow only stops it sitting flat on the canvas. */
+  --cn-shadow-card: 0 0 0 1px rgba(23, 23, 23, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06),
+    0 1px 2px -1px rgba(0, 0, 0, 0.06);
+
+  --cn-line-strong: #d4d4d4;
 
   background: var(--cn-bg);
   color: var(--cn-ink);
   min-height: 100vh;
-  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
-  /* The same word-space correction the shopper surface makes: it is a
-     property of the face, not of a component. */
-  word-spacing: 0.05em;
-  font-feature-settings: "tnum" 1;
+  color-scheme: light;
+  /* Inter, standing in for Geist: the same geometric neutrality, and it is
+     already in the registry (app/font-faces.ts) for brands to choose, so
+     the console's own face costs no extra download. */
+  font-family: var(--qf-inter), ui-sans-serif, system-ui, sans-serif;
+  /* ss01 and cv11 are the alternate glyphs that give Inter the engineered
+     read this system wants; zero slashes the zero and tnum holds a column
+     of figures in line, both of which matter on a screen that is mostly
+     numbers. */
+  font-feature-settings: "ss01" 1, "cv11" 1, "zero" 1, "tnum" 1;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Every figure goes through the monospace, so a column of amounts can be
-   compared down the page rather than read one at a time. The same face the
-   shopper sees, which is most of what makes the two halves one product. */
-.cn-num,
-.cn-mono,
-.cn-metric-v,
-.cn-secret-value,
-.cn-table td.cn-num,
-.cn-table th.cn-num {
-  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.04em;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .cn {
-    --cn-bg: #0a0a0b;
-    --cn-surface: #121214;
-    --cn-ink: #f7f7f5;
-    --cn-ink-2: #a1a1a8;
-    --cn-ink-3: #71717a;
-    --cn-line: #232326;
-    --cn-line-soft: #1a1a1d;
-    --cn-accent: #f7f7f5;
-    --cn-accent-ink: #0a0a0b;
-    --cn-data: #7aa2e8;
-  --cn-line-strong: #3a3a40;
-    --cn-pos: #3fbf7f;
-    --cn-warn: #e0a83a;
-    --cn-warn-bg: #241d0f;
-    --cn-neg: #f87171;
-  }
-}
-
+/* Dark, on the toggle in the masthead.
+ *
+ * Not a separate design: the same geometry, the same radii, the same type,
+ * with the tonal stack inverted. Deliberately not pure black - a #08090a
+ * canvas makes every card on it read as the only lit object on the screen,
+ * which is a landing page's trick and wrong for something somebody sits in
+ * for twenty minutes. Lifted to a deep charcoal, with each step above it
+ * lifted to match so the hairlines still separate anything.
+ *
+ * The chart hues brighten rather than change: the same five meanings, at
+ * the lightness this ground needs to show them.
+ *
+ * `[data-theme]` is set on <html> by the shared toggle in app/theme-actions.ts,
+ * the same one the shopper surface uses. */
 :root[data-theme="dark"] .cn {
-  --cn-bg: #0a0a0b;
-  --cn-surface: #121214;
-  --cn-ink: #f7f7f5;
-  --cn-ink-2: #a1a1a8;
-  --cn-ink-3: #71717a;
-  --cn-line: #232326;
-  --cn-line-soft: #1a1a1d;
-  --cn-accent: #f7f7f5;
-  --cn-accent-ink: #0a0a0b;
-  --cn-data: #7aa2e8;
-  --cn-line-strong: #3a3a40;
-  --cn-pos: #3fbf7f;
-  --cn-warn: #e0a83a;
-  --cn-warn-bg: #241d0f;
-  --cn-neg: #f87171;
+  color-scheme: dark;
+  --cn-bg: #131417;
+  --cn-surface: #1a1c20;
+  --cn-raised: #232529;
+  --cn-ink: #f7f8f8;
+  --cn-ink-2: #c4cad3;
+  --cn-ink-3: #9aa1ab;
+  --cn-line: #2c2f36;
+  --cn-line-soft: #232529;
+
+  /* The action blue holds its own value across both themes; only the ground
+     under it changes. */
+  --cn-accent: #2563eb;
+  --cn-accent-ink: #ffffff;
+  --cn-quiet: rgba(255, 255, 255, 0.06);
+
+  --cn-c1: #2dd4bf;
+  --cn-c2: #a78bfa;
+  --cn-c3: #fbbf24;
+  --cn-c4: #4ade80;
+  --cn-c5: #fb7185;
+  --cn-data: #2dd4bf;
+
+  --cn-pos: #4ade80;
+  --cn-warn: #fbbf24;
+  --cn-warn-bg: rgba(251, 191, 36, 0.10);
+  --cn-neg: #fb7185;
+
+  /* No lift in the dark. A drop shadow on a dark ground is a smudge, so the
+     card is defined by its step and its hairline alone. */
+  --cn-shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.02);
+  --cn-line-strong: #3d424a;
+}
+
+/* The ground behind the console.
+ *
+ * `.cn` paints its own canvas and is at least a full viewport tall, so this
+ * only shows in the gap an overscroll bounce opens at the top or bottom of
+ * the page - which on a trackpad is often enough to be worth not being a
+ * white flash. Scoped with :has so it reaches only pages that actually
+ * render the console; globals.css still owns the ground under the shopper,
+ * where the brand decides.
+ *
+ * The light opt-out gets the same treatment, or the escape hatch would sit
+ * on a black page. */
+html:has(.cn),
+html:has(.cn) body {
+  background: #f5f5f5;
+}
+
+html[data-theme="dark"]:has(.cn),
+html[data-theme="dark"]:has(.cn) body {
+  background: #131417;
 }
 
 /* ---------- chrome ---------- */
 
+/* One tonal step off the canvas, which is what separates the chrome from
+   the content without spending a divider on it. */
 .cn-top {
   border-bottom: 1px solid var(--cn-line);
   background: var(--cn-surface);
@@ -150,15 +235,66 @@
 
 .cn-mark {
   font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  letter-spacing: -0.025em;
   color: var(--cn-ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
 }
 
 .cn-mark span {
   color: var(--cn-ink-3);
-  font-weight: 500;
+  font-weight: 400;
 }
+
+/* The Qumo mark, set in the type colour.
+ *
+ * The file declares fill="currentColor" and no fills of its own, so it
+ * inherits whatever the nav's ink is and needs no second asset for the
+ * light palette. */
+.cn-mark svg,
+.cn-mark img {
+  height: 17px;
+  width: auto;
+  display: block;
+  color: var(--cn-ink);
+}
+
+/* The wordmark, for anything that cannot see the mark: a screen reader, a
+   search result, a stylesheet that failed to load. Present in the document,
+   absent from the layout - not display:none, which would take it out of the
+   accessibility tree along with the pixels. */
+.cn-mark-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Light or dark, said as the state you would get rather than as the state
+   you are in. "Light" on a dark console means "switch to light" - a toggle
+   labelled with its current state makes half its readers press it to find
+   out, and the other half press it expecting the opposite. */
+.cn-theme {
+  border: 1px solid var(--cn-line);
+  background: var(--cn-quiet);
+  color: var(--cn-ink-2);
+  border-radius: 9999px;
+  padding: 6px 13px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cn-theme:hover { color: var(--cn-ink); border-color: var(--cn-ink-3); }
+.cn-theme:focus-visible { outline: 2px solid var(--cn-ink-2); outline-offset: 2px; }
 
 .cn-nav-row {
   border-top: 1px solid var(--cn-line-soft);
@@ -183,17 +319,26 @@
 .cn-nav::-webkit-scrollbar { display: none; }
 
 .cn-nav a {
-  color: var(--cn-ink-2);
+  color: var(--cn-ink-3);
   text-decoration: none;
-  font-size: 14px;
-  padding: 6px 9px;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  padding: 7px 10px;
   border-radius: var(--cn-radius);
   white-space: nowrap;
 }
 
 .cn-nav a:hover {
   color: var(--cn-ink);
-  background: var(--cn-line-soft);
+  background: var(--cn-quiet);
+}
+
+/* Where you are, said once. The accent is the action colour everywhere
+   else, so the current page is marked in full-contrast ink instead - it is
+   a statement of fact, not something to click. */
+.cn-nav a[aria-current="page"] {
+  color: var(--cn-ink);
+  background: var(--cn-quiet);
 }
 
 .cn-who {
@@ -218,10 +363,12 @@
 
 /* ---------- type ---------- */
 
-.cn-h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
-.cn-h2 { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
-.cn-body { font-size: 14px; line-height: 1.55; color: var(--cn-ink-2); margin: 0; }
-.cn-label { font-size: 12px; color: var(--cn-ink-3); margin: 0; }
+/* Three weights, 400/500/600, and tracking that tightens as size grows.
+   Hierarchy comes from size and colour before it comes from weight. */
+.cn-h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.025em; margin: 0; }
+.cn-h2 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+.cn-body { font-size: 14px; line-height: 1.43; color: var(--cn-ink-2); margin: 0; }
+.cn-label { font-size: 12px; line-height: 1.33; color: var(--cn-ink-3); margin: 0; }
 
 /* ---------- metrics ---------- */
 
@@ -234,16 +381,17 @@
 .cn-metric {
   background: var(--cn-surface);
   border: 1px solid var(--cn-line);
-  border-radius: var(--cn-radius);
-  padding: 16px;
+  border-radius: var(--cn-radius-card);
+  box-shadow: var(--cn-shadow-card);
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
 .cn-metric-v {
-  font-size: 26px;
-  font-weight: 700;
+  font-size: 30px;
+  font-weight: 600;
   letter-spacing: -0.025em;
   line-height: 1.1;
   /* Tabular figures so two metrics side by side line up rather than
@@ -260,7 +408,8 @@
 .cn-panel {
   background: var(--cn-surface);
   border: 1px solid var(--cn-line);
-  border-radius: var(--cn-radius);
+  border-radius: var(--cn-radius-card);
+  box-shadow: var(--cn-shadow-card);
   overflow: hidden;
 }
 
@@ -287,7 +436,7 @@
 .cn-table th {
   text-align: left;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--cn-ink-3);
   padding: 10px 16px;
   border-bottom: 1px solid var(--cn-line);
@@ -310,11 +459,12 @@
 
 .cn-pill {
   display: inline-block;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--cn-line);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 10px;
+  border-radius: var(--cn-radius-badge);
+  border: 1px solid transparent;
+  background: var(--cn-quiet);
   color: var(--cn-ink-2);
   white-space: nowrap;
 }
@@ -328,26 +478,38 @@
 .cn-form { display: flex; flex-direction: column; gap: 16px; }
 
 .cn-field { display: flex; flex-direction: column; gap: 6px; }
-.cn-field label { font-size: 13px; font-weight: 600; }
+.cn-field label { font-size: 13px; font-weight: 500; color: var(--cn-ink); }
 
 .cn-input {
   font: inherit;
-  font-size: 15px;
-  padding: 10px 12px;
-  border: 1px solid var(--cn-line);
+  font-size: 14px;
+  padding: 10px 16px;
+  /* Transparent at rest, not invisible: the fill below is what separates
+     the field from the card it sits on, and the border arrives on focus. */
+  border: 1px solid transparent;
   border-radius: var(--cn-radius);
-  background: var(--cn-surface);
+  background: var(--cn-quiet);
   color: var(--cn-ink);
   width: 100%;
 }
 
-.cn-input:focus-visible { outline: 2px solid var(--cn-accent); outline-offset: 1px; border-color: transparent; }
+.cn-input::placeholder { color: var(--cn-ink-3); }
 
+/* The fill drops and a hairline ring takes its place: the field reads as
+   opened rather than as outlined-in-addition-to-being-filled. */
+.cn-input:focus-visible {
+  outline: none;
+  border-color: var(--cn-ink-3);
+  background: var(--cn-surface);
+}
+
+/* The one filled chromatic control on a screen. Everything else that can
+   be clicked is neutral, which is what makes this one mean anything. */
 .cn-btn {
   font: inherit;
   font-size: 14px;
-  font-weight: 600;
-  padding: 10px 16px;
+  font-weight: 500;
+  padding: 9px 18px;
   border-radius: var(--cn-radius);
   border: 1px solid transparent;
   background: var(--cn-accent);
@@ -355,15 +517,29 @@
   cursor: pointer;
 }
 
-.cn-btn:disabled { opacity: 0.5; cursor: default; }
+.cn-btn:hover:not(:disabled) { filter: brightness(1.08); }
+.cn-btn:disabled { opacity: 0.4; cursor: default; }
 
+.cn-btn:focus-visible {
+  outline: 2px solid var(--cn-ink);
+  outline-offset: 2px;
+}
+
+/* The tonal sibling: same pill, same type, less weight.
+   It carries a hairline as well as a fill, which the reference's ghost
+   button does not. The reason is this product: --cn-quiet and the page
+   canvas are the same value, so on a card the fill defines the button and
+   out on the canvas nothing did - "Export CSV" and "Sign out" were invisible
+   rectangles until the pointer found them. The border is what makes one
+   variant work in both places. */
 .cn-btn-quiet {
-  background: transparent;
-  color: var(--cn-ink-2);
+  background: var(--cn-quiet);
+  color: var(--cn-ink);
   border-color: var(--cn-line);
 }
 
-.cn-btn-quiet:hover { color: var(--cn-ink); border-color: var(--cn-ink-3); }
+.cn-btn-quiet:hover { background: var(--cn-line-soft); border-color: var(--cn-line); filter: none; }
+.cn-btn-quiet:focus-visible { outline-color: var(--cn-ink-2); }
 
 .cn-err {
   font-size: 13px;
@@ -386,7 +562,8 @@
   max-width: 380px;
   background: var(--cn-surface);
   border: 1px solid var(--cn-line);
-  border-radius: var(--cn-radius);
+  border-radius: var(--cn-radius-card);
+  box-shadow: var(--cn-shadow-card);
   padding: 28px;
   display: flex;
   flex-direction: column;
@@ -609,11 +786,16 @@ select.cn-input {
   display: block;
   width: 100%;
   min-height: 2px;
-  background: var(--cn-line);
-  border-radius: 1px 1px 0 0;
+  /* A step up from the hairline, not the hairline itself: at --cn-line the
+     bars and the panel edge were the same value and a short day read as an
+     empty slot. */
+  background: var(--cn-line-strong);
+  border-radius: var(--cn-radius-small) var(--cn-radius-small) 0 0;
 }
 
-/* The one mark that carries colour: the period being talked about. */
+/* The one mark in this chart that carries colour: the period being talked
+   about. Every other bar is the same quantity on a different day, so they
+   are one colour, and today is the only thing worth picking out. */
 .cn-chart i.cn-chart-now { background: var(--cn-data); }
 
 .cn-chart em {
@@ -621,7 +803,7 @@ select.cn-input {
   font-size: 9px;
   letter-spacing: 0.04em;
   color: var(--cn-ink-3);
-  font-family: var(--font-mono), ui-monospace, monospace;
+  font-family: var(--qf-jetbrains-mono), ui-monospace, monospace;
   white-space: nowrap;
 }
 
@@ -633,7 +815,7 @@ select.cn-input {
      the baseline rather than as a hairline that looks like a rule. */
   min-height: 3px;
   background: var(--cn-line);
-  border-radius: 1px;
+  border-radius: 2px;
   display: block;
 }
 .cn-spark i.cn-chart-now { background: var(--cn-data); }
@@ -657,7 +839,7 @@ select.cn-input {
   font-size: 12.5px;
   padding: 5px 11px;
   border: 0;
-  border-radius: 1px;
+  border-radius: 4px;
   background: transparent;
   color: var(--cn-ink-3);
   text-decoration: none;
@@ -665,17 +847,26 @@ select.cn-input {
   white-space: nowrap;
 }
 
+.cn-seg a:hover,
+.cn-seg button:hover { color: var(--cn-ink-2); }
+
+/* Lifted a step and set in full ink, not inverted.
+   A solid white chip here was the loudest thing on the performance screen,
+   which put the heaviest emphasis in the room on "30 days" rather than on
+   any of the figures it was framing. Which window you are looking at is
+   context, not the headline. */
 .cn-seg [aria-current="true"],
 .cn-seg .cn-seg-on {
-  background: var(--cn-ink);
-  color: var(--cn-surface);
+  background: var(--cn-raised);
+  color: var(--cn-ink);
+  box-shadow: inset 0 0 0 1px var(--cn-line);
 }
 
 /* ---------- a value that is missing on purpose ----------
    "No ceiling" is not zero and not blank; it is a decision somebody made.
-   Drawn as an em dash in the warn colour so it reads as a state rather
-   than as an empty cell. */
-.cn-unset { color: var(--cn-warn); font-family: var(--font-mono), ui-monospace, monospace; }
+   Set in the warn colour and the figure face, so it reads as a state in the
+   column it sits in rather than as an empty cell. */
+.cn-unset { color: var(--cn-warn); font-family: var(--qf-jetbrains-mono), ui-monospace, monospace; }
 
 /* ---------- secondary text in a table cell ---------- */
 .cn-sub {
@@ -700,22 +891,29 @@ select.cn-input {
 .cn-chart-tall { height: 120px; }
 .cn-chart-tall em { min-height: 12px; }
 
-/* The repeat distribution as one bar. Three tones of ink rather than three
-   hues: they are parts of one quantity, not three unrelated categories, and
-   colouring them separately would imply they are. */
+/* The repeat distribution as one bar, and the one place a stacked bar here
+   earns three hues.
+   It was three tones of grey, on the reasoning that these are parts of one
+   quantity. That reasoning was wrong about what the bar is for: nobody
+   reads it to see how the whole divides, they read it to find out whether
+   the right-hand group is winning. Once, a few times and a habit are three
+   different kinds of customer, and three tones of the same grey make the
+   reader work out which end is which every time they look.
+   Ordered cool to warm left to right, so the direction of travel is legible
+   before any legend is read. */
 .cn-stack {
   display: flex;
   height: 10px;
   margin-top: 12px;
-  border-radius: 1px;
+  border-radius: 9999px;
   overflow: hidden;
   background: var(--cn-line);
 }
 
 .cn-stack span { display: block; }
 .cn-seg-once { background: var(--cn-line-strong); }
-.cn-seg-twice { background: var(--cn-ink-3); }
-.cn-seg-more { background: var(--cn-data); }
+.cn-seg-twice { background: var(--cn-c2); }
+.cn-seg-more { background: var(--cn-c1); }
 
 .cn-legend {
   display: flex;
@@ -727,20 +925,24 @@ select.cn-input {
 }
 
 .cn-legend span { display: inline-flex; align-items: center; gap: 6px; }
-.cn-legend i { width: 9px; height: 9px; border-radius: 1px; display: inline-block; }
+.cn-legend i { width: 9px; height: 9px; border-radius: 9999px; display: inline-block; }
 .cn-legend b { font-weight: 600; color: var(--cn-ink); }
 
 /* A share, drawn. Reading a column of these answers "is it running
-   everywhere" faster than reading a column of percentages. */
+   everywhere" faster than reading a column of percentages.
+   These stay achromatic on purpose, and it is the counterpart to the rule
+   above: each one is a single quantity against its own ceiling, so there is
+   nothing here for a second hue to distinguish. Colour arrives only when
+   the bar is close enough to that ceiling to be worth saying so. */
 .cn-bar {
   height: 6px;
-  background: var(--cn-line-soft);
-  border-radius: 1px;
+  background: var(--cn-line);
+  border-radius: 9999px;
   overflow: hidden;
   min-width: 60px;
 }
 
-.cn-bar span { display: block; height: 100%; background: var(--cn-ink-3); }
+.cn-bar span { display: block; height: 100%; background: var(--cn-ink-3); border-radius: 9999px; }
 .cn-bar span.cn-bar-warn { background: var(--cn-warn); }
 
 /* The change against the previous window.
@@ -793,6 +995,10 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 .cn-label-qr { width: 28mm; height: 28mm; }
 .cn-label-qr svg { width: 100%; height: 100%; display: block; }
 
+/* Still the wider face, deliberately, and the one place in the console that
+   keeps it: this is printed on a box and read back by somebody typing it in
+   because the camera would not focus. Generous sidebearings are the whole
+   point there, where in a table they cost alignment. */
 .cn-label-code {
   font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 9pt;
@@ -893,3 +1099,82 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   color: var(--cn-ink-3);
 }
 .cn-quiet-link:hover { color: var(--cn-ink); }
+
+/* ---------- first-run setup ---------- */
+
+/* Its own block rather than reusing .cn-preview, because this screen shows
+   two phones side by side and the appearance screen shows one. Same palette
+   borrowed from the shopper surface, and for the same reason: what is being
+   judged is what a customer sees, so previewing it in console colours would
+   answer a different question. */
+
+.cn-setup { display: block; }
+
+.cn-setup-cols {
+  display: grid;
+  grid-template-columns: minmax(20rem, 26rem) 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.cn-setup-fields { display: flex; flex-direction: column; gap: 22px; }
+.cn-setup-preview { display: flex; flex-direction: column; gap: 12px; }
+
+.cn-setup-more summary { cursor: pointer; font-size: 14px; font-weight: 600; }
+.cn-setup-more[open] summary { margin-bottom: 6px; }
+
+.cn-prev-pair { display: flex; gap: 16px; flex-wrap: wrap; }
+
+.cn-prev-phone {
+  background: #ffffff;
+  color: #0a0a0a;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius);
+  padding: 20px 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 264px;
+}
+
+/* Near-black, not #000: on an OLED phone at night pure black reads as a hole
+   in the screen, and the shopper surface makes the same choice. */
+.cn-prev-dark {
+  background: #0a0a0b;
+  color: #f7f7f5;
+  border-color: #232326;
+}
+
+.cn-prev-mark { font-size: 19px; font-weight: 700; letter-spacing: -0.035em; line-height: 1; }
+.cn-prev-logo { display: block; height: 30px; width: auto; max-width: 180px; object-fit: contain; }
+.cn-prev-h1 { font-size: 21px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.14; margin: 4px 0 0; }
+.cn-prev-body { font-size: 13px; line-height: 1.45; color: #6b6b72; margin: 0; }
+.cn-prev-dark .cn-prev-body { color: #a1a1a8; }
+
+.cn-prev-btn {
+  display: block;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 16px;
+  border-radius: var(--cn-radius);
+  background: #0a0a0a;
+  color: #ffffff;
+  margin-top: 2px;
+}
+
+.cn-prev-dark .cn-prev-btn { background: #f7f7f5; color: #0a0a0b; }
+
+.cn-prev-foot {
+  font-size: 10.5px;
+  color: #8a8a90;
+  margin: 6px 0 0;
+  padding-top: 9px;
+  border-top: 1px solid #e4e4e0;
+}
+
+.cn-prev-dark .cn-prev-foot { color: #71717a; border-color: #232326; }
+
+@media (max-width: 860px) {
+  .cn-setup-cols { grid-template-columns: 1fr; gap: 28px; }
+}

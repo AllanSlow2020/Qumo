@@ -3,7 +3,11 @@ import { redirect } from "next/navigation";
 import { PRODUCT_NAME } from "@/lib/product";
 import { prisma } from "@/lib/db/client";
 import { getStaffSession } from "@/lib/staff/session";
+import { getTheme } from "@/lib/theme";
+import { toggleTheme } from "@/app/theme-actions";
 import { signOut } from "./actions";
+import { ConsoleNav } from "./console-nav";
+import { QumoMark } from "../qumo-mark";
 
 /**
  * Everything behind the login, and the only place that check lives.
@@ -29,6 +33,12 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
     select: { name: true },
   });
 
+  // The console is dark unless somebody has said otherwise, so an unset
+  // cookie is dark and the button offers the other one. The same cookie and
+  // the same action the shopper surface uses - it is set on <html> in the
+  // root layout, which is above both.
+  const theme = await getTheme();
+
   return (
     <>
       {/* Two rows, not one.
@@ -40,7 +50,9 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
       <header className="cn-top">
         <div className="cn-top-in">
           <Link href="/" className="cn-mark" style={{ textDecoration: "none" }}>
-            {PRODUCT_NAME} <span>console</span>
+            <QumoMark />
+            <span className="cn-mark-sr">{PRODUCT_NAME}</span>
+            <span>console</span>
           </Link>
           <div className="cn-who">
             <div>{brand?.name ?? "-"}</div>
@@ -49,6 +61,14 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
               <Link href="/change-password">password</Link> · <Link href="/security">security</Link>
             </div>
           </div>
+          <form action={toggleTheme}>
+            <button type="submit" className="cn-theme">
+              {/* Unset means light, so an unset preference is offered dark.
+                  Reading the other way round labelled a light console
+                  "Light", which is the state it is already in. */}
+              {theme === "dark" ? "Light" : "Dark"}
+            </button>
+          </form>
           <form action={signOut}>
             <button type="submit" className="cn-btn cn-btn-quiet">
               Sign out
@@ -56,17 +76,7 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
           </form>
         </div>
         <div className="cn-nav-row">
-          <nav className="cn-nav">
-            <Link href="/">Overview</Link>
-            <Link href="/performance">Performance</Link>
-            <Link href="/promotions">Promotions</Link>
-            <Link href="/stores">Stores</Link>
-            <Link href="/codes">Pack codes</Link>
-            <Link href="/people">Team</Link>
-            <Link href="/activity">Activity</Link>
-            <Link href="/settings">Appearance</Link>
-            <Link href="/billing">Plan</Link>
-          </nav>
+          <ConsoleNav />
         </div>
       </header>
       <main className="cn-main">{children}</main>

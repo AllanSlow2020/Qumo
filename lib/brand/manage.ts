@@ -97,6 +97,14 @@ const identitySchema = z.object({
     .refine((v) => !v || findFont(v) !== null, { message: "That isn't one of the fonts we can serve." }),
 });
 
+const coloursSchema = z.object({
+  accentColor: z.string().trim().optional().refine((v) => !v || HEX.test(v), { message: "Use a six-digit colour like #C8102E." }),
+  accentInkColor: z.string().trim().optional().refine((v) => !v || HEX.test(v), { message: "Use a six-digit colour like #FFFFFF." }),
+  accentColorDark: z.string().trim().optional().refine((v) => !v || HEX.test(v), { message: "Use a six-digit colour like #FF3355." }),
+  accentInkColorDark: z.string().trim().optional().refine((v) => !v || HEX.test(v), { message: "Use a six-digit colour like #0A0A0B." }),
+  logoUrl: z.string().trim().max(500).optional().refine((v) => !v || /^https:\/\//i.test(v), { message: "The logo address has to start with https://." }),
+});
+
 /** Empty form fields mean "clear this", not "leave it alone". */
 function blankToNull(value: string | undefined): string | null {
   const trimmed = value?.trim();
@@ -186,6 +194,63 @@ export async function updateBrandIdentityForSession(session: SessionLike, formDa
         .map(([key]) => key),
     },
   });
+}
+
+/**
+ * The colours only, for the first-run setup step.
+ *
+ * Its own function rather than a call into updateBrandIdentityForSession
+ * with most of the form missing, because that one reads every field out of
+ * the FormData and treats absent as "clear this". A setup screen that asks
+ * for two colours and silently wipes the display name and the support
+ * address on its way past would be a hard bug to see and an easy one to
+ * write.
+ */
+export async function updateBrandColoursForSession(session: SessionLike, formData: FormData): Promise<void> {
+  requireRole(session.user.role as Role, MANAGE_IDENTITY_ROLES);
+
+  const parsed = coloursSchema.parse({
+    accentColor: formData.get("accentColor")?.toString(),
+    accentInkColor: formData.get("accentInkColor")?.toString(),
+    accentColorDark: formData.get("accentColorDark")?.toString(),
+    accentInkColorDark: formData.get("accentInkColorDark")?.toString(),
+    logoUrl: formData.get("logoUrl")?.toString(),
+  });
+
+  const accentColor = blankToNull(parsed.accentColor);
+  if (!accentColor) {
+    throw new BrandIdentityError("Pick the colour your buttons should be.");
+  }
+  const accentInkColor = blankToNull(parsed.accentInkColor);
+  const accentColorDark = blankToNull(parsed.accentColorDark);
+  const accentInkColorDark = blankToNull(parsed.accentInkColorDark);
+
+  if (accentInkColorDark && !accentColorDark) {
+    throw new BrandIdentityError("Pick a dark mode button colour before choosing the text colour that sits on it.");
+  }
+
+  await forBrand(session.user.brandId).brand.update({
+    where: { id: session.user.brandId },
+    data: {
+      accentColor: accentColor.toLowerCase(),
+      accentInkColor: accentInkColor?.toLowerCase() ?? null,
+      accentColorDark: accentColorDark?.toLowerCase() ?? null,
+      accentInkColorDark: accentInkColorDark?.toLowerCase() ?? null,
+      logoUrl: blankToNull(parsed.logoUrl),
+    },
+  });
+
+  await record(prisma, session.user, {
+    action: "brand.identity_changed",
+    targetId: session.user.brandId,
+    detail: { changed: ["accentColor", "accentInkColor", "accentColorDark", "accentInkColorDark", "logoUrl"], step: "setup" },
+  });
+}
+
+/** True once a brand has chosen a colour, which is what the first-run gate asks. */
+export async function brandHasChosenColours(brandId: string): Promise<boolean> {
+  const brand = await forBrand(brandId).brand.findFirst({ where: { id: brandId }, select: { accentColor: true } });
+  return Boolean(brand?.accentColor);
 }
 
 export type BrandIdentity = {
