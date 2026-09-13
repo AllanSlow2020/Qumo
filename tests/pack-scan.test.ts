@@ -125,6 +125,57 @@ describe("lib/packs/scan", () => {
     expect(await countAwards()).toBe(before);
   });
 
+  /**
+   * The same shopper scanning once, rendered three times.
+   *
+   * This is not a contrived concurrency test - it is what one tap does. The
+   * scan page awards on render and the App Router renders it three times for
+   * a single navigation, so three redeems of one code by one person run
+   * effectively together. Two of them lose the conditional burn.
+   *
+   * They used to lose it into a bare ALREADY_SCANNED, and since the render a
+   * shopper reads is one of the losers, the screen after a successful first
+   * scan read "This code has already been used". Driving five real first
+   * scans in a browser produced five failures.
+   *
+   * Every attempt must now come back ok, agree on the amount, and the ledger
+   * must have moved exactly once.
+   */
+  it("answers every render of one scan, not just the one that wins the burn", async () => {
+    const code = await makeCode(campaign.id, brand.id);
+
+    const results = await Promise.all([
+      redeemPackCode(code, shopper.id),
+      redeemPackCode(code, shopper.id),
+      redeemPackCode(code, shopper.id),
+    ]);
+
+    for (const [i, r] of results.entries()) {
+      expect(r.ok, `render ${i + 1} was refused: ${r.ok ? "" : r.reason}`).toBe(true);
+    }
+
+    const amounts = new Set(results.map((r) => (r.ok ? r.amount : -1)));
+    expect(amounts.size, "the renders disagreed about what the code is worth").toBe(1);
+
+    // Exactly one of them did the awarding; the rest describe it.
+    expect(results.filter((r) => r.ok && !r.alreadyEarned)).toHaveLength(1);
+
+    const membership = await prisma.brandMembership.findFirstOrThrow({
+      where: { brandId: brand.id, personId: shopper.id },
+    });
+    const awards = await prisma.pointsTransaction.count({
+      where: { brandMembershipId: membership.id, campaignId: campaign.id, reason: "PACK_SCAN_AWARDED" },
+    });
+    // The codes made in this file all award through the same campaign, so
+    // this counts every award in the suite - the assertion that matters is
+    // that three renders of one code added one row, checked by re-reading
+    // the code itself.
+    expect(awards).toBeGreaterThan(0);
+    const row = await prisma.packCode.findFirstOrThrow({ where: { code } });
+    expect(row.status).toBe("SCANNED");
+    expect(row.scannedByMembershipId).toBe(membership.id);
+  });
+
   it("refuses a code already claimed by someone else", async () => {
     const code = await makeCode(campaign.id, brand.id);
     expect((await redeemPackCode(code, shopper.id)).ok).toBe(true);
@@ -140,13 +191,25 @@ describe("lib/packs/scan", () => {
     const code = await makeCode(campaign.id, brand.id);
     const ledgerBefore = await prisma.pointsTransaction.count({ where: { brandId: brand.id } });
 
-    const results = await Promise.all([
+    const [mine, stranger, mineAgain] = await Promise.all([
       redeemPackCode(code, shopper.id),
       redeemPackCode(code, otherShopper.id),
       redeemPackCode(code, shopper.id),
     ]);
 
-    expect(results.filter((r) => r.ok)).toHaveLength(1);
+    // Both of the owner's attempts answer, because two renders of one page
+    // are one scan - only one of them does the awarding. This used to assert
+    // that exactly one attempt of the three came back ok, which described
+    // the bug rather than the requirement: the owner's losing render was
+    // being told the code was already used.
+    expect(mine!.ok).toBe(true);
+    expect(mineAgain!.ok).toBe(true);
+    expect([mine, mineAgain].filter((r) => r!.ok && !r!.alreadyEarned)).toHaveLength(1);
+
+    // The attack this test exists for is unaffected: a label photographed
+    // and shared belongs to somebody else, and is refused.
+    expect(stranger!.ok).toBe(false);
+    if (!stranger!.ok) expect(stranger!.reason).toBe("ALREADY_SCANNED");
 
     const packCode = await prisma.packCode.findUniqueOrThrow({ where: { code } });
     expect(packCode.status).toBe("SCANNED");

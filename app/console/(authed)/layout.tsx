@@ -30,8 +30,22 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
   // came from the user row - never from the URL.
   const brand = await prisma.brand.findUnique({
     where: { id: session.brandId },
-    select: { name: true },
+    // accentColor is not displayed. It answers "has this brand been set up
+    // yet", which decides whether there is anywhere to navigate to - see
+    // the nav below. Selected here rather than in a second query because
+    // this one is already being made.
+    select: { name: true, accentColor: true },
   });
+
+  /**
+   * A brand that has not chosen its colours yet is held on /setup by the
+   * gate in (gated)/layout.tsx, so every nav item would bounce straight
+   * back to the screen they are already on. Offering nine of those is
+   * offering nine dead ends, and it makes a one-step setup look like a
+   * console somebody is locked out of. The nav appears when it leads
+   * somewhere.
+   */
+  const setUp = brand?.accentColor != null;
 
   // The console is dark unless somebody has said otherwise, so an unset
   // cookie is dark and the button offers the other one. The same cookie and
@@ -75,9 +89,11 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
             </button>
           </form>
         </div>
-        <div className="cn-nav-row">
-          <ConsoleNav />
-        </div>
+        {setUp && (
+          <div className="cn-nav-row">
+            <ConsoleNav />
+          </div>
+        )}
       </header>
       <main className="cn-main">{children}</main>
     </>

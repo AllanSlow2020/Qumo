@@ -484,9 +484,13 @@ html[data-theme="dark"]:has(.cn) body {
   font: inherit;
   font-size: 14px;
   padding: 10px 16px;
-  /* Transparent at rest, not invisible: the fill below is what separates
-     the field from the card it sits on, and the border arrives on focus. */
-  border: 1px solid transparent;
+  /* A hairline at rest, which the reference's borderless field does not
+     have. Same reason the quiet button carries one: --cn-quiet is the page
+     canvas, so a field sitting on the canvas rather than inside a card had
+     no edge at all - the setup screen rendered its hex values as loose text
+     with nothing around them. The fill alone only works when everything is
+     in a card, and here it is not. */
+  border: 1px solid var(--cn-line);
   border-radius: var(--cn-radius);
   background: var(--cn-quiet);
   color: var(--cn-ink);
@@ -495,11 +499,10 @@ html[data-theme="dark"]:has(.cn) body {
 
 .cn-input::placeholder { color: var(--cn-ink-3); }
 
-/* The fill drops and a hairline ring takes its place: the field reads as
-   opened rather than as outlined-in-addition-to-being-filled. */
+/* The fill drops and the border darkens: the field reads as opened. */
 .cn-input:focus-visible {
   outline: none;
-  border-color: var(--cn-ink-3);
+  border-color: var(--cn-ink);
   background: var(--cn-surface);
 }
 
