@@ -6,6 +6,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { encryptSecret, encryptPhone, hashPhone } from "../lib/security/crypto";
 import { hashPassword } from "../lib/staff/password";
 import { generatePackCode } from "../lib/packs/code";
+import { assertLocalDatabase } from "../lib/db/is-local";
 
 /**
  * A Chicken Licken worth showing someone.
@@ -54,6 +55,10 @@ function dayWeight(date: Date): number {
 const CAMPAIGNS = ["5% back", "Wing box sleeve", "Rounds card"];
 
 async function main() {
+  // This opens by deleting every ledger row, scan and coupon belonging to
+  // its brand. Pointed at production that is not a demo, it is an incident.
+  assertLocalDatabase("the demo data script");
+
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
 
   const brand = await prisma.brand.findUnique({ where: { slug: "chicken-licken" } });
