@@ -499,6 +499,29 @@ html[data-theme="dark"]:has(.cn) body {
 
 .cn-input::placeholder { color: var(--cn-ink-3); }
 
+/* Sixteen pixels on a touch device, and the reason is iOS rather than
+ * taste.
+ *
+ * Mobile Safari zooms the whole page in when a field with type smaller
+ * than 16px takes focus, and it does not zoom back out afterwards. The
+ * page is then wider than the window, so the left of it sits off-screen -
+ * which is exactly what a phone screenshot of this console showed, with
+ * every label clipped mid-word.
+ *
+ * `pointer: coarse` rather than a width query: it is a property of the
+ * input device, not the window, so a phone in landscape is still covered
+ * and a narrow desktop window is left at the density the screen was
+ * designed for. The shopper surface already sets 17px and was never
+ * affected.
+ */
+@media (pointer: coarse) {
+  .cn-input,
+  select.cn-input,
+  textarea.cn-input {
+    font-size: 16px;
+  }
+}
+
 /* The fill drops and the border darkens: the field reads as opened. */
 .cn-input:focus-visible {
   outline: none;
