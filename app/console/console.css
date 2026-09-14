@@ -573,6 +573,32 @@ html[data-theme="dark"]:has(.cn) body {
   gap: 20px;
 }
 
+/* A page that stands on its own, outside the console shell.
+ *
+ * /provision had no container at all. Every page under (authed) is wrapped
+ * in .cn-main, and login, forgot and reset each use .cn-login - provision
+ * was the one route that sat bare inside `.cn`, so its panel ran the full
+ * width of whatever it opened in, with no gutter and nothing to stop the
+ * fields spanning a phone edge to edge.
+ *
+ * Narrower than .cn-main, because this is one short form and a handover of
+ * credentials, not a screen of tables. Top-aligned rather than centred: the
+ * success state is much taller than the form, and a vertically centred box
+ * that grows past the viewport is a box you cannot scroll to the top of.
+ */
+.cn-solo {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  /* Side padding in its own declaration so a shorthand can never zero it:
+     this is the only thing keeping the card off the edge of a phone. */
+  padding-block: 56px 72px;
+  padding-inline: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 /* ---------- store management ---------- */
 
 .cn-check {
