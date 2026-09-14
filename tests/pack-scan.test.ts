@@ -191,25 +191,36 @@ describe("lib/packs/scan", () => {
     const code = await makeCode(campaign.id, brand.id);
     const ledgerBefore = await prisma.pointsTransaction.count({ where: { brandId: brand.id } });
 
-    const [mine, stranger, mineAgain] = await Promise.all([
-      redeemPackCode(code, shopper.id),
-      redeemPackCode(code, otherShopper.id),
-      redeemPackCode(code, shopper.id),
-    ]);
+    const attempts = [
+      { who: shopper.id, result: null as Awaited<ReturnType<typeof redeemPackCode>> | null },
+      { who: otherShopper.id, result: null as Awaited<ReturnType<typeof redeemPackCode>> | null },
+      { who: shopper.id, result: null as Awaited<ReturnType<typeof redeemPackCode>> | null },
+    ];
+    const settled = await Promise.all(attempts.map((a) => redeemPackCode(code, a.who)));
+    settled.forEach((r, i) => { attempts[i]!.result = r; });
 
-    // Both of the owner's attempts answer, because two renders of one page
-    // are one scan - only one of them does the awarding. This used to assert
-    // that exactly one attempt of the three came back ok, which described
-    // the bug rather than the requirement: the owner's losing render was
-    // being told the code was already used.
-    expect(mine!.ok).toBe(true);
-    expect(mineAgain!.ok).toBe(true);
-    expect([mine, mineAgain].filter((r) => r!.ok && !r!.alreadyEarned)).toHaveLength(1);
+    // Exactly one attempt did the awarding, and which one is genuinely a
+    // race - two different people are reaching for the same code here, and
+    // either may get there first. An earlier version of this test assumed
+    // the owner always wins and failed about one run in three.
+    const winners = attempts.filter((a) => a.result!.ok && !a.result!.alreadyEarned);
+    expect(winners).toHaveLength(1);
+    const winner = winners[0]!.who;
 
-    // The attack this test exists for is unaffected: a label photographed
-    // and shared belongs to somebody else, and is refused.
-    expect(stranger!.ok).toBe(false);
-    if (!stranger!.ok) expect(stranger!.reason).toBe("ALREADY_SCANNED");
+    // Everything after that follows from who won, not from who we hoped
+    // would. Another attempt by the winner is the same scan seen twice and
+    // must answer; an attempt by anybody else is a photographed label and
+    // must be refused.
+    for (const a of attempts) {
+      if (a.result === winners[0]!.result) continue;
+      if (a.who === winner) {
+        expect(a.result!.ok, "the winner's own second render was refused").toBe(true);
+        if (a.result!.ok) expect(a.result!.alreadyEarned).toBe(true);
+      } else {
+        expect(a.result!.ok, "somebody else's scan was allowed through").toBe(false);
+        if (!a.result!.ok) expect(a.result!.reason).toBe("ALREADY_SCANNED");
+      }
+    }
 
     const packCode = await prisma.packCode.findUniqueOrThrow({ where: { code } });
     expect(packCode.status).toBe("SCANNED");
