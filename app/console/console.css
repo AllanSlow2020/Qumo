@@ -352,6 +352,37 @@ html[data-theme="dark"]:has(.cn) body {
 
 .cn-top-in > form { flex: 0 0 auto; }
 
+/* The header on a phone.
+ *
+ * Above this width the identity row is one line that never wraps, which is
+ * right on a laptop and was wrong everywhere else: at 390px the mark, the
+ * brand, the signed-in line, the theme toggle and Sign out add up to 630px
+ * with nothing allowed to give, so every console page scrolled sideways.
+ * The content underneath was fine - it was the chrome dragging the page
+ * off its own edge.
+ *
+ * So the row wraps here, and the signed-in line is what drops: it is the
+ * longest thing in the header and the only one nobody reaches for. The
+ * mark, the toggle and the way out stay on the top line, which is the order
+ * somebody scanning a phone screen expects.
+ */
+@media (max-width: 640px) {
+  .cn-top-in {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 10px 16px;
+  }
+
+  .cn-who {
+    /* Last, full width, and allowed to wrap - the three things it was not. */
+    order: 3;
+    flex: 1 1 100%;
+    text-align: left;
+    white-space: normal;
+  }
+}
+
 .cn-main {
   max-width: 1120px;
   margin: 0 auto;
@@ -648,6 +679,41 @@ html[data-theme="dark"]:has(.cn) body {
 }
 
 .cn-logo-input::file-selector-button:hover { background: var(--cn-line-soft); }
+
+/* ---------- NFC tag addresses ---------- */
+
+.cn-tag-list { display: flex; flex-direction: column; gap: 8px; }
+
+/* The URL wraps and the button does not. Somebody is reading this on a
+   phone next to a bag of tags, and a URL pushed off the right edge is the
+   one thing on the screen they actually need. */
+.cn-tag-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-card);
+  background: var(--cn-quiet);
+}
+
+.cn-tag-url {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 260px;
+}
+
+.cn-tag-url code {
+  font-size: 13px;
+  color: var(--cn-ink);
+  overflow-wrap: anywhere;
+}
+
+.cn-tag-row .cn-btn { flex: none; }
 
 /* A button that reads as a link, for an undo sitting inside a sentence. */
 .cn-linkish {
