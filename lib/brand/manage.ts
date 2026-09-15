@@ -5,6 +5,7 @@ import { forBrand } from "@/lib/db/tenant";
 import { prisma } from "@/lib/db/client";
 import { record } from "@/lib/audit/record";
 import { findFont } from "@/lib/brand/fonts";
+import { checkLogo, MAX_LOGO_BYTES } from "@/lib/brand/logo";
 import type { Actor } from "@/lib/staff/actor";
 
 /**
@@ -111,6 +112,60 @@ function blankToNull(value: string | undefined): string | null {
   return trimmed ? trimmed : null;
 }
 
+/**
+ * The three columns an uploaded logo writes, or null for "leave it alone".
+ *
+ * Null is the important case and the reason this does not just return an
+ * object. A file input that nobody touched posts an empty File, and treating
+ * that the way every other field on this form is treated - blank means clear
+ * it - would wipe a brand's logo every time somebody changed their support
+ * address. So an untouched input says nothing, and removing is a separate,
+ * deliberate tick box.
+ */
+type LogoWrite = {
+  logoData: Uint8Array<ArrayBuffer> | null;
+  logoMimeType: string | null;
+  logoUpdatedAt: Date | null;
+};
+
+async function readLogoFromForm(formData: FormData): Promise<LogoWrite | null> {
+  if (formData.get("removeLogo") === "1") {
+    return { logoData: null, logoMimeType: null, logoUpdatedAt: null };
+  }
+
+  const file = formData.get("logoFile");
+  if (!(file instanceof File) || file.size === 0) {
+    return null;
+  }
+
+  // Checked before the bytes are pulled into memory. File.size here is the
+  // length of what the runtime has already received, not a header the
+  // uploader wrote, so it is worth trusting for this one purpose: refusing
+  // to allocate a buffer for something we are going to reject anyway.
+  if (file.size > MAX_LOGO_BYTES) {
+    const mb = (file.size / 1024 / 1024).toFixed(1);
+    throw new BrandIdentityError(
+      `That file is ${mb}MB. Logos have to be under 512KB - it is shown about 40px tall, so a small one loses nothing.`,
+    );
+  }
+
+  const checked = checkLogo(new Uint8Array(await file.arrayBuffer()));
+  if (!checked.ok) {
+    throw new BrandIdentityError(checked.error);
+  }
+
+  // The stamp is what the cache key in the served URL is built from, so it
+  // has to change on every upload or a new logo would sit behind a year of
+  // immutable caching.
+  return { logoData: checked.bytes, logoMimeType: checked.mime, logoUpdatedAt: new Date() };
+}
+
+/** What the audit entry should call this, given what actually happened. */
+function logoChange(write: LogoWrite | null): string | null {
+  if (!write) return null;
+  return write.logoData ? "logoUpload" : "logoUploadRemoved";
+}
+
 export async function updateBrandIdentityForSession(session: SessionLike, formData: FormData): Promise<void> {
   requireRole(session.user.role as Role, MANAGE_IDENTITY_ROLES);
 
@@ -151,9 +206,14 @@ export async function updateBrandIdentityForSession(session: SessionLike, formDa
     throw new BrandIdentityError("Pick a dark mode button colour before choosing the text colour that sits on it.");
   }
 
+  // Read before the write and not inside it, so a file we are going to
+  // refuse stops the whole save rather than half of it.
+  const logo = await readLogoFromForm(formData);
+
   await forBrand(session.user.brandId).brand.update({
     where: { id: session.user.brandId },
     data: {
+      ...(logo ?? {}),
       displayName: blankToNull(parsed.displayName),
       tagline: blankToNull(parsed.tagline),
       logoUrl: blankToNull(parsed.logoUrl),
@@ -191,7 +251,8 @@ export async function updateBrandIdentityForSession(session: SessionLike, formDa
         figureFont: blankToNull(parsed.figureFont),
       })
         .filter(([, value]) => value !== null)
-        .map(([key]) => key),
+        .map(([key]) => key)
+        .concat(logoChange(logo) ?? []),
     },
   });
 }
@@ -229,9 +290,12 @@ export async function updateBrandColoursForSession(session: SessionLike, formDat
     throw new BrandIdentityError("Pick a dark mode button colour before choosing the text colour that sits on it.");
   }
 
+  const logo = await readLogoFromForm(formData);
+
   await forBrand(session.user.brandId).brand.update({
     where: { id: session.user.brandId },
     data: {
+      ...(logo ?? {}),
       accentColor: accentColor.toLowerCase(),
       accentInkColor: accentInkColor?.toLowerCase() ?? null,
       accentColorDark: accentColorDark?.toLowerCase() ?? null,
@@ -243,7 +307,12 @@ export async function updateBrandColoursForSession(session: SessionLike, formDat
   await record(prisma, session.user, {
     action: "brand.identity_changed",
     targetId: session.user.brandId,
-    detail: { changed: ["accentColor", "accentInkColor", "accentColorDark", "accentInkColorDark", "logoUrl"], step: "setup" },
+    detail: {
+      changed: ["accentColor", "accentInkColor", "accentColorDark", "accentInkColorDark", "logoUrl"].concat(
+        logoChange(logo) ?? [],
+      ),
+      step: "setup",
+    },
   });
 }
 
@@ -259,6 +328,9 @@ export type BrandIdentity = {
   displayName: string | null;
   tagline: string | null;
   logoUrl: string | null;
+  /** Set when a logo has been uploaded. The bytes are never on this type. */
+  logoMimeType: string | null;
+  logoUpdatedAt: Date | null;
   accentColor: string | null;
   accentInkColor: string | null;
   accentColorDark: string | null;
@@ -278,6 +350,11 @@ export async function getBrandIdentity(brandId: string): Promise<BrandIdentity |
       displayName: true,
       tagline: true,
       logoUrl: true,
+      // Whether an upload exists and when it changed - never the bytes. The
+      // appearance screen needs to know there is one to show and to offer
+      // removing it, and neither question needs the image itself.
+      logoMimeType: true,
+      logoUpdatedAt: true,
       accentColor: true,
       accentInkColor: true,
       accentColorDark: true,

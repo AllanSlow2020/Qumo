@@ -102,7 +102,27 @@ type BrandIdentityFields = Pick<
   | "figureFont"
   | "supportEmail"
   | "supportUrl"
+  // Not the bytes: an uploaded logo is served by a route, and all the theme
+  // needs to know is whether one exists and when it last changed.
+  | "logoMimeType"
+  | "logoUpdatedAt"
 >;
+
+/**
+ * Where the shopper page points at the logo.
+ *
+ * An upload beats a URL, because a brand that has just uploaded one and
+ * still has an old address on file means the upload. The `v` is the row's
+ * own updated-at stamp, which is what lets the response be cached hard and
+ * still change the moment somebody uploads a new one.
+ */
+function logoSource(brand: BrandIdentityFields): string | null {
+  if (brand.logoMimeType) {
+    const v = brand.logoUpdatedAt ? brand.logoUpdatedAt.getTime() : 0;
+    return `/api/brand-logo?v=${v}`;
+  }
+  return safeLogoUrl(brand.logoUrl);
+}
 
 export function toBrandTheme(brand: BrandIdentityFields): BrandTheme {
   const accent = safeColor(brand.accentColor);
@@ -116,7 +136,7 @@ export function toBrandTheme(brand: BrandIdentityFields): BrandTheme {
     slug: brand.slug,
     name: brand.displayName?.trim() || brand.name,
     tagline: brand.tagline?.trim() || null,
-    logoUrl: safeLogoUrl(brand.logoUrl),
+    logoUrl: logoSource(brand),
     accent,
     // Ink without an accent is meaningless and, worse, actively harmful: it
     // would recolour the default black button's text and could land white on

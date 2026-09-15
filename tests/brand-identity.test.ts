@@ -127,6 +127,8 @@ describe("a brand editing its own appearance", () => {
         displayName: null,
         tagline: null,
         logoUrl: null,
+        logoMimeType: null,
+        logoUpdatedAt: null,
         accentColor: null,
         accentInkColor: null,
         accentColorDark: "#ff3355",

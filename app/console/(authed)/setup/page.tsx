@@ -23,7 +23,18 @@ export default async function SetupPage() {
   const staff = await requireStaff();
   const brand = await prisma.brand.findUniqueOrThrow({
     where: { id: staff.brandId },
-    select: { name: true, displayName: true, accentColor: true, accentInkColor: true, accentColorDark: true, accentInkColorDark: true, logoUrl: true, slug: true },
+    select: {
+      name: true,
+      displayName: true,
+      accentColor: true,
+      accentInkColor: true,
+      accentColorDark: true,
+      accentInkColorDark: true,
+      logoUrl: true,
+      logoMimeType: true,
+      logoUpdatedAt: true,
+      slug: true,
+    },
   });
 
   // Somebody who already has colours and came here by typing the address is
@@ -45,6 +56,11 @@ export default async function SetupPage() {
       <ColoursForm
         brandName={brand.displayName ?? brand.name}
         slug={brand.slug}
+        // Where the console can fetch a logo already on file. A brand
+        // provisioned with one arrives here with it set, so the screen has
+        // to show what is there rather than offer to upload over it blind.
+        // The stamp is the cache key: a new upload is a new URL.
+        uploadedLogo={brand.logoMimeType ? `/api/console-logo?v=${brand.logoUpdatedAt?.getTime() ?? 0}` : null}
         initial={{
           accentColor: brand.accentColor ?? "",
           accentInkColor: brand.accentInkColor ?? "",

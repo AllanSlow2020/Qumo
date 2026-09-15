@@ -25,6 +25,12 @@ const SELECT = {
   displayName: true,
   tagline: true,
   logoUrl: true,
+  // The type and the stamp, never the bytes: this select runs on every
+  // shopper page render, and pulling half a megabyte of image through it to
+  // decide whether an <img> tag exists would be a per-request cost for a
+  // boolean. app/api/brand-logo reads the bytes, once, when asked for them.
+  logoMimeType: true,
+  logoUpdatedAt: true,
   accentColor: true,
   accentInkColor: true,
   accentColorDark: true,

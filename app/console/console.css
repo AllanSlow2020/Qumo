@@ -573,6 +573,94 @@ html[data-theme="dark"]:has(.cn) body {
   margin: 0;
 }
 
+/* ---------- logo upload ---------- */
+
+.cn-logo-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* A checkerboard, because most brand logos are transparent PNGs and one on a
+   plain white card looks like an upload that failed. The squares are drawn
+   with two gradients rather than an image so there is nothing to fetch and
+   nothing to get blocked by the policy. */
+.cn-logo-well {
+  flex: none;
+  width: 108px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-card);
+  background-color: var(--cn-surface);
+  background-image:
+    linear-gradient(45deg, var(--cn-line-soft) 25%, transparent 25%, transparent 75%, var(--cn-line-soft) 75%),
+    linear-gradient(45deg, var(--cn-line-soft) 25%, transparent 25%, transparent 75%, var(--cn-line-soft) 75%);
+  background-size: 14px 14px;
+  background-position: 0 0, 7px 7px;
+}
+
+.cn-logo-shot {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.cn-logo-none {
+  font-size: 12px;
+  color: var(--cn-ink-3);
+}
+
+.cn-logo-controls {
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+/* The browser's own button, restyled to the console's pill rather than
+   replaced by one. A hidden input driven by a fake button is the usual
+   trick and it costs the keyboard and the screen reader more than the
+   appearance is worth. */
+.cn-logo-input {
+  font: inherit;
+  font-size: 13px;
+  color: var(--cn-ink-2);
+  max-width: 100%;
+}
+
+.cn-logo-input::file-selector-button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 9px 18px;
+  margin-right: 10px;
+  border-radius: var(--cn-radius);
+  border: 1px solid var(--cn-line);
+  background: var(--cn-quiet);
+  color: var(--cn-ink);
+  cursor: pointer;
+}
+
+.cn-logo-input::file-selector-button:hover { background: var(--cn-line-soft); }
+
+/* A button that reads as a link, for an undo sitting inside a sentence. */
+.cn-linkish {
+  font: inherit;
+  font-size: inherit;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--cn-ink);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 /* ---------- login ---------- */
 
 .cn-login {

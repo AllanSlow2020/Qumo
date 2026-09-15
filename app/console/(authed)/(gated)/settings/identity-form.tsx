@@ -10,6 +10,7 @@ import {
   findFont,
   fontStack,
 } from "@/lib/brand/fonts";
+import { LogoField } from "@/app/console/logo-field";
 import { saveIdentity } from "./actions";
 import { IDLE, type IdentityState } from "./state";
 
@@ -107,6 +108,11 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
   const [accentDark, setAccentDark] = useState(brand.accentColorDark ?? "");
   const [inkDark, setInkDark] = useState(brand.accentInkColorDark ?? "");
   const [logoUrl, setLogoUrl] = useState(brand.logoUrl ?? "");
+  // Where the console can fetch the logo already on file, stamped so a new
+  // upload is a new URL rather than a year-old cached one.
+  const [upload, setUpload] = useState<string | null>(
+    brand.logoMimeType ? `/api/console-logo?v=${brand.logoUpdatedAt ? new Date(brand.logoUpdatedAt).getTime() : 0}` : null,
+  );
   const [displayFont, setDisplayFont] = useState(brand.displayFont ?? "");
   const [figureFont, setFigureFont] = useState(brand.figureFont ?? "");
 
@@ -117,6 +123,10 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
   const accentOk = HEX.test(accent);
   const inkOk = HEX.test(ink);
   const ratio = accentOk && inkOk ? contrastRatio(accent, ink) : null;
+
+  // The upload wins over the address, the same way lib/brand/theme.ts
+  // resolves them, so the preview shows what a shopper will actually get.
+  const shownLogo = upload ?? (logoUrl.startsWith("https://") ? logoUrl : null);
 
   // What dark mode will actually use, which is not always what is typed in
   // the dark fields: leaving them empty means the light pair is used in both
@@ -321,8 +331,10 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
           }
         />
 
+        <LogoField existing={upload} onPreview={setUpload} />
+
         <div className="cn-field">
-          <label htmlFor="logoUrl">Logo address</label>
+          <label htmlFor="logoUrl">Logo address (instead of uploading)</label>
           <input
             id="logoUrl"
             name="logoUrl"
@@ -332,7 +344,9 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
             onChange={(e) => setLogoUrl(e.target.value)}
           />
           <p className="cn-label">
-            Must start with <code>https://</code>. Leave it empty and your name is used as the wordmark.
+            For a logo you already host and would rather keep one copy of. Must start with <code>https://</code>. An
+            uploaded logo is used ahead of this one, so clear the upload above if you want this to take over. With
+            neither, your name is used as the wordmark.
           </p>
         </div>
 
@@ -373,9 +387,9 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
             fields move, which is the whole reason the panel is here. */}
         <div className="cn-preview" style={{ fontFamily: displayFace ? fontStack(displayFace) : undefined }}>
           <div className="cn-preview-head">
-            {logoUrl.startsWith("https://") ? (
+            {shownLogo ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt="" className="cn-preview-logo" />
+              <img src={shownLogo} alt="" className="cn-preview-logo" />
             ) : (
               <span className="cn-preview-mark">{displayName || brand.name}</span>
             )}
