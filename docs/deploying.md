@@ -39,8 +39,17 @@ $20 a month and the switch is a button, not a migration. If you would
 rather not pay and would rather not be offside, the alternatives are at the
 bottom of this file.
 
-The one thing you do have to pay for is a domain. `qumo.app` belongs to
-somebody else; `qumo.co.za` is about R100 a year.
+The one thing you do have to pay for is a domain, and it is bought:
+`qumo.co.za`, about R100 a year. `qumo.app` belongs to somebody else and
+every `.com` and `.app` spelling was taken, so `qumo.co.za` is the name
+that goes on the QR codes.
+
+It was registered through Wix, which matters for one thing only: DNS.
+Every brand is a subdomain, so the wildcard below has to be added
+wherever the nameservers are pointed. A Wix site published on the apex
+does not get in the way - `qumo.co.za` and `*.qumo.co.za` are separate
+records - but the wildcard cannot be added from the site editor, only
+from whatever holds DNS.
 
 ---
 

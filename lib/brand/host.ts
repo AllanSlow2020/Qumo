@@ -14,9 +14,11 @@
  * The apex we own. Everything to the left of it, in a host with exactly one
  * more label, is a brand slug.
  *
- * Configurable because it is not settled: the plan says qumo.app is taken
- * and qumo.co.za is the likely answer, and a hostname baked into the code is
- * the kind of thing nobody finds until the certificate is already issued.
+ * `qumo.co.za` in production, registered and ours. It stays configurable
+ * anyway, for two reasons that outlive the question of which domain: a
+ * hostname baked into the code is the kind of thing nobody finds until the
+ * certificate is already issued, and a preview deployment on a root
+ * somebody else owns needs to be told so.
  * `localhost` is the default so a checkout with no .env still runs, and
  * because *.localhost resolves to 127.0.0.1 in every current browser, which
  * makes chicken-licken.localhost:3000 a working local brand host with no

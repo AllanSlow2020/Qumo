@@ -628,7 +628,7 @@
       </figcaption>
     </figure>
 
-    <h3>Consumer web · <code>{brand}.qumo.app</code></h3>
+    <h3>Consumer web · <code>{brand}.qumo.co.za</code></h3>
     <div class="scroll">
       <table>
         <thead>
@@ -840,8 +840,8 @@
             <rect x="14" y="152" width="180" height="46" rx="4"/>
           </g>
           <g font-family="IBM Plex Mono, monospace" font-size="11.5" fill="currentColor" text-anchor="middle">
-            <text x="104" y="41">{brand}.qumo.app</text>
-            <text x="104" y="107">app.qumo.app</text>
+            <text x="104" y="41">{brand}.qumo.co.za</text>
+            <text x="104" y="107">app.qumo.co.za</text>
             <text x="104" y="173">SMS short code</text>
           </g>
           <g font-family="Public Sans, sans-serif" font-size="10.5" fill="#6f7887" text-anchor="middle">
@@ -935,15 +935,15 @@
       </p>
     </div>
 
-    <div class="note risk">
-      <h3>The domain, which blocks the deployment</h3>
+    <div class="note">
+      <h3>The domain, which is bought</h3>
       <p>
         A brand is a subdomain, so hosting needs a wildcard certificate on a domain we control.
-        <code>qumo.app</code> and <code>qumo.com</code> both resolve to somebody else.
-        <code>qumo.co.za</code> is unconfirmed. Worth separating two decisions that look like one:
-        the domain the business launches on is a branding and trademark question and can take its
-        time, while any throwaway domain unblocks a real URL this week. The root domain is one
-        environment variable, so moving later costs a redeploy.
+        <code>qumo.app</code> and <code>qumo.com</code> both resolve to somebody else and every
+        other spelling was taken, so <code>qumo.co.za</code> is registered and is the name that
+        goes on the QR codes. What is left is not a decision but a DNS record: <code>*.qumo.co.za</code>
+        pointing at the deployment, added wherever the nameservers live. The root domain is one
+        environment variable, so moving later would still only cost a redeploy.
       </p>
     </div>
 
