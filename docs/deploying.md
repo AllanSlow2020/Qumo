@@ -215,14 +215,37 @@ rest of this is going to work.
 
 One change, and it is the nameservers rather than the records.
 
+**Add the domain to the Vercel project before you touch the
+nameservers.** Vercel's nameservers only answer for zones Vercel knows
+about, so pointing a domain at them first does not give you a broken
+website, it gives you no domain at all: every lookup fails, not just the
+apex. Adding it first also surfaces any plan or configuration objection
+while the domain is still resolving normally, which is the difference
+between reading an error message and debugging a blackout.
+
 **Copy the records you are keeping first.** Changing nameservers moves
 the whole zone, so anything GoDaddy is currently answering stops being
-answered by GoDaddy. Before you switch, write down every `MX` and `TXT`
-record on the domain and recreate them in Vercel afterwards. `MX` is
-email delivery and `TXT` is usually SPF, DKIM or a verification token
-that some other service is relying on. Nothing else on GoDaddy's default
-zone is worth keeping: the parked `A` on `@` and the builder `CNAME` on
-`www` are exactly what is being replaced.
+answered by GoDaddy. Write down every `MX` and `TXT` record and recreate
+them in Vercel afterwards. `MX` is email delivery and `TXT` is usually
+SPF, DKIM or a verification token something else relies on. Nothing else
+on a GoDaddy default zone is worth keeping: the parked `A` on `@`, the
+`CNAME` on `www` and the `_domainconnect` helper are exactly what is
+being replaced, and `NS` and `SOA` are replaced by the change itself.
+
+On this domain, as checked, there is no `MX`, no SPF and no DKIM, so no
+mail is live and nothing is at risk. The only record with content worth
+carrying over is the DMARC policy on `_dmarc`.
+
+**A trap for later, worth knowing now.** That DMARC record says
+`p=quarantine`, and with no SPF and no DKIM alongside it, every message
+claiming to come from this domain fails both checks. For a domain that
+sends no mail this is the right posture - it is what stops somebody
+spoofing your address. But the console sends staff password resets
+(`SMTP_*` in `.env.example`), and the day those start going out from an
+address at this domain they will be quarantined by receivers unless SPF
+and DKIM go in at the same time. If that day comes before Workspace is
+set up on the domain, send from an address on a domain that is already
+configured, rather than loosening the policy here.
 
 Then, in GoDaddy under Domain → Nameservers → Change → "I'll use my own
 nameservers":
