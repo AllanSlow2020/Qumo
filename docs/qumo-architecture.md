@@ -844,5 +844,7 @@ asserting it in a unit test.
   bought, through GoDaddy, which also holds DNS. It is the name on the QR
   codes. What is left is three records rather than a decision, and the one
   that matters is the wildcard `*.qumo.co.za` - it is what makes provisioning
-  a brand a database write instead of a DNS ticket. GoDaddy takes a `*` host,
-  so nothing has to move. See docs/deploying.md.
+  a brand a database write instead of a DNS ticket. The wildcard is also what
+  decides where DNS lives: a wildcard certificate is issued by proving control
+  of the zone, so the nameservers move from GoDaddy to the host. The
+  registration stays where it is. See docs/deploying.md.

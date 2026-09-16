@@ -44,8 +44,16 @@ The one thing you do have to pay for is a domain, and it is bought:
 every `.com` and `.app` spelling was taken, so `qumo.co.za` is the name
 that goes on the QR codes.
 
-It was bought through **GoDaddy**, which also holds the nameservers, so
-DNS is edited there and nowhere else.
+It was bought through **GoDaddy**, which holds the nameservers today.
+**They have to move to Vercel**, for the reason in the paragraph above:
+the wildcard certificate is issued by proving control of the zone, so
+Vercel has to hold the zone. Pointing individual records at Vercel from
+GoDaddy's DNS works for one named subdomain and does not work for `*`,
+which is the record everything here rests on.
+
+Moving nameservers is not moving the registration. The domain stays
+bought at GoDaddy, stays renewable there, and can be pointed back at any
+time.
 
 As of today the apex and `www` still resolve to GoDaddy's own parked
 page, and `app.qumo.co.za` and every brand subdomain resolve to nothing
@@ -187,7 +195,7 @@ are caught here rather than by you, later, in front of somebody.
 ## 4. The domains on the project
 
 Two halves, and both are needed: Vercel has to be told the domains are
-its, and GoDaddy has to be told where to send them.
+its, and GoDaddy has to hand it the zone.
 
 ### On Vercel
 
@@ -199,34 +207,43 @@ Settings → Domains, add three:
 | `qumo.co.za` | the apex. Nothing is served here yet - it answers "this link needs a brand" - but leaving it unclaimed means a typo goes nowhere at all. |
 | `app.qumo.co.za` | covered by the wildcard already; add it explicitly so the certificate is issued eagerly rather than on the first request. |
 
-Vercel will show you the record it wants for each one. Those are the
-authority - if they differ from the table below, Vercel is right and this
-document is out of date.
+Add the wildcard first. It is the one with a plan and a nameserver
+condition attached, so it is the one that tells you early whether the
+rest of this is going to work.
 
 ### On GoDaddy
 
-Domain → DNS → Manage Zones, and the records are:
+One change, and it is the nameservers rather than the records.
 
-| Type | Host | Points to |
-|---|---|---|
-| `CNAME` | `*` | `cname.vercel-dns.com` |
-| `CNAME` | `app` | `cname.vercel-dns.com` |
-| `A` | `@` | `76.76.21.21` |
+**Copy the records you are keeping first.** Changing nameservers moves
+the whole zone, so anything GoDaddy is currently answering stops being
+answered by GoDaddy. Before you switch, write down every `MX` and `TXT`
+record on the domain and recreate them in Vercel afterwards. `MX` is
+email delivery and `TXT` is usually SPF, DKIM or a verification token
+that some other service is relying on. Nothing else on GoDaddy's default
+zone is worth keeping: the parked `A` on `@` and the builder `CNAME` on
+`www` are exactly what is being replaced.
 
-The apex is an `A` record and the others are `CNAME`s, and that is not
-an inconsistency: a `CNAME` is not allowed on the apex of a zone, which
-is why every host does this.
+Then, in GoDaddy under Domain → Nameservers → Change → "I'll use my own
+nameservers":
 
-Delete GoDaddy's own parking records for `@` and `www` while you are in
-there, or the apex keeps answering from the builder.
+```
+ns1.vercel-dns.com
+ns2.vercel-dns.com
+```
 
-Vercel issues the certificates itself once the records have propagated,
-which is usually minutes and occasionally an hour.
+Vercel shows the pair it wants when you add the domain to the project.
+If it differs from the above, Vercel is right and this document is out
+of date.
 
-**If the `*` record is ever the one that will not go in, move DNS rather
-than work around it.** Adding brand subdomains one at a time is not a
-fallback - it would mean no brand can be provisioned without somebody
-editing DNS, which undoes the thing the provisioning screen exists for.
+Propagation is usually under an hour and can take up to 48. Vercel
+issues the certificates itself once it sees the zone, including the
+wildcard.
+
+**If the wildcard is ever the record that will not go in, stop and say
+so.** Adding brand subdomains one at a time is not a fallback - it would
+mean no brand can be provisioned without somebody editing DNS, which
+undoes the thing the provisioning screen exists for.
 
 ## 5. The schema, and something to look at
 
