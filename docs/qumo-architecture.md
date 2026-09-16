@@ -841,12 +841,8 @@ asserting it in a unit test.
   covers the OTP sending that Phase B's login already depends on. Worth pricing
   reverse-billed vs standard-rated early, since it sets the per-brand cap.
 - ~~**`qumo.app` is registered to someone else.**~~ Settled: `qumo.co.za` is
-  registered and is the name on the QR codes. What is left is DNS rather than
-  a decision. The apex currently serves a Wix site and no brand subdomain
-  resolves at all, so the open question is narrow and worth naming: **does
-  whoever holds the nameservers accept a wildcard record?** Subdomain-per-brand
-  needs `*.qumo.co.za`, and a builder's DNS editor often will not take one. If
-  it will not, the nameservers move to a provider that will. Adding brand
-  subdomains one at a time is not the fallback - it would mean no brand can be
-  provisioned without someone editing DNS, which is exactly what the
-  provisioning screen exists to avoid.
+  bought, through GoDaddy, which also holds DNS. It is the name on the QR
+  codes. What is left is three records rather than a decision, and the one
+  that matters is the wildcard `*.qumo.co.za` - it is what makes provisioning
+  a brand a database write instead of a DNS ticket. GoDaddy takes a `*` host,
+  so nothing has to move. See docs/deploying.md.

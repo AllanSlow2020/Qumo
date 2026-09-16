@@ -44,28 +44,22 @@ The one thing you do have to pay for is a domain, and it is bought:
 every `.com` and `.app` spelling was taken, so `qumo.co.za` is the name
 that goes on the QR codes.
 
-Today it serves a Wix site, and at the time of writing `qumo.co.za` and
-`www.qumo.co.za` resolve to Wix while `app.qumo.co.za` and every brand
-subdomain resolve to nothing. So the domain half of this is done and the
-DNS half has not started.
+It was bought through **GoDaddy**, which also holds the nameservers, so
+DNS is edited there and nowhere else.
 
-**Find out who holds the nameservers before anything else.** It is the
-one fact that decides how the rest of this section goes, and it is not
-the same question as who the domain was bought from. A domain bought
-through a site builder usually sits on that builder's nameservers by
-default, and a builder's DNS editor is a short list of record types
-rather than a real zone.
+As of today the apex and `www` still resolve to GoDaddy's own parked
+page, and `app.qumo.co.za` and every brand subdomain resolve to nothing
+at all. The domain half is done and the DNS half has not started.
 
-That matters here because **every brand is a subdomain**, so this needs a
-wildcard record - `*.qumo.co.za` - and not every builder's DNS editor
-will accept one. If the editor refuses a `*` host, the fix is to move
-the nameservers to a DNS provider that does; Cloudflare's free tier is
-the usual answer and takes about ten minutes. Moving nameservers does
-not move the registration and does not cost anything.
+The good news is that GoDaddy's DNS manager takes a `*` host, which is
+the record this whole architecture rests on: **every brand is a
+subdomain**, so one wildcard is what makes provisioning a brand a
+database write rather than a DNS ticket. Nothing has to be moved.
 
-The Wix site on the apex is not in the way either way. `qumo.co.za` and
-`*.qumo.co.za` are separate records, so the marketing site can keep
-answering on the apex while every brand answers on its own subdomain.
+There is also a free GoDaddy site sitting on the apex. It can stay or go
+- the apex record below replaces it either way, because a hostname
+answers from one place at a time. Qumo is what is being built here, so
+the builder is not part of the deployment.
 
 ---
 
@@ -192,6 +186,11 @@ are caught here rather than by you, later, in front of somebody.
 
 ## 4. The domains on the project
 
+Two halves, and both are needed: Vercel has to be told the domains are
+its, and GoDaddy has to be told where to send them.
+
+### On Vercel
+
 Settings → Domains, add three:
 
 | Domain | Why |
@@ -200,12 +199,34 @@ Settings → Domains, add three:
 | `qumo.co.za` | the apex. Nothing is served here yet - it answers "this link needs a brand" - but leaving it unclaimed means a typo goes nowhere at all. |
 | `app.qumo.co.za` | covered by the wildcard already; add it explicitly so the certificate is issued eagerly rather than on the first request. |
 
-Vercel issues the certificates itself once the nameservers have propagated.
+Vercel will show you the record it wants for each one. Those are the
+authority - if they differ from the table below, Vercel is right and this
+document is out of date.
 
-If the wildcard is the record that will not go in, that is the moment to
-move DNS rather than to work around it: a per-brand record added by hand
-means a brand cannot be provisioned without someone touching DNS, which
-undoes the thing the provisioning screen exists for.
+### On GoDaddy
+
+Domain → DNS → Manage Zones, and the records are:
+
+| Type | Host | Points to |
+|---|---|---|
+| `CNAME` | `*` | `cname.vercel-dns.com` |
+| `CNAME` | `app` | `cname.vercel-dns.com` |
+| `A` | `@` | `76.76.21.21` |
+
+The apex is an `A` record and the others are `CNAME`s, and that is not
+an inconsistency: a `CNAME` is not allowed on the apex of a zone, which
+is why every host does this.
+
+Delete GoDaddy's own parking records for `@` and `www` while you are in
+there, or the apex keeps answering from the builder.
+
+Vercel issues the certificates itself once the records have propagated,
+which is usually minutes and occasionally an hour.
+
+**If the `*` record is ever the one that will not go in, move DNS rather
+than work around it.** Adding brand subdomains one at a time is not a
+fallback - it would mean no brand can be provisioned without somebody
+editing DNS, which undoes the thing the provisioning screen exists for.
 
 ## 5. The schema, and something to look at
 
