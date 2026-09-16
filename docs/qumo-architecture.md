@@ -842,5 +842,11 @@ asserting it in a unit test.
   reverse-billed vs standard-rated early, since it sets the per-brand cap.
 - ~~**`qumo.app` is registered to someone else.**~~ Settled: `qumo.co.za` is
   registered and is the name on the QR codes. What is left is DNS rather than
-  a decision - the wildcard `*.qumo.co.za` has to point at the deployment, and
-  it is added wherever the nameservers live rather than in a site editor.
+  a decision. The apex currently serves a Wix site and no brand subdomain
+  resolves at all, so the open question is narrow and worth naming: **does
+  whoever holds the nameservers accept a wildcard record?** Subdomain-per-brand
+  needs `*.qumo.co.za`, and a builder's DNS editor often will not take one. If
+  it will not, the nameservers move to a provider that will. Adding brand
+  subdomains one at a time is not the fallback - it would mean no brand can be
+  provisioned without someone editing DNS, which is exactly what the
+  provisioning screen exists to avoid.

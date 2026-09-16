@@ -44,12 +44,28 @@ The one thing you do have to pay for is a domain, and it is bought:
 every `.com` and `.app` spelling was taken, so `qumo.co.za` is the name
 that goes on the QR codes.
 
-It was registered through Wix, which matters for one thing only: DNS.
-Every brand is a subdomain, so the wildcard below has to be added
-wherever the nameservers are pointed. A Wix site published on the apex
-does not get in the way - `qumo.co.za` and `*.qumo.co.za` are separate
-records - but the wildcard cannot be added from the site editor, only
-from whatever holds DNS.
+Today it serves a Wix site, and at the time of writing `qumo.co.za` and
+`www.qumo.co.za` resolve to Wix while `app.qumo.co.za` and every brand
+subdomain resolve to nothing. So the domain half of this is done and the
+DNS half has not started.
+
+**Find out who holds the nameservers before anything else.** It is the
+one fact that decides how the rest of this section goes, and it is not
+the same question as who the domain was bought from. A domain bought
+through a site builder usually sits on that builder's nameservers by
+default, and a builder's DNS editor is a short list of record types
+rather than a real zone.
+
+That matters here because **every brand is a subdomain**, so this needs a
+wildcard record - `*.qumo.co.za` - and not every builder's DNS editor
+will accept one. If the editor refuses a `*` host, the fix is to move
+the nameservers to a DNS provider that does; Cloudflare's free tier is
+the usual answer and takes about ten minutes. Moving nameservers does
+not move the registration and does not cost anything.
+
+The Wix site on the apex is not in the way either way. `qumo.co.za` and
+`*.qumo.co.za` are separate records, so the marketing site can keep
+answering on the apex while every brand answers on its own subdomain.
 
 ---
 
@@ -185,6 +201,11 @@ Settings → Domains, add three:
 | `app.qumo.co.za` | covered by the wildcard already; add it explicitly so the certificate is issued eagerly rather than on the first request. |
 
 Vercel issues the certificates itself once the nameservers have propagated.
+
+If the wildcard is the record that will not go in, that is the moment to
+move DNS rather than to work around it: a per-brand record added by hand
+means a brand cannot be provisioned without someone touching DNS, which
+undoes the thing the provisioning screen exists for.
 
 ## 5. The schema, and something to look at
 
