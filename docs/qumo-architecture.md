@@ -111,8 +111,8 @@ behaviour.
 ```
                     ┌─────────────────────────────┐
   chickenlicken.    │   Consumer web (multi-       │
-  qumo.app     ────▶│   tenant by subdomain)       │
-  campari.qumo.app  │   Brand-themed. Join, earn,  │
+  qumo.co.za   ────▶│   tenant by subdomain)       │
+  campari.qumo.co.za│   Brand-themed. Join, earn,  │
                     │   balance, opt out.          │
                     └──────────────┬──────────────┘
                                    │
@@ -122,7 +122,7 @@ behaviour.
                     │   auth · scan verification   │
                     └──────────────▲──────────────┘
                                    │
-  app.qumo.app  ───▶┌──────────────┴──────────────┐
+  app.qumo.co.za───▶┌──────────────┴──────────────┐
                     │   Brand console              │
                     │   promotions, analytics,     │
                     │   stores, billing            │
@@ -131,7 +131,7 @@ behaviour.
 
 ### Identity: shared Person, brand-scoped view
 
-One `Person` per phone number. On `chickenlicken.qumo.app` they see Chicken
+One `Person` per phone number. On `chicken-licken.qumo.co.za` they see Chicken
 Licken and nothing else - enforced by `forBrand`/`forPerson`, which already
 work. A shopper who later scans a Campari poster is **recognised by phone and
 needs one tap to opt in**, not a second registration.
@@ -162,8 +162,9 @@ and, more importantly, means no page component runs without a brand.
 `NEXT_PUBLIC_QUMO_ROOT_DOMAIN`, read at build time because the proxy is
 compiled into the Edge runtime. It defaults to `localhost`, which makes
 `chicken-licken.localhost:3000` a working local brand host with no hosts-file
-editing, and it means the still-open `qumo.app` / `qumo.co.za` question does
-not block anything.
+editing. The domain is settled - `qumo.co.za`, registered - and the setting
+stays because a preview deployment on a root somebody else owns still needs
+to be told what its root is.
 
 **How the brand reaches the Node side.** The proxy resolves the slug from the
 `Host` header and sets `x-qumo-brand`, having *deleted* any incoming copy
@@ -839,5 +840,11 @@ asserting it in a unit test.
 - **An SMS aggregator account** - needed for Phase G, and the same account
   covers the OTP sending that Phase B's login already depends on. Worth pricing
   reverse-billed vs standard-rated early, since it sets the per-brand cap.
-- **`qumo.app` is registered to someone else.** Unresolved from earlier, and
-  subdomain-per-brand makes the domain load-bearing rather than cosmetic.
+- ~~**`qumo.app` is registered to someone else.**~~ Settled: `qumo.co.za` is
+  bought, through GoDaddy, which also holds DNS. It is the name on the QR
+  codes. What is left is three records rather than a decision, and the one
+  that matters is the wildcard `*.qumo.co.za` - it is what makes provisioning
+  a brand a database write instead of a DNS ticket. The wildcard is also what
+  decides where DNS lives: a wildcard certificate is issued by proving control
+  of the zone, so the nameservers move from GoDaddy to the host. The
+  registration stays where it is. See docs/deploying.md.

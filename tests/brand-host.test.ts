@@ -108,8 +108,12 @@ describe("what a brand is allowed to put on the page", () => {
       displayName: "Chicken Licken",
       tagline: null,
       logoUrl: "http://insecure.example/logo.png",
+      logoMimeType: null,
+      logoUpdatedAt: null,
       accentColor: "not-a-colour",
       accentInkColor: "#ffffff",
+      accentColorDark: null,
+      accentInkColorDark: null,
       displayFont: null,
       figureFont: null,
       supportEmail: null,
@@ -133,8 +137,12 @@ describe("what a brand is allowed to put on the page", () => {
       displayName: null,
       tagline: "Soul food since 1981",
       logoUrl: null,
+      logoMimeType: null,
+      logoUpdatedAt: null,
       accentColor: "#E4002B",
       accentInkColor: "#FFFFFF",
+      accentColorDark: null,
+      accentInkColorDark: null,
       displayFont: null,
       figureFont: null,
       supportEmail: null,
@@ -148,6 +156,9 @@ describe("what a brand is allowed to put on the page", () => {
     // No font in this row, so no font token: an override that is not asked
     // for is not written, which is what lets the default in globals.css
     // apply with no cascade to reason about.
-    expect(brandStyle(theme)).toEqual({ "--sc-btn": "#e4002b", "--sc-btn-ink": "#ffffff" });
+    //
+    // Under its own name rather than --sc-btn directly, which is what lets
+    // shopper.css decide per theme. See brandStyle().
+    expect(brandStyle(theme)).toEqual({ "--sc-brand-accent": "#e4002b", "--sc-brand-ink": "#ffffff" });
   });
 });

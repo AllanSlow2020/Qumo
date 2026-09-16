@@ -4,6 +4,8 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { encryptSecret } from "../lib/security/crypto";
 import { buildReceiptUrl } from "../lib/stores/payload";
 import { hashPassword } from "../lib/staff/password";
+import { assertLocalDatabase } from "../lib/db/is-local";
+import { CONSOLE_SUBDOMAIN } from "../lib/brand/host";
 
 /**
  * A demo brand a shopper can actually earn against, so the app can be run
@@ -57,6 +59,11 @@ const BRANDS = [
 ] as const;
 
 async function main() {
+  // Before anything reads or writes. This script creates an OWNER whose
+  // password is a literal a few lines below, which is fine on a laptop and
+  // an open front door anywhere else.
+  assertLocalDatabase("the seed");
+
   const identity = BRANDS[0];
   const brand = await prisma.brand.upsert({
     where: { slug: identity.slug },
@@ -190,7 +197,7 @@ async function main() {
   console.log(`\n  The other brand, for comparing the skin: http://${second.slug}.localhost:3000/wallet`);
   console.log("  The apex, which names no brand:            http://localhost:3000/wallet");
   console.log(`\n  Poster / tag (joins, never awards):  ${origin}/join`);
-  console.log("\n  Brand console:  http://app.localhost:3000");
+  console.log(`\n  Brand console:  http://${CONSOLE_SUBDOMAIN}.localhost:3000`);
   console.log(`    owner@chicken-licken.example / ${staffPassword}\n`);
 }
 

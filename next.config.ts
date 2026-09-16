@@ -33,6 +33,15 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Server actions cap their request body at 1MB by default, and the logo
+    // upload rides one. A 512KB file plus the rest of the appearance form
+    // fits under 1MB, but only just, and being refused by the framework
+    // means a generic error instead of the message lib/brand/logo.ts writes
+    // for exactly this case. Raised enough that our own check is always the
+    // one that speaks, and no further.
+    serverActions: { bodySizeLimit: "2mb" },
+  },
   // Brand subdomains are separate origins from the apex, and dev refuses
   // cross-origin requests it wasn't told about. Every brand is *.localhost
   // locally, so this is what makes chicken-licken.localhost:3000 work at all.

@@ -362,8 +362,29 @@ export async function redeemPackCode(
     }
   }
 
+  /*
+   * The conditional burn updated nothing, so somebody else claimed the code
+   * between our read and our write.
+   *
+   * "Somebody else" is very often this same shopper on the same tap. The
+   * scan page awards on render and the App Router renders it three times
+   * for one navigation, so two of those three arrive here having lost the
+   * race to the first - and this used to answer them with a bare refusal.
+   * The customer then read "This code has already been used" on a code they
+   * had that second scanned successfully, with the money already in their
+   * balance. It reproduced on five first scans out of five.
+   *
+   * Re-reading and describing the existing scan is the same thing the
+   * early SCANNED path above does, and it tells the two cases apart
+   * properly: the shopper's own scan comes back as a success carrying
+   * `alreadyEarned`, and a stranger's is still refused.
+   */
   if (!claimed) {
-    return { ok: false, reason: "ALREADY_SCANNED" };
+    const existing = await findCode(canonical);
+    if (!existing) {
+      return { ok: false, reason: "UNKNOWN_CODE" };
+    }
+    return describeExistingScan(existing, personId);
   }
 
   return {

@@ -47,6 +47,26 @@ export default async function ScanPage({ params }: { params: Promise<{ code: str
     );
   }
 
+  /*
+   * One screen, whether this render performed the award or found it already
+   * done, and the copy is true either way.
+   *
+   * There were two screens here and the split could not work. This page
+   * awards on render and the App Router renders it three times for one
+   * navigation, so the render a shopper actually reads is never the one that
+   * did the awarding - it is one of the two that arrive to find the code
+   * already claimed, by this same shopper, a few milliseconds earlier. A
+   * branch that says "you already claimed this one" therefore fires on
+   * every genuine first scan, which is what it did.
+   *
+   * The earlier bug was the opposite mistake: one screen saying "+R10.00,
+   * added to your balance", which on a real second scan reads as a second
+   * award. Both readings came from trying to name *this scan* as the event.
+   * The code is the event. It is worth a fixed amount, once, and the
+   * balance underneath is the running total - and stating it that way is
+   * true on the first tap, on the accidental double tap, and on the scan
+   * somebody tries a week later to see whether it pays twice.
+   */
   return (
     <>
       <BrandHeader />
@@ -54,11 +74,16 @@ export default async function ScanPage({ params }: { params: Promise<{ code: str
         <p className="sc-label">
           {result.brandName} · {result.campaignName}
         </p>
-        <p className="sc-figure sc-pos">+{formatLedgerAmount(result.amount, result.unit)}</p>
+        <p className="sc-figure sc-pos">{formatLedgerAmount(result.amount, result.unit)}</p>
+        {/* "from this code", not "added": the amount belongs to the code,
+            and the sentence stays honest on a rescan. The balance beside it
+            is the number that actually moved, and on a rescan it visibly
+            has not. */}
         <p className="sc-body">
-          Added to your {result.brandName} balance. You now have{" "}
+          from this code. Your {result.brandName} balance is{" "}
           <strong style={{ color: "var(--sc-ink)" }}>{formatLedgerAmount(result.newBalance, result.unit)}</strong>.
         </p>
+        <p className="sc-label">Each code works once, so scanning this one again won&apos;t add more.</p>
 
         {/* A completed card is the moment the whole stamp mechanic exists
             for - the shopper has to leave this screen knowing they earned

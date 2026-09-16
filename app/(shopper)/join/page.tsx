@@ -19,8 +19,9 @@ export async function generateMetadata(): Promise<Metadata> {
  *
  * The one shopper route that never awards anything. A poster is a static
  * code anyone can scan without buying anything, so it explains the
- * promotion and takes an opt-in, and earning starts at the next till slip.
- * See lib/consumer/join.ts for why that line is not negotiable.
+ * promotion and takes an opt-in, and earning starts at the next unique
+ * code - under a pack or on a till slip. See lib/consumer/join.ts for why
+ * that line is not negotiable.
  */
 export default async function JoinPage() {
   const brand = await requireBrand();
@@ -98,14 +99,18 @@ export default async function JoinPage() {
         ) : (
           <>
             {/* Said before the button, not after it, and said plainly.
-                Somebody standing at a till who taps Join and then finds
-                nothing in their balance has been misled by omission - the
-                poster is the invitation, the slip is what pays. Shown only
-                to somebody who has not joined: telling an existing member
-                that joining is free reads as though they had not. */}
+                Somebody who taps Join and then finds nothing in their
+                balance has been misled by omission - this poster is the
+                invitation, and a code that came off something bought is
+                what pays. Named both ways round, because for most brands
+                here the code is under a box rather than on a slip and a
+                line naming only the slip sends people to look in the wrong
+                place. Shown only to somebody who has not joined: telling an
+                existing member that joining is free reads as though they
+                had not. */}
             <p className="sc-label">
-              Joining is free and takes a phone number. You start earning from your next till slip: scan the code
-              printed on it.
+              Joining is free and takes a phone number. You start earning at your next purchase: scan the code printed
+              under the pack, or on your till slip.
             </p>
             <JoinButton label={status.optedOut ? `Rejoin ${brand.name} rewards` : `Join ${brand.name} rewards`} />
           </>

@@ -112,7 +112,39 @@ model Brand {
 
   /// Absolute https URL. Validated where it is rendered and never trusted
   /// straight out of the database - see lib/brand/theme.ts.
+  ///
+  /// Still here now that logos can be uploaded, because a brand with a
+  /// design system already hosting its assets should not have to hand us a
+  /// copy that will drift. An upload wins over this when both are set.
   logoUrl String?
+
+  /// An uploaded logo, stored as bytes in this row.
+  ///
+  /// In the database rather than an object store, and that is a considered
+  /// choice rather than a shortcut. A brand logo is tens of kilobytes; a
+  /// few hundred brands is a few tens of megabytes, which Postgres carries
+  /// without noticing. Against that, an object store is one more account to
+  /// open, one more credential to rotate, one more thing to be down, and
+  /// one more bill - on a product whose whole outstanding list is already
+  /// suppliers nobody has signed up with.
+  ///
+  /// It is also the easy direction to migrate: moving bytes out to a CDN
+  /// later is a background job and a changed URL, where moving them in
+  /// would be a migration nobody wants to write. If a brand ever needs a
+  /// hundred-kilobyte hero image this stops being right, and that is the
+  /// signal to move, not this.
+  logoData Bytes?
+
+  /// What logoData actually is, decided by reading the file's own magic
+  /// bytes on upload rather than by believing the browser. Never null when
+  /// logoData is set.
+  logoMimeType String?
+
+  /// When the upload last changed. It is the cache key: the shopper page
+  /// asks for the logo with this value on the query string, so the response
+  /// can be cached for a year and still turn over the instant a brand
+  /// replaces it.
+  logoUpdatedAt DateTime?
 
   /// The single colour that carries the identity, and the ink that stays
   /// legible on it. Two fields rather than one because contrast is a
@@ -123,6 +155,23 @@ model Brand {
   /// against a strict pattern before they go anywhere near CSS.
   accentColor    String?
   accentInkColor String?
+
+  /// The same pair again, for when the shopper is reading in dark mode.
+  ///
+  /// One accent used in both themes was the original design and it is wrong
+  /// for exactly the brand this was built for. Chicken Licken's red is a
+  /// deep, warm #c8102e that sits confidently on white and goes muddy and
+  /// low-contrast on near-black, where the same identity wants to be lifted
+  /// a few points. A brand cannot fix that with one field, and deriving the
+  /// dark variant from the light one by adjusting luminance is the same
+  /// mistake as deriving the ink: it is a judgement about a palette, not a
+  /// calculation.
+  ///
+  /// Both null is the normal case and means "use the light pair in both",
+  /// which is precisely what every brand got before these existed. So this
+  /// is additive: nothing changes for a brand that never opens the screen.
+  accentColorDark    String?
+  accentInkColorDark String?
 
   /// Which faces the brand chose, as ids from the registry in
   /// lib/brand/fonts.ts - never a font name and never a URL. The value ends

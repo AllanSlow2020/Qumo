@@ -50,6 +50,48 @@ export async function exportBatchCodes(brandId: string, batchId: string): Promis
 }
 
 /**
+ * The first few codes in a run that nobody has scanned yet, for writing to
+ * NFC tags by hand.
+ *
+ * Unscanned because a tag written with a spent code is a tag that tells the
+ * person testing it that the code is spent, which reads as a broken tag.
+ * Few, because this is somebody standing at a desk with a bag of stickers
+ * and a phone, not a print vendor - the CSV is still what a run goes out
+ * as.
+ */
+export async function unscannedCodes(
+  brandId: string,
+  batchId: string,
+  limit: number,
+): Promise<{ label: string; campaignName: string; total: number; unscanned: number; codes: string[] } | null> {
+  const scoped = forBrand(brandId);
+
+  const batch = await scoped.packBatch.findFirst({
+    where: { id: batchId },
+    include: { campaign: { select: { name: true } } },
+  });
+  if (!batch) return null;
+
+  const [rows, unscanned] = await Promise.all([
+    scoped.packCode.findMany({
+      where: { batchId: batch.id, status: "UNSCANNED" },
+      select: { code: true },
+      orderBy: { code: "asc" },
+      take: limit,
+    }),
+    scoped.packCode.count({ where: { batchId: batch.id, status: "UNSCANNED" } }),
+  ]);
+
+  return {
+    label: batch.label,
+    campaignName: batch.campaign.name,
+    total: batch.quantity,
+    unscanned,
+    codes: rows.map((r) => r.code),
+  };
+}
+
+/**
  * CSV, because it is what a print vendor's artwork pipeline actually reads.
  *
  * Three columns and no cleverness. The URL is the whole point - a printer

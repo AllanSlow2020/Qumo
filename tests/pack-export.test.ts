@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Brand, Campaign, User } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
 import { createPackBatchForSession, PackBatchError } from "@/lib/packs/batch";
-import { exportBatchCodes, toCsv } from "@/lib/packs/export";
+import { exportBatchCodes, toCsv, unscannedCodes } from "@/lib/packs/export";
 import { normalisePackCode } from "@/lib/packs/code";
 import { redeemPackCode } from "@/lib/packs/scan";
 import { encryptPhone, hashPhone } from "@/lib/security/crypto";
@@ -118,6 +118,36 @@ describe("exporting a print run", () => {
     expect(data!.rows.filter((r) => r.status === "SCANNED")).toHaveLength(1);
 
     await prisma.packCode.update({ where: { id: one.id }, data: { status: "UNSCANNED" } });
+  });
+
+  it("hands out a few unused codes for writing to NFC tags", async () => {
+    const few = await unscannedCodes(brand.id, batchId, 3);
+    expect(few!.codes).toHaveLength(3);
+    expect(few!.unscanned).toBe(25);
+    // The whole run is still reported, so a screen showing three of them can
+    // say three of what.
+    expect(few!.total).toBe(25);
+  });
+
+  it("never offers a code that has already been used", async () => {
+    // A tag written with a spent code tells whoever taps it that the code is
+    // spent, which reads as a broken tag rather than a used code. So the
+    // filter is the feature, not an optimisation.
+    const all = await prisma.packCode.findMany({ where: { batchId }, orderBy: { code: "asc" } });
+    const first = all[0]!;
+    await prisma.packCode.update({ where: { id: first.id }, data: { status: "SCANNED" } });
+
+    const few = await unscannedCodes(brand.id, batchId, 3);
+    expect(few!.codes).not.toContain(first.code);
+    expect(few!.unscanned).toBe(24);
+
+    await prisma.packCode.update({ where: { id: first.id }, data: { status: "UNSCANNED" } });
+  });
+
+  it("will not reach into another brand's run", async () => {
+    // Same property the CSV route has, asserted separately because this is a
+    // second door onto the same unredeemed value.
+    expect(await unscannedCodes(otherBrand.id, batchId, 3)).toBeNull();
   });
 
   it("won't print codes for a promotion that awards nothing", async () => {
