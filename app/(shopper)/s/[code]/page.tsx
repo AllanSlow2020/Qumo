@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireBrand } from "@/lib/brand/current";
 import { getConsumerSession } from "@/lib/consumer/session";
+import { needsAgeStep } from "@/lib/consumer/age-check";
 import { formatLedgerAmount } from "@/lib/consumer/wallet";
 import { redeemPackCode, SCAN_FAILURE_MESSAGES } from "@/lib/packs/scan";
 import { BrandHeader } from "../../brand-header";
@@ -30,6 +31,18 @@ export default async function ScanPage({ params }: { params: Promise<{ code: str
   // See /r: the subdomain's brand has to agree with the code's, and the
   // check lands before the code is burned.
   const brand = await requireBrand();
+
+  // The age step, before the code is anywhere near being spent. The engine
+  // refuses an unconfirmed shopper too, and that refusal rolls the whole
+  // transaction back so nothing is lost either way - but arriving at a
+  // screen that says "this needs your age" beats arriving at one that says
+  // the scan did not work, when the scan was fine and the shopper was the
+  // open question. Carries the code through, exactly as the login redirect
+  // above does, so the tap resumes where it left off.
+  if (await needsAgeStep(brand.id, personId)) {
+    redirect(`/wallet/age?next=${encodeURIComponent(`/s/${code}`)}`);
+  }
+
   const result = await redeemPackCode(code, personId, new Date(), brand.id);
 
   if (!result.ok) {

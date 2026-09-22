@@ -35,7 +35,8 @@ export type ScanFailureReason =
   | "DAILY_LIMIT"
   | "DAILY_SCAN_LIMIT"
   | "CAMPAIGN_EXHAUSTED"
-  | "OPTED_OUT";
+  | "OPTED_OUT"
+  | "AGE_UNCONFIRMED";
 
 export type ScanResult =
   | {
@@ -79,6 +80,7 @@ export const SCAN_FAILURE_MESSAGES: Record<ScanFailureReason, string> = {
   DAILY_SCAN_LIMIT: "You've scanned as many codes as this promotion allows today. Try again tomorrow.",
   CAMPAIGN_EXHAUSTED: "This promotion has reached its limit and isn't giving out any more.",
   OPTED_OUT: "You've opted out of this brand's rewards. Opt back in to start earning again.",
+  AGE_UNCONFIRMED: "You need to confirm your age before this brand's rewards can pay out. Your code has not been used - go to your rewards and you will be asked.",
 };
 
 /**
@@ -332,6 +334,7 @@ export async function redeemPackCode(
             brandId,
             campaignId: packCode.campaignId,
             brandMembershipId: membership.id,
+            personId,
             optedOutAt: membership.optedOutAt,
             rule: {
               unit: earnRule.unit,

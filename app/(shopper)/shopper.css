@@ -444,6 +444,17 @@
 
 /* ---------- theme toggle ---------- */
 
+/* ---------- the age step ---------- */
+
+.sc-agegate { display: flex; flex-direction: column; gap: 18px; }
+
+/* Day, month, year. The year gets the room because it is twice the
+   characters, and the boxes are sized so the whole date reads as one field
+   rather than three questions. */
+.sc-dob { display: flex; gap: 8px; }
+.sc-dob .sc-input { text-align: center; letter-spacing: 0.08em; min-width: 0; flex: 1 1 0; }
+.sc-dob-year { flex: 1.6 1 0; }
+
 .sc-theme {
   border: 1px solid var(--sc-line);
   background: transparent;

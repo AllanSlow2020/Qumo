@@ -146,6 +146,21 @@ model Brand {
   /// replaces it.
   logoUpdatedAt DateTime?
 
+  /// The age a shopper must confirm before this brand's programme will
+  /// award them anything. Null is the default and means no age step.
+  ///
+  /// A number rather than a boolean, although the console offers a tick
+  /// box. The tick box writes 18 because that is South Africa's drinking
+  /// age and liquor is why this exists; a market with a different
+  /// threshold, or a brand told 21 by its own legal team, is then a value
+  /// rather than a migration. The console can grow a field later without
+  /// anything underneath it changing.
+  ///
+  /// Enforced in lib/ledger/accrue.ts, inside the transaction, so a brand
+  /// that turns this on is protected from every accrual path including
+  /// ones written after it.
+  minimumAge Int?
+
   /// The single colour that carries the identity, and the ink that stays
   /// legible on it. Two fields rather than one because contrast is a
   /// judgement about the brand's own palette; deriving it from luminance
@@ -482,6 +497,39 @@ model Person {
   consentVersion String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  /// When this person confirmed their age, and the age they confirmed.
+  ///
+  /// ── Why there is no date of birth here ─────────────────────────────
+  ///
+  /// The age step asks for one and this row never receives it. A birth
+  /// date would be personal information collected for a single yes-or-no
+  /// question and then kept forever, which is precisely what minimisation
+  /// is about. Once somebody is over eighteen they stay over eighteen, so
+  /// the answer keeps and the question does not need to.
+  ///
+  /// The minimum is stored beside the timestamp because it is what was
+  /// actually established. Someone confirmed against 18 has not been
+  /// confirmed against 21, and a brand that later needs 21 has to ask
+  /// again rather than inherit an answer to a different question.
+  ///
+  /// On a person, not a membership: age is a fact about the human, and
+  /// somebody old enough for one brand is old enough for the next. Only
+  /// the requirement is per-brand.
+  ageConfirmedAt      DateTime?
+  ageConfirmedMinimum Int?
+
+  /// When this person was last refused on age.
+  ///
+  /// Here so that a refusal costs something. Without it the age step is a
+  /// form that says no and immediately offers itself again, which is not a
+  /// control, it is a guessing game with the answer written on the box.
+  ///
+  /// This is the only thing kept about somebody who failed. The date they
+  /// typed is not written anywhere: a failed check means the person in
+  /// front of us said they were a child, and the response to that is to
+  /// refuse and keep nothing, not to open a file on them.
+  ageRefusedAt DateTime?
 
   // When this person asked to be erased.
   //

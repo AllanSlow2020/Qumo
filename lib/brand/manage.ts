@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db/client";
 import { record } from "@/lib/audit/record";
 import { findFont } from "@/lib/brand/fonts";
 import { checkLogo, MAX_LOGO_BYTES } from "@/lib/brand/logo";
+import { DEFAULT_MINIMUM_AGE } from "@/lib/consumer/age";
 import type { Actor } from "@/lib/staff/actor";
 
 /**
@@ -316,6 +317,44 @@ export async function updateBrandColoursForSession(session: SessionLike, formDat
   });
 }
 
+export const MANAGE_AGE_ROLES: Role[] = ["OWNER", "ADMIN"];
+
+/**
+ * Turning the age step on or off for this brand.
+ *
+ * Its own function rather than a field on the appearance form, because the
+ * two are not the same kind of setting and should not share a save button.
+ * A colour is a preference. This decides whether a shopper is asked a
+ * question before they can earn, and turning it off is the change worth
+ * having its own record in the audit log rather than appearing in a list of
+ * eleven fields that were posted together.
+ *
+ * Owner or admin, and the same pair that owns the brand's public face -
+ * this is visible to every shopper who joins.
+ */
+export async function setBrandMinimumAge(session: SessionLike, enabled: boolean): Promise<void> {
+  requireRole(session.user.role as Role, MANAGE_AGE_ROLES);
+
+  // A tick box writes a number. The column has always been an age rather
+  // than a flag so that a brand told 21 by its legal team is a value to
+  // change, not a migration - see the schema.
+  const minimumAge = enabled ? DEFAULT_MINIMUM_AGE : null;
+
+  await forBrand(session.user.brandId).brand.update({
+    where: { id: session.user.brandId },
+    data: { minimumAge },
+  });
+
+  await record(prisma, session.user, {
+    action: "brand.age_restriction_changed",
+    targetId: session.user.brandId,
+    // The value, not just the field name. Unlike a colour, what this was
+    // set to is the whole content of the event, and the question an
+    // auditor asks is "when did this brand stop asking".
+    detail: { minimumAge },
+  });
+}
+
 /** True once a brand has chosen a colour, which is what the first-run gate asks. */
 export async function brandHasChosenColours(brandId: string): Promise<boolean> {
   const brand = await forBrand(brandId).brand.findFirst({ where: { id: brandId }, select: { accentColor: true } });
@@ -339,6 +378,8 @@ export type BrandIdentity = {
   figureFont: string | null;
   supportEmail: string | null;
   supportUrl: string | null;
+  /** Null when this brand asks nobody's age. See lib/consumer/age.ts. */
+  minimumAge: number | null;
 };
 
 export async function getBrandIdentity(brandId: string): Promise<BrandIdentity | null> {
@@ -363,6 +404,7 @@ export async function getBrandIdentity(brandId: string): Promise<BrandIdentity |
       figureFont: true,
       supportEmail: true,
       supportUrl: true,
+      minimumAge: true,
     },
   });
 }

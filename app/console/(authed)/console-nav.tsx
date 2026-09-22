@@ -22,7 +22,7 @@ const ITEMS: { href: string; label: string }[] = [
   { href: "/codes", label: "Pack codes" },
   { href: "/people", label: "Team" },
   { href: "/activity", label: "Activity" },
-  { href: "/settings", label: "Appearance" },
+  { href: "/settings", label: "Programme" },
   { href: "/billing", label: "Plan" },
 ];
 

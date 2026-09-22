@@ -124,6 +124,12 @@ export const SCAN_FAILURE_REPLY: Record<ScanFailureReason, string> = {
   DAILY_SCAN_LIMIT: "You've reached today's limit for this brand. Try again tomorrow. Your code hasn't been used.",
   CAMPAIGN_EXHAUSTED: "This promotion has given out everything it had. Your code hasn't been used.",
   OPTED_OUT: "You've left this brand's programme. Rejoin on their site and send the code again.",
+  // The one reason on this list that cannot be resolved over SMS. Age is
+  // confirmed on the brand's site, deliberately - a birth date typed into a
+  // text message is carried in the clear by every network it crosses and
+  // sits in a sent-items folder afterwards, to establish a fact this
+  // channel has no way to check anyway.
+  AGE_UNCONFIRMED: "This brand needs you to confirm your age on their site first. Your code hasn't been used.",
 };
 
 /**
