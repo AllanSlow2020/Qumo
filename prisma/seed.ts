@@ -31,7 +31,7 @@ const SIGNING_SECRET = "dev-only-store-signing-secret-not-for-production-use";
  * reskin", and a seed with one brand in it proves nothing about that.
  *
  * The slug is the subdomain: copper-kettle.localhost:3000 and
- * campari.localhost:3000 both work with no hosts-file editing, because
+ * amber-oak.localhost:3000 both work with no hosts-file editing, because
  * *.localhost resolves to 127.0.0.1 in every current browser.
  *
  * Colours are approximations chosen for contrast, not the brands' actual
@@ -48,10 +48,10 @@ const BRANDS = [
     supportEmail: "rewards@example.invalid",
   },
   {
-    slug: "campari",
-    name: "Campari",
+    slug: "amber-oak",
+    name: "Amber Oak",
     displayName: null,
-    tagline: "Red Passion rewards",
+    tagline: "Small batch, since 1994",
     accentColor: "#1b2a4a",
     accentInkColor: "#ffffff",
     supportEmail: "rewards@example.invalid",

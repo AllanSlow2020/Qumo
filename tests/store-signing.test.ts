@@ -56,7 +56,7 @@ describe("issuing and rotating a store's signing secret", () => {
 
   beforeAll(async () => {
     brand = await prisma.brand.create({ data: { name: "Copper Kettle", slug: `sign-a-${suffix}` } });
-    otherBrand = await prisma.brand.create({ data: { name: "Campari", slug: `sign-b-${suffix}` } });
+    otherBrand = await prisma.brand.create({ data: { name: "Amber Oak", slug: `sign-b-${suffix}` } });
 
     const campaign = await prisma.campaign.create({
       data: { brandId: brand.id, name: "5% back", status: "ACTIVE" },

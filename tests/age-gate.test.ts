@@ -71,7 +71,7 @@ describe("a brand that asks for an age", () => {
 
   beforeAll(async () => {
     restricted = await prisma.brand.create({
-      data: { name: "Campari", slug: `age-on-${suffix}`, minimumAge: 18 },
+      data: { name: "Amber Oak", slug: `age-on-${suffix}`, minimumAge: 18 },
     });
     open = await prisma.brand.create({ data: { name: "Copper Kettle", slug: `age-off-${suffix}` } });
 

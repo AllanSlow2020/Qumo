@@ -25,7 +25,7 @@ describe("what a shopper can do with their own data", () => {
 
   beforeAll(async () => {
     brandA = await prisma.brand.create({ data: { name: "Copper Kettle", slug: `rights-a-${suffix}` } });
-    brandB = await prisma.brand.create({ data: { name: "Campari", slug: `rights-b-${suffix}` } });
+    brandB = await prisma.brand.create({ data: { name: "Amber Oak", slug: `rights-b-${suffix}` } });
     campaign = await prisma.campaign.create({
       data: { brandId: brandA.id, name: "5% back", status: "ACTIVE" },
     });
@@ -102,7 +102,7 @@ describe("what a shopper can do with their own data", () => {
 
   it("exports every brand, with balances that match the rows beneath them", async () => {
     const data = await exportPerson(me.id);
-    expect(data?.brands.map((b) => b.brand).sort()).toEqual(["Campari", "Copper Kettle"]);
+    expect(data?.brands.map((b) => b.brand).sort()).toEqual(["Amber Oak", "Copper Kettle"]);
 
     const kettle = data!.brands.find((b) => b.brand === "Copper Kettle")!;
     // 425 earned less 100 spent. Derived from the listed rows, never stored,
@@ -128,7 +128,7 @@ describe("what a shopper can do with their own data", () => {
 
     const programmes = await listProgrammes(me.id);
     expect(programmes.find((p) => p.brandName === "Copper Kettle")?.optedOutAt).toBeInstanceOf(Date);
-    expect(programmes.find((p) => p.brandName === "Campari")?.optedOutAt).toBeNull();
+    expect(programmes.find((p) => p.brandName === "Amber Oak")?.optedOutAt).toBeNull();
   });
 
   it("leaves the balance exactly where it was", async () => {
@@ -153,6 +153,6 @@ describe("what a shopper can do with their own data", () => {
     expect(await setOptOut(someoneElse.id, brandB.id, true)).toBe(false);
 
     const programmes = await listProgrammes(me.id);
-    expect(programmes.find((p) => p.brandName === "Campari")?.optedOutAt).toBeNull();
+    expect(programmes.find((p) => p.brandName === "Amber Oak")?.optedOutAt).toBeNull();
   });
 });

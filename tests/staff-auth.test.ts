@@ -67,7 +67,7 @@ describe("the console and the shopper surface are different doors", () => {
 
   beforeAll(async () => {
     brandA = await prisma.brand.create({ data: { name: "Copper Kettle", slug: `staff-a-${suffix}` } });
-    brandB = await prisma.brand.create({ data: { name: "Campari", slug: `staff-b-${suffix}` } });
+    brandB = await prisma.brand.create({ data: { name: "Amber Oak", slug: `staff-b-${suffix}` } });
 
     const passwordHash = await hashPassword(PASSWORD);
     staffA = await prisma.user.create({

@@ -14,7 +14,7 @@ import { getStaffSession } from "@/lib/staff/session";
  * their job while protecting nothing. See lib/brand/poster.ts.
  *
  * The session still matters: it is what says *which brand*, and a route
- * that took a slug from the caller would happily generate Campari's poster
+ * that took a slug from the caller would happily generate Amber Oak's poster
  * for a Copper Kettle login.
  */
 export async function GET(req: Request): Promise<Response> {

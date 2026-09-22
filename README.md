@@ -186,7 +186,7 @@ The seed prints the addresses to open. They look odd and they are correct:
 | | |
 |---|---|
 | `copper-kettle.localhost:3000` | a brand's shopper site |
-| `campari.localhost:3000` | a second brand, to see the reskin |
+| `amber-oak.localhost:3000` | a second brand, to see the reskin |
 | `app.localhost:3000` | the brand console |
 | `localhost:3000` | the apex, which belongs to no brand |
 
@@ -221,7 +221,7 @@ Roughly in the order the product happens:
    keep their balance and are told the date it stays spendable until.
    Restart it and everything comes back.
 5. **Print pack codes** under Pack codes, download the CSV, and open one of
-   the URLs in it. That is the Campari sticker path.
+   the URLs in it. That is the Amber Oak sticker path.
 6. **Add somebody to the team**, then sign in as them in a private window -
    the one-time password only works once.
 7. **Break something on purpose.** Take the *unsigned* slip URL, change

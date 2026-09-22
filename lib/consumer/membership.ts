@@ -23,7 +23,7 @@ import { forPerson } from "./scope";
  * `brandId` narrows it to the one whose site the shopper is standing on.
  * Not a confidentiality measure - this is the shopper's own screen and they
  * are entitled to every row of it - but a coherence one: a Copper Kettle
- * page that lists a Campari membership invites exactly the wrong conclusion
+ * page that lists a Amber Oak membership invites exactly the wrong conclusion
  * about who can see what. The complete list is a click away in the data
  * export, where it is unambiguously theirs and unambiguously not the
  * brand's.

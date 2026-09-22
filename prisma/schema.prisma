@@ -478,7 +478,7 @@ model ShopperSession {
 }
 
 // Brand-agnostic identity, and the reason a shopper who has scanned a
-// Copper Kettle slip is recognised at a Campari sticker without
+// Copper Kettle slip is recognised at a Amber Oak sticker without
 // registering twice.
 //
 // phoneHash is a deterministic HMAC, so a sign-in or an inbound SMS resolves
@@ -590,7 +590,7 @@ enum PointsReason {
   // A closed-loop wallet balance spent at the till. Negative amount, and
   // written only when a cashier confirms - see lib/wallet/spend.ts.
   WALLET_SPENT
-  // A code under a pack label, scanned by a shopper. The Campari path:
+  // A code under a pack label, scanned by a shopper. The Amber Oak path:
   // the brand owns no till, so the award is a flat amount configured on
   // the campaign's EarnRule rather than a share of any purchase.
   PACK_SCAN_AWARDED

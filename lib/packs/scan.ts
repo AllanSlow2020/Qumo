@@ -6,7 +6,7 @@ import { isSerializationConflict, MAX_SERIALIZATION_ATTEMPTS } from "@/lib/db/se
 import { looksLikePackCode, normalisePackCode } from "./code";
 
 /**
- * Redeeming a pack code: the shopper-facing half of the Campari path.
+ * Redeeming a pack code: the shopper-facing half of the Amber Oak path.
  *
  * Two things have to be true at once and neither is negotiable:
  *   1. A code awards exactly once, even if it is scanned twice in the same
@@ -225,8 +225,8 @@ export async function redeemPackCode(
    * Optional because not every carrier asserts one: an SMS arrives with a
    * code and a phone number and no host at all, and there is nothing to
    * cross-check. When a carrier does assert a brand it has to agree with the
-   * code, so a hand-crafted copper-kettle.qumo.co.za/s/<campari-code> is
-   * refused rather than rendering a Campari award under a Copper Kettle
+   * code, so a hand-crafted copper-kettle.qumo.co.za/s/<amber-oak-code> is
+   * refused rather than rendering a Amber Oak award under a Copper Kettle
    * header.
    *
    * Worth being precise about what this is and is not. It is not what keeps

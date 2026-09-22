@@ -61,7 +61,7 @@ describe("the poster QR", () => {
 
   it("gives two brands two different posters", async () => {
     const ours = await posterQrSvg(brandOrigin("copper-kettle"));
-    const theirs = await posterQrSvg(brandOrigin("campari"));
+    const theirs = await posterQrSvg(brandOrigin("amber-oak"));
 
     // Obvious, and the failure it guards against is not: a poster generated
     // from a hardcoded or cached origin would send one brand's customers to

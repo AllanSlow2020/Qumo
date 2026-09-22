@@ -30,7 +30,7 @@ describe("a brand editing its own appearance", () => {
 
   beforeAll(async () => {
     brand = await prisma.brand.create({ data: { name: "Copper Kettle Holdings (Pty) Ltd", slug: `id-a-${suffix}` } });
-    other = await prisma.brand.create({ data: { name: "Campari", slug: `id-b-${suffix}` } });
+    other = await prisma.brand.create({ data: { name: "Amber Oak", slug: `id-b-${suffix}` } });
   });
 
   afterAll(async () => {
@@ -190,8 +190,8 @@ describe("a brand editing its own appearance", () => {
   it("won't reach another brand", async () => {
     // The tenant guard scopes the update to the session's own brand, so an
     // owner of one cannot repaint another.
-    await updateBrandIdentityForSession(owner(other.id), form({ displayName: "Campari SA" }));
+    await updateBrandIdentityForSession(owner(other.id), form({ displayName: "Amber Oak SA" }));
     expect((await getBrandIdentity(brand.id))?.displayName).toBeNull();
-    expect((await getBrandIdentity(other.id))?.displayName).toBe("Campari SA");
+    expect((await getBrandIdentity(other.id))?.displayName).toBe("Amber Oak SA");
   });
 });

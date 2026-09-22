@@ -112,7 +112,7 @@ behaviour.
                     ┌─────────────────────────────┐
   copperkettle.    │   Consumer web (multi-       │
   qumo.co.za   ────▶│   tenant by subdomain)       │
-  campari.qumo.co.za│   Brand-themed. Join, earn,  │
+  amber-oak.qumo.co.za│   Brand-themed. Join, earn,  │
                     │   balance, opt out.          │
                     └──────────────┬──────────────┘
                                    │
@@ -148,7 +148,7 @@ lawful basis before it is ever built.
 a session on one brand's site does not automatically carry to another -
 correct isolation, and the "one tap to opt in" recognition happens by phone at
 sign-in rather than by a shared cookie. That is visible rather than theoretical:
-sign in at `copper-kettle.…`, open `campari.…` in the same browser, and you
+sign in at `copper-kettle.…`, open `amber-oak.…` in the same browser, and you
 get a login page.
 
 The apex is deliberately not a brand. Nor is `www`, nor any of a reserved list

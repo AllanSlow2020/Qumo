@@ -36,7 +36,7 @@ describe("exporting a print run", () => {
   }
 
   beforeAll(async () => {
-    brand = await prisma.brand.create({ data: { name: "Campari", slug: `exp-a-${suffix}` } });
+    brand = await prisma.brand.create({ data: { name: "Amber Oak", slug: `exp-a-${suffix}` } });
     otherBrand = await prisma.brand.create({ data: { name: "Copper Kettle", slug: `exp-b-${suffix}` } });
 
     staff = await prisma.user.create({
@@ -90,14 +90,14 @@ describe("exporting a print run", () => {
 
   it("builds URLs on the brand's own address", async () => {
     const data = await exportBatchCodes(brand.id, batchId);
-    const csv = toCsv(data!, "https://campari.qumo.co.za");
+    const csv = toCsv(data!, "https://amber-oak.qumo.co.za");
     const [header, first] = csv.split("\n");
 
     expect(header).toBe("code,printed_as,url,status");
     const [code, printedAs, url, status] = first!.split(",");
     // A code scanned at the apex lands on the no-brand page, so the address
     // in the CSV is the thing that decides whether a printed sticker works.
-    expect(url).toBe(`https://campari.qumo.co.za/s/${code}`);
+    expect(url).toBe(`https://amber-oak.qumo.co.za/s/${code}`);
     expect(status).toBe("UNSCANNED");
     // The readable form is the same code, so somebody typing it off a
     // scuffed label reaches the same place the QR would have.
@@ -106,7 +106,7 @@ describe("exporting a print run", () => {
 
   it("has a row for every code and nothing else", async () => {
     const data = await exportBatchCodes(brand.id, batchId);
-    const csv = toCsv(data!, "https://campari.qumo.co.za");
+    const csv = toCsv(data!, "https://amber-oak.qumo.co.za");
     expect(csv.split("\n")).toHaveLength(26);
   });
 

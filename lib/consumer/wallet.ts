@@ -39,7 +39,7 @@ export type BrandWallet = {
  *
  * `brandId` narrows it to one, which is what every shopper-facing screen
  * now passes: a shopper on copper-kettle.qumo.co.za is on Copper Kettle's
- * site and should not be shown that they also drink Campari. The unfiltered
+ * site and should not be shown that they also drink Amber Oak. The unfiltered
  * form survives for the one caller entitled to the whole picture - the
  * shopper's own data export, where withholding it would answer a different
  * question than the one the law says they asked.

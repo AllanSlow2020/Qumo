@@ -13,7 +13,7 @@ describe("reading a brand out of a host", () => {
 
   it("takes the one label in front of the root domain", () => {
     expect(brandSlugFromHost("copper-kettle.qumo.co.za", ROOT)).toBe("copper-kettle");
-    expect(brandSlugFromHost("campari.qumo.co.za", ROOT)).toBe("campari");
+    expect(brandSlugFromHost("amber-oak.qumo.co.za", ROOT)).toBe("amber-oak");
   });
 
   it("ignores the port, the case, and a trailing dot", () => {

@@ -21,9 +21,9 @@ describe("what a brand's own site shows and refuses", () => {
   const suffix = Date.now();
 
   let kettle: Brand;
-  let campari: Brand;
+  let amberOak: Brand;
   let kettleCampaign: Campaign;
-  let campariCampaign: Campaign;
+  let amberOakCampaign: Campaign;
   let kettleStore: Store;
   let shopper: Person;
 
@@ -76,7 +76,7 @@ describe("what a brand's own site shows and refuses", () => {
 
   beforeAll(async () => {
     ({ brand: kettle, campaign: kettleCampaign } = await makeBrand("scope-kettle", "Copper Kettle"));
-    ({ brand: campari, campaign: campariCampaign } = await makeBrand("scope-campari", "Campari"));
+    ({ brand: amberOak, campaign: amberOakCampaign } = await makeBrand("scope-amber-oak", "Amber Oak"));
 
     kettleStore = await prisma.store.create({
       data: { brandId: kettle.id, name: "Sandton", code: `SCOPE-CK-${suffix}` },
@@ -89,7 +89,7 @@ describe("what a brand's own site shows and refuses", () => {
   });
 
   afterAll(async () => {
-    for (const brand of [kettle, campari]) {
+    for (const brand of [kettle, amberOak]) {
       await prisma.pointsTransaction.deleteMany({ where: { brandId: brand.id } });
       await prisma.purchaseScan.deleteMany({ where: { brandId: brand.id } });
       await prisma.packCode.deleteMany({ where: { brandId: brand.id } });
@@ -110,17 +110,17 @@ describe("what a brand's own site shows and refuses", () => {
   });
 
   it("refuses the same slip on another brand's site, and awards nothing", async () => {
-    // The hand-crafted URL: campari.qumo.co.za/r?s=<a Copper Kettle store>.
+    // The hand-crafted URL: amber-oak.qumo.co.za/r?s=<a Copper Kettle store>.
     // Nothing about it could have misdirected value - the award has always
     // been driven by the store's own brandId - but rendering one brand's
-    // award under a Campari header is indistinguishable, to a
+    // award under a Amber Oak header is indistinguishable, to a
     // shopper, from the two brands sharing a database.
     const before = await centsAt(kettle);
-    const result = await redeemReceipt(kettleSlip(), shopper.id, new Date(), campari.id);
+    const result = await redeemReceipt(kettleSlip(), shopper.id, new Date(), amberOak.id);
 
     expect(result).toEqual({ ok: false, reason: "WRONG_BRAND" });
     expect(await centsAt(kettle)).toBe(before);
-    expect(await centsAt(campari)).toBe(0);
+    expect(await centsAt(amberOak)).toBe(0);
   });
 
   it("refuses before the slip is spent, so the shopper can still use it", async () => {
@@ -128,7 +128,7 @@ describe("what a brand's own site shows and refuses", () => {
     // for our routing: they would return to the right host and be told the
     // slip had already been scanned.
     const slip = kettleSlip(20_000);
-    expect(await redeemReceipt(slip, shopper.id, new Date(), campari.id)).toEqual({
+    expect(await redeemReceipt(slip, shopper.id, new Date(), amberOak.id)).toEqual({
       ok: false,
       reason: "WRONG_BRAND",
     });
@@ -147,11 +147,11 @@ describe("what a brand's own site shows and refuses", () => {
     // engine refuses it, and this fixture used to build exactly that
     // impossible pairing.
     const packCampaign = await prisma.campaign.create({
-      data: { brandId: campari.id, name: "Campari stickers", status: "ACTIVE" },
+      data: { brandId: amberOak.id, name: "Amber Oak stickers", status: "ACTIVE" },
     });
     await prisma.earnRule.create({
       data: {
-        brandId: campari.id,
+        brandId: amberOak.id,
         campaignId: packCampaign.id,
         type: "FLAT_PER_SCAN",
         unit: "POINTS",
@@ -161,10 +161,10 @@ describe("what a brand's own site shows and refuses", () => {
 
     const code = generatePackCode();
     const batch = await prisma.packBatch.create({
-      data: { brandId: campari.id, campaignId: packCampaign.id, label: `scope-${suffix}`, quantity: 1 },
+      data: { brandId: amberOak.id, campaignId: packCampaign.id, label: `scope-${suffix}`, quantity: 1 },
     });
     await prisma.packCode.create({
-      data: { brandId: campari.id, campaignId: packCampaign.id, batchId: batch.id, code },
+      data: { brandId: amberOak.id, campaignId: packCampaign.id, batchId: batch.id, code },
     });
 
     expect(await redeemPackCode(code, shopper.id, new Date(), kettle.id)).toEqual({
@@ -172,7 +172,7 @@ describe("what a brand's own site shows and refuses", () => {
       reason: "WRONG_BRAND",
     });
 
-    const onTheRightSite = await redeemPackCode(code, shopper.id, new Date(), campari.id);
+    const onTheRightSite = await redeemPackCode(code, shopper.id, new Date(), amberOak.id);
     expect(onTheRightSite.ok).toBe(true);
   });
 
@@ -189,16 +189,16 @@ describe("what a brand's own site shows and refuses", () => {
     expect(here).toHaveLength(1);
     expect(here[0]!.brandName).toBe("Copper Kettle");
 
-    const there = await getWallet(shopper.id, campari.id);
+    const there = await getWallet(shopper.id, amberOak.id);
     expect(there).toHaveLength(1);
-    expect(there[0]!.brandName).toBe("Campari");
+    expect(there[0]!.brandName).toBe("Amber Oak");
 
     // The sums are the giveaway if scoping were done with the wrong filter:
-    // both memberships exist, so an unscoped groupBy would put Campari's
+    // both memberships exist, so an unscoped groupBy would put Amber Oak's
     // rows into Copper Kettle's total.
     const kettleCents = here[0]!.balances.find((b) => b.unit === "CENTS")?.amount ?? 0;
     expect(kettleCents).toBe(await centsAt(kettle));
-    expect(kettleCents).not.toBe(await centsAt(campari));
+    expect(kettleCents).not.toBe(await centsAt(amberOak));
   });
 
   it("shows one brand's activity, and one brand's membership", async () => {
@@ -218,17 +218,17 @@ describe("what a brand's own site shows and refuses", () => {
     const data = await exportPerson(shopper.id);
     const names = data!.brands.map((b) => b.brand).sort();
     expect(names).toContain("Copper Kettle");
-    expect(names).toContain("Campari");
+    expect(names).toContain("Amber Oak");
   });
 
   it("keeps the two campaigns apart", async () => {
-    // Belt and braces on the thing that would be worst: a Campari campaign
+    // Belt and braces on the thing that would be worst: a Amber Oak campaign
     // paying for a Copper Kettle purchase.
     const rows = await prisma.pointsTransaction.findMany({
-      where: { campaignId: campariCampaign.id },
+      where: { campaignId: amberOakCampaign.id },
       select: { brandId: true },
     });
-    expect(rows.every((r) => r.brandId === campari.id)).toBe(true);
+    expect(rows.every((r) => r.brandId === amberOak.id)).toBe(true);
     expect(kettleCampaign.brandId).toBe(kettle.id);
   });
 });
