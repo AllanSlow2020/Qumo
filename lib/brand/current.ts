@@ -25,8 +25,16 @@ const SELECT = {
   displayName: true,
   tagline: true,
   logoUrl: true,
+  // The type and the stamp, never the bytes: this select runs on every
+  // shopper page render, and pulling half a megabyte of image through it to
+  // decide whether an <img> tag exists would be a per-request cost for a
+  // boolean. app/api/brand-logo reads the bytes, once, when asked for them.
+  logoMimeType: true,
+  logoUpdatedAt: true,
   accentColor: true,
   accentInkColor: true,
+  accentColorDark: true,
+  accentInkColorDark: true,
   displayFont: true,
   figureFont: true,
   supportEmail: true,
@@ -54,8 +62,11 @@ export const currentBrand = cache(async (): Promise<BrandTheme | null> => {
  * reached from a link or a code that carried a brand host, so arriving
  * without one is a routing bug, not a shopper mistake.
  *
- * The layout catches the shopper-facing case first (app/(shopper)/layout.tsx
- * renders the no-brand page), so in practice this never throws in a browser.
+ * app/(shopper)/layout.tsx renders the no-brand notice rather than its
+ * children when there is no brand, so in practice this never throws on a
+ * shopper page. It said that before the layout actually did it, and the
+ * gap was a server error on every page of a deployment whose first brand
+ * had not been created yet.
  */
 export async function requireBrand(): Promise<BrandTheme> {
   const brand = await currentBrand();

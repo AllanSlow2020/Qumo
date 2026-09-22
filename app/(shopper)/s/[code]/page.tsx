@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireBrand } from "@/lib/brand/current";
 import { getConsumerSession } from "@/lib/consumer/session";
+import { needsAgeStep } from "@/lib/consumer/age-check";
 import { formatLedgerAmount } from "@/lib/consumer/wallet";
 import { redeemPackCode, SCAN_FAILURE_MESSAGES } from "@/lib/packs/scan";
 import { BrandHeader } from "../../brand-header";
@@ -30,6 +31,18 @@ export default async function ScanPage({ params }: { params: Promise<{ code: str
   // See /r: the subdomain's brand has to agree with the code's, and the
   // check lands before the code is burned.
   const brand = await requireBrand();
+
+  // The age step, before the code is anywhere near being spent. The engine
+  // refuses an unconfirmed shopper too, and that refusal rolls the whole
+  // transaction back so nothing is lost either way - but arriving at a
+  // screen that says "this needs your age" beats arriving at one that says
+  // the scan did not work, when the scan was fine and the shopper was the
+  // open question. Carries the code through, exactly as the login redirect
+  // above does, so the tap resumes where it left off.
+  if (await needsAgeStep(brand.id, personId)) {
+    redirect(`/wallet/age?next=${encodeURIComponent(`/s/${code}`)}`);
+  }
+
   const result = await redeemPackCode(code, personId, new Date(), brand.id);
 
   if (!result.ok) {
@@ -47,6 +60,26 @@ export default async function ScanPage({ params }: { params: Promise<{ code: str
     );
   }
 
+  /*
+   * One screen, whether this render performed the award or found it already
+   * done, and the copy is true either way.
+   *
+   * There were two screens here and the split could not work. This page
+   * awards on render and the App Router renders it three times for one
+   * navigation, so the render a shopper actually reads is never the one that
+   * did the awarding - it is one of the two that arrive to find the code
+   * already claimed, by this same shopper, a few milliseconds earlier. A
+   * branch that says "you already claimed this one" therefore fires on
+   * every genuine first scan, which is what it did.
+   *
+   * The earlier bug was the opposite mistake: one screen saying "+R10.00,
+   * added to your balance", which on a real second scan reads as a second
+   * award. Both readings came from trying to name *this scan* as the event.
+   * The code is the event. It is worth a fixed amount, once, and the
+   * balance underneath is the running total - and stating it that way is
+   * true on the first tap, on the accidental double tap, and on the scan
+   * somebody tries a week later to see whether it pays twice.
+   */
   return (
     <>
       <BrandHeader />
@@ -54,11 +87,16 @@ export default async function ScanPage({ params }: { params: Promise<{ code: str
         <p className="sc-label">
           {result.brandName} · {result.campaignName}
         </p>
-        <p className="sc-figure sc-pos">+{formatLedgerAmount(result.amount, result.unit)}</p>
+        <p className="sc-figure sc-pos">{formatLedgerAmount(result.amount, result.unit)}</p>
+        {/* "from this code", not "added": the amount belongs to the code,
+            and the sentence stays honest on a rescan. The balance beside it
+            is the number that actually moved, and on a rescan it visibly
+            has not. */}
         <p className="sc-body">
-          Added to your {result.brandName} balance. You now have{" "}
+          from this code. Your {result.brandName} balance is{" "}
           <strong style={{ color: "var(--sc-ink)" }}>{formatLedgerAmount(result.newBalance, result.unit)}</strong>.
         </p>
+        <p className="sc-label">Each code works once, so scanning this one again won&apos;t add more.</p>
 
         {/* A completed card is the moment the whole stamp mechanic exists
             for - the shopper has to leave this screen knowing they earned

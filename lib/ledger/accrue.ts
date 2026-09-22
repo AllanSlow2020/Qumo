@@ -1,6 +1,7 @@
 import type { LedgerUnit, PointsReason, Prisma } from "@prisma/client";
 import { createCouponWithRetry } from "@/lib/coupons/issue";
 import { programmeState, type SubscriptionRow } from "@/lib/subscriptions/state";
+import { meetsMinimum } from "@/lib/consumer/age";
 
 /**
  * The one place a scan turns into ledger movement.
@@ -57,6 +58,22 @@ type AccrualTx = {
       select: { status: true; cancelledAt: true; honourRedemptionUntil: true };
     }) => Promise<SubscriptionRow>;
   };
+  brand: {
+    findUnique: (args: {
+      where: { id: string };
+      select: { minimumAge: true };
+    }) => Promise<{ minimumAge: number | null } | null>;
+  };
+  person: {
+    findUnique: (args: {
+      where: { id: string };
+      select: { ageConfirmedAt: true; ageConfirmedMinimum: true; ageRefusedAt: true };
+    }) => Promise<{
+      ageConfirmedAt: Date | null;
+      ageConfirmedMinimum: number | null;
+      ageRefusedAt: Date | null;
+    } | null>;
+  };
 };
 
 /**
@@ -70,7 +87,8 @@ export type AccrualRefusal =
   | "DAILY_SCAN_LIMIT"
   | "CAMPAIGN_EXHAUSTED"
   | "OPTED_OUT"
-  | "PROGRAMME_CLOSED";
+  | "PROGRAMME_CLOSED"
+  | "AGE_UNCONFIRMED";
 
 /**
  * Thrown, not returned, and deliberately.
@@ -206,12 +224,64 @@ async function assertWithinCeilings(
   }
 }
 
+/**
+ * The age gate, in the one place value is created.
+ *
+ * ── Why here and not only on the screen ──────────────────────────────────
+ *
+ * The screen does check, and it checks first, so that a shopper is asked
+ * before a single-use code is anywhere near being spent. This is the check
+ * that cannot be forgotten. A brand turning on an age restriction is
+ * relying on it holding for every way value can be earned, including the
+ * adapters not written yet - the SMS earn path, an import, a manual
+ * adjustment by support. Each of those is a new caller, and a new caller
+ * that forgets a UI convention is an ordinary mistake, where one that gets
+ * past this has to have removed it.
+ *
+ * Refusing by throwing is what makes it safe to check this late. The whole
+ * transaction rolls back, so a shopper who has not done the age step keeps
+ * the code they scanned rather than having it burnt on an award they were
+ * never given.
+ *
+ * The brand is read first and the person only if the brand asks for an age,
+ * so a brand with no restriction - which is most of them - pays one indexed
+ * read on a row it is already holding rather than two.
+ */
+async function assertOldEnough(tx: AccrualTx, brandId: string, personId: string | undefined): Promise<void> {
+  const brand = await tx.brand.findUnique({ where: { id: brandId }, select: { minimumAge: true } });
+  const minimum = brand?.minimumAge ?? null;
+  if (minimum === null) {
+    return;
+  }
+
+  // A caller that cannot say who this is for cannot be allowed through a
+  // gate about who this is for. Every current caller passes it; this is
+  // what stops the next one quietly opting out by omission.
+  if (!personId) {
+    throw new AccrualRefused("AGE_UNCONFIRMED");
+  }
+
+  const person = await tx.person.findUnique({
+    where: { id: personId },
+    select: { ageConfirmedAt: true, ageConfirmedMinimum: true, ageRefusedAt: true },
+  });
+  if (!person || !meetsMinimum(person, minimum)) {
+    throw new AccrualRefused("AGE_UNCONFIRMED");
+  }
+}
+
 export async function applyAccrual(
   tx: AccrualTx,
   input: {
     brandId: string;
     campaignId: string;
     brandMembershipId: string;
+    /**
+     * Who is earning. Needed for the age gate, which is a question about
+     * the person rather than about the membership, and required whenever
+     * the brand sets a minimum age - see assertOldEnough.
+     */
+    personId?: string;
     /** From the membership row the caller already read in this transaction. */
     optedOutAt?: Date | null;
     rule: AccrualRule;
@@ -250,6 +320,8 @@ export async function applyAccrual(
   if (!programmeState(subscription, now).canEarn) {
     throw new AccrualRefused("PROGRAMME_CLOSED");
   }
+
+  await assertOldEnough(tx, brandId, input.personId);
 
   await assertWithinCeilings(tx, {
     campaignId,

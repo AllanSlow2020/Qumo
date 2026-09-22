@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Brand, Campaign, User } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
 import { createPackBatchForSession, PackBatchError } from "@/lib/packs/batch";
-import { exportBatchCodes, toCsv } from "@/lib/packs/export";
+import { exportBatchCodes, toCsv, unscannedCodes } from "@/lib/packs/export";
 import { normalisePackCode } from "@/lib/packs/code";
 import { redeemPackCode } from "@/lib/packs/scan";
 import { encryptPhone, hashPhone } from "@/lib/security/crypto";
@@ -36,8 +36,8 @@ describe("exporting a print run", () => {
   }
 
   beforeAll(async () => {
-    brand = await prisma.brand.create({ data: { name: "Campari", slug: `exp-a-${suffix}` } });
-    otherBrand = await prisma.brand.create({ data: { name: "Licken", slug: `exp-b-${suffix}` } });
+    brand = await prisma.brand.create({ data: { name: "Amber Oak", slug: `exp-a-${suffix}` } });
+    otherBrand = await prisma.brand.create({ data: { name: "Copper Kettle", slug: `exp-b-${suffix}` } });
 
     staff = await prisma.user.create({
       data: {
@@ -90,14 +90,14 @@ describe("exporting a print run", () => {
 
   it("builds URLs on the brand's own address", async () => {
     const data = await exportBatchCodes(brand.id, batchId);
-    const csv = toCsv(data!, "https://campari.qumo.co.za");
+    const csv = toCsv(data!, "https://amber-oak.qumo.co.za");
     const [header, first] = csv.split("\n");
 
     expect(header).toBe("code,printed_as,url,status");
     const [code, printedAs, url, status] = first!.split(",");
     // A code scanned at the apex lands on the no-brand page, so the address
     // in the CSV is the thing that decides whether a printed sticker works.
-    expect(url).toBe(`https://campari.qumo.co.za/s/${code}`);
+    expect(url).toBe(`https://amber-oak.qumo.co.za/s/${code}`);
     expect(status).toBe("UNSCANNED");
     // The readable form is the same code, so somebody typing it off a
     // scuffed label reaches the same place the QR would have.
@@ -106,7 +106,7 @@ describe("exporting a print run", () => {
 
   it("has a row for every code and nothing else", async () => {
     const data = await exportBatchCodes(brand.id, batchId);
-    const csv = toCsv(data!, "https://campari.qumo.co.za");
+    const csv = toCsv(data!, "https://amber-oak.qumo.co.za");
     expect(csv.split("\n")).toHaveLength(26);
   });
 
@@ -118,6 +118,36 @@ describe("exporting a print run", () => {
     expect(data!.rows.filter((r) => r.status === "SCANNED")).toHaveLength(1);
 
     await prisma.packCode.update({ where: { id: one.id }, data: { status: "UNSCANNED" } });
+  });
+
+  it("hands out a few unused codes for writing to NFC tags", async () => {
+    const few = await unscannedCodes(brand.id, batchId, 3);
+    expect(few!.codes).toHaveLength(3);
+    expect(few!.unscanned).toBe(25);
+    // The whole run is still reported, so a screen showing three of them can
+    // say three of what.
+    expect(few!.total).toBe(25);
+  });
+
+  it("never offers a code that has already been used", async () => {
+    // A tag written with a spent code tells whoever taps it that the code is
+    // spent, which reads as a broken tag rather than a used code. So the
+    // filter is the feature, not an optimisation.
+    const all = await prisma.packCode.findMany({ where: { batchId }, orderBy: { code: "asc" } });
+    const first = all[0]!;
+    await prisma.packCode.update({ where: { id: first.id }, data: { status: "SCANNED" } });
+
+    const few = await unscannedCodes(brand.id, batchId, 3);
+    expect(few!.codes).not.toContain(first.code);
+    expect(few!.unscanned).toBe(24);
+
+    await prisma.packCode.update({ where: { id: first.id }, data: { status: "UNSCANNED" } });
+  });
+
+  it("will not reach into another brand's run", async () => {
+    // Same property the CSV route has, asserted separately because this is a
+    // second door onto the same unredeemed value.
+    expect(await unscannedCodes(otherBrand.id, batchId, 3)).toBeNull();
   });
 
   it("won't print codes for a promotion that awards nothing", async () => {

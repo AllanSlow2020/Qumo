@@ -6,7 +6,7 @@ import { isSerializationConflict, MAX_SERIALIZATION_ATTEMPTS } from "@/lib/db/se
 import { looksLikePackCode, normalisePackCode } from "./code";
 
 /**
- * Redeeming a pack code: the shopper-facing half of the Campari path.
+ * Redeeming a pack code: the shopper-facing half of the Amber Oak path.
  *
  * Two things have to be true at once and neither is negotiable:
  *   1. A code awards exactly once, even if it is scanned twice in the same
@@ -35,7 +35,8 @@ export type ScanFailureReason =
   | "DAILY_LIMIT"
   | "DAILY_SCAN_LIMIT"
   | "CAMPAIGN_EXHAUSTED"
-  | "OPTED_OUT";
+  | "OPTED_OUT"
+  | "AGE_UNCONFIRMED";
 
 export type ScanResult =
   | {
@@ -79,6 +80,7 @@ export const SCAN_FAILURE_MESSAGES: Record<ScanFailureReason, string> = {
   DAILY_SCAN_LIMIT: "You've scanned as many codes as this promotion allows today. Try again tomorrow.",
   CAMPAIGN_EXHAUSTED: "This promotion has reached its limit and isn't giving out any more.",
   OPTED_OUT: "You've opted out of this brand's rewards. Opt back in to start earning again.",
+  AGE_UNCONFIRMED: "You need to confirm your age before this brand's rewards can pay out. Your code has not been used - go to your rewards and you will be asked.",
 };
 
 /**
@@ -223,8 +225,8 @@ export async function redeemPackCode(
    * Optional because not every carrier asserts one: an SMS arrives with a
    * code and a phone number and no host at all, and there is nothing to
    * cross-check. When a carrier does assert a brand it has to agree with the
-   * code, so a hand-crafted chicken-licken.qumo.co.za/s/<campari-code> is
-   * refused rather than rendering a Campari award under a Chicken Licken
+   * code, so a hand-crafted copper-kettle.qumo.co.za/s/<amber-oak-code> is
+   * refused rather than rendering a Amber Oak award under a Copper Kettle
    * header.
    *
    * Worth being precise about what this is and is not. It is not what keeps
@@ -332,6 +334,7 @@ export async function redeemPackCode(
             brandId,
             campaignId: packCode.campaignId,
             brandMembershipId: membership.id,
+            personId,
             optedOutAt: membership.optedOutAt,
             rule: {
               unit: earnRule.unit,
@@ -362,8 +365,29 @@ export async function redeemPackCode(
     }
   }
 
+  /*
+   * The conditional burn updated nothing, so somebody else claimed the code
+   * between our read and our write.
+   *
+   * "Somebody else" is very often this same shopper on the same tap. The
+   * scan page awards on render and the App Router renders it three times
+   * for one navigation, so two of those three arrive here having lost the
+   * race to the first - and this used to answer them with a bare refusal.
+   * The customer then read "This code has already been used" on a code they
+   * had that second scanned successfully, with the money already in their
+   * balance. It reproduced on five first scans out of five.
+   *
+   * Re-reading and describing the existing scan is the same thing the
+   * early SCANNED path above does, and it tells the two cases apart
+   * properly: the shopper's own scan comes back as a success carrying
+   * `alreadyEarned`, and a stranger's is still refused.
+   */
   if (!claimed) {
-    return { ok: false, reason: "ALREADY_SCANNED" };
+    const existing = await findCode(canonical);
+    if (!existing) {
+      return { ok: false, reason: "UNKNOWN_CODE" };
+    }
+    return describeExistingScan(existing, personId);
   }
 
   return {

@@ -59,7 +59,10 @@ export function NewBatchForm({ campaigns }: { campaigns: Option[] }) {
           className="cn-input"
           required
           maxLength={120}
-          placeholder="Campari 750ml neck tags, March"
+          // Deliberately nobody's brand. A placeholder naming a real
+          // customer turns up inside every other customer's console, which
+          // is a small leak and an awkward one to explain in a room.
+          placeholder="Box sleeves, March run"
         />
         <p className="cn-label">For your own records. It names the download too.</p>
       </div>

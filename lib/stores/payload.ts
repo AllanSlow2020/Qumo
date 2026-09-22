@@ -13,7 +13,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  * implement this in a template language; asking them for base64 of a JSON
  * document would get a "no" that has nothing to do with willingness.
  *
- *   https://qumo.app/r?s=CL04&t=884231&c=8500&d=1755512582&g=<hmac>
+ *   https://copper-kettle.qumo.co.za/r?s=CL04&t=884231&c=8500&d=1755512582&g=<hmac>
  *
  *   s  store code
  *   t  the till's own transaction id - opaque to us, must be unique per store

@@ -20,8 +20,8 @@
 // and the tenant boundary - a brand only ever reaches a Person through a
 // membership it is authorised to see, and never lists that person's other
 // memberships. On a brand-scoped site that is not just a privacy control,
-// it is the product: a shopper on chickenlicken.qumo.co.za sees Chicken
-// Licken and nothing else.
+// it is the product: a shopper on copperkettle.qumo.co.za sees Copper
+// Kettle and nothing else.
 
 generator client {
   provider = "prisma-client-js"
@@ -87,7 +87,7 @@ model Brand {
 
   /// Identity and address in one field, which is a decision worth stating.
   ///
-  /// The slug is the subdomain: chicken-licken.qumo.co.za. Splitting them
+  /// The slug is the subdomain: copper-kettle.qumo.co.za. Splitting them
   /// would let a brand have a prettier host than their internal key, and it
   /// would also give us two values to keep in step for a benefit nobody has
   /// asked for. A prettier host is the custom-domain upsell, and that gets
@@ -112,17 +112,81 @@ model Brand {
 
   /// Absolute https URL. Validated where it is rendered and never trusted
   /// straight out of the database - see lib/brand/theme.ts.
+  ///
+  /// Still here now that logos can be uploaded, because a brand with a
+  /// design system already hosting its assets should not have to hand us a
+  /// copy that will drift. An upload wins over this when both are set.
   logoUrl String?
+
+  /// An uploaded logo, stored as bytes in this row.
+  ///
+  /// In the database rather than an object store, and that is a considered
+  /// choice rather than a shortcut. A brand logo is tens of kilobytes; a
+  /// few hundred brands is a few tens of megabytes, which Postgres carries
+  /// without noticing. Against that, an object store is one more account to
+  /// open, one more credential to rotate, one more thing to be down, and
+  /// one more bill - on a product whose whole outstanding list is already
+  /// suppliers nobody has signed up with.
+  ///
+  /// It is also the easy direction to migrate: moving bytes out to a CDN
+  /// later is a background job and a changed URL, where moving them in
+  /// would be a migration nobody wants to write. If a brand ever needs a
+  /// hundred-kilobyte hero image this stops being right, and that is the
+  /// signal to move, not this.
+  logoData Bytes?
+
+  /// What logoData actually is, decided by reading the file's own magic
+  /// bytes on upload rather than by believing the browser. Never null when
+  /// logoData is set.
+  logoMimeType String?
+
+  /// When the upload last changed. It is the cache key: the shopper page
+  /// asks for the logo with this value on the query string, so the response
+  /// can be cached for a year and still turn over the instant a brand
+  /// replaces it.
+  logoUpdatedAt DateTime?
+
+  /// The age a shopper must confirm before this brand's programme will
+  /// award them anything. Null is the default and means no age step.
+  ///
+  /// A number rather than a boolean, although the console offers a tick
+  /// box. The tick box writes 18 because that is South Africa's drinking
+  /// age and liquor is why this exists; a market with a different
+  /// threshold, or a brand told 21 by its own legal team, is then a value
+  /// rather than a migration. The console can grow a field later without
+  /// anything underneath it changing.
+  ///
+  /// Enforced in lib/ledger/accrue.ts, inside the transaction, so a brand
+  /// that turns this on is protected from every accrual path including
+  /// ones written after it.
+  minimumAge Int?
 
   /// The single colour that carries the identity, and the ink that stays
   /// legible on it. Two fields rather than one because contrast is a
   /// judgement about the brand's own palette; deriving it from luminance
-  /// gets Chicken Licken's red wrong in exactly the case that matters.
+  /// gets Copper Kettle's red wrong in exactly the case that matters.
   ///
   /// Stored as #rrggbb. These reach a style attribute, so they are matched
   /// against a strict pattern before they go anywhere near CSS.
   accentColor    String?
   accentInkColor String?
+
+  /// The same pair again, for when the shopper is reading in dark mode.
+  ///
+  /// One accent used in both themes was the original design and it is wrong
+  /// for exactly the brand this was built for. Copper Kettle's red is a
+  /// deep, warm #c8102e that sits confidently on white and goes muddy and
+  /// low-contrast on near-black, where the same identity wants to be lifted
+  /// a few points. A brand cannot fix that with one field, and deriving the
+  /// dark variant from the light one by adjusting luminance is the same
+  /// mistake as deriving the ink: it is a judgement about a palette, not a
+  /// calculation.
+  ///
+  /// Both null is the normal case and means "use the light pair in both",
+  /// which is precisely what every brand got before these existed. So this
+  /// is additive: nothing changes for a brand that never opens the screen.
+  accentColorDark    String?
+  accentInkColorDark String?
 
   /// Which faces the brand chose, as ids from the registry in
   /// lib/brand/fonts.ts - never a font name and never a URL. The value ends
@@ -414,7 +478,7 @@ model ShopperSession {
 }
 
 // Brand-agnostic identity, and the reason a shopper who has scanned a
-// Chicken Licken slip is recognised at a Campari sticker without
+// Copper Kettle slip is recognised at a Amber Oak sticker without
 // registering twice.
 //
 // phoneHash is a deterministic HMAC, so a sign-in or an inbound SMS resolves
@@ -433,6 +497,39 @@ model Person {
   consentVersion String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  /// When this person confirmed their age, and the age they confirmed.
+  ///
+  /// ── Why there is no date of birth here ─────────────────────────────
+  ///
+  /// The age step asks for one and this row never receives it. A birth
+  /// date would be personal information collected for a single yes-or-no
+  /// question and then kept forever, which is precisely what minimisation
+  /// is about. Once somebody is over eighteen they stay over eighteen, so
+  /// the answer keeps and the question does not need to.
+  ///
+  /// The minimum is stored beside the timestamp because it is what was
+  /// actually established. Someone confirmed against 18 has not been
+  /// confirmed against 21, and a brand that later needs 21 has to ask
+  /// again rather than inherit an answer to a different question.
+  ///
+  /// On a person, not a membership: age is a fact about the human, and
+  /// somebody old enough for one brand is old enough for the next. Only
+  /// the requirement is per-brand.
+  ageConfirmedAt      DateTime?
+  ageConfirmedMinimum Int?
+
+  /// When this person was last refused on age.
+  ///
+  /// Here so that a refusal costs something. Without it the age step is a
+  /// form that says no and immediately offers itself again, which is not a
+  /// control, it is a guessing game with the answer written on the box.
+  ///
+  /// This is the only thing kept about somebody who failed. The date they
+  /// typed is not written anywhere: a failed check means the person in
+  /// front of us said they were a child, and the response to that is to
+  /// refuse and keep nothing, not to open a file on them.
+  ageRefusedAt DateTime?
 
   // When this person asked to be erased.
   //
@@ -486,14 +583,14 @@ model BrandMembership {
 }
 
 enum PointsReason {
-  // A share of a purchase, from a scanned till slip. The Chicken Licken
+  // A share of a purchase, from a scanned till slip. The Copper Kettle
   // path: the brand owns the point of sale, so the receipt can carry what
   // was actually spent and the award scales with it.
   PURCHASE_ACCRUAL
   // A closed-loop wallet balance spent at the till. Negative amount, and
   // written only when a cashier confirms - see lib/wallet/spend.ts.
   WALLET_SPENT
-  // A code under a pack label, scanned by a shopper. The Campari path:
+  // A code under a pack label, scanned by a shopper. The Amber Oak path:
   // the brand owns no till, so the award is a flat amount configured on
   // the campaign's EarnRule rather than a share of any purchase.
   PACK_SCAN_AWARDED

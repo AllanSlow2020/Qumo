@@ -242,6 +242,23 @@ function CampaignTable({ rows }: { rows: CampaignRow[] }) {
   );
 }
 
+/**
+ * The two scan mechanisms, named in the order the brand uses them.
+ *
+ * A brand running a QR on the box and a brand running codes off the till
+ * are both reading this screen, and neither should have to find their own
+ * number second. Whichever is carrying the programme is said first.
+ */
+function scanSplit(pack: number, slips: number): string {
+  const n = (v: number) => v.toLocaleString("en-ZA");
+  if (pack === 0 && slips === 0) return "Nothing scanned in this window";
+  if (pack === 0) return `${n(slips)} off the till`;
+  if (slips === 0) return `${n(pack)} on pack`;
+  return pack >= slips
+    ? `${n(pack)} on pack, ${n(slips)} off the till`
+    : `${n(slips)} off the till, ${n(pack)} on pack`;
+}
+
 export default async function ConsolePerformancePage({
   searchParams,
 }: {
@@ -261,7 +278,10 @@ export default async function ConsolePerformancePage({
   const was = p.previous;
   const rateChange = was ? delta(rate, repeatRate(was as Performance)) : null;
   const perMemberChange = was ? delta(perMember, costPerMemberCents(was as Performance)) : null;
-  const slipsChange = was ? delta(p.slips, was.slips) : null;
+  // Against both mechanisms, matching the figure it sits under. Comparing
+  // only the slips beneath a total that includes pack codes would report a
+  // fall in a period that actually grew.
+  const scansChange = was ? delta(p.slips + p.packCodes, was.slips + was.packCodes) : null;
   const reachedChange = was ? delta(p.membersReached, was.membersReached) : null;
 
   return (
@@ -322,12 +342,14 @@ export default async function ConsolePerformancePage({
           <div className="cn-metric-note">All time, not this window</div>
         </div>
         <div className="cn-metric">
-          <div className="cn-metric-v">{p.slips.toLocaleString("en-ZA")}</div>
-          <div className="cn-metric-k">Slips scanned</div>
-          <div className="cn-metric-note">
-            {p.packCodes > 0 ? `${p.packCodes.toLocaleString("en-ZA")} pack codes as well` : "No pack codes yet"}
-          </div>
-          <Change change={slipsChange} />
+          <div className="cn-metric-v">{(p.slips + p.packCodes).toLocaleString("en-ZA")}</div>
+          <div className="cn-metric-k">Scans</div>
+          {/* The split, not one of the two with the other as a footnote.
+              Which mechanism a brand leans on is theirs to choose, and a
+              brand running everything on pack should not have to read its
+              own headline number out of the small print. */}
+          <div className="cn-metric-note">{scanSplit(p.packCodes, p.slips)}</div>
+          <Change change={scansChange} />
         </div>
         <div className="cn-metric">
           <div className="cn-metric-v">{p.membersReached.toLocaleString("en-ZA")}</div>
@@ -339,7 +361,7 @@ export default async function ConsolePerformancePage({
 
       <section className="cn-panel">
         <div className="cn-panel-head">
-          <h2 className="cn-h2">Slips scanned</h2>
+          <h2 className="cn-h2">Scans a day</h2>
         </div>
         <div style={{ padding: "18px 16px 12px" }}>
           <ScanChart series={p.scansByDay} days={days} />
@@ -349,7 +371,12 @@ export default async function ConsolePerformancePage({
       <section className="cn-panel">
         <div className="cn-panel-head">
           <h2 className="cn-h2">Where it is running</h2>
-          <span className="cn-metric-note">Busiest first</span>
+          {/* Said here rather than left to be discovered, because the store
+              figures will not add up to the headline and the reason is not
+              a bug: a code on a box has no till behind it. */}
+          <span className="cn-metric-note">
+            {p.packCodes > 0 ? "Till scans only, busiest first" : "Busiest first"}
+          </span>
         </div>
         <div className="cn-scroll">
           <StoreTable rows={p.byStore} />

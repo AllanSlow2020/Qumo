@@ -70,7 +70,16 @@ function underRoot(pathname: string, root: string): boolean {
   return pathname === root || pathname.startsWith(`${root}/`);
 }
 
-function isPublic(pathname: string): boolean {
+/**
+ * Exported for the test that pins this list.
+ *
+ * Every entry here is a decision to serve something to somebody with no
+ * session, and the two ways to get it wrong are opposites: too tight and a
+ * public page loses a piece of itself with no error anywhere, too loose and
+ * a shopper's own data is readable by a stranger. Neither shows up in a
+ * screenshot, so the list is asserted rather than read.
+ */
+export function isPublic(pathname: string): boolean {
   return (
     pathname === SHOPPER_LOGIN ||
     pathname === JOIN_PATH ||
@@ -87,6 +96,19 @@ function isPublic(pathname: string): boolean {
     // its own CRON_SECRET check inside the handler instead - the same
     // "public URL, real auth in the route" shape a webhook uses.
     pathname.startsWith("/api/cron") ||
+    // Public and unauthenticated, because its whole job is to be reachable
+    // when other things are not. It carries one bit and no detail, so
+    // there is nothing here for a stranger to learn.
+    pathname === "/api/health" ||
+    // The brand's own logo, which sits at the top of the join page and the
+    // login page - both of them public, both of them read by somebody with
+    // no session. Behind the session check it was redirected to /wallet/login
+    // and the brand's own shoppers saw a wordmark where their logo should
+    // be, on the two screens where the logo is doing the most work. It
+    // carries nothing about anybody: the brand is resolved from the Host
+    // header, so the response is the same public image the page it sits on
+    // already is.
+    pathname === "/api/brand-logo" ||
     // The aggregator posting an inbound SMS. Same shape as cron and for
     // the same reason: a network has no cookie to carry, so the URL is
     // public and the route checks its own shared secret. It also arrives
@@ -212,9 +234,23 @@ export function proxy(req: NextRequest): NextResponse {
     req.headers.get("x-forwarded-proto") === "https" || req.nextUrl.protocol === "https:";
   const security: Security = { nonce, csp: buildCsp(nonce, secure) };
   const response = route(req, security);
-  response.headers.set("Content-Security-Policy", security.csp);
+  if (!CARRIES_OWN_CSP.has(req.nextUrl.pathname)) {
+    response.headers.set("Content-Security-Policy", security.csp);
+  }
   return response;
 }
+
+/**
+ * Routes that answer with bytes somebody uploaded, and set a far tighter
+ * policy on them than any page would want.
+ *
+ * Middleware runs before the handler, so a header set here lands on the
+ * handler's response and replaces what it wrote. Without this the two logo
+ * routes claimed a sandbox in their own code and shipped the ordinary page
+ * policy - the comment said one thing and the response said another, which
+ * is worse than not having tried, because the next person reads the comment.
+ */
+const CARRIES_OWN_CSP = new Set(["/api/brand-logo", "/api/console-logo"]);
 
 function route(req: NextRequest, security: Security): NextResponse {
   const { pathname } = req.nextUrl;

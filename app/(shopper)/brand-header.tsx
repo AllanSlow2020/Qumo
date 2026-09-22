@@ -5,9 +5,9 @@ import { toggleTheme } from "../theme-actions";
 /**
  * The top of every shopper screen, and the whole point of Phase D.
  *
- * It used to say "Qumo". It now says Chicken Licken, because that is who
+ * It used to say "Qumo". It now says Copper Kettle, because that is who
  * the shopper thinks they are dealing with - they scanned a code at a
- * Chicken Licken till, on a Chicken Licken poster, for a Chicken Licken
+ * Copper Kettle till, on a Copper Kettle poster, for a Copper Kettle
  * promotion, and a page that leads with an infrastructure vendor's name is
  * asking them to trust a company they have never heard of with their phone
  * number. Qumo moves to the footer.

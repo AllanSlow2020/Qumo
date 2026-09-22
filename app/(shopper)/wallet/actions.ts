@@ -8,7 +8,7 @@ import { clearConsumerSession, getConsumerSession, revokeAllSessions } from "@/l
  *
  * `redirect()` inside a server action is resolved against the dev server's
  * own origin rather than the host the request arrived on, so on
- * chicken-licken.qumo.co.za it fetched the next page from the apex and
+ * copper-kettle.qumo.co.za it fetched the next page from the apex and
  * rendered "this link needs a brand" under a perfectly correct URL. Making
  * the redirect absolute did not help: the Location was right and the
  * router's data fetch still went to the wrong origin.

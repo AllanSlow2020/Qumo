@@ -66,8 +66,8 @@ describe("the console and the shopper surface are different doors", () => {
   const PASSWORD = "a-good-enough-dev-password";
 
   beforeAll(async () => {
-    brandA = await prisma.brand.create({ data: { name: "Licken", slug: `staff-a-${suffix}` } });
-    brandB = await prisma.brand.create({ data: { name: "Campari", slug: `staff-b-${suffix}` } });
+    brandA = await prisma.brand.create({ data: { name: "Copper Kettle", slug: `staff-a-${suffix}` } });
+    brandB = await prisma.brand.create({ data: { name: "Amber Oak", slug: `staff-b-${suffix}` } });
 
     const passwordHash = await hashPassword(PASSWORD);
     staffA = await prisma.user.create({
@@ -189,7 +189,7 @@ describe("which host is which", () => {
   it("recognises the console at app, and only at app", () => {
     expect(isConsoleHost("app.qumo.co.za", ROOT)).toBe(true);
     expect(isConsoleHost("APP.Qumo.CO.ZA:443", ROOT)).toBe(true);
-    expect(isConsoleHost("chicken-licken.qumo.co.za", ROOT)).toBe(false);
+    expect(isConsoleHost("copper-kettle.qumo.co.za", ROOT)).toBe(false);
     expect(isConsoleHost("qumo.co.za", ROOT)).toBe(false);
     // The near miss worth being explicit about: somebody else's domain with
     // our shape.

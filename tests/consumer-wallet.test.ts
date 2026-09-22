@@ -35,7 +35,7 @@ describe("lib/consumer/wallet", () => {
         { brandId: coffeeBrand.id, brandMembershipId: coffeeMembership.id, amount: -200, unit: "CENTS", reason: "COUPON_UNLOCKED" },
         { brandId: coffeeBrand.id, brandMembershipId: coffeeMembership.id, amount: 1, unit: "STAMPS", reason: "PACK_SCAN_AWARDED" },
         { brandId: coffeeBrand.id, brandMembershipId: coffeeMembership.id, amount: 1, unit: "STAMPS", reason: "PACK_SCAN_AWARDED" },
-        // Drinks: pack-scan points, the Campari model.
+        // Drinks: pack-scan points, the Amber Oak model.
         { brandId: drinksBrand.id, brandMembershipId: drinksMembership.id, amount: 50, unit: "POINTS", reason: "PACK_SCAN_AWARDED" },
         // Someone else's money, at a brand the shopper also belongs to.
         { brandId: coffeeBrand.id, brandMembershipId: strangerMembership.id, amount: 999999, unit: "CENTS", reason: "PACK_SCAN_AWARDED" },

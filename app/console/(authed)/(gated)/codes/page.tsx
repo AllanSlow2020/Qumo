@@ -83,6 +83,13 @@ export default async function ConsoleCodesPage() {
                           <Link href={`/codes/${batch.id}/sheet`} className="cn-btn cn-btn-quiet">
                             Labels
                           </Link>
+                          {/* The same codes again, as addresses to copy. A
+                              tag holds a URL, so this needed no mechanic of
+                              its own - only a way to get one URL out
+                              without the spreadsheet. */}
+                          <Link href={`/codes/${batch.id}/tags`} className="cn-btn cn-btn-quiet">
+                            NFC
+                          </Link>
                         </div>
                       )}
                     </td>
@@ -124,6 +131,10 @@ export default async function ConsoleCodesPage() {
           <p className="cn-body">
             The URL already carries your own address, so a shopper who scans it lands on your page rather than
             ours. Print the QR and the readable code together. A scuffed label still works if somebody can type it.
+          </p>
+          <p className="cn-body">
+            That same URL is what goes on an NFC tag, so a tap and a scan reach the same page and cost you nothing
+            extra to support. <strong>NFC</strong> next to a run gives you the addresses to write, and what to buy.
           </p>
         </div>
       </section>

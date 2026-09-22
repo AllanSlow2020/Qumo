@@ -361,8 +361,8 @@
       current since - what is marked built exists, is tested, and has been driven in a browser.
     </p>
     <div class="meta">
-      <span>Pilot: Chicken Licken (slip)</span>
-      <span>Then: Campari (sticker)</span>
+      <span>Pilot: Copper Kettle (slip)</span>
+      <span>Then: Amber Oak (sticker)</span>
       <span>Identity: phone, brand-scoped</span>
       <span>Routing: subdomain per brand</span>
       <span>Carriers: QR, NFC, SMS</span>
@@ -385,8 +385,8 @@
     <h2>What Qumo does</h2>
     <div class="prose">
       <p>
-        A customer buys a bucket at Chicken Licken. On the till slip is a QR code. They scan it,
-        land on a page that looks like Chicken Licken - not like us - give a phone number, and 5% of
+        A customer buys a bucket at Copper Kettle. On the till slip is a QR code. They scan it,
+        land on a page that looks like Copper Kettle - not like us - give a phone number, and 5% of
         what they spent lands in a balance they can spend at that same brand. No app to download,
         no card to carry, no points that mean nothing.
       </p>
@@ -398,7 +398,7 @@
         from people who did nothing wrong.
       </p>
       <p>
-        The same mechanic reskins for the next brand. Campari does not want percent-of-spend off a
+        The same mechanic reskins for the next brand. Amber Oak does not want percent-of-spend off a
         till slip; they want a unique code under a bottle cap. Same engine, same ledger, different
         carrier and different colours.
       </p>
@@ -409,7 +409,7 @@
       <ul class="plain">
         <li>
           <strong>Not a universal points scheme.</strong> Value is closed-loop - earned with one
-          brand, spent with that brand. A shopper cannot move Chicken Licken value to Campari, and
+          brand, spent with that brand. A shopper cannot move Copper Kettle value to Amber Oak, and
           neither brand can see the other's customers.
         </li>
         <li>
@@ -628,7 +628,7 @@
       </figcaption>
     </figure>
 
-    <h3>Consumer web · <code>{brand}.qumo.app</code></h3>
+    <h3>Consumer web · <code>{brand}.qumo.co.za</code></h3>
     <div class="scroll">
       <table>
         <thead>
@@ -637,7 +637,7 @@
         <tbody>
           <tr><td class="route">/join</td><td class="what">Poster, table-talker or plain tag. Explains what is running, registers, records the opt-in. Awards nothing, ever - that is what makes it safe to print where anyone can scan it.</td><td class="st"><span class="pill built">Built</span></td></tr>
           <tr><td class="route">/r</td><td class="what">Slip QR. Verifies and earns. <code>?s=store&amp;t=txn&amp;c=cents&amp;d=unix&amp;g=sig</code></td><td class="st"><span class="pill built">Built</span></td></tr>
-          <tr><td class="route">/s/[code]</td><td class="what">Sticker or pack code. Single-use. Campari's path, and the same URL an NFC tag can hold.</td><td class="st"><span class="pill built">Built</span></td></tr>
+          <tr><td class="route">/s/[code]</td><td class="what">Sticker or pack code. Single-use. Amber Oak's path, and the same URL an NFC tag can hold.</td><td class="st"><span class="pill built">Built</span></td></tr>
           <tr><td class="route">/wallet</td><td class="what">This brand's balance and history - this brand's only. Spend request when there is cash to spend.</td><td class="st"><span class="pill built">Built</span></td></tr>
           <tr><td class="route">/wallet/login</td><td class="what">Phone plus a one-time passcode. No password, no SSO.</td><td class="st"><span class="pill built">Built</span></td></tr>
           <tr><td class="route">/wallet/me</td><td class="what">Signed-in devices, leave the programme, download everything held about you.</td><td class="st"><span class="pill built">Built</span></td></tr>
@@ -665,7 +665,7 @@
         </thead>
         <tbody>
           <tr><td class="route">BALANCE</td><td class="what">Replies with this brand's balance. Unknown number gets a join instruction instead.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
-          <tr><td class="route">CL 8842315</td><td class="what">Store code and transaction number off the slip. Same verification as the QR, same accrual.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
+          <tr><td class="route">CK 8842315</td><td class="what">Store code and transaction number off the slip. Same verification as the QR, same accrual.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
           <tr><td class="route">YES</td><td class="what">Accepts the terms sent in the previous message. Consent in the shopper's own words.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
           <tr><td class="route">STOP</td><td class="what">Opt out. The one write this channel is allowed, because refusing it is worse than the risk.</td><td class="st"><span class="pill planned">Planned</span></td></tr>
         </tbody>
@@ -840,8 +840,8 @@
             <rect x="14" y="152" width="180" height="46" rx="4"/>
           </g>
           <g font-family="IBM Plex Mono, monospace" font-size="11.5" fill="currentColor" text-anchor="middle">
-            <text x="104" y="41">{brand}.qumo.app</text>
-            <text x="104" y="107">app.qumo.app</text>
+            <text x="104" y="41">{brand}.qumo.co.za</text>
+            <text x="104" y="107">app.qumo.co.za</text>
             <text x="104" y="173">SMS short code</text>
           </g>
           <g font-family="Public Sans, sans-serif" font-size="10.5" fill="#6f7887" text-anchor="middle">
@@ -935,15 +935,15 @@
       </p>
     </div>
 
-    <div class="note risk">
-      <h3>The domain, which blocks the deployment</h3>
+    <div class="note">
+      <h3>The domain, which is bought</h3>
       <p>
         A brand is a subdomain, so hosting needs a wildcard certificate on a domain we control.
-        <code>qumo.app</code> and <code>qumo.com</code> both resolve to somebody else.
-        <code>qumo.co.za</code> is unconfirmed. Worth separating two decisions that look like one:
-        the domain the business launches on is a branding and trademark question and can take its
-        time, while any throwaway domain unblocks a real URL this week. The root domain is one
-        environment variable, so moving later costs a redeploy.
+        <code>qumo.app</code> and <code>qumo.com</code> both resolve to somebody else and every
+        other spelling was taken, so <code>qumo.co.za</code> is registered and is the name that
+        goes on the QR codes. What is left is not a decision but a DNS record: <code>*.qumo.co.za</code>
+        pointing at the deployment, added wherever the nameservers live. The root domain is one
+        environment variable, so moving later would still only cost a redeploy.
       </p>
     </div>
 

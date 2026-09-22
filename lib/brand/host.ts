@@ -14,12 +14,14 @@
  * The apex we own. Everything to the left of it, in a host with exactly one
  * more label, is a brand slug.
  *
- * Configurable because it is not settled: the plan says qumo.app is taken
- * and qumo.co.za is the likely answer, and a hostname baked into the code is
- * the kind of thing nobody finds until the certificate is already issued.
+ * `qumo.co.za` in production, registered and ours. It stays configurable
+ * anyway, for two reasons that outlive the question of which domain: a
+ * hostname baked into the code is the kind of thing nobody finds until the
+ * certificate is already issued, and a preview deployment on a root
+ * somebody else owns needs to be told so.
  * `localhost` is the default so a checkout with no .env still runs, and
  * because *.localhost resolves to 127.0.0.1 in every current browser, which
- * makes chicken-licken.localhost:3000 a working local brand host with no
+ * makes copper-kettle.localhost:3000 a working local brand host with no
  * hosts-file editing.
  */
 export const ROOT_DOMAIN = process.env.NEXT_PUBLIC_QUMO_ROOT_DOMAIN?.toLowerCase() || "localhost";
@@ -107,7 +109,7 @@ export function isValidBrandSlug(slug: string): boolean {
  * no brand. Callers decide what to do about it (app/(shopper)/no-brand).
  *
  * Deliberately strict. Only a host that is *exactly* one label deeper than
- * the root domain resolves, so `evil.chicken-licken.qumo.co.za` - which an
+ * the root domain resolves, so `evil.copper-kettle.qumo.co.za` - which an
  * attacker with a wildcard record beneath their own name could otherwise
  * arrange - does not.
  */

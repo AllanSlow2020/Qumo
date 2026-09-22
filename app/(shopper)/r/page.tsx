@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireBrand } from "@/lib/brand/current";
 import { getConsumerSession } from "@/lib/consumer/session";
+import { needsAgeStep } from "@/lib/consumer/age-check";
 import { formatLedgerAmount } from "@/lib/consumer/wallet";
 import { redeemReceipt, RECEIPT_FAILURE_MESSAGES } from "@/lib/stores/receipt";
 import { BrandHeader } from "../brand-header";
@@ -43,6 +44,14 @@ export default async function ReceiptScanPage({
   // brand inside redeemReceipt. A slip from another brand is refused before
   // anything is awarded rather than rendered under the wrong header.
   const brand = await requireBrand();
+
+  // Same step as the pack path, for the same reason: ask the question
+  // before anything is spent answering it. A slip survives the round trip,
+  // so the whole query string goes along and comes back.
+  if (await needsAgeStep(brand.id, personId)) {
+    redirect(`/wallet/age?next=${encodeURIComponent(`/r?${params.toString()}`)}`);
+  }
+
   const result = await redeemReceipt(params, personId, new Date(), brand.id);
 
   if (!result.ok) {
