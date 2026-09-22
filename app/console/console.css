@@ -50,7 +50,7 @@
  *
  * Note what did NOT change: the shopper surface. It stays brand-led, and
  * light or dark by the shopper's own setting, because the whole premise is
- * that a customer is dealing with Chicken Licken rather than with us.
+ * that a customer is dealing with Copper Kettle rather than with us.
  * The `.cn-preview-*` and `.cn-prev-*` blocks near the bottom of this file
  * simulate that shopper surface inside the console, which is exactly why
  * they hardcode white and near-black and must not be retheemed with the

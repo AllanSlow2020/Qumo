@@ -171,7 +171,7 @@ export function IdentityForm({ brand }: { brand: BrandIdentity }) {
             name="tagline"
             className="cn-input"
             maxLength={120}
-            placeholder="Soul food rewards"
+            placeholder="Good food, worth coming back for"
             value={tagline}
             onChange={(e) => setTagline(e.target.value)}
           />

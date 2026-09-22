@@ -274,7 +274,7 @@ async function handleBalance(person: Person): Promise<string> {
   // The difference is the medium rather than the entitlement. A wallet page
   // is behind a one-time code and closes when they leave it; an SMS sits in
   // an inbox on a handset that in this market is frequently shared,
-  // borrowed or handed to a child. "R240 with Chicken Licken" tells a reader
+  // borrowed or handed to a child. "R240 with Copper Kettle" tells a reader
   // an amount. A list of scans tells them which shops somebody used and
   // when, which is a movement record and not what was asked for. The full
   // history stays one authenticated tap away at /wallet.

@@ -14,7 +14,7 @@
  * ── Why SVG is refused ───────────────────────────────────────────────────
  *
  * SVG is a document, not a picture: it can carry <script>, event handlers
- * and external references. Serving one from chicken-licken.qumo.co.za means
+ * and external references. Serving one from copper-kettle.qumo.co.za means
  * running whatever it contains on the origin that holds that brand's
  * shopper sessions - a stored cross-site scripting hole with a file picker
  * in front of it. It could be sandboxed with headers, or served from a

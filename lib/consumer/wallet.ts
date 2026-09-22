@@ -38,7 +38,7 @@ export type BrandWallet = {
  * membership is created by a first scan, not by signing up.
  *
  * `brandId` narrows it to one, which is what every shopper-facing screen
- * now passes: a shopper on chicken-licken.qumo.co.za is on Chicken Licken's
+ * now passes: a shopper on copper-kettle.qumo.co.za is on Copper Kettle's
  * site and should not be shown that they also drink Campari. The unfiltered
  * form survives for the one caller entitled to the whole picture - the
  * shopper's own data export, where withholding it would answer a different

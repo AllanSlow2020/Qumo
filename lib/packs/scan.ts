@@ -225,8 +225,8 @@ export async function redeemPackCode(
    * Optional because not every carrier asserts one: an SMS arrives with a
    * code and a phone number and no host at all, and there is nothing to
    * cross-check. When a carrier does assert a brand it has to agree with the
-   * code, so a hand-crafted chicken-licken.qumo.co.za/s/<campari-code> is
-   * refused rather than rendering a Campari award under a Chicken Licken
+   * code, so a hand-crafted copper-kettle.qumo.co.za/s/<campari-code> is
+   * refused rather than rendering a Campari award under a Copper Kettle
    * header.
    *
    * Worth being precise about what this is and is not. It is not what keeps

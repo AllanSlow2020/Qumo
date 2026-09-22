@@ -4,7 +4,7 @@ Everything below is one afternoon and, apart from a domain, no money. It
 gets you two working addresses on real HTTPS:
 
 ```
-chicken-licken.qumo.co.za    the shopper's site
+copper-kettle.qumo.co.za    the shopper's site
 app.qumo.co.za               the brand console
 ```
 
@@ -31,7 +31,7 @@ The nightly cleanup job also fits: Hobby allows cron, once a day, and
 **Vercel's free plan is not licensed for this.** Hobby is
 non-commercial-personal-use only, and Vercel defines commercial broadly -
 any deployment used for the financial gain of anyone involved in producing
-it. Showing Qumo to Chicken Licken in order to win their business is
+it. Showing Qumo to a prospective client in order to win their business is
 commercial by that definition. Nobody will stop you deploying, and I am not
 going to pretend the risk is dramatic; but it is their platform and their
 rule, so you should choose it knowingly rather than find out later. Pro is
@@ -100,7 +100,7 @@ You can skip this step entirely and still get a working shopper site.
 Vercel gives every project a `<project-name>.vercel.app` hostname, and Qumo
 reads the brand from the label to the left of the root domain - so name the
 project after the brand's slug, set `NEXT_PUBLIC_QUMO_ROOT_DOMAIN` to
-`vercel.app`, and `chicken-licken.vercel.app` resolves correctly.
+`vercel.app`, and `copper-kettle.vercel.app` resolves correctly.
 
 One brand, and no console: the console lives at `app.{root}`, and
 `app.vercel.app` is not yours to claim. Run the console locally against the
@@ -179,7 +179,7 @@ pnpm dlx vercel env pull .env --environment=production
 It writes `[SENSITIVE]` in place of anything saved as Secret, which is the
 tell that a value was typed into the wrong box. It also writes a handful of
 Vercel's own variables and sets `NEXT_PUBLIC_QUMO_ROOT_DOMAIN` to the
-production domain, which will stop `chicken-licken.localhost:3000` working
+production domain, which will stop `copper-kettle.localhost:3000` working
 - so keep this `.env` for pointing at production, and run `pnpm bootstrap`
 to get a local one back.
 
@@ -307,8 +307,8 @@ secret before storing it - and `demo` needs `PHONE_HASH_SECRET` as well,
 for the members it creates. Both must be the same values the live site
 uses, which is the whole reason they are Config rather than Secret above.
 
-That gives you Chicken Licken with five stores, 280 members and three
-months of activity, at `https://chicken-licken.qumo.co.za`, and a console
+That gives you Copper Kettle with five stores, 280 members and three
+months of activity, at `https://copper-kettle.qumo.co.za`, and a console
 login at `https://app.qumo.co.za`.
 
 **Change the console password immediately.** The seed sets a known one, and
@@ -338,11 +338,11 @@ cannot mint its own slips. Two ways round it, both fine:
 
   ```bash
   DATABASE_URL="<the pooled Neon string>" \
-  QUMO_TILL_ORIGIN="https://chicken-licken.qumo.co.za" \
+  QUMO_TILL_ORIGIN="https://copper-kettle.qumo.co.za" \
   pnpm dev
   ```
 
-  Open `http://chicken-licken.localhost:3000/dev/till`, print a slip, scan
+  Open `http://copper-kettle.localhost:3000/dev/till`, print a slip, scan
   the QR with your phone. The slip is signed with that store's real secret,
   read from the production database, so the deployed site accepts it - the
   till is standing in for a point of sale, which is exactly what it is for;

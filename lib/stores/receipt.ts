@@ -9,7 +9,7 @@ import { parseReceiptPayload, signingMessage, verifySignature } from "./payload"
 
 /**
  * Redeeming a scanned till slip - the shopper-facing half of the
- * Chicken Licken path.
+ * Copper Kettle path.
  *
  * Three defences, and it is worth being clear which one does what, because
  * only two of them are always available:

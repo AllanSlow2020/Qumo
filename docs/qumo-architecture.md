@@ -57,7 +57,7 @@ The whole earn spine exists and is sound:
 | Phone hashing + encryption | `lib/security/crypto.ts` | Keep. |
 | Consent capture, versioned per channel | `lib/consumer/consent.ts` | Keep the mechanism; the copy needs rewriting for brand-first. |
 | Receipt QR verification (signed + unsigned) | `lib/stores/payload.ts`, `receipt.ts` | Keep, **but see the security fix in §5**. |
-| Unique single-use codes | `lib/packs/*` | Keep - this is the Campari sticker path. |
+| Unique single-use codes | `lib/packs/*` | Keep - this is the on-pack sticker path. |
 | Serializable transaction discipline | throughout | Keep. |
 
 ## 3. What was built on the wrong assumption
@@ -66,7 +66,7 @@ Honest list. Some of this is mine to own.
 
 **a) The shopper sees "Qumo", not the brand.** Every shopper screen renders a
 Qumo wordmark; the brand is a line of text inside a card. Your description has
-it the other way round - the page *is* Chicken Licken's. **`Brand` has no
+it the other way round - the page *is* Copper Kettle's. **`Brand` has no
 theming fields at all**: no logo, no colour, no subdomain. This is the single
 biggest gap and it is the reskin requirement.
 
@@ -110,7 +110,7 @@ behaviour.
 
 ```
                     ┌─────────────────────────────┐
-  chickenlicken.    │   Consumer web (multi-       │
+  copperkettle.    │   Consumer web (multi-       │
   qumo.co.za   ────▶│   tenant by subdomain)       │
   campari.qumo.co.za│   Brand-themed. Join, earn,  │
                     │   balance, opt out.          │
@@ -131,9 +131,9 @@ behaviour.
 
 ### Identity: shared Person, brand-scoped view
 
-One `Person` per phone number. On `chicken-licken.qumo.co.za` they see Chicken
-Licken and nothing else - enforced by `forBrand`/`forPerson`, which already
-work. A shopper who later scans a Campari poster is **recognised by phone and
+One `Person` per phone number. On `copper-kettle.qumo.co.za` they see Copper
+Kettle and nothing else - enforced by `forBrand`/`forPerson`, which already
+work. A shopper who later scans another brand's poster is **recognised by phone and
 needs one tap to opt in**, not a second registration.
 
 Brands never see across. Any cross-brand view is Qumo's alone and needs its own
@@ -148,7 +148,7 @@ lawful basis before it is ever built.
 a session on one brand's site does not automatically carry to another -
 correct isolation, and the "one tap to opt in" recognition happens by phone at
 sign-in rather than by a shared cookie. That is visible rather than theoretical:
-sign in at `chicken-licken.…`, open `campari.…` in the same browser, and you
+sign in at `copper-kettle.…`, open `campari.…` in the same browser, and you
 get a login page.
 
 The apex is deliberately not a brand. Nor is `www`, nor any of a reserved list
@@ -161,7 +161,7 @@ and, more importantly, means no page component runs without a brand.
 **The root domain is configuration, not a constant** -
 `NEXT_PUBLIC_QUMO_ROOT_DOMAIN`, read at build time because the proxy is
 compiled into the Edge runtime. It defaults to `localhost`, which makes
-`chicken-licken.localhost:3000` a working local brand host with no hosts-file
+`copper-kettle.localhost:3000` a working local brand host with no hosts-file
 editing. The domain is settled - `qumo.co.za`, registered - and the setting
 stays because a preview deployment on a root somebody else owns still needs
 to be told what its root is.
@@ -199,7 +199,7 @@ check is a parameter on the engine call rather than a rule in the page, because
 not every carrier asserts a brand: an SMS arrives with a code and a phone
 number and no host at all, and the absence of a claim is not a mismatched one.
 
-Custom domains (`rewards.chickenlicken.co.za`) become a later upsell without
+Custom domains (`rewards.copperkettle.co.za`) become a later upsell without
 changing the model.
 
 **One thing deliberately not narrowed.** The data export still spans every
@@ -274,9 +274,9 @@ good enough, and it is a far better moment than typing a code.
 
 iPhone XS and later read tags in the background with no app, but only with
 the screen on and unlocked; older iPhones need the Control Centre widget;
-plenty of people have NFC switched off entirely. For Chicken Licken's
-customer base "my phone doesn't do that" is a common outcome, not an edge
-case, and a shopper who cannot tap must never be stuck.
+plenty of people have NFC switched off entirely. Across a mass-market South
+African customer base "my phone doesn't do that" is a common outcome, not an
+edge case, and a shopper who cannot tap must never be stuck.
 
 #### The operational risk that has no software fix
 
@@ -378,10 +378,10 @@ unknown number gets a join instruction, never a silently created account.
 
 **SMS-to-earn, not just SMS-to-check.** The slip already carries a unique
 transaction code. Printing it as text beside the QR -
-*"No data? SMS `CL 8842315` to 33xxx"* - makes the receipt earn with no data,
+*"No data? SMS `CK 8842315` to 33xxx"* - makes the receipt earn with no data,
 no smartphone and no app. It is a second door onto `redeemReceipt()`, reusing
 the same store code, single-use constraint and freshness window, not a second
-system. For Chicken Licken's customer base this may matter more than the web
+system. For a mass-market customer base this may matter more than the web
 path. Registration works the same way: an unknown number gets the terms and
 "reply YES to join", which is a better consent record than a tick box.
 
@@ -396,7 +396,7 @@ The channel sends balances only. The entitlement is not in question, the
 medium is: a wallet page sits behind a one-time code and closes when the
 shopper leaves it, while an SMS sits in an inbox on a handset that in this
 market is frequently shared, borrowed or handed to a child. "R240 with
-Chicken Licken" is an amount. A list of scans is a record of which shops
+Copper Kettle" is an amount. A list of scans is a record of which shops
 somebody used and when, which is a different disclosure and not the one that
 was asked for. The full history stays one authenticated tap away.
 
@@ -445,7 +445,7 @@ than a rebuild. Excluded for now because Qumo is staying clear of CIOS.
 `redirect()` inside a server action is resolved against the dev server's own
 origin rather than the host the request arrived on. On a single-domain app
 that difference never shows. Here it silently moved a shopper from
-`chicken-licken.…` to the apex, where there is no brand, and rendered "this
+`copper-kettle.…` to the apex, where there is no brand, and rendered "this
 link needs a brand" under a perfectly correct URL.
 
 Making the redirect absolute did not fix it - the `Location` was right and the
@@ -634,9 +634,11 @@ not scope; the join and wallet paths read no id from the request at all.
 No code.
 
 **Phase B - engine hardening** (in this repo, before extraction; all of it
-moves with the engine). **Pilot is Chicken Licken, so the slip path is what
-gets hardened first**; Campari's sticker path follows once the first is right,
-and shares every fix below:
+moves with the engine). Which path hardens first follows the pilot, and the
+two are genuinely different: **a brand that owns its tills** earns from a
+slip, where the receipt can carry what was actually spent; **a brand that
+owns no till** earns from a unique code under a pack, at a flat amount. Both
+share every fix below:
 - Velocity + per-person caps inside `applyAccrual`
 - Liability caps on `EarnRule`
 - Opt-out on `BrandMembership`, and a data export
@@ -783,7 +785,10 @@ asserting it in a unit test.
 - **Routing** - subdomain per brand, `{slug}.{root}`. The root domain is
   configuration (`NEXT_PUBLIC_QUMO_ROOT_DOMAIN`), not a constant, so the
   unresolved apex does not block anything.
-- **Pilot** - Chicken Licken (slip) first, Campari (sticker) once it's right.
+- **Pilot** - not settled, and the architecture does not depend on it. Both
+  earn paths are built; which one gets hardened first follows whichever brand
+  signs. A brand that owns its point of sale uses the slip path, one that does
+  not uses the on-pack code.
 - **Redemption** - parked.
 - **Cancellation** - freeze earning, honour redemption 60 days.
 - **SSO** - out for now, addable later without touching identity.

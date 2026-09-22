@@ -12,7 +12,7 @@ describe("reading a brand out of a host", () => {
   const ROOT = "qumo.co.za";
 
   it("takes the one label in front of the root domain", () => {
-    expect(brandSlugFromHost("chicken-licken.qumo.co.za", ROOT)).toBe("chicken-licken");
+    expect(brandSlugFromHost("copper-kettle.qumo.co.za", ROOT)).toBe("copper-kettle");
     expect(brandSlugFromHost("campari.qumo.co.za", ROOT)).toBe("campari");
   });
 
@@ -20,8 +20,8 @@ describe("reading a brand out of a host", () => {
     // A browser sends none of these three. A health check, a proxy and a
     // crafted request each send one, and "Brand.Qumo.co.za." must not be a
     // different brand than "brand.qumo.co.za".
-    expect(brandSlugFromHost("Chicken-Licken.Qumo.CO.ZA:443", ROOT)).toBe("chicken-licken");
-    expect(brandSlugFromHost("chicken-licken.qumo.co.za.", ROOT)).toBe("chicken-licken");
+    expect(brandSlugFromHost("Copper-Kettle.Qumo.CO.ZA:443", ROOT)).toBe("copper-kettle");
+    expect(brandSlugFromHost("copper-kettle.qumo.co.za.", ROOT)).toBe("copper-kettle");
   });
 
   it("finds no brand at the apex", () => {
@@ -39,19 +39,19 @@ describe("reading a brand out of a host", () => {
 
   it("refuses a host deeper than one label", () => {
     // The attack this exists for: anyone who controls a domain can point
-    // evil.chicken-licken.example.com at us. Only exactly-one-label-deep
+    // evil.copper-kettle.example.com at us. Only exactly-one-label-deep
     // resolves, so a nested host names no brand rather than the brand whose
     // name it happens to contain.
-    expect(brandSlugFromHost("evil.chicken-licken.qumo.co.za", ROOT)).toBeNull();
+    expect(brandSlugFromHost("evil.copper-kettle.qumo.co.za", ROOT)).toBeNull();
     expect(brandSlugFromHost("a.b.qumo.co.za", ROOT)).toBeNull();
   });
 
   it("refuses a host that is not ours at all", () => {
-    expect(brandSlugFromHost("chicken-licken.evil.com", ROOT)).toBeNull();
+    expect(brandSlugFromHost("copper-kettle.evil.com", ROOT)).toBeNull();
     // The near miss that a naive endsWith() would accept: a domain that
     // merely ends in our name.
     expect(brandSlugFromHost("notqumo.co.za", ROOT)).toBeNull();
-    expect(brandSlugFromHost("chicken-licken.notqumo.co.za", ROOT)).toBeNull();
+    expect(brandSlugFromHost("copper-kettle.notqumo.co.za", ROOT)).toBeNull();
     expect(brandSlugFromHost("197.242.94.1", ROOT)).toBeNull();
     expect(brandSlugFromHost("qumo-git-main.vercel.app", ROOT)).toBeNull();
   });
@@ -66,7 +66,7 @@ describe("reading a brand out of a host", () => {
   it("works on localhost, because that is where it gets developed", () => {
     // *.localhost resolves to 127.0.0.1 in every current browser, so this is
     // a real local brand host and not a test-only fiction.
-    expect(brandSlugFromHost("chicken-licken.localhost:3000", "localhost")).toBe("chicken-licken");
+    expect(brandSlugFromHost("copper-kettle.localhost:3000", "localhost")).toBe("copper-kettle");
     expect(brandSlugFromHost("localhost:3000", "localhost")).toBeNull();
   });
 });
@@ -90,22 +90,22 @@ describe("what a brand is allowed to put on the page", () => {
   });
 
   it("accepts only an absolute https logo", () => {
-    expect(safeLogoUrl("https://cdn.example/licken.svg")).toBe("https://cdn.example/licken.svg");
+    expect(safeLogoUrl("https://cdn.example/mark.svg")).toBe("https://cdn.example/mark.svg");
     // Inert in a modern browser, and still not something to hand to an img.
     expect(safeLogoUrl("javascript:alert(1)")).toBeNull();
     expect(safeLogoUrl("data:image/svg+xml,<svg onload=alert(1)/>")).toBeNull();
     // Not an attack - a mixed-content block, which presents as a brand with
     // no logo and nobody knowing why. Better to fall back deliberately.
-    expect(safeLogoUrl("http://cdn.example/licken.svg")).toBeNull();
+    expect(safeLogoUrl("http://cdn.example/mark.svg")).toBeNull();
     expect(safeLogoUrl("/logo.svg")).toBeNull();
   });
 
   it("falls back to a correct plain page rather than a half-painted one", () => {
     const theme = toBrandTheme({
       id: "b1",
-      slug: "chicken-licken",
-      name: "Chicken Licken Holdings (Pty) Ltd",
-      displayName: "Chicken Licken",
+      slug: "copper-kettle",
+      name: "Copper Kettle Holdings (Pty) Ltd",
+      displayName: "Copper Kettle",
       tagline: null,
       logoUrl: "http://insecure.example/logo.png",
       logoMimeType: null,
@@ -120,7 +120,7 @@ describe("what a brand is allowed to put on the page", () => {
       supportUrl: null,
     });
 
-    expect(theme.name).toBe("Chicken Licken");
+    expect(theme.name).toBe("Copper Kettle");
     expect(theme.logoUrl).toBeNull();
     expect(theme.accent).toBeNull();
     // Ink only means anything against an accent. Kept on its own it would
@@ -132,10 +132,10 @@ describe("what a brand is allowed to put on the page", () => {
   it("overrides only what the brand actually chose", () => {
     const theme = toBrandTheme({
       id: "b1",
-      slug: "chicken-licken",
-      name: "Chicken Licken",
+      slug: "copper-kettle",
+      name: "Copper Kettle",
       displayName: null,
-      tagline: "Soul food since 1981",
+      tagline: "Good food since 1981",
       logoUrl: null,
       logoMimeType: null,
       logoUpdatedAt: null,

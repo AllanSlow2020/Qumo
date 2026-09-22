@@ -20,7 +20,7 @@
  * **The brand's colour marks action and progress. Money is always ink.**
  *
  * The first pass had earned amounts render in the brand accent. That works
- * until the brand is Chicken Licken, whose colour is red - and a column of
+ * until the brand is Copper Kettle, whose colour is red - and a column of
  * red money reads as money lost to anyone who has ever opened a banking
  * app. It is the kind of thing that only shows up when you put a real
  * brand's palette into it.
@@ -135,7 +135,7 @@
   font-weight: 700;
   /* Instrument Sans is narrower than the Inter this was tuned for, and has
      a narrow word space to match. The tracking that gave Inter its
-     tightness ran Instrument's words into each other - "Chicken Licken"
+     tightness ran Instrument's words into each other - "Copper Kettle"
      set as one word. Tracking sits at zero at display sizes and the word
      space is opened slightly instead, which is the pair of adjustments a
      narrower face wants. This is the whole argument for owning the type
@@ -344,7 +344,7 @@
 
 .sc-btn:hover { opacity: 0.85; }
 .sc-btn:disabled {
-  /* Not a faded brand colour: at 32% opacity Chicken Licken's red became a
+  /* Not a faded brand colour: at 32% opacity Copper Kettle's red became a
      pale pink that reads as a rendering fault rather than as "not yet".
      A disabled control is drawn as a control that is off. */
   background: var(--sc-raised);
@@ -502,7 +502,7 @@
 .sc-brandmark {
   display: block;
   /* 30px was tuned against a plain wordmark and is too small for the thing
-     brands actually send: Chicken Licken's is a rooster roundel beside script
+     brands actually send: Copper Kettle's is a rooster roundel beside script
      type, and at 30px the type was unreadable. The binding constraint here
      was never height, it is the width below - the mark must not push the
      theme toggle off a 360px screen. */

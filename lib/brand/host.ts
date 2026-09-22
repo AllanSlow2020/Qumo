@@ -21,7 +21,7 @@
  * somebody else owns needs to be told so.
  * `localhost` is the default so a checkout with no .env still runs, and
  * because *.localhost resolves to 127.0.0.1 in every current browser, which
- * makes chicken-licken.localhost:3000 a working local brand host with no
+ * makes copper-kettle.localhost:3000 a working local brand host with no
  * hosts-file editing.
  */
 export const ROOT_DOMAIN = process.env.NEXT_PUBLIC_QUMO_ROOT_DOMAIN?.toLowerCase() || "localhost";
@@ -109,7 +109,7 @@ export function isValidBrandSlug(slug: string): boolean {
  * no brand. Callers decide what to do about it (app/(shopper)/no-brand).
  *
  * Deliberately strict. Only a host that is *exactly* one label deeper than
- * the root domain resolves, so `evil.chicken-licken.qumo.co.za` - which an
+ * the root domain resolves, so `evil.copper-kettle.qumo.co.za` - which an
  * attacker with a wildcard record beneath their own name could otherwise
  * arrange - does not.
  */

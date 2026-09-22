@@ -24,7 +24,7 @@ describe("what a shopper can do with their own data", () => {
   }
 
   beforeAll(async () => {
-    brandA = await prisma.brand.create({ data: { name: "Licken", slug: `rights-a-${suffix}` } });
+    brandA = await prisma.brand.create({ data: { name: "Copper Kettle", slug: `rights-a-${suffix}` } });
     brandB = await prisma.brand.create({ data: { name: "Campari", slug: `rights-b-${suffix}` } });
     campaign = await prisma.campaign.create({
       data: { brandId: brandA.id, name: "5% back", status: "ACTIVE" },
@@ -102,13 +102,13 @@ describe("what a shopper can do with their own data", () => {
 
   it("exports every brand, with balances that match the rows beneath them", async () => {
     const data = await exportPerson(me.id);
-    expect(data?.brands.map((b) => b.brand).sort()).toEqual(["Campari", "Licken"]);
+    expect(data?.brands.map((b) => b.brand).sort()).toEqual(["Campari", "Copper Kettle"]);
 
-    const licken = data!.brands.find((b) => b.brand === "Licken")!;
+    const kettle = data!.brands.find((b) => b.brand === "Copper Kettle")!;
     // 425 earned less 100 spent. Derived from the listed rows, never stored,
     // so the summary cannot contradict the detail printed under it.
-    expect(licken.balances).toEqual([{ unit: "CENTS", amount: 325 }]);
-    expect(licken.activity).toHaveLength(2);
+    expect(kettle.balances).toEqual([{ unit: "CENTS", amount: 325 }]);
+    expect(kettle.activity).toHaveLength(2);
   });
 
   it("never exports another person's rows", async () => {
@@ -127,7 +127,7 @@ describe("what a shopper can do with their own data", () => {
     expect(await setOptOut(me.id, brandA.id, true)).toBe(true);
 
     const programmes = await listProgrammes(me.id);
-    expect(programmes.find((p) => p.brandName === "Licken")?.optedOutAt).toBeInstanceOf(Date);
+    expect(programmes.find((p) => p.brandName === "Copper Kettle")?.optedOutAt).toBeInstanceOf(Date);
     expect(programmes.find((p) => p.brandName === "Campari")?.optedOutAt).toBeNull();
   });
 
@@ -135,15 +135,15 @@ describe("what a shopper can do with their own data", () => {
     // The fear that stops people opting out, and it is unfounded by design:
     // withdrawal is a flag, never a deletion.
     const data = await exportPerson(me.id);
-    const licken = data!.brands.find((b) => b.brand === "Licken")!;
-    expect(licken.balances).toEqual([{ unit: "CENTS", amount: 325 }]);
-    expect(licken.optedOut).not.toBeNull();
+    const kettle = data!.brands.find((b) => b.brand === "Copper Kettle")!;
+    expect(kettle.balances).toEqual([{ unit: "CENTS", amount: 325 }]);
+    expect(kettle.optedOut).not.toBeNull();
   });
 
   it("lets them rejoin and find it there", async () => {
     expect(await setOptOut(me.id, brandA.id, false)).toBe(true);
     const programmes = await listProgrammes(me.id);
-    expect(programmes.find((p) => p.brandName === "Licken")?.optedOutAt).toBeNull();
+    expect(programmes.find((p) => p.brandName === "Copper Kettle")?.optedOutAt).toBeNull();
   });
 
   it("refuses to opt somebody else out", async () => {

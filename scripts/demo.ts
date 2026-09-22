@@ -9,7 +9,7 @@ import { generatePackCode } from "../lib/packs/code";
 import { assertLocalDatabase } from "../lib/db/is-local";
 
 /**
- * A Chicken Licken worth showing someone.
+ * A Copper Kettle worth showing someone.
  *
  * `prisma/seed.ts` makes the smallest database the app will run against -
  * two brands, a couple of stores, enough to boot. This makes one that looks
@@ -52,7 +52,7 @@ function dayWeight(date: Date): number {
 }
 
 /** Every promotion this script creates. Anything else on the brand is stale. */
-const CAMPAIGNS = ["5% back", "Wing box sleeve", "Rounds card"];
+const CAMPAIGNS = ["5% back", "Meal deal sleeve", "Rounds card"];
 
 async function main() {
   // This opens by deleting every ledger row, scan and coupon belonging to
@@ -61,9 +61,9 @@ async function main() {
 
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
 
-  const brand = await prisma.brand.findUnique({ where: { slug: "chicken-licken" } });
+  const brand = await prisma.brand.findUnique({ where: { slug: "copper-kettle" } });
   if (!brand) {
-    throw new Error("No chicken-licken brand. Run `pnpm db:seed` first.");
+    throw new Error("No copper-kettle brand. Run `pnpm db:seed` first.");
   }
 
   console.log("clearing previous demo data…");
@@ -83,11 +83,11 @@ async function main() {
   await prisma.brand.update({
     where: { id: brand.id },
     data: {
-      displayName: "Chicken Licken",
-      tagline: "Soul food rewards",
+      displayName: "Copper Kettle",
+      tagline: "Good food, worth coming back for",
       accentColor: "#c8102e",
       accentInkColor: "#ffffff",
-      supportEmail: "rewards@chickenlicken.example",
+      supportEmail: "rewards@copperkettle.example",
       // Reset to Qumo's house style on purpose. Changing the type in the
       // console is one of the better things to actually do in front of a
       // brand, and it only reads as a change if it starts from the default.
@@ -194,7 +194,7 @@ async function main() {
           storeId: store.id,
           brandMembershipId: membership.id,
           campaignId: cashback.id,
-          externalTxnId: `CL-${randomUUID().slice(0, 12)}`,
+          externalTxnId: `CK-${randomUUID().slice(0, 12)}`,
           amountCents: basket,
           wasSigned: store.signingSecretEncrypted !== null,
           purchasedAt: at,
@@ -235,11 +235,11 @@ async function main() {
    * promotion running right now" - which is the guard working, and a seed
    * that had not read it.
    */
-  const existingSleeve = await prisma.campaign.findFirst({ where: { brandId: brand.id, name: "Wing box sleeve" } });
+  const existingSleeve = await prisma.campaign.findFirst({ where: { brandId: brand.id, name: "Meal deal sleeve" } });
   const sleeve = await prisma.campaign.upsert({
     where: { id: existingSleeve?.id ?? "new" },
     update: { status: "ACTIVE" },
-    create: { brandId: brand.id, name: "Wing box sleeve", description: "R5 under every sleeve", status: "ACTIVE" },
+    create: { brandId: brand.id, name: "Meal deal sleeve", description: "R5 under every sleeve", status: "ACTIVE" },
   });
   await prisma.earnRule.upsert({
     where: { campaignId: sleeve.id },
@@ -257,7 +257,7 @@ async function main() {
 
   const owner = await prisma.user.findFirst({ where: { brandId: brand.id, role: "OWNER" } });
   const batch = await prisma.packBatch.create({
-    data: { brandId: brand.id, campaignId: sleeve.id, label: "Wing box sleeves, run 1", quantity: 40, createdByUserId: owner?.id ?? null },
+    data: { brandId: brand.id, campaignId: sleeve.id, label: "Meal deal sleeves, run 1", quantity: 40, createdByUserId: owner?.id ?? null },
   });
   await prisma.packCode.createMany({
     data: Array.from({ length: 40 }, () => ({
@@ -312,9 +312,9 @@ async function main() {
   console.log(`Done. ${MEMBERS} members, ${scans} scans across ${STORES.length} stores, 40 unscanned pack codes.`);
   console.log("");
   console.log("  Console:  http://app.localhost:3000");
-  console.log(`  Sign in:  ${owner?.email ?? "owner@chicken-licken.example"} / qumo-dev-password`);
-  console.log("  Shopper:  http://chicken-licken.localhost:3000/join");
-  console.log("  Till:     http://chicken-licken.localhost:3000/dev/till");
+  console.log(`  Sign in:  ${owner?.email ?? "owner@copper-kettle.example"} / qumo-dev-password`);
+  console.log("  Shopper:  http://copper-kettle.localhost:3000/join");
+  console.log("  Till:     http://copper-kettle.localhost:3000/dev/till");
   console.log("");
 
   await prisma.$disconnect();

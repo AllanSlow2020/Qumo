@@ -33,7 +33,7 @@ describe("running a promotion from the console", () => {
   }
 
   beforeAll(async () => {
-    brand = await prisma.brand.create({ data: { name: "Licken", slug: `camp-a-${suffix}` } });
+    brand = await prisma.brand.create({ data: { name: "Copper Kettle", slug: `camp-a-${suffix}` } });
     otherBrand = await prisma.brand.create({ data: { name: "Campari", slug: `camp-b-${suffix}` } });
   });
 

@@ -59,8 +59,8 @@ describe("lib/brand/fonts", () => {
 describe("a font a brand did not choose", () => {
   const base = {
     id: "b1",
-    slug: "chicken-licken",
-    name: "Chicken Licken",
+    slug: "copper-kettle",
+    name: "Copper Kettle",
     displayName: null,
     tagline: null,
     logoUrl: null,

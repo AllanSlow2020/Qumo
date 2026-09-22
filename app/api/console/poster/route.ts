@@ -15,7 +15,7 @@ import { getStaffSession } from "@/lib/staff/session";
  *
  * The session still matters: it is what says *which brand*, and a route
  * that took a slug from the caller would happily generate Campari's poster
- * for a Chicken Licken login.
+ * for a Copper Kettle login.
  */
 export async function GET(req: Request): Promise<Response> {
   const staff = await getStaffSession();

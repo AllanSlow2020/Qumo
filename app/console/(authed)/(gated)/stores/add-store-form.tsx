@@ -38,7 +38,7 @@ export function AddStoreForm() {
             required
             maxLength={40}
             pattern="[A-Za-z0-9\-]+"
-            placeholder="CL-SANDTON-01"
+            placeholder="CK-SANDTON-01"
           />
           {/* Said at the point of naming, because renaming later is not an
               option once it is printing on receipts. */}

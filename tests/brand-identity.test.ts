@@ -29,7 +29,7 @@ describe("a brand editing its own appearance", () => {
   }
 
   beforeAll(async () => {
-    brand = await prisma.brand.create({ data: { name: "Licken Holdings (Pty) Ltd", slug: `id-a-${suffix}` } });
+    brand = await prisma.brand.create({ data: { name: "Copper Kettle Holdings (Pty) Ltd", slug: `id-a-${suffix}` } });
     other = await prisma.brand.create({ data: { name: "Campari", slug: `id-b-${suffix}` } });
   });
 
@@ -41,8 +41,8 @@ describe("a brand editing its own appearance", () => {
     await updateBrandIdentityForSession(
       owner(brand.id),
       form({
-        displayName: "Chicken Licken",
-        tagline: "Soul food rewards",
+        displayName: "Copper Kettle",
+        tagline: "Good food, worth coming back for",
         accentColor: "#C8102E",
         accentInkColor: "#FFFFFF",
         supportEmail: "rewards@example.invalid",
@@ -50,14 +50,14 @@ describe("a brand editing its own appearance", () => {
     );
 
     const saved = await getBrandIdentity(brand.id);
-    expect(saved?.displayName).toBe("Chicken Licken");
+    expect(saved?.displayName).toBe("Copper Kettle");
     // Normalised on the way in, so the render path never has to care about case.
     expect(saved?.accentColor).toBe("#c8102e");
 
     const theme = toBrandTheme({ id: brand.id, ...saved! });
     // The legal name is what the row holds; the signage name is what a
     // shopper reads.
-    expect(theme.name).toBe("Chicken Licken");
+    expect(theme.name).toBe("Copper Kettle");
     expect(brandStyle(theme)).toEqual({ "--sc-brand-accent": "#c8102e", "--sc-brand-ink": "#ffffff" });
   });
 
@@ -178,7 +178,7 @@ describe("a brand editing its own appearance", () => {
     // Falls back to the registered name, rather than rendering an empty
     // masthead.
     const theme = toBrandTheme({ id: brand.id, ...saved! });
-    expect(theme.name).toBe("Licken Holdings (Pty) Ltd");
+    expect(theme.name).toBe("Copper Kettle Holdings (Pty) Ltd");
   });
 
   it("won't let marketing change the brand's face", async () => {

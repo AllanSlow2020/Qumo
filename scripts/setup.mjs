@@ -200,7 +200,7 @@ say("need no setup:\n");
 // The seed already prints every URL and the console password; echoing its
 // output beats maintaining a second copy that drifts out of date.
 for (const line of seedOutput.split("\n")) {
-  if (line.includes("http://") || line.includes("@chicken-licken")) say(`   ${line.trim()}`);
+  if (line.includes("http://") || line.includes("@copper-kettle")) say(`   ${line.trim()}`);
 }
 
 say("\nSigning in as a shopper needs no SMS account: enter any South African");

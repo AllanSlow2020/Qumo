@@ -16,11 +16,11 @@ function query(fields: Record<string, string>): URLSearchParams {
 
 describe("lib/stores/payload", () => {
   it("parses a well-formed slip", () => {
-    const parsed = parseReceiptPayload(query({ s: "CL-04", t: "884231", c: "8500", d: "1755512582" }));
+    const parsed = parseReceiptPayload(query({ s: "CK-04", t: "884231", c: "8500", d: "1755512582" }));
     expect(typeof parsed).not.toBe("string");
     if (typeof parsed === "string") return;
 
-    expect(parsed.storeCode).toBe("CL-04");
+    expect(parsed.storeCode).toBe("CK-04");
     expect(parsed.externalTxnId).toBe("884231");
     expect(parsed.amountCents).toBe(8500);
     expect(parsed.purchasedAt.getTime()).toBe(1755512582 * 1000);
@@ -28,9 +28,9 @@ describe("lib/stores/payload", () => {
   });
 
   it("upper-cases the store code so a template's casing doesn't matter", () => {
-    const parsed = parseReceiptPayload(query({ s: "cl-04", t: "1", c: "100", d: "1755512582" }));
+    const parsed = parseReceiptPayload(query({ s: "ck-04", t: "1", c: "100", d: "1755512582" }));
     if (typeof parsed === "string") throw new Error(parsed);
-    expect(parsed.storeCode).toBe("CL-04");
+    expect(parsed.storeCode).toBe("CK-04");
   });
 
   it("rejects an amount that isn't purely digits", () => {
@@ -45,9 +45,9 @@ describe("lib/stores/payload", () => {
   it("tolerates whitespace a receipt template might emit", () => {
     // Padding around a substituted field is common in template languages
     // and is not the shopper's problem.
-    const parsed = parseReceiptPayload(query({ s: " CL-04 ", t: " 884231 ", c: " 8500 ", d: " 1755512582 " }));
+    const parsed = parseReceiptPayload(query({ s: " CK-04 ", t: " 884231 ", c: " 8500 ", d: " 1755512582 " }));
     if (typeof parsed === "string") throw new Error(parsed);
-    expect(parsed.storeCode).toBe("CL-04");
+    expect(parsed.storeCode).toBe("CK-04");
     expect(parsed.externalTxnId).toBe("884231");
     expect(parsed.amountCents).toBe(8500);
   });
@@ -72,24 +72,24 @@ describe("lib/stores/payload", () => {
     // A POS vendor implements this from the written spec, not from this
     // code - so the exact string has to be pinned by a test.
     expect(
-      signingMessage({ storeCode: "CL-SANDTON-04", externalTxnId: "884231", amountCents: 8500, purchasedAtUnix: 1755512582 }),
-    ).toBe("CL-SANDTON-04|884231|8500|1755512582");
+      signingMessage({ storeCode: "CK-SANDTON-04", externalTxnId: "884231", amountCents: 8500, purchasedAtUnix: 1755512582 }),
+    ).toBe("CK-SANDTON-04|884231|8500|1755512582");
   });
 
   it("produces a 20-character hex signature", () => {
-    const sig = signReceipt(SECRET, "CL-04|1|100|1755512582");
+    const sig = signReceipt(SECRET, "CK-04|1|100|1755512582");
     expect(sig).toMatch(/^[0-9a-f]{20}$/);
   });
 
   it("verifies a correct signature and rejects a wrong one", () => {
-    const message = "CL-04|1|100|1755512582";
+    const message = "CK-04|1|100|1755512582";
     const sig = signReceipt(SECRET, message);
 
     expect(verifySignature(SECRET, message, sig)).toBe(true);
     expect(verifySignature(SECRET, message, sig.toUpperCase())).toBe(true);
     expect(verifySignature("a-different-secret", message, sig)).toBe(false);
     // The attack the signature exists for: the amount was edited.
-    expect(verifySignature(SECRET, "CL-04|1|10000|1755512582", sig)).toBe(false);
+    expect(verifySignature(SECRET, "CK-04|1|10000|1755512582", sig)).toBe(false);
   });
 
   it("rejects a truncated signature without throwing", () => {
@@ -104,7 +104,7 @@ describe("lib/stores/payload", () => {
     const purchasedAt = new Date("2026-08-18T11:43:02.000Z");
     const url = buildReceiptUrl(
       "https://qumo.test",
-      { storeCode: "CL-04", externalTxnId: "884231", amountCents: 8500, purchasedAt },
+      { storeCode: "CK-04", externalTxnId: "884231", amountCents: 8500, purchasedAt },
       SECRET,
     );
 
@@ -124,7 +124,7 @@ describe("lib/stores/payload", () => {
   it("omits the signature when a store has no key", () => {
     const url = buildReceiptUrl(
       "https://qumo.test",
-      { storeCode: "CL-04", externalTxnId: "1", amountCents: 100, purchasedAt: new Date() },
+      { storeCode: "CK-04", externalTxnId: "1", amountCents: 100, purchasedAt: new Date() },
       null,
     );
     expect(url).not.toContain("&g=");

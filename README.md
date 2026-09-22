@@ -15,7 +15,7 @@ deployment. Two commands, then a browser.
 
 ```bash
 pnpm bootstrap     # database, secrets, schema - safe to re-run
-pnpm demo          # a Chicken Licken worth looking at
+pnpm demo          # a brand worth looking at
 pnpm dev
 ```
 
@@ -28,9 +28,9 @@ codes. It clears its own rows first, so run it as often as you like.
 
 | | |
 |---|---|
-| **Shopper** | http://chicken-licken.localhost:3000 |
-| **Console** | http://app.localhost:3000 - `owner@chicken-licken.example` / `qumo-dev-password` |
-| **Till** | http://chicken-licken.localhost:3000/dev/till |
+| **Shopper** | http://copper-kettle.localhost:3000 |
+| **Console** | http://app.localhost:3000 - `owner@copper-kettle.example` / `qumo-dev-password` |
+| **Till** | http://copper-kettle.localhost:3000/dev/till |
 
 `*.localhost` resolves to your own machine in every current browser, so
 there is nothing to add to `/etc/hosts`.
@@ -56,7 +56,7 @@ there is nothing to add to `/etc/hosts`.
 
 ### Using a phone
 
-`chicken-licken.localhost` means nothing to a phone, and Qumo resolves the
+`copper-kettle.localhost` means nothing to a phone, and Qumo resolves the
 brand from the subdomain, so a bare IP will not do. `nip.io` solves it with
 no code and no configuration - it resolves any `<anything>.<ip>.nip.io` to
 that IP.
@@ -66,7 +66,7 @@ ipconfig getifaddr en0                       # macOS, e.g. 192.168.1.42
 NEXT_PUBLIC_QUMO_ROOT_DOMAIN=192.168.1.42.nip.io pnpm dev
 ```
 
-Then browse to `http://chicken-licken.192.168.1.42.nip.io:3000` from the
+Then browse to `http://copper-kettle.192.168.1.42.nip.io:3000` from the
 phone, on the same wifi. The till's QR codes will point there too, so they
 scan properly.
 
@@ -185,7 +185,7 @@ The seed prints the addresses to open. They look odd and they are correct:
 
 | | |
 |---|---|
-| `chicken-licken.localhost:3000` | a brand's shopper site |
+| `copper-kettle.localhost:3000` | a brand's shopper site |
 | `campari.localhost:3000` | a second brand, to see the reskin |
 | `app.localhost:3000` | the brand console |
 | `localhost:3000` | the apex, which belongs to no brand |
@@ -203,7 +203,7 @@ running `pnpm dev`, on a line reading `sms (simulated) send`. Copy the six
 digits from it.
 
 **As a brand**, open `app.localhost:3000` and use the credentials the seed
-printed: `owner@chicken-licken.example` / `qumo-dev-password`.
+printed: `owner@copper-kettle.example` / `qumo-dev-password`.
 
 ### What is worth trying
 
@@ -213,7 +213,7 @@ Roughly in the order the product happens:
    one on your phone-sized browser window and follow it through sign-up. Then
    open the *same* URL again - it should show you what you earned, not an
    error.
-2. **Try the poster.** `chicken-licken.localhost:3000/join` explains what is
+2. **Try the poster.** `copper-kettle.localhost:3000/join` explains what is
    running and takes an opt-in. It never awards anything, deliberately.
 3. **Open the console** and look at Overview. The outstanding figure is what
    the brand owes its shoppers, summed from the ledger.
@@ -247,7 +247,7 @@ database you are developing on.
 - **"Can't reach database server"** - Postgres isn't running, or
   `DATABASE_URL` doesn't match how you installed it.
 - **Every page says "this link needs a brand"** - you are on `localhost:3000`
-  rather than a brand subdomain. Use `chicken-licken.localhost:3000`.
+  rather than a brand subdomain. Use `copper-kettle.localhost:3000`.
 - **The login passcode never appears** - check `TWILIO_*` are empty in `.env`,
   and look at the terminal running `pnpm dev` rather than the browser.
 - **A slip says it has already been scanned** - they are single-use. Re-run

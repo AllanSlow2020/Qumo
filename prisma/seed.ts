@@ -30,7 +30,7 @@ const SIGNING_SECRET = "dev-only-store-signing-secret-not-for-production-use";
  * claim of Phase D is "same mechanic, different brands, all we do is
  * reskin", and a seed with one brand in it proves nothing about that.
  *
- * The slug is the subdomain: chicken-licken.localhost:3000 and
+ * The slug is the subdomain: copper-kettle.localhost:3000 and
  * campari.localhost:3000 both work with no hosts-file editing, because
  * *.localhost resolves to 127.0.0.1 in every current browser.
  *
@@ -39,10 +39,10 @@ const SIGNING_SECRET = "dev-only-store-signing-secret-not-for-production-use";
  */
 const BRANDS = [
   {
-    slug: "chicken-licken",
-    name: "Chicken Licken",
+    slug: "copper-kettle",
+    name: "Copper Kettle",
     displayName: null,
-    tagline: "Soul food rewards",
+    tagline: "Good food, worth coming back for",
     accentColor: "#c8102e",
     accentInkColor: "#ffffff",
     supportEmail: "rewards@example.invalid",
@@ -116,7 +116,7 @@ async function main() {
     create: {
       id: "seed-campaign-stamps",
       brandId: brand.id,
-      name: "Wing box stamp card",
+      name: "Meal deal stamp card",
       status: "ACTIVE",
     },
   });
@@ -138,19 +138,19 @@ async function main() {
   // operational fact about this product: one has a point of sale that can
   // sign its slips and one does not.
   const signed = await prisma.store.upsert({
-    where: { code: "CL-SANDTON-01" },
+    where: { code: "CK-SANDTON-01" },
     update: {},
     create: {
       brandId: brand.id,
       name: "Sandton City",
-      code: "CL-SANDTON-01",
+      code: "CK-SANDTON-01",
       signingSecretEncrypted: encryptSecret(SIGNING_SECRET),
     },
   });
   const unsigned = await prisma.store.upsert({
-    where: { code: "CL-ROSEBANK-02" },
+    where: { code: "CK-ROSEBANK-02" },
     update: {},
-    create: { brandId: brand.id, name: "Rosebank", code: "CL-ROSEBANK-02" },
+    create: { brandId: brand.id, name: "Rosebank", code: "CK-ROSEBANK-02" },
   });
 
   // The brand's own host, not the apex. A slip URL that pointed at
@@ -161,11 +161,11 @@ async function main() {
   // with a real credential.
   const staffPassword = "qumo-dev-password";
   await prisma.user.upsert({
-    where: { email: "owner@chicken-licken.example" },
+    where: { email: "owner@copper-kettle.example" },
     update: { passwordHash: await hashPassword(staffPassword), isActive: true },
     create: {
       brandId: brand.id,
-      email: "owner@chicken-licken.example",
+      email: "owner@copper-kettle.example",
       name: "Thandi Mokoena",
       role: "OWNER",
       passwordHash: await hashPassword(staffPassword),
@@ -198,7 +198,7 @@ async function main() {
   console.log("  The apex, which names no brand:            http://localhost:3000/wallet");
   console.log(`\n  Poster / tag (joins, never awards):  ${origin}/join`);
   console.log(`\n  Brand console:  http://${CONSOLE_SUBDOMAIN}.localhost:3000`);
-  console.log(`    owner@chicken-licken.example / ${staffPassword}\n`);
+  console.log(`    owner@copper-kettle.example / ${staffPassword}\n`);
 }
 
 main()

@@ -73,7 +73,7 @@ describe("a brand that asks for an age", () => {
     restricted = await prisma.brand.create({
       data: { name: "Campari", slug: `age-on-${suffix}`, minimumAge: 18 },
     });
-    open = await prisma.brand.create({ data: { name: "Chicken Licken", slug: `age-off-${suffix}` } });
+    open = await prisma.brand.create({ data: { name: "Copper Kettle", slug: `age-off-${suffix}` } });
 
     for (const [brand, holder] of [[restricted, "campaign"], [open, "openCampaign"]] as const) {
       const made = await prisma.campaign.create({

@@ -93,10 +93,10 @@ describe("a brand uploading its logo", () => {
     return fd;
   }
 
-  const base = { displayName: "Chicken Licken", accentColor: "#C8102E", accentInkColor: "#FFFFFF" };
+  const base = { displayName: "Copper Kettle", accentColor: "#C8102E", accentInkColor: "#FFFFFF" };
 
   beforeAll(async () => {
-    brand = await prisma.brand.create({ data: { name: "Licken Holdings (Pty) Ltd", slug: `logo-${suffix}` } });
+    brand = await prisma.brand.create({ data: { name: "Copper Kettle Holdings (Pty) Ltd", slug: `logo-${suffix}` } });
   });
 
   afterAll(async () => {

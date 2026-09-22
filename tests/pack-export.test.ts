@@ -37,7 +37,7 @@ describe("exporting a print run", () => {
 
   beforeAll(async () => {
     brand = await prisma.brand.create({ data: { name: "Campari", slug: `exp-a-${suffix}` } });
-    otherBrand = await prisma.brand.create({ data: { name: "Licken", slug: `exp-b-${suffix}` } });
+    otherBrand = await prisma.brand.create({ data: { name: "Copper Kettle", slug: `exp-b-${suffix}` } });
 
     staff = await prisma.user.create({
       data: {

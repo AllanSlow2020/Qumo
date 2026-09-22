@@ -10,7 +10,7 @@ import { smallestTagFor, TAG_CAPACITY, tagBytes } from "@/lib/packs/nfc";
  * first time the URL shape changes.
  */
 describe("what a pack code costs on an NFC tag", () => {
-  const url = "https://chicken-licken.qumo.co.za/s/7XQP928KM3RT";
+  const url = "https://copper-kettle.qumo.co.za/s/7XQP928KM3RT";
 
   it("charges one byte for https:// rather than eight", () => {
     // The saving is the one non-obvious thing about NDEF sizing, and it is

@@ -72,7 +72,7 @@ describe("joining from a poster", () => {
   }
 
   beforeAll(async () => {
-    brand = await prisma.brand.create({ data: { name: "Licken", slug: `join-a-${suffix}` } });
+    brand = await prisma.brand.create({ data: { name: "Copper Kettle", slug: `join-a-${suffix}` } });
     otherBrand = await prisma.brand.create({ data: { name: "Campari", slug: `join-b-${suffix}` } });
 
     for (const [b, bp] of [

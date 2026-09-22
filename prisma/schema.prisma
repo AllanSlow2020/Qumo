@@ -20,8 +20,8 @@
 // and the tenant boundary - a brand only ever reaches a Person through a
 // membership it is authorised to see, and never lists that person's other
 // memberships. On a brand-scoped site that is not just a privacy control,
-// it is the product: a shopper on chickenlicken.qumo.co.za sees Chicken
-// Licken and nothing else.
+// it is the product: a shopper on copperkettle.qumo.co.za sees Copper
+// Kettle and nothing else.
 
 generator client {
   provider = "prisma-client-js"
@@ -87,7 +87,7 @@ model Brand {
 
   /// Identity and address in one field, which is a decision worth stating.
   ///
-  /// The slug is the subdomain: chicken-licken.qumo.co.za. Splitting them
+  /// The slug is the subdomain: copper-kettle.qumo.co.za. Splitting them
   /// would let a brand have a prettier host than their internal key, and it
   /// would also give us two values to keep in step for a benefit nobody has
   /// asked for. A prettier host is the custom-domain upsell, and that gets
@@ -164,7 +164,7 @@ model Brand {
   /// The single colour that carries the identity, and the ink that stays
   /// legible on it. Two fields rather than one because contrast is a
   /// judgement about the brand's own palette; deriving it from luminance
-  /// gets Chicken Licken's red wrong in exactly the case that matters.
+  /// gets Copper Kettle's red wrong in exactly the case that matters.
   ///
   /// Stored as #rrggbb. These reach a style attribute, so they are matched
   /// against a strict pattern before they go anywhere near CSS.
@@ -174,7 +174,7 @@ model Brand {
   /// The same pair again, for when the shopper is reading in dark mode.
   ///
   /// One accent used in both themes was the original design and it is wrong
-  /// for exactly the brand this was built for. Chicken Licken's red is a
+  /// for exactly the brand this was built for. Copper Kettle's red is a
   /// deep, warm #c8102e that sits confidently on white and goes muddy and
   /// low-contrast on near-black, where the same identity wants to be lifted
   /// a few points. A brand cannot fix that with one field, and deriving the
@@ -478,7 +478,7 @@ model ShopperSession {
 }
 
 // Brand-agnostic identity, and the reason a shopper who has scanned a
-// Chicken Licken slip is recognised at a Campari sticker without
+// Copper Kettle slip is recognised at a Campari sticker without
 // registering twice.
 //
 // phoneHash is a deterministic HMAC, so a sign-in or an inbound SMS resolves
@@ -583,7 +583,7 @@ model BrandMembership {
 }
 
 enum PointsReason {
-  // A share of a purchase, from a scanned till slip. The Chicken Licken
+  // A share of a purchase, from a scanned till slip. The Copper Kettle
   // path: the brand owns the point of sale, so the receipt can carry what
   // was actually spent and the award scales with it.
   PURCHASE_ACCRUAL

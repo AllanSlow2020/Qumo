@@ -13,11 +13,11 @@ import { joinUrl, posterQrSvg } from "@/lib/brand/poster";
  * without buying is only safe while it is worthless.
  */
 describe("the poster QR", () => {
-  const origin = brandOrigin("chicken-licken");
+  const origin = brandOrigin("copper-kettle");
 
   it("sends a scan to the brand's join page", () => {
     expect(joinUrl(origin)).toBe(`${origin}/join`);
-    expect(joinUrl(origin)).toContain("chicken-licken.");
+    expect(joinUrl(origin)).toContain("copper-kettle.");
   });
 
   it("never points at a route that awards", () => {
@@ -60,7 +60,7 @@ describe("the poster QR", () => {
   });
 
   it("gives two brands two different posters", async () => {
-    const ours = await posterQrSvg(brandOrigin("chicken-licken"));
+    const ours = await posterQrSvg(brandOrigin("copper-kettle"));
     const theirs = await posterQrSvg(brandOrigin("campari"));
 
     // Obvious, and the failure it guards against is not: a poster generated
