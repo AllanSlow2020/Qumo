@@ -33,5 +33,6 @@ AGENTS.md
 CLAUDE.md
 
 # deck build output
-deck/Qumo.pptx
+deck/*.pptx
 deck/*.pdf
+__pycache__/

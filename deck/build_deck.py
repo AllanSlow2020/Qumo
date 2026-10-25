@@ -1,283 +1,22 @@
 """
-The Qumo deck.
+The Qumo product overview: 23 slides, generated rather than drawn.
 
-Run it and a 24-slide pptx comes out. The point of it being code rather than
-a file somebody drags boxes around in is that the deck is regenerated from
-the product: every screenshot is a live render captured by capture.mjs, so
-the deck cannot quietly drift from what the thing actually does.
+Run it and a pptx comes out. The point of it being code is that the deck is
+regenerated from the product: every screenshot is a live render captured by
+capture.mjs, so the deck cannot quietly drift from what the thing does.
 
     python3 deck/build_deck.py [output.pptx]
 
-See README.md in this directory for the full sequence, including how the
-screens are captured first.
-
-── The house style ──────────────────────────────────────────────────────
-
-Dark. Background #0D0E11, cards #16181C on #282B31 borders, one blue, and
-a monospace for anything that labels rather than reads. The palette was
-sampled from the original deck rather than guessed at, which is why the
-values look arbitrary: they are measured, not chosen.
-
-Light UI screenshots sit on light panels. Dropping a white screenshot
-straight onto black reads as a hole in the slide.
+The palette, geometry and drawing primitives live in style.py, shared with
+the other decks here. See README.md for the full sequence.
 """
 import sys
-from pptx import Presentation
-from pptx.util import Inches, Pt, Emu
-from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
-from PIL import Image
 import os
+from style import *  # noqa: F403 - a deck is a drawing script, not a library
+import style
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-SHOTS, ART = os.path.join(HERE, "shots"), os.path.join(HERE, "art")
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "Qumo.pptx")
-
-BG     = RGBColor(0x0D, 0x0E, 0x11)
-CARD   = RGBColor(0x16, 0x18, 0x1C)
-LINE   = RGBColor(0x28, 0x2B, 0x31)
-ACCENT = RGBColor(0x25, 0x63, 0xEB)
-INK    = RGBColor(0xFF, 0xFF, 0xFF)
-BODY   = RGBColor(0xC4, 0xCA, 0xD3)
-MUTED  = RGBColor(0x8A, 0x90, 0x9B)
-FOOT   = RGBColor(0x6A, 0x70, 0x80)
-WARN   = RGBColor(0xFF, 0x6B, 0x7F)
-PANEL  = RGBColor(0xF2, 0xF2, 0xF4)
-
-SANS, MONO = "Arial", "Consolas"
-W, H = Inches(13.333), Inches(7.5)
-M = Inches(0.85)
-RIGHT = Inches(12.49)
-CONTENT = RIGHT - M
-RULE_Y = Inches(6.90)
-DECK = "Product overview"
-
-prs = Presentation()
-prs.slide_width, prs.slide_height = W, H
-BLANK = prs.slide_layouts[6]
-_page = {"n": 0}
-TOTAL = 24
-
-
-# ---------------- primitives ----------------
-
-def slide():
-    s = prs.slides.add_slide(BLANK)
-    bg = s.shapes.add_shape(1, 0, 0, W, H)
-    bg.fill.solid(); bg.fill.fore_color.rgb = BG
-    bg.line.fill.background(); bg.shadow.inherit = False
-    return s
-
-
-def text(s, txt, x, y, w, h, size=13, bold=False, colour=BODY, font=SANS,
-         align=PP_ALIGN.LEFT, spacing=1.5, spc=None, anchor=MSO_ANCHOR.TOP):
-    tb = s.shapes.add_textbox(x, y, w, h)
-    tf = tb.text_frame
-    tf.word_wrap = True
-    tf.vertical_anchor = anchor
-    tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
-    for i, line in enumerate(txt.split("\n")):
-        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
-        p.alignment = align
-        p.line_spacing = spacing
-        r = p.add_run(); r.text = line
-        r.font.size = Pt(size); r.font.bold = bold
-        r.font.name = font; r.font.color.rgb = colour
-        if spc:
-            # Letter-spacing, which python-pptx does not expose. The tracked
-            # out mono labels look wrong without it.
-            r.font._rPr.set("spc", str(int(spc * 100)))
-    return tb
-
-
-def box(s, x, y, w, h, fill=CARD, border=LINE, radius=0.045):
-    sh = s.shapes.add_shape(5, x, y, w, h)
-    sh.fill.solid(); sh.fill.fore_color.rgb = fill
-    if border is None:
-        sh.line.fill.background()
-    else:
-        sh.line.color.rgb = border; sh.line.width = Pt(1)
-    sh.shadow.inherit = False
-    sh.adjustments[0] = radius
-    return sh
-
-
-def hline(s, x, y, w, colour=LINE, thick=Emu(9525)):
-    sh = s.shapes.add_shape(1, x, y, w, thick)
-    sh.fill.solid(); sh.fill.fore_color.rgb = colour
-    sh.line.fill.background(); sh.shadow.inherit = False
-
-
-def logo(s, x, y, h, variant="white"):
-    path = os.path.join(ART, f"qumo-{variant}.png")
-    iw, ih = Image.open(path).size
-    s.shapes.add_picture(path, x, y, height=h, width=Emu(int(h * iw / ih)))
-
-
-def masthead(s):
-    logo(s, M, Inches(0.40), Inches(0.21))
-    text(s, DECK, M + Inches(0.68), Inches(0.41), Inches(4), Inches(0.24),
-         size=10.5, colour=MUTED, spacing=1.0)
-
-
-def footer(s):
-    _page["n"] += 1
-    hline(s, M, RULE_Y, CONTENT)
-    text(s, "Qumo  ·  indicative, for discussion", M, RULE_Y + Inches(0.12),
-         Inches(8), Inches(0.24), size=8, colour=FOOT, font=MONO, spacing=1.0)
-    text(s, f"{_page['n']:02d} / {TOTAL}", RIGHT - Inches(2), RULE_Y + Inches(0.12),
-         Inches(2), Inches(0.24), size=8, colour=FOOT, font=MONO,
-         align=PP_ALIGN.RIGHT, spacing=1.0)
-
-
-def kicker(s, label, colour=ACCENT, y=Inches(1.00)):
-    hline(s, M, y + Inches(0.055), Inches(0.30), colour, Emu(19050))
-    text(s, label.upper(), M + Inches(0.41), y - Inches(0.055), Inches(9), Inches(0.26),
-         size=9, colour=colour, font=MONO, spacing=1.0, spc=1.6)
-
-
-def est_lines(txt, size_pt, width_in):
-    """
-    How many lines a string will wrap to, near enough.
-
-    Here because a heading placed at a fixed height is correct for one line
-    and wrong for two: an early draft shipped nine slides with the second
-    line of the heading printed through the paragraph under it. Arial Bold
-    advances about 0.52 of the point size per character.
-    """
-    per_char = 0.52 * size_pt / 72
-    per_line = max(1, int(width_in / per_char))
-    lines, cur = 1, 0
-    for word in txt.split():
-        add = len(word) + (1 if cur else 0)
-        if cur + add > per_line:
-            lines += 1; cur = len(word)
-        else:
-            cur += add
-    return lines
-
-
-def h1(s, txt, y=Inches(1.46), size=29, w=None, colour=INK):
-    lines = est_lines(txt, size, (w or CONTENT) / Inches(1))
-    h = Inches(lines * size * 1.2 / 72)
-    text(s, txt, M, y, w or CONTENT, h, size=size, bold=True, colour=colour, spacing=1.2)
-    return y + h
-
-
-def shot(s, name, x, y, max_w, max_h, panel=True, fallback=None):
-    """
-    A screenshot on a light panel, which is how light UI reads on black.
-
-    `fallback` is for screens that only exist when capture.mjs was given the
-    optional arguments: the deck still builds without them rather than
-    dying on a missing file halfway through.
-    """
-    path = os.path.join(SHOTS, f"{name}.png")
-    if not os.path.exists(path) and fallback:
-        path = os.path.join(SHOTS, f"{fallback}.png")
-    iw, ih = Image.open(path).size
-    pad = Inches(0.09) if panel else Inches(0)
-    scale = min((max_w - 2 * pad) / iw, (max_h - 2 * pad) / ih)
-    w, h = Emu(int(iw * scale)), Emu(int(ih * scale))
-    cx = x + Emu(int((max_w - w - 2 * pad) / 2)) + pad
-    if panel:
-        box(s, cx - pad, y, w + 2 * pad, h + 2 * pad, fill=PANEL, border=None, radius=0.03)
-    s.shapes.add_picture(path, cx, y + pad, width=w, height=h)
-    return h + 2 * pad
-
-
-def stats(s, items, y, x=None, total_w=None, gap=Inches(0.16), hgt=Inches(0.95)):
-    x = x if x is not None else M
-    total_w = total_w if total_w is not None else CONTENT
-    n = len(items)
-    w = Emu(int((total_w - gap * (n - 1)) / n))
-    for i, (value, label) in enumerate(items):
-        cx = x + Emu(int((w + gap) * i))
-        box(s, cx, y, w, hgt)
-        text(s, value, cx + Inches(0.22), y + Inches(0.15), w - Inches(0.44), Inches(0.42),
-             size=22, bold=True, colour=ACCENT if i == 0 else INK, spacing=1.0)
-        text(s, label.upper(), cx + Inches(0.22), y + Inches(0.62), w - Inches(0.44), Inches(0.24),
-             size=8, colour=MUTED, font=MONO, spacing=1.0, spc=1.2)
-
-
-def dotted(s, items, x, y, w, size=11.5, gap=Inches(0.255), colour=BODY):
-    for i, item in enumerate(items):
-        top = y + Emu(int(gap * i))
-        text(s, "·", x, top, Inches(0.16), gap, size=size, colour=MUTED, spacing=1.35)
-        text(s, item, x + Inches(0.21), top, w - Inches(0.21), gap, size=size,
-             colour=colour, spacing=1.35)
-    return y + Emu(int(gap * len(items)))
-
-
-def rows(s, pairs, y, label_w=Inches(3.3), gap=Inches(0.84), size=12):
-    for i, (label, value) in enumerate(pairs):
-        top = y + Emu(int(gap * i))
-        hline(s, M, top, CONTENT)
-        text(s, label, M, top + Inches(0.14), label_w, Inches(0.3), size=size,
-             bold=True, colour=INK, spacing=1.35)
-        text(s, value, M + label_w + Inches(0.1), top + Inches(0.14),
-             CONTENT - label_w - Inches(0.1), gap - Inches(0.2), size=size,
-             colour=BODY, spacing=1.45)
-
-
-def tri_cards(s, cards, y, hgt=Inches(3.45), highlight=0):
-    gap = Inches(0.22)
-    w = Emu(int((CONTENT - gap * 2) / 3))
-    for i, c in enumerate(cards):
-        x = M + Emu(int((w + gap) * i))
-        on = i == highlight
-        box(s, x, y, w, hgt, border=ACCENT if on else LINE)
-        px, pw = x + Inches(0.26), w - Inches(0.52)
-        text(s, c["tag"].upper(), px, y + Inches(0.24), pw, Inches(0.24), size=8,
-             colour=ACCENT if on else MUTED, font=MONO, spacing=1.0, spc=1.2)
-        text(s, c["title"], px, y + Inches(0.54), pw, Inches(0.42), size=19, bold=True,
-             colour=INK, spacing=1.1)
-        text(s, c["sub"], px, y + Inches(1.02), pw, Inches(0.28), size=11, colour=BODY, spacing=1.2)
-        # Tight enough that five points still clear the divider below them.
-        dotted(s, c["points"], px, y + Inches(1.32), pw, size=10, gap=Inches(0.225))
-        hline(s, px, y + hgt - Inches(0.92), pw)
-        text(s, c["foot_label"].upper(), px, y + hgt - Inches(0.80), pw, Inches(0.24),
-             size=8, colour=ACCENT if on else MUTED, font=MONO, spacing=1.0, spc=1.2)
-        text(s, c["foot"], px, y + hgt - Inches(0.54), pw, Inches(0.3), size=14, bold=True,
-             colour=ACCENT if on and c.get("foot_accent") else INK, spacing=1.15)
-        if c.get("foot_note"):
-            text(s, c["foot_note"], px, y + hgt - Inches(0.26), pw, Inches(0.24), size=9,
-                 colour=MUTED, spacing=1.1)
-
-
-def two_col(s, kick, title, paras, shot_name, shot_y=Inches(1.75), shot_h=Inches(4.3)):
-    masthead(s); kicker(s, kick)
-    y = h1(s, title, w=Inches(4.9))
-    ty = y + Inches(0.22)
-    for i, p in enumerate(paras):
-        size = 13 if i == 0 else 12
-        hh = Inches(est_lines(p, size, 4.6) * size * 1.55 / 72)
-        text(s, p, M, ty, Inches(4.75), hh, size=size,
-             colour=BODY if i == 0 else MUTED, spacing=1.55)
-        ty += hh + Inches(0.26)
-    shot(s, shot_name, Inches(6.06), shot_y, Inches(6.43), shot_h)
-    footer(s)
-
-
-def phones(s, items, y=Inches(1.70), h=Inches(3.85), x0=Inches(6.06), total=Inches(6.43)):
-    gap = Inches(0.14)
-    w = Emu(int((total - gap * (len(items) - 1)) / len(items)))
-    for i, (name, cap, sub) in enumerate(items):
-        x = x0 + Emu(int((w + gap) * i))
-        used = shot(s, name, x, y, w, h, fallback="shopper-wallet")
-        text(s, cap, x, y + used + Inches(0.16), w, Inches(0.26), size=12, bold=True,
-             colour=INK, spacing=1.2)
-        text(s, sub, x, y + used + Inches(0.44), w, Inches(0.26), size=10.5,
-             colour=MUTED, spacing=1.2)
-
-
-def part(kick, title, body):
-    s = slide(); masthead(s)
-    kicker(s, kick, y=Inches(2.56))
-    h1(s, title, y=Inches(3.02), size=44)
-    text(s, body, M, Inches(4.62), Inches(9.6), Inches(0.9), size=13, colour=BODY, spacing=1.55)
-    footer(s)
-
+OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(style.HERE, "Qumo.pptx")
+style.start("Product overview", 23)
 
 # ---------------- slides ----------------
 
@@ -500,12 +239,12 @@ def s18():
         "Anyone under the threshold is turned away, and their code is not used up",
         "Refused in the engine, not on the screen, so no earn path can forget it",
         "The answer is kept. The date of birth is not",
-    ], M, y + Inches(1.45), Inches(6.0), size=11.5, gap=Inches(0.42))
+    ], M, y + Inches(1.35), Inches(6.0), size=11.5, gap=Inches(0.38))
     text(s, "Nothing at all is kept about somebody refused. It records that you asked and that you "
             "refused when told no, which is what a promotion is expected to do. It is not identity "
             "verification, and the console says so above the tick box rather than letting a brand "
             "assume otherwise.",
-         M, Inches(5.62), Inches(6.0), Inches(1.0), size=11, colour=MUTED, spacing=1.45)
+         M, Inches(5.64), Inches(6.0), Inches(1.0), size=11, colour=MUTED, spacing=1.45)
     phones(s, [("shopper-login", "The step", "Neutral, and asked once.")],
            y=Inches(1.85), h=Inches(3.6), x0=Inches(8.6), total=Inches(2.6))
     footer(s)
@@ -572,68 +311,41 @@ def s21():
 
 
 def s22():
-    s = slide(); masthead(s); kicker(s, "The commercial architecture")
-    h1(s, "Three gates, and you only commit to the next one")
-    text(s, "Define before we build. Build before we scale. Scale what proves value. Which doors a "
-            "pilot opens is one of the decisions DEFINE makes, and each is priced once its "
-            "requirements are known rather than estimated now.",
+    s = slide(); masthead(s); kicker(s, "How a pilot runs")
+    h1(s, "One product line, free, and your own numbers at the end")
+    text(s, "There is no scoping exercise to buy first. The product is built, so a pilot is a "
+            "print run and a reward you choose. What a brand is really deciding at the end is "
+            "whether their own repeat rate is worth paying for.",
          M, Inches(2.42), Inches(11.2), Inches(0.8), size=12.5, colour=BODY, spacing=1.55)
     tri_cards(s, [
-        {"tag": "Stage 01", "title": "DEFINE", "sub": "Pilot blueprint",
-         "points": ["Pilot architecture and cohort", "Consumer journey", "Connected packaging",
-                    "Loyalty and reward logic", "Measurement and Stage 02 scope"],
-         "foot_label": "Excl. VAT · fixed fee", "foot": "Quoted per brief", "foot_accent": True},
-        {"tag": "Stage 02", "title": "BUILD", "sub": "Prototype and pilot",
-         "points": ["Services against approved SOW", "Technology and specialist partners",
-                    "Production and packaging", "Quoted, or passed through"],
-         "foot_label": "After define", "foot": "Scoped"},
-        {"tag": "Stage 03", "title": "SCALE", "sub": "Rollout and optimise",
-         "points": ["Agreed against scale", "Platform and usage model",
-                    "Production priced on volume", "Licence structure agreed"],
-         "foot_label": "On pilot results", "foot": "Agreed"},
+        {"tag": "Before the print run", "title": "SET UP", "sub": "A week, mostly yours",
+         "points": ["Your pages, your colour, your address",
+                    "You choose the reward and the cap",
+                    "We generate the codes as a print file",
+                    "Your vendor prints what they already print"],
+         "foot_label": "What it costs you", "foot": "Nothing", "foot_accent": True},
+        {"tag": "In market", "title": "RUNNING", "sub": "One product line",
+         "points": ["Customers scan the code under the pack",
+                    "A number and a texted code, once",
+                    "Every scan lands on the console as it happens",
+                    "The cap is enforced at the scan, not after"],
+         "foot_label": "Your commitment", "foot": "One line"},
+        {"tag": "At the end", "title": "THE READ-BACK", "sub": "Your own numbers",
+         "points": ["How many scanned, and how many came back",
+                    "What it cost per person reached",
+                    "What the same thing costs across the range",
+                    "The data stays yours either way"],
+         "foot_label": "Time to a number", "foot": "One print cycle"},
     ], Inches(3.30))
     footer(s)
 
 
 def s23():
-    s = slide(); masthead(s); kicker(s, "Stage 01 · what it covers")
-    h1(s, "What a blueprint fee covers, and what it does not")
-    gap = Inches(0.28)
-    w = Emu(int((CONTENT - gap) / 2))
-    for i, (tag, title, items, colour) in enumerate([
-        ("Included", "Professional services",
-         ["Innovation and system architecture", "Connected experience development",
-          "Pilot architecture and commercialisation", "The pilot blueprint itself",
-          "Indicative Stage 02 build budget"], ACCENT),
-        ("Excluded until scoped", "Third-party costs",
-         ["Technology development, platform and CRM fees", "SMS, USSD and messaging traffic",
-          "Packaging and point-of-sale production, logistics", "Rewards, fulfilment and media",
-          "Specialist technical partners and external research"], WARN),
-    ]):
-        x = M + Emu(int((w + gap) * i))
-        box(s, x, Inches(2.42), w, Inches(2.75))
-        text(s, tag.upper(), x + Inches(0.4), Inches(2.68), w - Inches(0.8), Inches(0.24),
-             size=8, colour=colour, font=MONO, spacing=1.0, spc=1.2)
-        text(s, title, x + Inches(0.4), Inches(2.98), w - Inches(0.8), Inches(0.36),
-             size=17, bold=True, colour=INK, spacing=1.1)
-        dotted(s, items, x + Inches(0.4), Inches(3.52), w - Inches(0.8), size=11, gap=Inches(0.29))
-    text(s, "Splitting them this way keeps contingency out of the numbers: a cost nobody can size "
-            "yet is named and quoted when it can be, rather than padded into a figure today. No "
-            "blanket revenue share is assumed.",
-         M, Inches(5.40), Inches(11.4), Inches(0.7), size=11.5, colour=MUTED, spacing=1.5)
-    text(s, "THE WAY FORWARD", M, Inches(6.14), Inches(4), Inches(0.24), size=8, colour=ACCENT,
-         font=MONO, spacing=1.0, spc=1.2)
-    text(s, "Align scope   →   Confirm Stage 01   →   Issue SOW   →   Commence DEFINE",
-         M, Inches(6.42), Inches(11.4), Inches(0.34), size=14, bold=True, colour=INK, spacing=1.1)
-    footer(s)
-
-
-def s24():
     s = slide(); masthead(s); kicker(s, "Indicative · for discussion")
-    h1(s, "And what running it costs once it is live")
-    text(s, "Directional only, to show the shape. The pilot is a project; the programme that "
-            "follows it is a subscription. Brands pay for the scale they use, the tier decides which "
-            "doors are open, and messaging is passed through at cost against an agreed ceiling.",
+    h1(s, "And what it costs if you keep it")
+    text(s, "Directional only, to show the shape. The pilot is free; what follows it is a "
+            "subscription, because a programme does not end the way a campaign does. Brands pay "
+            "for the scale they use, and messaging is passed through at cost against a ceiling.",
          M, Inches(2.42), Inches(11.2), Inches(0.8), size=12.5, colour=BODY, spacing=1.55)
     tri_cards(s, [
         {"tag": "Tier 01", "title": "LAUNCH", "sub": "One campaign, one door",
@@ -653,8 +365,7 @@ def s24():
 
 
 for fn in [s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12,
-           s13, s14, s15, s16, s17, s18, s19, s20, s21, s22, s23, s24]:
+           s13, s14, s15, s16, s17, s18, s19, s20, s21, s22, s23]:
     fn()
 
-prs.save(OUT)
-print(f"{_page['n']} slides -> {OUT}")
+print(f"{style.save(OUT)} slides -> {OUT}")
