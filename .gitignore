@@ -31,3 +31,7 @@ next-env.d.ts
 # time somebody upgrades and never a decision worth reviewing.
 AGENTS.md
 CLAUDE.md
+
+# deck build output
+deck/Qumo.pptx
+deck/*.pdf
