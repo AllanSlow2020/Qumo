@@ -283,6 +283,41 @@ describe("the chart", () => {
     expect((await getPerformance(brand.id, 90)).scansByDay).toHaveLength(90);
   });
 
+  it("has a bar for today, which is the one a brand looks at first", async () => {
+    // Every scan in the fixture above is two or more days old, which is why
+    // the assertion below this one passed while the chart had no bucket for
+    // today at all. A scan made today produced a key the map did not have
+    // and was dropped: the page read "1 scan, 1 on pack" in the headline
+    // and "nothing scanned in this window" in the chart, about the same
+    // scan. Found on a live brand, on the first scan it ever took.
+    const before = await getPerformance(brand.id, 30);
+
+    const batch = await prisma.packBatch.create({
+      data: { brandId: brand.id, campaignId: cashback.id, label: `today-${run}`, quantity: 1 },
+    });
+    const now = new Date();
+    await prisma.packCode.create({
+      data: {
+        brandId: brand.id,
+        campaignId: cashback.id,
+        batchId: batch.id,
+        code: `TODAY-${run}`,
+        status: "SCANNED" as const,
+        scannedAt: now,
+      },
+    });
+
+    const after = await getPerformance(brand.id, 30);
+
+    expect(after.packCodes).toBe(before.packCodes + 1);
+    expect(sumScans(after)).toBe(sumScans(before) + 1);
+
+    const today = now.toISOString().slice(0, 10);
+    const bar = after.scansByDay.find((d) => d.day.toISOString().slice(0, 10) === today);
+    expect(bar, "the chart has no bucket for today").toBeDefined();
+    expect(bar!.count).toBe(1);
+  });
+
   it("agrees with the total printed beside it", async () => {
     const p = await getPerformance(brand.id, 30);
     // Both mechanisms, because the headline above the chart counts both.

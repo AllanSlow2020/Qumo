@@ -258,9 +258,25 @@ export async function getPerformance(
   // one brand's scans, and date_trunc in raw SQL would step outside the
   // tenant guard for a query that is not expensive.
   const buckets = new Map<string, number>();
-  for (let i = 1; i <= days; i += 1) {
-    // Counting back from the last full day inside the window rather than
-    // from `now`, so the buckets line up with the range the query used.
+  // `days` bars ending today, because `from` is now minus `days` and the
+  // headline above counts everything up to this moment. Starting at 1 built
+  // the bars from yesterday backwards, so today never got one and a scan
+  // made today fell through the `buckets.has` check below and vanished: the
+  // page said "1 scan, 1 on pack" and, four rows down, "nothing scanned in
+  // this window". The overview's sparkline has always ended on today
+  // (lib/console/overview.ts), so the two screens disagreed about the same
+  // scan.
+  //
+  // The window is `days` times 24 hours rather than `days` calendar days,
+  // so its oldest edge lands part way through a day that gets no bar. A
+  // scan in that sliver is counted in the headline and not drawn, which is
+  // the same trade the overview makes and names: better than inventing an
+  // extra bar nobody asked for.
+  //
+  // Bucket keys are UTC, so for a brand two hours ahead a scan before 02:00
+  // local draws on the previous day's bar. Fixing that needs a timezone per
+  // brand, which is a decision rather than a patch.
+  for (let i = days - 1; i >= 0; i -= 1) {
     buckets.set(new Date(now.getTime() - i * DAY_MS).toISOString().slice(0, 10), 0);
   }
   // Both mechanisms, one chart. A till slip and a code on a box are the
