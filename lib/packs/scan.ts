@@ -116,6 +116,7 @@ async function findCode(canonical: string) {
           reward: {
             select: {
               id: true,
+              rewardName: true,
               couponName: true,
               codePrefix: true,
               couponExpiryDate: true,

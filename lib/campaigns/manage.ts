@@ -97,7 +97,7 @@ export async function setCampaignStatusForSession(
   const scoped = forBrand(session.user.brandId);
   const campaign = await scoped.campaign.findFirst({
     where: { id: campaignId },
-    include: { earnRule: { select: { type: true, maxTotalAmount: true } } },
+    include: { earnRule: { select: { type: true, maxTotalAmount: true, completesAt: true } } },
   });
   if (!campaign) {
     throw new CampaignError("That promotion doesn't exist.");
@@ -106,6 +106,33 @@ export async function setCampaignStatusForSession(
   if (status === "ACTIVE") {
     if (!campaign.earnRule) {
       throw new CampaignError("Set what this promotion awards before switching it on.");
+    }
+
+    /*
+     * A card that can never complete must not be allowed to go live.
+     *
+     * applyAccrual issues a coupon only when a Reward row exists
+     * (`rule.completesAt != null && reward`), so a promotion with a
+     * threshold and no reward behind it accrues stamps forever and pays out
+     * nothing. Nothing failed, nothing logged, and the shopper's card simply
+     * filled past the end - which is exactly the state the demo brand was
+     * found in: a ten-stamp card with no reward, running.
+     *
+     * Checked at activation rather than when the threshold is set, for the
+     * same reason the earn rule is: a brand configures in whatever order
+     * suits them, and the moment that has to be coherent is the moment it
+     * goes live.
+     */
+    if (campaign.earnRule.completesAt != null) {
+      const reward = await scoped.reward.findFirst({
+        where: { campaignId: campaign.id },
+        select: { rewardName: true },
+      });
+      if (!reward?.rewardName?.trim()) {
+        throw new CampaignError(
+          `This promotion completes a card at ${campaign.earnRule.completesAt}, but nothing says what the card earns. Shoppers would collect forever and never be given anything. Set the reward first.`,
+        );
+      }
     }
 
     if (campaign.earnRule.type === "PERCENT_OF_SPEND") {
@@ -140,11 +167,17 @@ const limitsSchema = z.object({
   maxPerPersonPerDay: z.coerce.number().int().min(1).max(100_000_000).optional(),
   maxScansPerPersonPerDay: z.coerce.number().int().min(1).max(1_000).optional(),
   maxTotalAmount: z.coerce.number().int().min(1).max(1_000_000_000).optional(),
-  completesAt: z.coerce.number().int().min(1).max(1_000).optional(),
 });
 
 /**
- * The three ceilings, plus the stamp-card size.
+ * The three ceilings.
+ *
+ * The stamp-card size used to be set here too, and that was wrong twice
+ * over. It is not a ceiling - it is half of what the promotion awards - and
+ * this form clears every box left empty, so saving the ceilings without
+ * retyping the card size silently turned a stamp card into a campaign that
+ * only accrues. It lives in setCardForSession now, beside the reward it
+ * completes into.
  *
  * These are what the forgery suite exists to justify: at a store whose till
  * cannot sign a slip, the shopper controls every field of the payload, and
@@ -161,7 +194,6 @@ export async function setCampaignLimitsForSession(session: SessionLike, formData
     maxPerPersonPerDay: formData.get("maxPerPersonPerDay") || undefined,
     maxScansPerPersonPerDay: formData.get("maxScansPerPersonPerDay") || undefined,
     maxTotalAmount: formData.get("maxTotalAmount") || undefined,
-    completesAt: formData.get("completesAt") || undefined,
   };
   const parsed = limitsSchema.parse(raw);
 
@@ -184,7 +216,6 @@ export async function setCampaignLimitsForSession(session: SessionLike, formData
     maxPerPersonPerDay: parsed.maxPerPersonPerDay ?? null,
     maxScansPerPersonPerDay: parsed.maxScansPerPersonPerDay ?? null,
     maxTotalAmount: parsed.maxTotalAmount ?? null,
-    completesAt: parsed.completesAt ?? null,
   };
 
   await scoped.earnRule.update({ where: { campaignId: campaign.id }, data: limits });
@@ -287,6 +318,104 @@ export async function deleteCampaignForSession(session: SessionLike, campaignId:
   await scoped.campaign.delete({ where: { id: campaign.id } });
 }
 
+const cardSchema = z.object({
+  campaignId: z.string().trim().min(1),
+  // Empty means "this is not a stamp card". A real choice, and the one
+  // every non-card promotion is in.
+  completesAt: z.coerce.number().int().min(1).max(1_000).optional(),
+  rewardName: z.string().trim().max(120).optional(),
+  maxCoupons: z.coerce.number().int().min(1).max(10_000_000).optional(),
+});
+
+/**
+ * The stamp card: how many it takes, and what they get at the end.
+ *
+ * One form for both halves, because they are one decision and splitting
+ * them is what produced the bug this function exists to close. The console
+ * could set a threshold - it sat under "What it may cost", as though the
+ * size of a card were a ceiling - and there was no screen anywhere for what
+ * the card earns. A Reward row could only be created by a seed script.
+ *
+ * So a brand could build a ten-stamp card, switch it on, and watch shoppers
+ * collect past ten forever: applyAccrual issues a coupon only when a Reward
+ * exists, and no error is raised when one does not. The card simply never
+ * completes. Copper Kettle was in exactly that state.
+ *
+ * rewardName rather than couponName is what a shopper is told they earned -
+ * the schema says so and the shopper surface reads it. couponName is the
+ * staff-facing label on the coupon itself and is left alone here.
+ */
+export async function setCardForSession(session: SessionLike, formData: FormData): Promise<void> {
+  requireRole(session.user.role as Role, MANAGE_CAMPAIGN_ROLES);
+
+  const parsed = cardSchema.parse({
+    campaignId: formData.get("campaignId"),
+    completesAt: formData.get("completesAt") || undefined,
+    rewardName: formData.get("rewardName") ?? undefined,
+    maxCoupons: formData.get("maxCoupons") || undefined,
+  });
+
+  const scoped = forBrand(session.user.brandId);
+  const campaign = await scoped.campaign.findFirst({
+    where: { id: parsed.campaignId },
+    include: { earnRule: { select: { id: true } } },
+  });
+  if (!campaign) {
+    throw new CampaignError("That promotion doesn't exist.");
+  }
+  if (!campaign.earnRule) {
+    throw new CampaignError("Set what this promotion awards before turning it into a card.");
+  }
+
+  const rewardName = parsed.rewardName?.trim() ?? "";
+
+  // Refused here as well as at activation. The activation guard is the one
+  // that cannot be got round; this one is the one that tells somebody while
+  // they are still looking at the form they got it wrong in.
+  if (parsed.completesAt != null && !rewardName) {
+    throw new CampaignError("Say what the card earns. A card with no reward collects stamps and never pays out.");
+  }
+
+  await scoped.earnRule.update({
+    where: { campaignId: campaign.id },
+    data: { completesAt: parsed.completesAt ?? null },
+  });
+
+  /*
+   * Upserted rather than created, and only when there is something to say.
+   *
+   * Clearing completesAt leaves any existing Reward row alone: the brand has
+   * said this is not a card at the moment, not that they have forgotten what
+   * the reward was, and turning the card back on should not cost them the
+   * name they already typed.
+   */
+  if (rewardName) {
+    await scoped.reward.upsert({
+      where: { campaignId: campaign.id },
+      create: {
+        brandId: session.user.brandId,
+        campaignId: campaign.id,
+        rewardName,
+        maxCoupons: parsed.maxCoupons ?? null,
+      },
+      update: { rewardName, maxCoupons: parsed.maxCoupons ?? null },
+    });
+  }
+
+  // Recorded with the numbers: how many coupons a promotion may issue is a
+  // liability, and "the reward changed" is not an answer to what it was.
+  await record(prisma, session.user, {
+    action: "campaign.card_changed",
+    targetId: campaign.id,
+    targetLabel: campaign.name,
+    detail: {
+      completesAt: parsed.completesAt ?? null,
+      rewardName: rewardName || null,
+      maxCoupons: parsed.maxCoupons ?? null,
+    },
+  });
+}
+
 export type ConsoleCampaign = {
   id: string;
   name: string;
@@ -303,6 +432,12 @@ export type ConsoleCampaign = {
     maxScansPerPersonPerDay: number | null;
     maxTotalAmount: number | null;
   } | null;
+  /**
+   * What completing a card earns, when the brand has said. Null covers both
+   * no Reward row and one nobody filled in - rewardName defaults to "" in
+   * the schema, and to a shopper those are the same thing.
+   */
+  reward: { rewardName: string; maxCoupons: number | null } | null;
   /**
    * Credits issued by this campaign so far, in the rule's own unit.
    *
@@ -332,6 +467,7 @@ export async function listCampaignsForConsole(brandId: string): Promise<ConsoleC
           maxTotalAmount: true,
         },
       },
+      reward: { select: { rewardName: true, maxCoupons: true } },
     },
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
   });
@@ -351,6 +487,9 @@ export async function listCampaignsForConsole(brandId: string): Promise<ConsoleC
     description: campaign.description,
     status: campaign.status,
     rule: campaign.earnRule,
+    reward: campaign.reward?.rewardName?.trim()
+      ? { rewardName: campaign.reward.rewardName.trim(), maxCoupons: campaign.reward.maxCoupons }
+      : null,
     issued: issuedBy.get(campaign.id) ?? 0,
   }));
 }

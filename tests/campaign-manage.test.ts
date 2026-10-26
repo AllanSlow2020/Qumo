@@ -9,6 +9,7 @@ import {
   listCampaignsForConsole,
   setCampaignLimitsForSession,
   setCampaignStatusForSession,
+  setCardForSession,
 } from "@/lib/campaigns/manage";
 import { setSpendRuleForSession } from "@/lib/stores/manage";
 import { setEarnRuleForSession } from "@/lib/packs/earn-rule";
@@ -42,6 +43,7 @@ describe("running a promotion from the console", () => {
     for (const b of [brand, otherBrand]) {
       await prisma.pointsTransaction.deleteMany({ where: { brandId: b.id } });
       await prisma.brandMembership.deleteMany({ where: { brandId: b.id } });
+      await prisma.reward.deleteMany({ where: { brandId: b.id } });
       await prisma.earnRule.deleteMany({ where: { brandId: b.id } });
       await prisma.campaign.deleteMany({ where: { brandId: b.id } });
       await prisma.brand.delete({ where: { id: b.id } });
@@ -217,6 +219,142 @@ describe("running a promotion from the console", () => {
     await prisma.pointsTransaction.deleteMany({ where: { brandMembershipId: membership.id } });
     await prisma.brandMembership.delete({ where: { id: membership.id } });
     await prisma.person.delete({ where: { id: person.id } });
+  });
+
+  describe("the stamp card and what it earns", () => {
+    async function cardCampaign(name: string) {
+      const campaign = await newCampaign(name);
+      await setEarnRuleForSession(owner(brand.id), form({ campaignId: campaign.id, unit: "STAMPS", amount: "1" }));
+      return campaign;
+    }
+
+    it("refuses to switch on a card that earns nothing", async () => {
+      /*
+       * The bug this whole piece of work is about.
+       *
+       * applyAccrual issues a coupon only when a Reward row exists, so a
+       * threshold with nothing behind it accrues stamps forever and pays
+       * out nothing - silently, with no error anywhere. The demo brand was
+       * found running exactly this: a ten-stamp card with no reward.
+       */
+      const campaign = await cardCampaign(`Hollow ${suffix}`);
+      await setCardForSession(owner(brand.id), form({ campaignId: campaign.id, completesAt: "10", rewardName: "X" }));
+      // Strip the reward back out, the way a seeded campaign arrives.
+      await prisma.reward.updateMany({ where: { campaignId: campaign.id }, data: { rewardName: "" } });
+
+      await expect(setCampaignStatusForSession(owner(brand.id), campaign.id, "ACTIVE")).rejects.toThrow(
+        /nothing says what the card earns/,
+      );
+      const after = await prisma.campaign.findUnique({ where: { id: campaign.id } });
+      expect(after?.status).not.toBe("ACTIVE");
+    });
+
+    it("switches on once the reward is set", async () => {
+      const campaign = await cardCampaign(`Whole ${suffix}`);
+      await setCardForSession(
+        owner(brand.id),
+        form({ campaignId: campaign.id, completesAt: "10", rewardName: "A free coffee" }),
+      );
+      await setCampaignStatusForSession(owner(brand.id), campaign.id, "ACTIVE");
+      expect((await prisma.campaign.findUnique({ where: { id: campaign.id } }))?.status).toBe("ACTIVE");
+      await setCampaignStatusForSession(owner(brand.id), campaign.id, "PAUSED");
+    });
+
+    it("leaves a promotion with no threshold alone", async () => {
+      // The guard must only fire on a card. A campaign that simply accrues
+      // has nothing to complete and needs no reward.
+      const campaign = await newCampaign(`Plain ${suffix}`);
+      await setEarnRuleForSession(owner(brand.id), form({ campaignId: campaign.id, unit: "CENTS", amount: "100" }));
+      await setCampaignStatusForSession(owner(brand.id), campaign.id, "ACTIVE");
+      expect((await prisma.campaign.findUnique({ where: { id: campaign.id } }))?.status).toBe("ACTIVE");
+      await setCampaignStatusForSession(owner(brand.id), campaign.id, "PAUSED");
+    });
+
+    it("refuses a card size with no reward beside it, while they are still looking at the form", async () => {
+      const campaign = await cardCampaign(`Early ${suffix}`);
+      await expect(
+        setCardForSession(owner(brand.id), form({ campaignId: campaign.id, completesAt: "10" })),
+      ).rejects.toThrow(/what the card earns/);
+      // And nothing was written, so a refused save does not half-apply.
+      const rule = await prisma.earnRule.findUnique({ where: { campaignId: campaign.id } });
+      expect(rule?.completesAt).toBeNull();
+    });
+
+    it("stores the size, the reward and the coupon cap together", async () => {
+      const campaign = await cardCampaign(`Stored ${suffix}`);
+      await setCardForSession(
+        owner(brand.id),
+        form({ campaignId: campaign.id, completesAt: "8", rewardName: "  A free coffee  ", maxCoupons: "500" }),
+      );
+
+      const rule = await prisma.earnRule.findUnique({ where: { campaignId: campaign.id } });
+      const reward = await prisma.reward.findUnique({ where: { campaignId: campaign.id } });
+      expect(rule?.completesAt).toBe(8);
+      expect(reward?.rewardName).toBe("A free coffee");
+      expect(reward?.maxCoupons).toBe(500);
+    });
+
+    it("keeps the reward when the card is turned off, so turning it back on costs nothing", async () => {
+      const campaign = await cardCampaign(`Toggle ${suffix}`);
+      await setCardForSession(
+        owner(brand.id),
+        form({ campaignId: campaign.id, completesAt: "8", rewardName: "A free coffee" }),
+      );
+      await setCardForSession(owner(brand.id), form({ campaignId: campaign.id }));
+
+      expect((await prisma.earnRule.findUnique({ where: { campaignId: campaign.id } }))?.completesAt).toBeNull();
+      // The brand said this is not a card right now, not that they forgot
+      // what the reward was.
+      expect((await prisma.reward.findUnique({ where: { campaignId: campaign.id } }))?.rewardName).toBe(
+        "A free coffee",
+      );
+    });
+
+    it("does not lose the card size when the ceilings are saved", async () => {
+      /*
+       * Why completesAt moved out of the ceilings form.
+       *
+       * That form clears every box left empty, on purpose - an empty
+       * ceiling means no ceiling. The card size was in it, so saving the
+       * ceilings without retyping the size silently turned a stamp card
+       * into a campaign that only accrues, and nothing said so.
+       */
+      const campaign = await cardCampaign(`Survives ${suffix}`);
+      await setCardForSession(
+        owner(brand.id),
+        form({ campaignId: campaign.id, completesAt: "10", rewardName: "A free coffee" }),
+      );
+      await setCampaignLimitsForSession(owner(brand.id), form({ campaignId: campaign.id, maxTotalAmount: "5000" }));
+
+      const rule = await prisma.earnRule.findUnique({ where: { campaignId: campaign.id } });
+      expect(rule?.completesAt).toBe(10);
+      expect(rule?.maxTotalAmount).toBe(5000);
+    });
+
+    it("shows a brand what the card earns, beside its size", async () => {
+      const campaign = await cardCampaign(`Listed ${suffix}`);
+      await setCardForSession(
+        owner(brand.id),
+        form({ campaignId: campaign.id, completesAt: "10", rewardName: "A free coffee", maxCoupons: "50" }),
+      );
+      const listed = (await listCampaignsForConsole(brand.id)).find((c) => c.id === campaign.id);
+      expect(listed?.rule?.completesAt).toBe(10);
+      expect(listed?.reward).toEqual({ rewardName: "A free coffee", maxCoupons: 50 });
+    });
+
+    it("reads a reward nobody filled in as no reward", async () => {
+      const campaign = await cardCampaign(`Blank ${suffix}`);
+      await prisma.reward.create({ data: { brandId: brand.id, campaignId: campaign.id, rewardName: "   " } });
+      const listed = (await listCampaignsForConsole(brand.id)).find((c) => c.id === campaign.id);
+      expect(listed?.reward).toBeNull();
+    });
+
+    it("refuses a role that can't set a card", async () => {
+      const campaign = await cardCampaign(`Guarded card ${suffix}`);
+      await expect(
+        setCardForSession(marketing(brand.id), form({ campaignId: campaign.id, completesAt: "10", rewardName: "X" })),
+      ).rejects.toThrow(ForbiddenError);
+    });
   });
 
   it("deletes a promotion that never touched anybody, and its rule with it", async () => {

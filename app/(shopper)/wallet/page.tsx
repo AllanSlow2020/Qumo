@@ -112,7 +112,10 @@ function Figure({
     <p className={className}>
       {sign && amount > 0 ? "+" : ""}
       {figure}
-      {suffix && <span className="sc-figure-unit">{suffix}</span>}
+      {/* A real space, not only the CSS margin: the margin is invisible to
+          anything reading the text rather than the pixels, so a screen
+          reader and a copy-paste both got "+1stamp". */}
+      {suffix && <span className="sc-figure-unit"> {suffix}</span>}
     </p>
   );
 }

@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ConsoleCampaign } from "@/lib/campaigns/manage";
-import { deleteCampaign, setLimits, setRule, setStatus } from "./actions";
+import { deleteCampaign, setCard, setLimits, setRule, setStatus } from "./actions";
 import { IDLE, type PromoActionState } from "./state";
 
 /** Cents to rands for display; everything is stored and compared as integers. */
@@ -157,6 +157,7 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
   const [editing, setEditing] = useState(false);
   const [ruleState, ruleAction, rulePending] = useActionState<PromoActionState, FormData>(setRule, IDLE);
   const [limitState, limitAction, limitPending] = useActionState<PromoActionState, FormData>(setLimits, IDLE);
+  const [cardState, cardAction, cardPending] = useActionState<PromoActionState, FormData>(setCard, IDLE);
 
   // Refresh only. The editor deliberately stays open after a save: the
   // offer and its ceilings are two forms filled in one after the other, and
@@ -164,10 +165,10 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
   // somebody reached for it. The metrics above update, which is the
   // confirmation that matters.
   useEffect(() => {
-    if (ruleState.ok || limitState.ok) {
+    if (ruleState.ok || limitState.ok || cardState.ok) {
       router.refresh();
     }
-  }, [ruleState, limitState, router]);
+  }, [ruleState, limitState, cardState, router]);
 
   const rule = campaign.rule;
   const live = campaign.status === "ACTIVE";
@@ -205,7 +206,10 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
               {rule.minSpendCents ? (
                 <div className="cn-metric-note">Baskets over {money(rule.minSpendCents)}</div>
               ) : rule.completesAt ? (
-                <div className="cn-metric-note">{rule.completesAt} completes a card</div>
+                <div className={`cn-metric-note${campaign.reward ? "" : " cn-warn-note"}`}>
+                  {rule.completesAt} completes a card
+                  {campaign.reward ? `: ${campaign.reward.rewardName}` : ", earning nothing"}
+                </div>
               ) : null}
             </div>
 
@@ -238,6 +242,18 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
             The ceilings are what stands between a store that can't sign its
             slips and an unbounded payout - that is what the forgery suite
             established, and a brand should read it at the moment it matters. */}
+        {/* The failure this form was built to stop. A threshold with no
+            reward behind it issues nothing on completion - applyAccrual
+            needs both - so the card fills past the end and the shopper is
+            never given anything. Switching it on is refused now, but a
+            paused promotion in this state should still say so. */}
+        {rule?.completesAt && !campaign.reward && (
+          <p className="cn-body cn-warn-note">
+            This card completes at {rule.completesAt} and nothing says what it earns, so shoppers would collect
+            forever and be given nothing. Set the reward below before switching it on.
+          </p>
+        )}
+
         {rule && !rule.maxTotalAmount && (
           <p className="cn-body cn-warn-note">
             No total budget. If any of your stores can&apos;t sign their slips, nothing bounds what this promotion can
@@ -352,8 +368,89 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
               </button>
             </form>
 
+            {/* Between the offer and the ceilings, because that is the
+                order the decision is made in: what they earn, what a card
+                takes and gives, then what it may all cost. Keyed on what
+                came back from the server for the same reason the other two
+                are - defaultValue only applies at mount. */}
             <form
-              key={`${rule?.maxTotalAmount}-${rule?.maxPerPersonPerDay}-${rule?.maxScansPerPersonPerDay}-${rule?.completesAt}`}
+              key={`${rule?.completesAt}-${campaign.reward?.rewardName}-${campaign.reward?.maxCoupons}`}
+              action={cardAction}
+              className="cn-form"
+            >
+              <h3 className="cn-h2">The card, and what it earns</h3>
+              <input type="hidden" name="campaignId" value={campaign.id} />
+
+              <div className="cn-field">
+                <label htmlFor={`completes-${campaign.id}`}>Stamps that complete a card</label>
+                <input
+                  id={`completes-${campaign.id}`}
+                  name="completesAt"
+                  className="cn-input"
+                  type="number"
+                  min={1}
+                  defaultValue={rule?.completesAt ?? ""}
+                />
+                <p className="cn-label">
+                  Buy ten, get the tenth free: put 10 here. Leave it empty and this promotion just adds up, with
+                  nothing to complete.
+                </p>
+              </div>
+
+              <div className="cn-field">
+                <label htmlFor={`reward-${campaign.id}`}>What they get when a card is full</label>
+                <input
+                  id={`reward-${campaign.id}`}
+                  name="rewardName"
+                  className="cn-input"
+                  type="text"
+                  maxLength={120}
+                  placeholder="a free coffee"
+                  defaultValue={campaign.reward?.rewardName ?? ""}
+                />
+                {/* These are the words the shopper reads, in their wallet
+                    and on the screen their scan lands on. Said plainly,
+                    because a brand typing an internal code here would be
+                    typing it onto somebody's phone. */}
+                {/* Lowercase in both the placeholder and the example, and
+                    the example is the whole reason. This text is dropped
+                    into the middle of a sentence on somebody's phone, so a
+                    capital typed here reads as "and A free coffee is
+                    yours". Steering the input is better than mangling the
+                    output - it keeps "exactly as you type it" true. */}
+                <p className="cn-label">
+                  Your customers see this exactly as you type it, in the middle of a sentence: &ldquo;2 more stamps
+                  and a free coffee is yours.&rdquo; Required as soon as there is a number above.
+                </p>
+              </div>
+
+              <div className="cn-field">
+                <label htmlFor={`maxcoupons-${campaign.id}`}>Most rewards this may ever hand out (optional)</label>
+                <input
+                  id={`maxcoupons-${campaign.id}`}
+                  name="maxCoupons"
+                  className="cn-input"
+                  type="number"
+                  min={1}
+                  defaultValue={campaign.reward?.maxCoupons ?? ""}
+                />
+                <p className="cn-label">
+                  Once reached, cards stop completing and the stamps stay on the balance rather than vanishing.
+                </p>
+              </div>
+
+              {cardState.ok === false && (
+                <p className="cn-err" role="alert">
+                  {cardState.error}
+                </p>
+              )}
+              <button type="submit" className="cn-btn" disabled={cardPending} style={{ alignSelf: "flex-start" }}>
+                {cardPending ? "Saving…" : cardState.ok ? "Saved. Save again" : "Save the card"}
+              </button>
+            </form>
+
+            <form
+              key={`${rule?.maxTotalAmount}-${rule?.maxPerPersonPerDay}-${rule?.maxScansPerPersonPerDay}`}
               action={limitAction}
               className="cn-form"
             >
@@ -398,19 +495,6 @@ export function CampaignCard({ campaign, canManage }: { campaign: ConsoleCampaig
                   min={1}
                   defaultValue={rule?.maxScansPerPersonPerDay ?? ""}
                 />
-              </div>
-
-              <div className="cn-field">
-                <label htmlFor={`completes-${campaign.id}`}>Stamps that complete a card (optional)</label>
-                <input
-                  id={`completes-${campaign.id}`}
-                  name="completesAt"
-                  className="cn-input"
-                  type="number"
-                  min={1}
-                  defaultValue={rule?.completesAt ?? ""}
-                />
-                <p className="cn-label">Buy ten, get the tenth free: put 10 here.</p>
               </div>
 
               {limitState.ok === false && (

@@ -199,4 +199,43 @@ describe("stamp card completion", () => {
     expect(result.coupon).toBeNull();
     expect(result.newBalance).toBe(500);
   });
+
+  it("tells the shopper the name the brand wrote for them, not the staff label", async () => {
+    /*
+     * Two columns, and only one of them is the shopper's.
+     *
+     * The schema is explicit: rewardName is "what the member is told they've
+     * earned", couponName is "the internal/staff-facing label on the coupon
+     * itself". The engine read couponName and fell back to the literal word
+     * "Reward" - so a brand whose internal label is a stock code put that
+     * code on somebody's phone, and a brand that set only the member-facing
+     * name had their shopper told they had earned "Reward".
+     *
+     * It stayed invisible because the fixture above sets both columns to
+     * the same string, which is what a sensible seed does and exactly what
+     * hides a bug like this. They are deliberately different here.
+     *
+     * It is also what the wallet already reads (lib/consumer/progress.ts),
+     * so before this the two surfaces disagreed about what one card paid:
+     * "2 more stamps and a free coffee is yours" on one screen, "COFFEE-10"
+     * on the next.
+     */
+    await prisma.reward.update({
+      where: { id: reward.id },
+      data: { rewardName: "A free coffee", couponName: "COFFEE-10-INTERNAL" },
+    });
+
+    for (let i = 0; i < CARD_SIZE - 1; i += 1) {
+      await scanOnce(shopper.id);
+    }
+    const completing = await scanOnce(shopper.id);
+    expect(completing.ok).toBe(true);
+    if (!completing.ok) return;
+    expect(completing.coupon?.name).toBe("A free coffee");
+
+    await prisma.reward.update({
+      where: { id: reward.id },
+      data: { rewardName: "Free coffee", couponName: "Free coffee" },
+    });
+  });
 });
