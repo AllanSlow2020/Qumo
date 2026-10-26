@@ -45,7 +45,24 @@ export async function setEarnRuleForSession(session: SessionLike, formData: Form
 
   return scoped.earnRule.upsert({
     where: { campaignId: campaign.id },
-    update: { unit: parsed.unit as LedgerUnit, amount: parsed.amount },
+    update: {
+      // `type` is set on the update and not only on the create, because a
+      // promotion can be changed from one shape to the other and the row is
+      // the same row. Leaving it out meant a spend rule switched to
+      // per-scan kept type PERCENT_OF_SPEND while its amount changed: the
+      // console saved, said so, and redrew the old kind, and a pack code
+      // batch went on refusing to be created against a promotion that
+      // looked correct on screen. The spend path has always done this - see
+      // the mirror of it in lib/stores/manage.ts, which zeroes `amount`
+      // for the same reason.
+      type: "FLAT_PER_SCAN",
+      unit: parsed.unit as LedgerUnit,
+      amount: parsed.amount,
+      // Cleared rather than left stale, so a rule switched back to
+      // percent-of-spend cannot silently inherit a share nobody chose.
+      basisPoints: null,
+      minSpendCents: null,
+    },
     create: {
       brandId: session.user.brandId,
       campaignId: campaign.id,

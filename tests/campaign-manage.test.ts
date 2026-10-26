@@ -71,6 +71,40 @@ describe("running a promotion from the console", () => {
     expect((await prisma.campaign.findUniqueOrThrow({ where: { id: campaign.id } })).status).toBe("PAUSED");
   });
 
+  it("changes the kind of rule, in both directions", async () => {
+    // A promotion is one row, and a brand is allowed to change its mind
+    // about what it awards. Switching from a share of the basket to a flat
+    // amount per scan used to write the new amount and leave the old type,
+    // so the console saved, reported success, and redrew the old kind -
+    // while the pack codes screen went on refusing to create a batch
+    // because the promotion still looked like a spend rule to it.
+    const campaign = await newCampaign(`Switcher ${suffix}`);
+
+    await setSpendRuleForSession(
+      owner(brand.id),
+      form({ campaignId: campaign.id, unit: "CENTS", basisPoints: "500", minSpendCents: "1000" }),
+    );
+    const asSpend = await prisma.earnRule.findUniqueOrThrow({ where: { campaignId: campaign.id } });
+    expect(asSpend.type).toBe("PERCENT_OF_SPEND");
+    expect(asSpend.basisPoints).toBe(500);
+
+    await setEarnRuleForSession(owner(brand.id), form({ campaignId: campaign.id, unit: "CENTS", amount: "500" }));
+    const asFlat = await prisma.earnRule.findUniqueOrThrow({ where: { campaignId: campaign.id } });
+    expect(asFlat.type).toBe("FLAT_PER_SCAN");
+    expect(asFlat.amount).toBe(500);
+    // The share-of-spend fields go with it, so switching back cannot
+    // inherit a basket share nobody chose this time round.
+    expect(asFlat.basisPoints).toBeNull();
+    expect(asFlat.minSpendCents).toBeNull();
+
+    // And back the other way, which has always worked and must keep working.
+    await setSpendRuleForSession(owner(brand.id), form({ campaignId: campaign.id, unit: "CENTS", basisPoints: "250" }));
+    const backToSpend = await prisma.earnRule.findUniqueOrThrow({ where: { campaignId: campaign.id } });
+    expect(backToSpend.type).toBe("PERCENT_OF_SPEND");
+    expect(backToSpend.basisPoints).toBe(250);
+    expect(backToSpend.amount).toBe(0);
+  });
+
   it("refuses a second live spend-based promotion - including by the back door", async () => {
     // The hole this test exists for.
     //
