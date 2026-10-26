@@ -178,7 +178,7 @@ function brandHeaders(req: NextRequest, security: Security): { headers: Headers;
  * The console: `app.{root}`, one principal, its own cookie.
  *
  * Every path is rewritten under /console, so a staff member types
- * app.qumo.co.za/stores and the app directory keeps its routes namespaced.
+ * app.qumo-app.com/stores and the app directory keeps its routes namespaced.
  * The namespace is what makes the guard on the other side cheap - a brand
  * host asking for /console/anything is asking for something no brand URL
  * ever produces, so it can be refused without a list of console routes to

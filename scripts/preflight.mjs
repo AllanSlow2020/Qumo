@@ -106,7 +106,7 @@ if (!root) {
     "A deployed site with this set answers every request with the no-brand page.",
   );
 } else if (root.includes("://") || root.includes("/")) {
-  fail(`NEXT_PUBLIC_QUMO_ROOT_DOMAIN is "${root}", which looks like a URL.`, "It is a bare hostname: qumo.co.za");
+  fail(`NEXT_PUBLIC_QUMO_ROOT_DOMAIN is "${root}", which looks like a URL.`, "It is a bare hostname: qumo-app.com");
 }
 
 // ------------------------------------------------------- database reachable

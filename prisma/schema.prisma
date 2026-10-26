@@ -20,7 +20,7 @@
 // and the tenant boundary - a brand only ever reaches a Person through a
 // membership it is authorised to see, and never lists that person's other
 // memberships. On a brand-scoped site that is not just a privacy control,
-// it is the product: a shopper on copperkettle.qumo.co.za sees Copper
+// it is the product: a shopper on copperkettle.qumo-app.com sees Copper
 // Kettle and nothing else.
 
 generator client {
@@ -87,7 +87,7 @@ model Brand {
 
   /// Identity and address in one field, which is a decision worth stating.
   ///
-  /// The slug is the subdomain: copper-kettle.qumo.co.za. Splitting them
+  /// The slug is the subdomain: copper-kettle.qumo-app.com. Splitting them
   /// would let a brand have a prettier host than their internal key, and it
   /// would also give us two values to keep in step for a benefit nobody has
   /// asked for. A prettier host is the custom-domain upsell, and that gets

@@ -225,7 +225,7 @@ export function ColoursForm({
             </div>
           </div>
           <p className="cn-label">
-            Live at <span className="cn-mono">{slug}.qumo.co.za</span> the moment you save.
+            Live at <span className="cn-mono">{slug}.qumo-app.com</span> the moment you save.
           </p>
         </div>
       </div>

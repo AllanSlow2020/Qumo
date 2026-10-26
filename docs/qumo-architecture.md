@@ -111,8 +111,8 @@ behaviour.
 ```
                     ┌─────────────────────────────┐
   copperkettle.    │   Consumer web (multi-       │
-  qumo.co.za   ────▶│   tenant by subdomain)       │
-  amber-oak.qumo.co.za│   Brand-themed. Join, earn,  │
+  qumo-app.com   ────▶│   tenant by subdomain)       │
+  amber-oak.qumo-app.com│   Brand-themed. Join, earn,  │
                     │   balance, opt out.          │
                     └──────────────┬──────────────┘
                                    │
@@ -122,7 +122,7 @@ behaviour.
                     │   auth · scan verification   │
                     └──────────────▲──────────────┘
                                    │
-  app.qumo.co.za───▶┌──────────────┴──────────────┐
+  app.qumo-app.com───▶┌──────────────┴──────────────┐
                     │   Brand console              │
                     │   promotions, analytics,     │
                     │   stores, billing            │
@@ -131,7 +131,7 @@ behaviour.
 
 ### Identity: shared Person, brand-scoped view
 
-One `Person` per phone number. On `copper-kettle.qumo.co.za` they see Copper
+One `Person` per phone number. On `copper-kettle.qumo-app.com` they see Copper
 Kettle and nothing else - enforced by `forBrand`/`forPerson`, which already
 work. A shopper who later scans another brand's poster is **recognised by phone and
 needs one tap to opt in**, not a second registration.
@@ -162,9 +162,11 @@ and, more importantly, means no page component runs without a brand.
 `NEXT_PUBLIC_QUMO_ROOT_DOMAIN`, read at build time because the proxy is
 compiled into the Edge runtime. It defaults to `localhost`, which makes
 `copper-kettle.localhost:3000` a working local brand host with no hosts-file
-editing. The domain is settled - `qumo.co.za`, registered - and the setting
-stays because a preview deployment on a root somebody else owns still needs
-to be told what its root is.
+editing. The domain is settled - `qumo-app.com`, registered - and the setting
+stays for two reasons that outlive it: a preview deployment on a root
+somebody else owns still needs to be told what its root is, and this
+project has already changed its mind about which domain is the product
+once, after `qumo.co.za` was bought and before anything was printed.
 
 **How the brand reaches the Node side.** The proxy resolves the slug from the
 `Host` header and sets `x-qumo-brand`, having *deleted* any incoming copy
@@ -227,7 +229,7 @@ opens a URL - the engine cannot tell whether that URL arrived through a
 camera or a radio, and should not care. So NFC is a *carrier* decision, not
 an architectural one, and it splits into two very different tiers.
 
-**Tier one needs no code at all.** Encode `https://qumo.co.za/s/K7M2-P9QR-3XVW`
+**Tier one needs no code at all.** Encode `https://qumo-app.com/s/K7M2-P9QR-3XVW`
 onto a tag and it works today: same route, same single-use guarantee, same
 ledger. A pack code is twelve characters from a 31-symbol alphabet, so the
 whole URL sits comfortably under 60 bytes - fine even on the cheapest NTAG213
@@ -845,10 +847,10 @@ asserting it in a unit test.
 - **An SMS aggregator account** - needed for Phase G, and the same account
   covers the OTP sending that Phase B's login already depends on. Worth pricing
   reverse-billed vs standard-rated early, since it sets the per-brand cap.
-- ~~**`qumo.app` is registered to someone else.**~~ Settled: `qumo.co.za` is
+- ~~**`qumo.app` is registered to someone else.**~~ Settled: `qumo-app.com` is
   bought, through GoDaddy, which also holds DNS. It is the name on the QR
-  codes. What is left is three records rather than a decision, and the one
-  that matters is the wildcard `*.qumo.co.za` - it is what makes provisioning
+  codes. `qumo.co.za`, bought first, redirects to it. What is left is three records rather than a decision, and the one
+  that matters is the wildcard `*.qumo-app.com` - it is what makes provisioning
   a brand a database write instead of a DNS ticket. The wildcard is also what
   decides where DNS lives: a wildcard certificate is issued by proving control
   of the zone, so the nameservers move from GoDaddy to the host. The

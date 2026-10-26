@@ -211,7 +211,7 @@ def p10():
     text(s, "We will have your first real numbers inside one print cycle, and you will not have "
             "spent anything to find out.",
          M, Inches(5.08), Inches(9.4), Inches(0.9), size=14.5, colour=BODY, spacing=1.45)
-    text(s, "qumo.co.za", M, Inches(6.02), Inches(6), Inches(0.36), size=15, bold=True,
+    text(s, "qumo-app.com", M, Inches(6.02), Inches(6), Inches(0.36), size=15, bold=True,
          colour=ACCENT, font=MONO, spacing=1.0)
     footer(s)
 

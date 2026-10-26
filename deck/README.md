@@ -46,10 +46,10 @@ pnpm bootstrap
 pnpm demo
 
 # 2. a build, served on 3000, with the production root domain compiled in
-NEXT_PUBLIC_QUMO_ROOT_DOMAIN=qumo.co.za \
+NEXT_PUBLIC_QUMO_ROOT_DOMAIN=qumo-app.com \
 NEXT_PUBLIC_QUMO_CONSOLE_SUBDOMAIN=app \
   pnpm exec next build
-NEXT_PUBLIC_QUMO_ROOT_DOMAIN=qumo.co.za \
+NEXT_PUBLIC_QUMO_ROOT_DOMAIN=qumo-app.com \
 NEXT_PUBLIC_QUMO_CONSOLE_SUBDOMAIN=app \
 DEMO_LOGIN_PHONES='+27821000037' DEMO_LOGIN_CODE='424242' \
   pnpm exec next start -p 3000
@@ -57,7 +57,7 @@ DEMO_LOGIN_PHONES='+27821000037' DEMO_LOGIN_CODE='424242' \
 
 The shopper surface sets secure cookies, so the browser has to see https.
 Put any TLS terminator on 443 in front of 3000 and point the capture
-browser's host resolver at it. `capture.mjs` already maps `*.qumo.co.za`
+browser's host resolver at it. `capture.mjs` already maps `*.qumo-app.com`
 and the apex to 127.0.0.1.
 
 ```bash

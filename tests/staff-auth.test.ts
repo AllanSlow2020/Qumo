@@ -184,22 +184,22 @@ describe("the console and the shopper surface are different doors", () => {
 });
 
 describe("which host is which", () => {
-  const ROOT = "qumo.co.za";
+  const ROOT = "qumo-app.com";
 
   it("recognises the console at app, and only at app", () => {
-    expect(isConsoleHost("app.qumo.co.za", ROOT)).toBe(true);
-    expect(isConsoleHost("APP.Qumo.CO.ZA:443", ROOT)).toBe(true);
-    expect(isConsoleHost("copper-kettle.qumo.co.za", ROOT)).toBe(false);
-    expect(isConsoleHost("qumo.co.za", ROOT)).toBe(false);
+    expect(isConsoleHost("app.qumo-app.com", ROOT)).toBe(true);
+    expect(isConsoleHost("APP.Qumo-App.COM:443", ROOT)).toBe(true);
+    expect(isConsoleHost("copper-kettle.qumo-app.com", ROOT)).toBe(false);
+    expect(isConsoleHost("qumo-app.com", ROOT)).toBe(false);
     // The near miss worth being explicit about: somebody else's domain with
     // our shape.
-    expect(isConsoleHost("app.notqumo.co.za", ROOT)).toBe(false);
-    expect(isConsoleHost("evil.app.qumo.co.za", ROOT)).toBe(false);
+    expect(isConsoleHost("app.notqumo-app.com", ROOT)).toBe(false);
+    expect(isConsoleHost("evil.app.qumo-app.com", ROOT)).toBe(false);
   });
 
   it("never lets a brand claim the console's address", () => {
     // The two rules have to agree, and this is the assertion that they do.
-    expect(brandSlugFromHost("app.qumo.co.za", ROOT)).toBeNull();
+    expect(brandSlugFromHost("app.qumo-app.com", ROOT)).toBeNull();
   });
 });
 

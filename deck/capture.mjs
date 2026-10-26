@@ -25,14 +25,14 @@ fs.mkdirSync(SHOTS, { recursive: true });
 fs.mkdirSync(ART, { recursive: true });
 
 const [SLUG = "copper-kettle", BATCH, SECRET, CODE] = process.argv.slice(2);
-const CONSOLE = "https://app.qumo.co.za";
-const SHOP = `https://${SLUG}.qumo.co.za`;
+const CONSOLE = "https://app.qumo-app.com";
+const SHOP = `https://${SLUG}.qumo-app.com`;
 const STAFF = { email: `owner@${SLUG}.example`, password: "qumo-dev-password" };
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || undefined,
   args: [
-    "--host-resolver-rules=MAP *.qumo.co.za 127.0.0.1,MAP qumo.co.za 127.0.0.1",
+    "--host-resolver-rules=MAP *.qumo-app.com 127.0.0.1,MAP qumo-app.com 127.0.0.1",
     "--ignore-certificate-errors",
     "--no-proxy-server",
     "--no-sandbox",

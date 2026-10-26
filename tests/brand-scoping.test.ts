@@ -12,7 +12,7 @@ import { redeemPackCode } from "@/lib/packs/scan";
 
 /**
  * One shopper, two brands, and the question Phase D exists to answer: what
- * does a page under copper-kettle.qumo.co.za show, and what does it refuse?
+ * does a page under copper-kettle.qumo-app.com show, and what does it refuse?
  *
  * The host-parsing half is tested without a database in brand-host.test.ts.
  * This is the half that costs money if it is wrong.
@@ -110,7 +110,7 @@ describe("what a brand's own site shows and refuses", () => {
   });
 
   it("refuses the same slip on another brand's site, and awards nothing", async () => {
-    // The hand-crafted URL: amber-oak.qumo.co.za/r?s=<a Copper Kettle store>.
+    // The hand-crafted URL: amber-oak.qumo-app.com/r?s=<a Copper Kettle store>.
     // Nothing about it could have misdirected value - the award has always
     // been driven by the store's own brandId - but rendering one brand's
     // award under a Amber Oak header is indistinguishable, to a

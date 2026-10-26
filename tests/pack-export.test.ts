@@ -90,14 +90,14 @@ describe("exporting a print run", () => {
 
   it("builds URLs on the brand's own address", async () => {
     const data = await exportBatchCodes(brand.id, batchId);
-    const csv = toCsv(data!, "https://amber-oak.qumo.co.za");
+    const csv = toCsv(data!, "https://amber-oak.qumo-app.com");
     const [header, first] = csv.split("\n");
 
     expect(header).toBe("code,printed_as,url,status");
     const [code, printedAs, url, status] = first!.split(",");
     // A code scanned at the apex lands on the no-brand page, so the address
     // in the CSV is the thing that decides whether a printed sticker works.
-    expect(url).toBe(`https://amber-oak.qumo.co.za/s/${code}`);
+    expect(url).toBe(`https://amber-oak.qumo-app.com/s/${code}`);
     expect(status).toBe("UNSCANNED");
     // The readable form is the same code, so somebody typing it off a
     // scuffed label reaches the same place the QR would have.
@@ -106,7 +106,7 @@ describe("exporting a print run", () => {
 
   it("has a row for every code and nothing else", async () => {
     const data = await exportBatchCodes(brand.id, batchId);
-    const csv = toCsv(data!, "https://amber-oak.qumo.co.za");
+    const csv = toCsv(data!, "https://amber-oak.qumo-app.com");
     expect(csv.split("\n")).toHaveLength(26);
   });
 

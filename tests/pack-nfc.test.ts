@@ -10,7 +10,7 @@ import { smallestTagFor, TAG_CAPACITY, tagBytes } from "@/lib/packs/nfc";
  * first time the URL shape changes.
  */
 describe("what a pack code costs on an NFC tag", () => {
-  const url = "https://copper-kettle.qumo.co.za/s/7XQP928KM3RT";
+  const url = "https://copper-kettle.qumo-app.com/s/7XQP928KM3RT";
 
   it("charges one byte for https:// rather than eight", () => {
     // The saving is the one non-obvious thing about NDEF sizing, and it is
@@ -32,7 +32,7 @@ describe("what a pack code costs on an NFC tag", () => {
     // Slugs are bounded, so the worst case is computable rather than
     // hypothetical. If this ever fails, the pack mechanic has outgrown the
     // cheap tags and somebody needs to know before the order is placed.
-    const long = `https://${"a".repeat(63)}.qumo.co.za/s/7XQP928KM3RT`;
+    const long = `https://${"a".repeat(63)}.qumo-app.com/s/7XQP928KM3RT`;
     expect(smallestTagFor(long)?.name).toBe("NTAG213");
   });
 

@@ -14,7 +14,7 @@
  * The apex we own. Everything to the left of it, in a host with exactly one
  * more label, is a brand slug.
  *
- * `qumo.co.za` in production, registered and ours. It stays configurable
+ * `qumo-app.com` in production, registered and ours. It stays configurable
  * anyway, for two reasons that outlive the question of which domain: a
  * hostname baked into the code is the kind of thing nobody finds until the
  * certificate is already issued, and a preview deployment on a root
@@ -109,7 +109,7 @@ export function isValidBrandSlug(slug: string): boolean {
  * no brand. Callers decide what to do about it (app/(shopper)/no-brand).
  *
  * Deliberately strict. Only a host that is *exactly* one label deeper than
- * the root domain resolves, so `evil.copper-kettle.qumo.co.za` - which an
+ * the root domain resolves, so `evil.copper-kettle.qumo-app.com` - which an
  * attacker with a wildcard record beneath their own name could otherwise
  * arrange - does not.
  */
@@ -118,8 +118,8 @@ export function brandSlugFromHost(host: string | null | undefined, rootDomain = 
 
   // Strip the port, lowercase, and drop the trailing dot of a fully
   // qualified name. A browser will not send that dot but a health check or a
-  // crafted request can, and "brand.qumo.co.za." must not read as a
-  // different host than "brand.qumo.co.za".
+  // crafted request can, and "brand.qumo-app.com." must not read as a
+  // different host than "brand.qumo-app.com".
   const hostname = (host.split(":")[0] ?? "").trim().toLowerCase().replace(/\.$/, "");
   if (!hostname) return null;
 
