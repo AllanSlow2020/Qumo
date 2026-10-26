@@ -4,6 +4,7 @@ import { formatLedgerAmount } from "@/lib/consumer/wallet";
 import { getBrandOverview } from "@/lib/console/overview";
 import { getSetupFacts, setupSteps } from "@/lib/console/setup-state";
 import { requireStaff } from "@/lib/staff/current";
+import { Ticker } from "@/app/console/ticker";
 
 function Metric({
   value,
@@ -21,7 +22,9 @@ function Metric({
 }) {
   return (
     <div className="cn-metric">
-      <div className="cn-metric-v">{value}</div>
+      <div className="cn-metric-v">
+        <Ticker value={value} />
+      </div>
       <div className="cn-metric-k">{label}</div>
       {note && <div className={`cn-metric-note${warn ? " cn-warn-note" : ""}`}>{note}</div>}
       {series && series.length > 0 && <Sparkline series={series} />}

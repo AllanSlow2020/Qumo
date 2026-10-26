@@ -3,6 +3,7 @@
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { ConsoleCampaign } from "@/lib/campaigns/manage";
+import { Ticker } from "@/app/console/ticker";
 import { setStatus } from "./actions";
 import { IDLE, type PromoActionState } from "./state";
 
@@ -106,9 +107,13 @@ export function CampaignCard({
           <div className="cn-grid">
             <div className="cn-metric">
               <div className="cn-metric-v">
-                {rule.type === "PERCENT_OF_SPEND" && rule.basisPoints
-                  ? `${Number((rule.basisPoints / 100).toFixed(2))}%`
-                  : unitAmount(rule.amount, unit)}
+                <Ticker
+                  value={
+                    rule.type === "PERCENT_OF_SPEND" && rule.basisPoints
+                      ? `${Number((rule.basisPoints / 100).toFixed(2))}%`
+                      : unitAmount(rule.amount, unit)
+                  }
+                />
               </div>
               <div className="cn-metric-k">{rule.type === "PERCENT_OF_SPEND" ? "Of every basket" : "Per scan"}</div>
               {rule.minSpendCents ? (
@@ -122,7 +127,9 @@ export function CampaignCard({
             </div>
 
             <div className="cn-metric">
-              <div className="cn-metric-v">{unitAmount(campaign.issued, unit)}</div>
+              <div className="cn-metric-v">
+                <Ticker value={unitAmount(campaign.issued, unit)} />
+              </div>
               <div className="cn-metric-k">Issued so far</div>
               {rule.maxTotalAmount ? (
                 <div className={`cn-metric-note${budgetUsed !== null && budgetUsed >= 80 ? " cn-warn-note" : ""}`}>
@@ -135,7 +142,7 @@ export function CampaignCard({
 
             <div className="cn-metric">
               <div className="cn-metric-v">
-                {rule.maxPerPersonPerDay ? unitAmount(rule.maxPerPersonPerDay, unit) : "-"}
+                <Ticker value={rule.maxPerPersonPerDay ? unitAmount(rule.maxPerPersonPerDay, unit) : "-"} />
               </div>
               <div className="cn-metric-k">Per person, per day</div>
               <div className="cn-metric-note">
