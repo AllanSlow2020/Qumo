@@ -79,7 +79,7 @@ export default async function ConsolePromotionsPage() {
               {/* SVG, not a screenshot. A poster is laid out by somebody else
                   at a size nobody has decided yet, and a QR scaled up from a
                   small raster is a QR that fails in a shop window. */}
-              <a href="/api/console/poster" className="cn-btn" download>
+              <a href="/api/console/poster" className="cn-btn cn-btn-quiet" download>
                 Download the QR as SVG
               </a>
               <p className="cn-label">
@@ -88,9 +88,16 @@ export default async function ConsolePromotionsPage() {
               </p>
             </div>
           </div>
+          {/* This paragraph used to name the till slip as the only thing that
+              can award, which is wrong and was wrong on the screen a brand
+              reads before choosing a mechanism. A code printed on the pack
+              is single-use in exactly the same way. What separates both of
+              them from the poster above is uniqueness, not where they are
+              printed. */}
           <p className="cn-body">
-            The codes that <em>do</em> award are the ones printed per transaction on a till slip. Those are the only
-            thing that proves a purchase happened.
+            The codes that <em>do</em> award are the unique ones: printed under a pack, or printed per transaction on
+            a till slip. Either way each code works once, which is what makes it proof that something was bought
+            rather than walked past.
           </p>
         </div>
       </section>

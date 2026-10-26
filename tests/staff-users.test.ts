@@ -33,8 +33,8 @@ describe("who can get into a brand's console", () => {
   }
 
   beforeAll(async () => {
-    brand = await prisma.brand.create({ data: { name: "Licken", slug: `team-a-${suffix}` } });
-    otherBrand = await prisma.brand.create({ data: { name: "Campari", slug: `team-b-${suffix}` } });
+    brand = await prisma.brand.create({ data: { name: "Copper Kettle", slug: `team-a-${suffix}` } });
+    otherBrand = await prisma.brand.create({ data: { name: "Amber Oak", slug: `team-b-${suffix}` } });
 
     const passwordHash = await hashPassword("the-original-owner-password");
     owner = await prisma.user.create({

@@ -7,7 +7,7 @@ import { forPerson } from "./scope";
  * Per membership rather than per Person, because opting out of one brand
  * says nothing about the others - that is the whole point of a brand-scoped
  * programme, and a single global switch would make "stop emailing me about
- * chicken" also stop a completely unrelated coffee card.
+ * burger" also stop a completely unrelated coffee card.
  *
  * Withdrawal never touches the ledger. Someone who opts out keeps every row
  * they earned, and finds the balance where they left it if they come back.
@@ -22,8 +22,8 @@ import { forPerson } from "./scope";
  *
  * `brandId` narrows it to the one whose site the shopper is standing on.
  * Not a confidentiality measure - this is the shopper's own screen and they
- * are entitled to every row of it - but a coherence one: a Chicken Licken
- * page that lists a Campari membership invites exactly the wrong conclusion
+ * are entitled to every row of it - but a coherence one: a Copper Kettle
+ * page that lists a Amber Oak membership invites exactly the wrong conclusion
  * about who can see what. The complete list is a click away in the data
  * export, where it is unambiguously theirs and unambiguously not the
  * brand's.

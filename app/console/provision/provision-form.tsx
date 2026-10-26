@@ -107,7 +107,7 @@ export function ProvisionForm({ rootDomain }: { rootDomain: string }) {
               id="name"
               name="name"
               className="cn-input"
-              placeholder="Chicken Licken"
+              placeholder="Copper Kettle"
               value={fields.name}
               onChange={set("name")}
               required
@@ -122,7 +122,7 @@ export function ProvisionForm({ rootDomain }: { rootDomain: string }) {
               className="cn-input"
               value={fields.slug}
               onChange={set("slug")}
-              placeholder="chicken-licken"
+              placeholder="copper-kettle"
               required
             />
             {/* Shown as they type, because this is the one field that cannot be

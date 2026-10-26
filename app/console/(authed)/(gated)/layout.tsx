@@ -28,5 +28,22 @@ export default async function GatedConsoleLayout({ children }: { children: React
     redirect("/change-password");
   }
 
+  // Then the brand's own appearance, in that order: a password is about this
+  // person's account and has to be settled before anything is done as them,
+  // and the colour is about what their customers will see.
+  //
+  // Also per request, and also lifting the moment it is satisfied. The cost
+  // is one indexed read on a row this console loads on nearly every screen
+  // anyway; the alternative is a flag on the session that goes stale the
+  // first time somebody clears the colour again.
+  const brand = await prisma.brand.findUnique({
+    where: { id: staff.brandId },
+    select: { accentColor: true },
+  });
+
+  if (!brand?.accentColor) {
+    redirect("/setup");
+  }
+
   return <>{children}</>;
 }

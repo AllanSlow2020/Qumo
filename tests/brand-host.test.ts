@@ -9,49 +9,66 @@ import { brandStyle, safeColor, safeLogoUrl, toBrandTheme } from "@/lib/brand/th
  * before the impure half can be safe.
  */
 describe("reading a brand out of a host", () => {
-  const ROOT = "qumo.co.za";
+  const ROOT = "qumo-app.com";
 
   it("takes the one label in front of the root domain", () => {
-    expect(brandSlugFromHost("chicken-licken.qumo.co.za", ROOT)).toBe("chicken-licken");
-    expect(brandSlugFromHost("campari.qumo.co.za", ROOT)).toBe("campari");
+    expect(brandSlugFromHost("copper-kettle.qumo-app.com", ROOT)).toBe("copper-kettle");
+    expect(brandSlugFromHost("amber-oak.qumo-app.com", ROOT)).toBe("amber-oak");
   });
 
   it("ignores the port, the case, and a trailing dot", () => {
     // A browser sends none of these three. A health check, a proxy and a
-    // crafted request each send one, and "Brand.Qumo.co.za." must not be a
-    // different brand than "brand.qumo.co.za".
-    expect(brandSlugFromHost("Chicken-Licken.Qumo.CO.ZA:443", ROOT)).toBe("chicken-licken");
-    expect(brandSlugFromHost("chicken-licken.qumo.co.za.", ROOT)).toBe("chicken-licken");
+    // crafted request each send one, and "Brand.Qumo-App.com." must not be a
+    // different brand than "brand.qumo-app.com".
+    expect(brandSlugFromHost("Copper-Kettle.Qumo-App.COM:443", ROOT)).toBe("copper-kettle");
+    expect(brandSlugFromHost("copper-kettle.qumo-app.com.", ROOT)).toBe("copper-kettle");
   });
 
   it("finds no brand at the apex", () => {
-    expect(brandSlugFromHost("qumo.co.za", ROOT)).toBeNull();
-    expect(brandSlugFromHost("www.qumo.co.za", ROOT)).toBeNull();
+    expect(brandSlugFromHost("qumo-app.com", ROOT)).toBeNull();
+    expect(brandSlugFromHost("www.qumo-app.com", ROOT)).toBeNull();
   });
 
   it("refuses every reserved subdomain", () => {
     // Enforced here rather than only at sign-up, so a row written straight
     // into the database still cannot take the console's address.
     for (const reserved of RESERVED_SUBDOMAINS) {
-      expect(brandSlugFromHost(`${reserved}.qumo.co.za`, ROOT)).toBeNull();
+      expect(brandSlugFromHost(`${reserved}.qumo-app.com`, ROOT)).toBeNull();
     }
   });
 
   it("refuses a host deeper than one label", () => {
     // The attack this exists for: anyone who controls a domain can point
-    // evil.chicken-licken.example.com at us. Only exactly-one-label-deep
+    // evil.copper-kettle.example.com at us. Only exactly-one-label-deep
     // resolves, so a nested host names no brand rather than the brand whose
     // name it happens to contain.
-    expect(brandSlugFromHost("evil.chicken-licken.qumo.co.za", ROOT)).toBeNull();
-    expect(brandSlugFromHost("a.b.qumo.co.za", ROOT)).toBeNull();
+    expect(brandSlugFromHost("evil.copper-kettle.qumo-app.com", ROOT)).toBeNull();
+    expect(brandSlugFromHost("a.b.qumo-app.com", ROOT)).toBeNull();
+  });
+
+  it("is not confused by the hyphen in the root domain", () => {
+    // The root is qumo-app.com, so a hyphen appears on both sides of the
+    // boundary: in brand slugs, which have always had them, and now in the
+    // root itself. The split is on the last dot of the root, never on a
+    // hyphen, and these are the hosts that would catch it if that changed.
+    expect(brandSlugFromHost("copper-kettle.qumo-app.com", ROOT)).toBe("copper-kettle");
+    expect(brandSlugFromHost("qumo-app.com", ROOT)).toBeNull();
+    // Somebody else's domain that shares our left-hand label.
+    expect(brandSlugFromHost("qumo-app.co.za", ROOT)).toBeNull();
+    expect(brandSlugFromHost("copper-kettle.qumo-app.co.za", ROOT)).toBeNull();
+    // The domain bought first, which redirects rather than serving brands.
+    expect(brandSlugFromHost("copper-kettle.qumo.co.za", ROOT)).toBeNull();
+    // A slug that ends where the root begins, read as one label by anything
+    // doing arithmetic on hyphens rather than dots.
+    expect(brandSlugFromHost("qumo.qumo-app.com", ROOT)).toBe("qumo");
   });
 
   it("refuses a host that is not ours at all", () => {
-    expect(brandSlugFromHost("chicken-licken.evil.com", ROOT)).toBeNull();
+    expect(brandSlugFromHost("copper-kettle.evil.com", ROOT)).toBeNull();
     // The near miss that a naive endsWith() would accept: a domain that
     // merely ends in our name.
-    expect(brandSlugFromHost("notqumo.co.za", ROOT)).toBeNull();
-    expect(brandSlugFromHost("chicken-licken.notqumo.co.za", ROOT)).toBeNull();
+    expect(brandSlugFromHost("notqumo-app.com", ROOT)).toBeNull();
+    expect(brandSlugFromHost("copper-kettle.notqumo-app.com", ROOT)).toBeNull();
     expect(brandSlugFromHost("197.242.94.1", ROOT)).toBeNull();
     expect(brandSlugFromHost("qumo-git-main.vercel.app", ROOT)).toBeNull();
   });
@@ -59,14 +76,14 @@ describe("reading a brand out of a host", () => {
   it("finds no brand in nothing", () => {
     expect(brandSlugFromHost(null, ROOT)).toBeNull();
     expect(brandSlugFromHost("", ROOT)).toBeNull();
-    expect(brandSlugFromHost(".qumo.co.za", ROOT)).toBeNull();
-    expect(brandSlugFromHost("-bad-.qumo.co.za", ROOT)).toBeNull();
+    expect(brandSlugFromHost(".qumo-app.com", ROOT)).toBeNull();
+    expect(brandSlugFromHost("-bad-.qumo-app.com", ROOT)).toBeNull();
   });
 
   it("works on localhost, because that is where it gets developed", () => {
     // *.localhost resolves to 127.0.0.1 in every current browser, so this is
     // a real local brand host and not a test-only fiction.
-    expect(brandSlugFromHost("chicken-licken.localhost:3000", "localhost")).toBe("chicken-licken");
+    expect(brandSlugFromHost("copper-kettle.localhost:3000", "localhost")).toBe("copper-kettle");
     expect(brandSlugFromHost("localhost:3000", "localhost")).toBeNull();
   });
 });
@@ -90,33 +107,37 @@ describe("what a brand is allowed to put on the page", () => {
   });
 
   it("accepts only an absolute https logo", () => {
-    expect(safeLogoUrl("https://cdn.example/licken.svg")).toBe("https://cdn.example/licken.svg");
+    expect(safeLogoUrl("https://cdn.example/mark.svg")).toBe("https://cdn.example/mark.svg");
     // Inert in a modern browser, and still not something to hand to an img.
     expect(safeLogoUrl("javascript:alert(1)")).toBeNull();
     expect(safeLogoUrl("data:image/svg+xml,<svg onload=alert(1)/>")).toBeNull();
     // Not an attack - a mixed-content block, which presents as a brand with
     // no logo and nobody knowing why. Better to fall back deliberately.
-    expect(safeLogoUrl("http://cdn.example/licken.svg")).toBeNull();
+    expect(safeLogoUrl("http://cdn.example/mark.svg")).toBeNull();
     expect(safeLogoUrl("/logo.svg")).toBeNull();
   });
 
   it("falls back to a correct plain page rather than a half-painted one", () => {
     const theme = toBrandTheme({
       id: "b1",
-      slug: "chicken-licken",
-      name: "Chicken Licken Holdings (Pty) Ltd",
-      displayName: "Chicken Licken",
+      slug: "copper-kettle",
+      name: "Copper Kettle Holdings (Pty) Ltd",
+      displayName: "Copper Kettle",
       tagline: null,
       logoUrl: "http://insecure.example/logo.png",
+      logoMimeType: null,
+      logoUpdatedAt: null,
       accentColor: "not-a-colour",
       accentInkColor: "#ffffff",
+      accentColorDark: null,
+      accentInkColorDark: null,
       displayFont: null,
       figureFont: null,
       supportEmail: null,
       supportUrl: null,
     });
 
-    expect(theme.name).toBe("Chicken Licken");
+    expect(theme.name).toBe("Copper Kettle");
     expect(theme.logoUrl).toBeNull();
     expect(theme.accent).toBeNull();
     // Ink only means anything against an accent. Kept on its own it would
@@ -128,13 +149,17 @@ describe("what a brand is allowed to put on the page", () => {
   it("overrides only what the brand actually chose", () => {
     const theme = toBrandTheme({
       id: "b1",
-      slug: "chicken-licken",
-      name: "Chicken Licken",
+      slug: "copper-kettle",
+      name: "Copper Kettle",
       displayName: null,
-      tagline: "Soul food since 1981",
+      tagline: "Good food since 1981",
       logoUrl: null,
+      logoMimeType: null,
+      logoUpdatedAt: null,
       accentColor: "#E4002B",
       accentInkColor: "#FFFFFF",
+      accentColorDark: null,
+      accentInkColorDark: null,
       displayFont: null,
       figureFont: null,
       supportEmail: null,
@@ -148,6 +173,9 @@ describe("what a brand is allowed to put on the page", () => {
     // No font in this row, so no font token: an override that is not asked
     // for is not written, which is what lets the default in globals.css
     // apply with no cascade to reason about.
-    expect(brandStyle(theme)).toEqual({ "--sc-btn": "#e4002b", "--sc-btn-ink": "#ffffff" });
+    //
+    // Under its own name rather than --sc-btn directly, which is what lets
+    // shopper.css decide per theme. See brandStyle().
+    expect(brandStyle(theme)).toEqual({ "--sc-brand-accent": "#e4002b", "--sc-brand-ink": "#ffffff" });
   });
 });

@@ -9,7 +9,7 @@ import { parseReceiptPayload, signingMessage, verifySignature } from "./payload"
 
 /**
  * Redeeming a scanned till slip - the shopper-facing half of the
- * Chicken Licken path.
+ * Copper Kettle path.
  *
  * Three defences, and it is worth being clear which one does what, because
  * only two of them are always available:
@@ -48,7 +48,8 @@ export type ReceiptFailureReason =
   | "DAILY_LIMIT"
   | "DAILY_SCAN_LIMIT"
   | "CAMPAIGN_EXHAUSTED"
-  | "OPTED_OUT";
+  | "OPTED_OUT"
+  | "AGE_UNCONFIRMED";
 
 export type ReceiptResult =
   | {
@@ -90,6 +91,8 @@ export const RECEIPT_FAILURE_MESSAGES: Record<ReceiptFailureReason, string> = {
   DAILY_SCAN_LIMIT: "You've scanned as many slips as this promotion allows today. Try again tomorrow.",
   CAMPAIGN_EXHAUSTED: "This promotion has reached its limit and isn't giving out any more.",
   OPTED_OUT: "You've opted out of this brand's rewards. Opt back in to start earning again.",
+  AGE_UNCONFIRMED:
+    "You need to confirm your age before this brand's rewards can pay out. Nothing has been used - go to your rewards and you will be asked.",
 };
 
 /**
@@ -299,6 +302,7 @@ export async function redeemReceipt(
             brandId,
             campaignId: campaign.id,
             brandMembershipId: membership.id,
+            personId,
             optedOutAt: membership.optedOutAt,
             // What makes the ledger row able to name the store it came
             // from. The scan is written above, before anything is awarded,

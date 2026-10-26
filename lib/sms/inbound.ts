@@ -124,6 +124,12 @@ export const SCAN_FAILURE_REPLY: Record<ScanFailureReason, string> = {
   DAILY_SCAN_LIMIT: "You've reached today's limit for this brand. Try again tomorrow. Your code hasn't been used.",
   CAMPAIGN_EXHAUSTED: "This promotion has given out everything it had. Your code hasn't been used.",
   OPTED_OUT: "You've left this brand's programme. Rejoin on their site and send the code again.",
+  // The one reason on this list that cannot be resolved over SMS. Age is
+  // confirmed on the brand's site, deliberately - a birth date typed into a
+  // text message is carried in the clear by every network it crosses and
+  // sits in a sent-items folder afterwards, to establish a fact this
+  // channel has no way to check anyway.
+  AGE_UNCONFIRMED: "This brand needs you to confirm your age on their site first. Your code hasn't been used.",
 };
 
 /**
@@ -268,7 +274,7 @@ async function handleBalance(person: Person): Promise<string> {
   // The difference is the medium rather than the entitlement. A wallet page
   // is behind a one-time code and closes when they leave it; an SMS sits in
   // an inbox on a handset that in this market is frequently shared,
-  // borrowed or handed to a child. "R240 with Chicken Licken" tells a reader
+  // borrowed or handed to a child. "R240 with Copper Kettle" tells a reader
   // an amount. A list of scans tells them which shops somebody used and
   // when, which is a movement record and not what was asked for. The full
   // history stays one authenticated tap away at /wallet.

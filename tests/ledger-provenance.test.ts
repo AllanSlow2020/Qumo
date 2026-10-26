@@ -58,7 +58,7 @@ describe("ledger provenance", () => {
     // The other earn path, which has no store behind it at all - the case
     // the null has to stay honest about.
     sleeve = await prisma.campaign.create({
-      data: { brandId: brand.id, name: "Wing box sleeve", status: "ACTIVE" },
+      data: { brandId: brand.id, name: "Meal deal sleeve", status: "ACTIVE" },
     });
     await prisma.earnRule.create({
       data: { brandId: brand.id, campaignId: sleeve.id, type: "FLAT_PER_SCAN", unit: "POINTS", amount: 10 },
@@ -150,6 +150,6 @@ describe("ledger provenance", () => {
     // know of, and the wallet falls back to the promotion's name for it.
     expect(scanned?.storeName).toBeNull();
     expect(scanned?.amountCents).toBeNull();
-    expect(scanned?.campaignName).toBe("Wing box sleeve");
+    expect(scanned?.campaignName).toBe("Meal deal sleeve");
   });
 });

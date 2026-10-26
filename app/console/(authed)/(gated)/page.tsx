@@ -101,7 +101,7 @@ export default async function ConsoleOverviewPage() {
         />
         <Metric
           value={o.scansLast7Days.toLocaleString("en-ZA")}
-          label="Slips scanned, last 7 days"
+          label="Scans, last 7 days"
           note={`${o.activeCampaigns} active promotion${o.activeCampaigns === 1 ? "" : "s"}`}
           series={o.scansByDay}
         />

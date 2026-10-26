@@ -285,7 +285,10 @@ describe("the chart", () => {
 
   it("agrees with the total printed beside it", async () => {
     const p = await getPerformance(brand.id, 30);
-    expect(p.scansByDay.reduce((sum, d) => sum + d.count, 0)).toBe(p.slips);
+    // Both mechanisms, because the headline above the chart counts both.
+    // The chart plotted slips alone for a while, which meant a brand
+    // running everything on pack watched a flat line through its best week.
+    expect(p.scansByDay.reduce((sum, d) => sum + d.count, 0)).toBe(p.slips + p.packCodes);
   });
 });
 
@@ -366,6 +369,53 @@ describe("delta", () => {
     expect(delta(0.5, null)).toBeNull();
   });
 });
+
+/**
+ * On-pack codes, which for a brand with no till is the whole mechanism.
+ *
+ * Every scan figure on this screen was once a count of till slips, with
+ * pack codes relegated to a note underneath. That reads as a rounding
+ * detail until you picture the brand whose codes are printed on the box
+ * and who has no tills at all: headline zero, flat chart, and a programme
+ * that was in fact working.
+ */
+describe("scans that arrive off a pack rather than a till", () => {
+  it("counts them in the headline and plots them on the chart", async () => {
+    const before = await getPerformance(brand.id, 30);
+
+    const batch = await prisma.packBatch.create({
+      data: { brandId: brand.id, campaignId: cashback.id, label: `pack-${run}`, quantity: 2 },
+    });
+    const at = new Date(Date.now() - 3 * DAY);
+    await prisma.packCode.createMany({
+      data: [0, 1].map((i) => ({
+        brandId: brand.id,
+        campaignId: cashback.id,
+        batchId: batch.id,
+        code: `PACK-${run}-${i}`,
+        status: "SCANNED" as const,
+        scannedAt: at,
+      })),
+    });
+
+    const after = await getPerformance(brand.id, 30);
+
+    expect(after.packCodes).toBe(before.packCodes + 2);
+    // Untouched: a code on a box has no till behind it, so the store
+    // table must not grow a phantom row or inflate an existing one.
+    expect(after.slips).toBe(before.slips);
+    expect(sumScans(after)).toBe(sumScans(before) + 2);
+
+    const day = at.toISOString().slice(0, 10);
+    const bar = (p: Awaited<ReturnType<typeof getPerformance>>) =>
+      p.scansByDay.find((d) => d.day.toISOString().slice(0, 10) === day)?.count ?? 0;
+    expect(bar(after)).toBe(bar(before) + 2);
+  });
+});
+
+function sumScans(p: Awaited<ReturnType<typeof getPerformance>>): number {
+  return p.scansByDay.reduce((sum, d) => sum + d.count, 0);
+}
 
 describe("a brand with nothing yet", () => {
   /**

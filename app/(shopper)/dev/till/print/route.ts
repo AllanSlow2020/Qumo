@@ -11,7 +11,7 @@ import { devOnly } from "@/lib/dev/guard";
  *
  * It is a route handler rather than a server action because the server
  * action version did not stay on the brand's host. Printing a slip on
- * chicken-licken.localhost:3000 produced a render on localhost:3000 -
+ * copper-kettle.localhost:3000 produced a render on localhost:3000 -
  * a host that names no brand - so the answer to "print a slip" was "this
  * link needs a brand". The Location below is relative, and a browser
  * resolves a relative Location against the address it asked for, so

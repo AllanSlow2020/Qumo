@@ -94,7 +94,7 @@ describe("provisioning a brand", () => {
 
   describe("the address, which cannot be changed later", () => {
     it("refuses a slug the host resolver could never route", async () => {
-      for (const slug of ["Chicken Licken", "chicken_licken", "-leading", "trailing-", "", "a".repeat(64)]) {
+      for (const slug of ["Copper Kettle", "copper_kettle", "-leading", "trailing-", "", "a".repeat(64)]) {
         await expect(make({ slug })).rejects.toBeInstanceOf(ProvisionError);
       }
     });

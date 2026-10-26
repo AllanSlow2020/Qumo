@@ -13,7 +13,7 @@ import { DeleteAccountForm } from "./delete-account-form";
 import { OptOutForm } from "./opt-out-form";
 
 // Async, because the title has to name the brand: a static one would put
-// "Qumo" in the tab of a page that says Chicken Licken everywhere else.
+// "Qumo" in the tab of a page that says Copper Kettle everywhere else.
 export async function generateMetadata(): Promise<Metadata> {
   return { title: brandTitle(await requireBrand(), "Your details") };
 }

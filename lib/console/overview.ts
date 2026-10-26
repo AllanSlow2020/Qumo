@@ -76,6 +76,7 @@ export async function getBrandOverview(brandId: string, now: Date = new Date()):
     uncappedCampaigns,
     uncappedPerPerson,
     scans,
+    packScans,
     newMembers,
   ] =
     await Promise.all([
@@ -96,6 +97,10 @@ export async function getBrandOverview(brandId: string, now: Date = new Date()):
       scoped.campaign.count({ where: { status: "ACTIVE", earnRule: { maxTotalAmount: null } } }),
       scoped.campaign.count({ where: { status: "ACTIVE", earnRule: { maxPerPersonPerDay: null } } }),
       scoped.purchaseScan.count({ where: { scannedAt: { gte: since } } }),
+      // On-pack scans count here too. The headline says "scanned", and a
+      // brand whose whole mechanism is a code on the box would otherwise
+      // read zero on a week that worked.
+      scoped.packCode.count({ where: { status: "SCANNED", scannedAt: { gte: since } } }),
       scoped.brandMembership.count({ where: { joinedAt: { gte: since } } }),
     ]);
 
@@ -103,18 +108,30 @@ export async function getBrandOverview(brandId: string, now: Date = new Date()):
   // by day, so the dates come back raw and are counted in memory - seven
   // days of one brand's scans is a small enough set that the alternative
   // (a raw SQL date_trunc) would be optimising the wrong thing.
-  const scanDays = await scoped.purchaseScan.findMany({
-    where: { scannedAt: { gte: since } },
-    select: { scannedAt: true },
-  });
+  const [slipDays, packDays] = await Promise.all([
+    scoped.purchaseScan.findMany({
+      where: { scannedAt: { gte: since } },
+      select: { scannedAt: true },
+    }),
+    scoped.packCode.findMany({
+      where: { status: "SCANNED", scannedAt: { gte: since } },
+      select: { scannedAt: true },
+    }),
+  ]);
+  // Nullable on PackCode even for SCANNED rows, so filtered rather than
+  // asserted. See the same note in lib/console/performance.ts.
+  const scanDays = [
+    ...slipDays.map((r) => r.scannedAt),
+    ...packDays.map((r) => r.scannedAt).filter((d): d is Date => d !== null),
+  ];
 
   const buckets = new Map<string, number>();
   for (let i = 6; i >= 0; i -= 1) {
     const day = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
     buckets.set(day.toISOString().slice(0, 10), 0);
   }
-  for (const scan of scanDays) {
-    const key = scan.scannedAt.toISOString().slice(0, 10);
+  for (const at of scanDays) {
+    const key = at.toISOString().slice(0, 10);
     // A scan can land a few minutes outside the window between the two
     // queries; drop it rather than inventing an eighth bar.
     if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
@@ -136,7 +153,7 @@ export async function getBrandOverview(brandId: string, now: Date = new Date()):
     unsignedStores,
     uncappedCampaigns,
     uncappedPerPerson,
-    scansLast7Days: scans,
+    scansLast7Days: scans + packScans,
     newMembersLast7Days: newMembers,
     scansByDay,
   };

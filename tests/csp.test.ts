@@ -65,7 +65,15 @@ describe("the production policy", () => {
   });
 
   it("allows images from any https host, because brand logos live on brand CDNs", () => {
-    expect(directive(production(), "img-src")).toBe("img-src 'self' https: data:");
+    expect(directive(production(), "img-src")).toBe("img-src 'self' https: data: blob:");
+  });
+
+  it("allows blob images, which is what the logo upload previews with", () => {
+    // Pinned on its own because it is easy to read the line above as noise
+    // and tidy away. Without blob: the console's file picker shows a broken
+    // image instead of the logo somebody just chose, and the failure is
+    // silent apart from a console warning nobody is looking at.
+    expect(directive(production(), "img-src")).toContain("blob:");
   });
 
   it("does not reach off-origin for fonts, because next/font self-hosts", () => {

@@ -4,8 +4,8 @@ Everything below is one afternoon and, apart from a domain, no money. It
 gets you two working addresses on real HTTPS:
 
 ```
-chicken-licken.qumo.co.za    the shopper's site
-app.qumo.co.za               the brand console
+copper-kettle.qumo-app.com    the shopper's site
+app.qumo-app.com               the brand console
 ```
 
 Read the two paragraphs under **Before you start** first. One of them is a
@@ -17,7 +17,7 @@ worth knowing before rather than after.
 ## Before you start
 
 **Vercel's free plan is technically enough.** The thing that looked like it
-would force an upgrade - a wildcard domain, `*.qumo.co.za`, which is what
+would force an upgrade - a wildcard domain, `*.qumo-app.com`, which is what
 makes subdomain-per-brand work - is available on every Vercel plan,
 including Hobby. The only condition is that the domain has to use Vercel's
 own nameservers, because a wildcard certificate is issued by proving
@@ -31,7 +31,7 @@ The nightly cleanup job also fits: Hobby allows cron, once a day, and
 **Vercel's free plan is not licensed for this.** Hobby is
 non-commercial-personal-use only, and Vercel defines commercial broadly -
 any deployment used for the financial gain of anyone involved in producing
-it. Showing Qumo to Chicken Licken in order to win their business is
+it. Showing Qumo to a prospective client in order to win their business is
 commercial by that definition. Nobody will stop you deploying, and I am not
 going to pretend the risk is dramatic; but it is their platform and their
 rule, so you should choose it knowingly rather than find out later. Pro is
@@ -39,8 +39,36 @@ $20 a month and the switch is a button, not a migration. If you would
 rather not pay and would rather not be offside, the alternatives are at the
 bottom of this file.
 
-The one thing you do have to pay for is a domain. `qumo.app` belongs to
-somebody else; `qumo.co.za` is about R100 a year.
+The one thing you do have to pay for is a domain, and two are bought.
+`qumo-app.com` is the one that matters: it is the root every brand
+subdomain hangs off and the name that goes on the QR codes. `qumo.co.za`
+was bought first, when `qumo.app` and every unhyphenated `.com` spelling
+turned out to be taken, and it is now a redirect rather than the product.
+
+Both were bought through **GoDaddy**, which holds the nameservers today.
+**They have to move to Vercel**, for the reason in the paragraph above:
+the wildcard certificate is issued by proving control of the zone, so
+Vercel has to hold the zone. Pointing individual records at Vercel from
+GoDaddy's DNS works for one named subdomain and does not work for `*`,
+which is the record everything here rests on.
+
+Moving nameservers is not moving the registration. The domain stays
+bought at GoDaddy, stays renewable there, and can be pointed back at any
+time.
+
+As of today the apex and `www` still resolve to GoDaddy's own parked
+page, and `app.qumo-app.com` and every brand subdomain resolve to nothing
+at all. The domain half is done and the DNS half has not started.
+
+The good news is that GoDaddy's DNS manager takes a `*` host, which is
+the record this whole architecture rests on: **every brand is a
+subdomain**, so one wildcard is what makes provisioning a brand a
+database write rather than a DNS ticket. Nothing has to be moved.
+
+There is also a free GoDaddy site sitting on the apex. It can stay or go
+- the apex record below replaces it either way, because a hostname
+answers from one place at a time. Qumo is what is being built here, so
+the builder is not part of the deployment.
 
 ---
 
@@ -73,7 +101,7 @@ You can skip this step entirely and still get a working shopper site.
 Vercel gives every project a `<project-name>.vercel.app` hostname, and Qumo
 reads the brand from the label to the left of the root domain - so name the
 project after the brand's slug, set `NEXT_PUBLIC_QUMO_ROOT_DOMAIN` to
-`vercel.app`, and `chicken-licken.vercel.app` resolves correctly.
+`vercel.app`, and `copper-kettle.vercel.app` resolves correctly.
 
 One brand, and no console: the console lives at `app.{root}`, and
 `app.vercel.app` is not yours to claim. Run the console locally against the
@@ -110,7 +138,7 @@ that one before it deploys; it cannot catch a weak `AUTH_SECRET`.
 | Variable | Value | Type |
 |---|---|---|
 | `DATABASE_URL` | the pooled Neon string from step 1 | Config |
-| `NEXT_PUBLIC_QUMO_ROOT_DOMAIN` | `qumo.co.za` - bare hostname, no `https://`, no path | Config |
+| `NEXT_PUBLIC_QUMO_ROOT_DOMAIN` | `qumo-app.com` - bare hostname, no `https://`, no path | Config |
 | `PHONE_HASH_SECRET` | `openssl rand -base64 32` | Config |
 | `ENCRYPTION_KEY` | `openssl rand -base64 32` | Config |
 | `AUTH_SECRET` | `openssl rand -base64 32` | Secret |
@@ -152,7 +180,7 @@ pnpm dlx vercel env pull .env --environment=production
 It writes `[SENSITIVE]` in place of anything saved as Secret, which is the
 tell that a value was typed into the wrong box. It also writes a handful of
 Vercel's own variables and sets `NEXT_PUBLIC_QUMO_ROOT_DOMAIN` to the
-production domain, which will stop `chicken-licken.localhost:3000` working
+production domain, which will stop `copper-kettle.localhost:3000` working
 - so keep this `.env` for pointing at production, and run `pnpm bootstrap`
 to get a local one back.
 
@@ -167,15 +195,99 @@ are caught here rather than by you, later, in front of somebody.
 
 ## 4. The domains on the project
 
-Settings → Domains, add three:
+Two halves, and both are needed: Vercel has to be told the domains are
+its, and GoDaddy has to hand it the zone.
+
+### On Vercel
+
+Settings → Domains, add three for the product root:
 
 | Domain | Why |
 |---|---|
-| `*.qumo.co.za` | every brand, and the console. This is the one that matters. |
-| `qumo.co.za` | the apex. Nothing is served here yet - it answers "this link needs a brand" - but leaving it unclaimed means a typo goes nowhere at all. |
-| `app.qumo.co.za` | covered by the wildcard already; add it explicitly so the certificate is issued eagerly rather than on the first request. |
+| `*.qumo-app.com` | every brand, and the console. This is the one that matters. |
+| `qumo-app.com` | the apex. Nothing is served here yet - it answers "this link needs a brand" - but leaving it unclaimed means a typo goes nowhere at all. |
+| `app.qumo-app.com` | covered by the wildcard already; add it explicitly so the certificate is issued eagerly rather than on the first request. |
 
-Vercel issues the certificates itself once the nameservers have propagated.
+Add the wildcard first. It is the one with a plan and a nameserver
+condition attached, so it is the one that tells you early whether the
+rest of this is going to work.
+
+### The second domain
+
+`qumo.co.za` was bought first and is no longer the product. It is a
+redirect, and it should be one rather than a second live root: two roots
+serving the same brand means two sets of cookies, two origins a shopper
+can be signed in on, and a pack printed with whichever one somebody had
+in their head that week.
+
+Add `qumo.co.za` and `www.qumo.co.za` to the Vercel project too, and set
+a redirect to `qumo-app.com`. There is nothing to add for
+`*.qumo.co.za`: no brand is served there, so no wildcard and no
+certificate for one.
+
+Worth knowing what the redirect does **not** cover. A shopper who scans a
+pack printed with a `qumo.co.za` address is carrying a path,
+`/s/<code>`, and a redirect that drops the path sends them to a page that
+asks which brand they want. Nothing is printed yet, so this is theory
+rather than a problem, and it stays theory as long as every print run
+carries the product root.
+
+### On GoDaddy
+
+One change, and it is the nameservers rather than the records.
+
+**Add the domain to the Vercel project before you touch the
+nameservers.** Vercel's nameservers only answer for zones Vercel knows
+about, so pointing a domain at them first does not give you a broken
+website, it gives you no domain at all: every lookup fails, not just the
+apex. Adding it first also surfaces any plan or configuration objection
+while the domain is still resolving normally, which is the difference
+between reading an error message and debugging a blackout.
+
+**Copy the records you are keeping first.** Changing nameservers moves
+the whole zone, so anything GoDaddy is currently answering stops being
+answered by GoDaddy. Write down every `MX` and `TXT` record and recreate
+them in Vercel afterwards. `MX` is email delivery and `TXT` is usually
+SPF, DKIM or a verification token something else relies on. Nothing else
+on a GoDaddy default zone is worth keeping: the parked `A` on `@`, the
+`CNAME` on `www` and the `_domainconnect` helper are exactly what is
+being replaced, and `NS` and `SOA` are replaced by the change itself.
+
+On this domain, as checked, there is no `MX`, no SPF and no DKIM, so no
+mail is live and nothing is at risk. The only record with content worth
+carrying over is the DMARC policy on `_dmarc`.
+
+**A trap for later, worth knowing now.** That DMARC record says
+`p=quarantine`, and with no SPF and no DKIM alongside it, every message
+claiming to come from this domain fails both checks. For a domain that
+sends no mail this is the right posture - it is what stops somebody
+spoofing your address. But the console sends staff password resets
+(`SMTP_*` in `.env.example`), and the day those start going out from an
+address at this domain they will be quarantined by receivers unless SPF
+and DKIM go in at the same time. If that day comes before Workspace is
+set up on the domain, send from an address on a domain that is already
+configured, rather than loosening the policy here.
+
+Then, in GoDaddy under Domain → Nameservers → Change → "I'll use my own
+nameservers":
+
+```
+ns1.vercel-dns.com
+ns2.vercel-dns.com
+```
+
+Vercel shows the pair it wants when you add the domain to the project.
+If it differs from the above, Vercel is right and this document is out
+of date.
+
+Propagation is usually under an hour and can take up to 48. Vercel
+issues the certificates itself once it sees the zone, including the
+wildcard.
+
+**If the wildcard is ever the record that will not go in, stop and say
+so.** Adding brand subdomains one at a time is not a fallback - it would
+mean no brand can be provisioned without somebody editing DNS, which
+undoes the thing the provisioning screen exists for.
 
 ## 5. The schema, and something to look at
 
@@ -216,9 +328,9 @@ secret before storing it - and `demo` needs `PHONE_HASH_SECRET` as well,
 for the members it creates. Both must be the same values the live site
 uses, which is the whole reason they are Config rather than Secret above.
 
-That gives you Chicken Licken with five stores, 280 members and three
-months of activity, at `https://chicken-licken.qumo.co.za`, and a console
-login at `https://app.qumo.co.za`.
+That gives you Copper Kettle with five stores, 280 members and three
+months of activity, at `https://copper-kettle.qumo-app.com`, and a console
+login at `https://app.qumo-app.com`.
 
 **Change the console password immediately.** The seed sets a known one, and
 it is in this repository. Sign in, then use the password screen.
@@ -247,11 +359,11 @@ cannot mint its own slips. Two ways round it, both fine:
 
   ```bash
   DATABASE_URL="<the pooled Neon string>" \
-  QUMO_TILL_ORIGIN="https://chicken-licken.qumo.co.za" \
+  QUMO_TILL_ORIGIN="https://copper-kettle.qumo-app.com" \
   pnpm dev
   ```
 
-  Open `http://chicken-licken.localhost:3000/dev/till`, print a slip, scan
+  Open `http://copper-kettle.localhost:3000/dev/till`, print a slip, scan
   the QR with your phone. The slip is signed with that store's real secret,
   read from the production database, so the deployed site accepts it - the
   till is standing in for a point of sale, which is exactly what it is for;

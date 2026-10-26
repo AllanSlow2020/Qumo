@@ -3,6 +3,7 @@ import { ROOT_DOMAIN } from "@/lib/brand/host";
 import { getBrandIdentity, MANAGE_IDENTITY_ROLES } from "@/lib/brand/manage";
 import { requireStaff } from "@/lib/staff/current";
 import { IdentityForm } from "./identity-form";
+import { AgeForm } from "./age-form";
 
 export default async function ConsoleSettingsPage() {
   const session = await requireStaff();
@@ -17,11 +18,11 @@ export default async function ConsoleSettingsPage() {
 
   return (
     <>
-      <h1 className="cn-h1">Appearance</h1>
+      <h1 className="cn-h1">Your programme</h1>
       <p className="cn-body">
-        Your name, your colour, your type and your logo, on the pages your customers actually see. The same
-        mechanic runs underneath for every brand. This is the part that makes it yours. Everything here has a
-        Qumo default already set, so changing nothing still gets you a considered page.
+        Your address, who is allowed to join, and the face your customers see. The same mechanic runs underneath
+        for every brand. This is the part that makes it yours. Everything here has a Qumo default already set, so
+        changing nothing still gets you a considered page.
       </p>
 
       <section className="cn-panel">
@@ -38,6 +39,21 @@ export default async function ConsoleSettingsPage() {
             and we will redirect the old one.
           </p>
         </div>
+      </section>
+
+      <section className="cn-panel">
+        <div className="cn-panel-head">
+          <h2 className="cn-h2">Who can join</h2>
+        </div>
+        {canManage ? (
+          <div className="cn-panel-body">
+            <AgeForm minimumAge={brand.minimumAge} />
+          </div>
+        ) : (
+          <div className="cn-panel-body">
+            <p className="cn-label">Changing this needs an owner or admin.</p>
+          </div>
+        )}
       </section>
 
       <section className="cn-panel">

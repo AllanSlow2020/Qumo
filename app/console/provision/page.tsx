@@ -19,13 +19,13 @@ export const metadata: Metadata = { title: `Set up a brand · ${PRODUCT_NAME}` }
  */
 export default function ProvisionPage() {
   return (
-    <>
+    <div className="cn-solo">
       <h1 className="cn-h1">Set up a brand</h1>
       <p className="cn-body">
         Creates the brand and its first owner. Everything else - promotions, stores, the rest of the team - they do
         themselves from the console.
       </p>
       <ProvisionForm rootDomain={ROOT_DOMAIN} />
-    </>
+    </div>
   );
 }

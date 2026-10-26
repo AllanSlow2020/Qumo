@@ -52,7 +52,7 @@ describe("lib/stores/receipt", () => {
   }
 
   beforeAll(async () => {
-    brand = await prisma.brand.create({ data: { name: "Licken Co", slug: `receipt-${suffix}` } });
+    brand = await prisma.brand.create({ data: { name: "Copper Kettle Co", slug: `receipt-${suffix}` } });
     campaign = await prisma.campaign.create({
       data: { brandId: brand.id, name: "5% back", status: "ACTIVE" },
     });

@@ -87,7 +87,13 @@ export function buildCsp(nonce: string, secure: boolean): string {
     "default-src 'self'",
     `script-src ${script}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' https: data:",
+    // `blob:` is for the console only, and specifically for the logo upload:
+    // picking a file makes an object URL so the preview moves before
+    // anything is saved, and without this the one screen whose job is
+    // showing you what you picked shows a broken image instead. A blob URL
+    // is same-origin and is minted by the page's own script, so allowing it
+    // hands nothing to an attacker who is not already running script here.
+    "img-src 'self' https: data: blob:",
     // next/font self-hosts, so fonts only ever come from our own origin.
     "font-src 'self'",
     `connect-src ${connect}`,

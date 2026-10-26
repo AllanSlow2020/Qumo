@@ -76,6 +76,9 @@ export type BrandTheme = {
   logoUrl: string | null;
   accent: string | null;
   accentInk: string | null;
+  /** Null means the light pair is used in dark mode too, which was the old behaviour. */
+  accentDark: string | null;
+  accentInkDark: string | null;
   /** Null means Qumo's own face, which is the default rather than a fallback. */
   displayFont: FontFace | null;
   figureFont: FontFace | null;
@@ -93,26 +96,55 @@ type BrandIdentityFields = Pick<
   | "logoUrl"
   | "accentColor"
   | "accentInkColor"
+  | "accentColorDark"
+  | "accentInkColorDark"
   | "displayFont"
   | "figureFont"
   | "supportEmail"
   | "supportUrl"
+  // Not the bytes: an uploaded logo is served by a route, and all the theme
+  // needs to know is whether one exists and when it last changed.
+  | "logoMimeType"
+  | "logoUpdatedAt"
 >;
+
+/**
+ * Where the shopper page points at the logo.
+ *
+ * An upload beats a URL, because a brand that has just uploaded one and
+ * still has an old address on file means the upload. The `v` is the row's
+ * own updated-at stamp, which is what lets the response be cached hard and
+ * still change the moment somebody uploads a new one.
+ */
+function logoSource(brand: BrandIdentityFields): string | null {
+  if (brand.logoMimeType) {
+    const v = brand.logoUpdatedAt ? brand.logoUpdatedAt.getTime() : 0;
+    return `/api/brand-logo?v=${v}`;
+  }
+  return safeLogoUrl(brand.logoUrl);
+}
 
 export function toBrandTheme(brand: BrandIdentityFields): BrandTheme {
   const accent = safeColor(brand.accentColor);
+  // Same rule as the light pair, one level down: a dark accent only means
+  // anything if there is a light one to be the dark variant *of*. A brand
+  // with only a dark colour set would get its identity on one theme and
+  // Qumo's black on the other, which reads as a bug rather than a choice.
+  const accentDark = accent ? safeColor(brand.accentColorDark) : null;
   return {
     id: brand.id,
     slug: brand.slug,
     name: brand.displayName?.trim() || brand.name,
     tagline: brand.tagline?.trim() || null,
-    logoUrl: safeLogoUrl(brand.logoUrl),
+    logoUrl: logoSource(brand),
     accent,
     // Ink without an accent is meaningless and, worse, actively harmful: it
     // would recolour the default black button's text and could land white on
     // white. It only exists in relation to the accent, so it only survives
     // in relation to it.
     accentInk: accent ? safeColor(brand.accentInkColor) : null,
+    accentDark,
+    accentInkDark: accentDark ? safeColor(brand.accentInkColorDark) : null,
     // Independent of each other and of the accent, unlike the ink above. A
     // brand that wants its own headings and Qumo's figures is a coherent
     // choice, and so is the other way round.
@@ -147,9 +179,21 @@ export function brandStyle(theme: BrandTheme | null): React.CSSProperties | unde
   if (!theme) return undefined;
 
   const style: Record<string, string> = {};
+  // Named --sc-brand-* rather than assigned to --sc-btn directly, which is
+  // the one non-obvious line in this file and the reason dark mode works.
+  //
+  // These arrive as an inline style attribute, and an inline declaration
+  // beats every stylesheet rule. Writing --sc-btn here therefore overrode
+  // the dark-theme blocks in shopper.css as well as the light one, so a
+  // brand colour was the same in both themes no matter what the stylesheet
+  // said. Setting a differently-named property instead leaves the theme
+  // blocks in charge: each one picks the pair it wants and falls back to
+  // the light pair, then to Qumo's own. See shopper.css.
   if (theme.accent) {
-    style["--sc-btn"] = theme.accent;
-    if (theme.accentInk) style["--sc-btn-ink"] = theme.accentInk;
+    style["--sc-brand-accent"] = theme.accent;
+    if (theme.accentInk) style["--sc-brand-ink"] = theme.accentInk;
+    if (theme.accentDark) style["--sc-brand-accent-dark"] = theme.accentDark;
+    if (theme.accentInkDark) style["--sc-brand-ink-dark"] = theme.accentInkDark;
   }
   if (theme.displayFont) style["--font-display"] = fontStack(theme.displayFont);
   if (theme.figureFont) style["--font-mono"] = fontStack(theme.figureFont);

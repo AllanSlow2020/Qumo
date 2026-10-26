@@ -84,7 +84,7 @@ describe("cancelling a programme, end to end", () => {
   }
 
   beforeAll(async () => {
-    brand = await prisma.brand.create({ data: { name: "Licken", slug: `sub-${suffix}` } });
+    brand = await prisma.brand.create({ data: { name: "Copper Kettle", slug: `sub-${suffix}` } });
     campaign = await prisma.campaign.create({
       data: { brandId: brand.id, name: "5% back", status: "ACTIVE" },
     });
