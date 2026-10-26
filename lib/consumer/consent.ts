@@ -15,7 +15,7 @@ import { OPERATOR_NAME, PRODUCT_NAME } from "@/lib/product";
  *  system actually does, and deliberately claiming nothing it does not. It
  *  must be reviewed against POPIA - and rewritten to match whichever
  *  position the business takes - BEFORE the first real shopper registers.
- *  See docs/qumo-design.md §3: the operator vs responsible party decision
+ *  See docs/popia.md: the operator vs responsible party decision
  *  changes what this copy has to say, and retrofitting consent onto people
  *  who already signed up is materially harder than getting it right once.
  * ─────────────────────────────────────────────────────────────────────────

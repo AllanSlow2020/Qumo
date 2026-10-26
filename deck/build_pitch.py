@@ -1,5 +1,5 @@
 """
-The Qumo pitch: ten slides, to win a second meeting.
+The Qumo pitch: eleven slides, to win a second meeting.
 
 Not the product overview. That one answers "what does it do" and runs to
 twenty-three slides; this one answers "why should a brand care, and what are
@@ -29,7 +29,7 @@ from style import *  # noqa: F403 - a deck is a drawing script, not a library
 import style
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(style.HERE, "Qumo-pitch.pptx")
-style.start("For brands", 10)
+style.start("For brands", 11)
 
 
 def p01():
@@ -53,12 +53,12 @@ def p02():
             "No name, no number, no second conversation. The retailer knows who they are. You do not.",
          M, Inches(2.55), Inches(10.2), Inches(1.0), size=13, colour=BODY, spacing=1.55)
     cards = [
-        ("Loyalty cards do not travel", "They work where you own the till. On somebody else's "
-         "shelf there is nothing to swipe."),
-        ("Apps ask far too much", "Nobody downloads an app to claim five rand. The install is a "
-         "bigger ask than the reward is worth."),
-        ("Competitions prove nothing", "A prize draw collects entries. It does not tell you who "
+        ("The retailer keeps them", "Clicks, Pick n Pay and Checkers run the loyalty card. What "
+         "it learns about your buyer stays with them."),
+        ("A draw collects entries", "One act, by one person, on one day. It does not tell you who "
          "buys twice, and it does not move anybody to."),
+        ("An app is a second ask", "Nobody downloads one to claim five rand, and the data costs "
+         "money before the reward arrives."),
     ]
     gap = Inches(0.24)
     w = Emu(int((CONTENT - gap * 2) / 3))
@@ -75,9 +75,9 @@ def p02():
 def p03():
     s = slide(); masthead(s); kicker(s, "The opening")
     h1(s, "You are already paying for this, and getting nothing back")
-    text(s, "On-pack promotions are everywhere. Codes under caps, numbers texted to a short code, "
-            "a draw at the end of the quarter. The print run is paid for, the codes go out, people "
-            "enter, somebody wins a car.",
+    text(s, "A managed on-pack promotion in this market starts around R40,000. Codes under caps, a "
+            "short code to text, a draw at the end of the quarter. Run two a year and that is "
+            "R80,000 of print and prize money spent on finding out nothing.",
          M, Inches(2.55), Inches(10.6), Inches(1.0), size=13, colour=BODY, spacing=1.55)
     box(s, M, Inches(3.95), CONTENT, Inches(1.5), border=ACCENT)
     text(s, "And then the campaign ends and you have a spreadsheet of entrants you will never "
@@ -114,8 +114,9 @@ def p05():
     text(s, "Your name at the top, your colour on the button, your address in the bar. Qumo is one "
             "line in the footer, which is there so a customer knows who is holding their number.",
          M, y + Inches(0.3), Inches(4.75), Inches(1.4), size=13, colour=BODY, spacing=1.55)
-    text(s, "You are the responsible party for the data and we operate it for you. Your customers "
-            "are yours. No other brand sees them, and there is no cross-brand list for anybody to buy.",
+    text(s, "Your customers are yours. No other brand sees them, and there is no cross-brand list "
+            "for anybody to buy. How POPIA responsibility splits between you and us is in the "
+            "agreement.",
          M, y + Inches(1.9), Inches(4.75), Inches(1.3), size=12, colour=MUTED, spacing=1.55)
     phones(s, [("shopper-join", "Poster", "Explains, signs up, pays nothing."),
                ("shopper-login", "Sign in", "A number and a texted code."),
@@ -183,8 +184,9 @@ def p08():
 def p09():
     s = slide(); masthead(s); kicker(s, "Indicative · for discussion")
     h1(s, "And what it costs if you keep it")
-    text(s, "Directional, to show the shape. A subscription rather than a project, because the "
-            "programme does not end. Brands pay for the scale they use.",
+    text(s, "Two managed promotions a year costs about R80,000 and ends twice. Launch is R90,000 a "
+            "year and does not end. Directional figures, to show the shape: a subscription rather "
+            "than a project, because a programme has no closing date.",
          M, Inches(2.42), Inches(11.0), Inches(0.8), size=12.5, colour=BODY, spacing=1.55)
     tri_cards(s, [
         {"tag": "Tier 01", "title": "LAUNCH", "sub": "One campaign, one door",
@@ -216,7 +218,29 @@ def p10():
     footer(s)
 
 
-for fn in [p01, p02, p03, p04, p05, p06, p07, p08, p09, p10]:
+def p11():
+    s = slide(); masthead(s); kicker(s, "If somebody already runs your promotions")
+    h1(s, "We are not asking you to cancel anything")
+    text(s, "A brand running on-pack codes already has an agency or a promotions vendor, and they "
+            "are good at what they do. This is where Qumo sits beside them rather than instead.",
+         M, Inches(2.42), Inches(11.0), Inches(0.8), size=12.5, colour=BODY, spacing=1.55)
+    rows(s, [
+        ("What they do well",
+         "The mechanic, the prize fulfilment, the winner admin and the paperwork a draw needs."),
+        ("What ends with it",
+         "The list. An entry is somebody who wanted a car, on one day, in one month. Next quarter "
+         "starts from nothing again."),
+        ("Where we sit",
+         "Under the same print run. The code opens your page instead of a draw entry, and the "
+         "person is still there in six months."),
+        ("Run both if you like",
+         "One code can carry a draw and a balance. We would rather be the half that keeps the "
+         "customer than the half that picks a winner."),
+    ], Inches(3.30))
+    footer(s)
+
+
+for fn in [p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11]:
     fn()
 
 print(f"{style.save(OUT)} slides -> {OUT}")
