@@ -166,7 +166,7 @@ export function CampaignEditor({ campaign, onDone }: { campaign: ConsoleCampaign
             another, and pressing save again would have quietly replaced
             the stamp card with 5% cash. Remounting re-applies them. */}
         <form
-          key={`${rule?.type}-${rule?.unit}-${rule?.amount}-${rule?.basisPoints}-${rule?.minSpendCents}`}
+          key={`rule-${rule?.type}-${rule?.unit}-${rule?.amount}-${rule?.basisPoints}-${rule?.minSpendCents}`}
           action={ruleAction}
           className="cn-form"
         >
@@ -254,7 +254,13 @@ export function CampaignEditor({ campaign, onDone }: { campaign: ConsoleCampaign
             came back from the server for the same reason the other two
             are - defaultValue only applies at mount. */}
         <form
-          key={`${rule?.completesAt}-${campaign.reward?.rewardName}-${campaign.reward?.maxCoupons}`}
+          /* Namespaced, and that prefix is load-bearing. This key and the
+             ceilings key below were both three fields wide, so on a
+             promotion with no rule yet they both resolved to
+             "undefined-undefined-undefined" - two siblings with the same
+             key, which React is explicit it will not handle predictably.
+             It fired on every draft promotion. */
+          key={`card-${rule?.completesAt}-${campaign.reward?.rewardName}-${campaign.reward?.maxCoupons}`}
           action={cardAction}
           className="cn-form"
         >
@@ -330,7 +336,7 @@ export function CampaignEditor({ campaign, onDone }: { campaign: ConsoleCampaign
         </form>
 
         <form
-          key={`${rule?.maxTotalAmount}-${rule?.maxPerPersonPerDay}-${rule?.maxScansPerPersonPerDay}`}
+          key={`limits-${rule?.maxTotalAmount}-${rule?.maxPerPersonPerDay}-${rule?.maxScansPerPersonPerDay}`}
           action={limitAction}
           className="cn-form"
         >

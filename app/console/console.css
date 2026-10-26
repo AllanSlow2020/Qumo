@@ -1083,6 +1083,73 @@ html[data-theme="dark"]:has(.cn) body {
    sits at the foot of the editor - away from the Save buttons above it. */
 .cn-actions-end { justify-content: flex-end; }
 
+/* ---------- the getting-started list ----------
+   A numbered list that reads as a sequence rather than a set of options,
+   because it is one: the engine refuses to activate a promotion with no
+   rule, and a code scanned under a paused promotion earns nothing. The
+   order is not a suggestion. */
+.cn-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cn-step {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--cn-line-soft);
+}
+
+.cn-step:last-child { border-bottom: 0; }
+
+.cn-step-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+
+.cn-step-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--cn-ink);
+  margin: 0;
+}
+
+/* A ring that fills when the step is done. The same shape as the shopper's
+   stamp card, for the same reason: a row of marks with gaps in it says how
+   far along you are before any of the words are read. */
+.cn-step-mark {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: 999px;
+  border: 1.5px dashed var(--cn-line-strong);
+}
+
+.cn-step-done .cn-step-mark {
+  border: 1.5px solid var(--cn-pos);
+  background: var(--cn-pos);
+}
+
+/* Done is quieter, not struck through. These are things the brand did, not
+   mistakes, and they stay readable so somebody can check what they set. */
+.cn-step-done .cn-step-title { color: var(--cn-ink-2); font-weight: 400; }
+
+/* Present in the document, absent from the layout - not display:none, which
+   would take it out of the accessibility tree along with the pixels. */
+.cn-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ---------- the destructive pair ----------
    Quiet until the pointer is on it. A Delete button that is red from across
    the room pulls the eye to the one control nobody should reach for by
