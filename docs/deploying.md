@@ -82,6 +82,20 @@ the builder is not part of the deployment.
    process, and a direct connection per process exhausts Postgres's
    connection limit under any real traffic.
 3. Keep it. It becomes `DATABASE_URL`.
+4. Copy the **direct** string too - the same database on the host
+   *without* `-pooler`. It becomes `DIRECT_DATABASE_URL`, and it is used by
+   the Prisma CLI for migrations and by nothing else.
+
+**Why two.** `prisma migrate deploy` takes a session-level advisory lock so
+that two deploys landing together cannot apply the same migration twice. A
+transaction pooler does not promise the next statement goes to the same
+backend, so the session holding the lock and the session waiting on it can
+be different connections, and the wait ends at the ten second timeout with
+`P1002: the database server was reached but timed out`. Which backend the
+pooler hands out decides it, so this passes several deploys and then fails
+one for no visible reason. The application keeps the pooled URL, which is
+what it wants; only the CLI needs the direct one. `scripts/preflight.mjs`
+refuses to build with a pooled `DATABASE_URL` and no `DIRECT_DATABASE_URL`.
 
 **On the region:** what matters is that the database and the app end up in
 the same one, not which one. A page makes several queries, and each of them
@@ -138,6 +152,7 @@ that one before it deploys; it cannot catch a weak `AUTH_SECRET`.
 | Variable | Value | Type |
 |---|---|---|
 | `DATABASE_URL` | the pooled Neon string from step 1 | Config |
+| `DIRECT_DATABASE_URL` | the same database, host without `-pooler`. Migrations only | Secret |
 | `NEXT_PUBLIC_QUMO_ROOT_DOMAIN` | `qumo-app.com` - bare hostname, no `https://`, no path | Config |
 | `PHONE_HASH_SECRET` | `openssl rand -base64 32` | Config |
 | `ENCRYPTION_KEY` | `openssl rand -base64 32` | Config |
