@@ -257,3 +257,38 @@ async function findOrCreatePerson(phoneE164: string, phoneHash: string): Promise
     },
   });
 }
+
+/**
+ * How long a spent or expired passcode row is kept.
+ *
+ * Nothing in the product reads one after its ten minutes are up. The two
+ * rate limits run off their own table and their own fifteen-minute windows,
+ * so they do not need these rows either. What was left was a table that only
+ * ever grew: one row per sign-in attempt, each carrying the HMAC of a phone
+ * number and the moment it was made, kept forever, answering a question
+ * nobody can ask - there is no screen anywhere that shows a shopper their
+ * sign-in attempts.
+ *
+ * Seven days rather than the ninety ShopperSession gets. A session row is
+ * kept that long on purpose, so a shopper who notices something wrong weeks
+ * later can still be told when a device signed in and whether it was them.
+ * These rows answer nothing of the kind, and they are keyed on the number
+ * itself rather than on a person, which makes them the more sensitive of the
+ * two and the one with less reason to exist. A week leaves enough for
+ * "I never got my code" on a Monday about a Friday, and no more.
+ */
+export const OTP_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Deletes passcode rows well past their expiry. Wired to the nightly cron
+ * beside the session sweep - the same job, for the same reason.
+ *
+ * Cut on expiresAt rather than createdAt because expiry is what makes a row
+ * useless, and it is the column that is already indexed.
+ */
+export async function sweepExpiredPasscodes(now: Date = new Date()): Promise<number> {
+  const { count } = await prisma.phoneOtp.deleteMany({
+    where: { expiresAt: { lt: new Date(now.getTime() - OTP_RETENTION_MS) } },
+  });
+  return count;
+}

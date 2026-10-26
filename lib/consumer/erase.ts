@@ -44,6 +44,27 @@ import { logger } from "@/lib/security/logger";
  * The number is therefore free again. Somebody signing in on it afterwards
  * gets a new, empty account, which is the correct answer both for a person
  * who changed their mind and for whoever is issued that number next.
+ *
+ * ── The trail the hash leaves in other tables ────────────────────────────
+ *
+ * Overwriting Person.phoneHash is only as good as the claim that no other
+ * table holds the same value, and two do. PhoneOtp carries phoneHash
+ * directly, one row per passcode ever requested. RateLimit carries it
+ * inside its key ("otp:send:<phoneHash>").
+ *
+ * That matters more than a loose end, because phoneHash is a deterministic
+ * HMAC of the real number. Anyone who can compute it - this service, or
+ * anyone holding PHONE_HASH_SECRET and a number to test - could take an
+ * erased person's number, hash it, and find rows proving that number used
+ * Qumo and on which dates. The enforcement this file is built on is "a
+ * value no phone number can hash to", and leaving the original hash in a
+ * neighbouring table defeats it.
+ *
+ * The argument against keeping ShopperSession rows is already written above
+ * and applies to PhoneOtp word for word: it is a list of when this person
+ * asked to use the service, which is precisely the record they have just
+ * asked us not to keep. It was reasoned out for one table and missed for
+ * the other.
  */
 
 /** Deliberately not hex: nothing HMAC-SHA256 ever produces can collide with it. */
@@ -54,6 +75,8 @@ function unreachableHash(): string {
 export type EraseResult = {
   /** Sessions ended by this. Logged rather than shown - it is an operator's number. */
   sessionsRevoked: number;
+  /** Passcode rows removed with them, for the same reason. */
+  passcodesDeleted: number;
 };
 
 /**
@@ -67,11 +90,14 @@ export async function erasePerson(personId: string, now: Date = new Date()): Pro
   return prisma.$transaction(async (tx) => {
     const person = await tx.person.findUnique({
       where: { id: personId },
-      select: { id: true, erasedAt: true },
+      // phoneHash is read here because it is about to be destroyed, and the
+      // rows in other tables that carry it can only be found while it is
+      // still known.
+      select: { id: true, erasedAt: true, phoneHash: true },
     });
 
     if (!person || person.erasedAt) {
-      return { sessionsRevoked: 0 };
+      return { sessionsRevoked: 0, passcodesDeleted: 0 };
     }
 
     // Deleted outright rather than revoked. Everywhere else in this system a
@@ -82,6 +108,28 @@ export async function erasePerson(personId: string, now: Date = new Date()): Pro
     // where, which is precisely the kind of record they have just asked us
     // not to keep.
     const { count } = await tx.shopperSession.deleteMany({ where: { personId } });
+
+    // Every passcode this number was ever sent. Deleted for the same reason
+    // the sessions are, and before the hash is overwritten, because the hash
+    // is the only way to find them.
+    const { count: passcodes } = await tx.phoneOtp.deleteMany({ where: { phoneHash: person.phoneHash } });
+
+    /*
+     * The rate-limit counters keyed on the same hash.
+     *
+     * These expire on their own within fifteen minutes and are swept
+     * nightly, so the exposure is small - but "small" is not the standard an
+     * erasure request is answered to, and a row that says this number asked
+     * for a code four minutes ago is the same fact as the ones above.
+     *
+     * It does clear this number's send and verify counters, and that is
+     * worth naming rather than hiding: somebody could sign in, erase, and
+     * start again with a fresh allowance. It cannot be used to pump SMS,
+     * because each cycle needs a passcode that was actually delivered and
+     * entered - and on the other side of the trade is leaving an erased
+     * person's number recoverable in a table. The counters lose.
+     */
+    await tx.rateLimit.deleteMany({ where: { key: { contains: person.phoneHash } } });
 
     await tx.person.update({
       where: { id: personId },
@@ -106,8 +154,12 @@ export async function erasePerson(personId: string, now: Date = new Date()): Pro
     // more: after this transaction nothing in the system can turn it back
     // into a number or a name. It is what makes "who complained that their
     // erasure did not work" answerable.
-    logger.info("shopper erased at their own request", { personId, sessionsRevoked: count });
+    logger.info("shopper erased at their own request", {
+      personId,
+      sessionsRevoked: count,
+      passcodesDeleted: passcodes,
+    });
 
-    return { sessionsRevoked: count };
+    return { sessionsRevoked: count, passcodesDeleted: passcodes };
   });
 }
