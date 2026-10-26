@@ -449,6 +449,25 @@ export type ConsoleCampaign = {
   issued: number;
 };
 
+/**
+ * What a brand looks at first, and in what order.
+ *
+ * Sorted here rather than in the query, because Postgres orders an enum by
+ * the order its values were declared and CampaignStatus was declared
+ * DRAFT, ACTIVE, PAUSED, COMPLETED. `status: "asc"` therefore put every
+ * abandoned draft above every live promotion - on the one page whose job is
+ * to show what is running right now.
+ *
+ * Live first, then the ones a brand might switch back on, then drafts, then
+ * what is finished. Within a rank, newest first, which the query still does.
+ */
+const STATUS_ORDER: Record<CampaignStatus, number> = {
+  ACTIVE: 0,
+  PAUSED: 1,
+  DRAFT: 2,
+  COMPLETED: 3,
+};
+
 export async function listCampaignsForConsole(brandId: string): Promise<ConsoleCampaign[]> {
   const scoped = forBrand(brandId);
 
@@ -469,7 +488,7 @@ export async function listCampaignsForConsole(brandId: string): Promise<ConsoleC
       },
       reward: { select: { rewardName: true, maxCoupons: true } },
     },
-    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+    orderBy: [{ createdAt: "desc" }],
   });
 
   if (campaigns.length === 0) return [];
@@ -481,15 +500,17 @@ export async function listCampaignsForConsole(brandId: string): Promise<ConsoleC
   });
   const issuedBy = new Map(issued.map((row) => [row.campaignId, row._sum.amount ?? 0]));
 
-  return campaigns.map((campaign) => ({
-    id: campaign.id,
-    name: campaign.name,
-    description: campaign.description,
-    status: campaign.status,
-    rule: campaign.earnRule,
-    reward: campaign.reward?.rewardName?.trim()
-      ? { rewardName: campaign.reward.rewardName.trim(), maxCoupons: campaign.reward.maxCoupons }
-      : null,
-    issued: issuedBy.get(campaign.id) ?? 0,
-  }));
+  return campaigns
+    .map((campaign) => ({
+      id: campaign.id,
+      name: campaign.name,
+      description: campaign.description,
+      status: campaign.status,
+      rule: campaign.earnRule,
+      reward: campaign.reward?.rewardName?.trim()
+        ? { rewardName: campaign.reward.rewardName.trim(), maxCoupons: campaign.reward.maxCoupons }
+        : null,
+      issued: issuedBy.get(campaign.id) ?? 0,
+    }))
+    .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]);
 }

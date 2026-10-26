@@ -221,6 +221,33 @@ describe("running a promotion from the console", () => {
     await prisma.person.delete({ where: { id: person.id } });
   });
 
+  it("puts what is running at the top, above drafts nobody finished", async () => {
+    /*
+     * Postgres orders an enum by the order its values were declared, and
+     * CampaignStatus was declared DRAFT, ACTIVE, PAUSED, COMPLETED. The
+     * query's `status: "asc"` therefore put every abandoned draft above
+     * every live promotion, on the one page whose job is to show what is
+     * running right now.
+     */
+    const draft = await newCampaign(`Order draft ${suffix}`);
+    const paused = await newCampaign(`Order paused ${suffix}`);
+    const active = await newCampaign(`Order active ${suffix}`);
+
+    for (const c of [paused, active]) {
+      await setEarnRuleForSession(owner(brand.id), form({ campaignId: c.id, unit: "CENTS", amount: "100" }));
+      await setCampaignStatusForSession(owner(brand.id), c.id, "ACTIVE");
+    }
+    await setCampaignStatusForSession(owner(brand.id), paused.id, "PAUSED");
+
+    const listed = await listCampaignsForConsole(brand.id);
+    const rank = (id: string) => listed.findIndex((c) => c.id === id);
+
+    expect(rank(active.id)).toBeLessThan(rank(paused.id));
+    expect(rank(paused.id)).toBeLessThan(rank(draft.id));
+
+    await setCampaignStatusForSession(owner(brand.id), active.id, "PAUSED");
+  });
+
   describe("the stamp card and what it earns", () => {
     async function cardCampaign(name: string) {
       const campaign = await newCampaign(name);
