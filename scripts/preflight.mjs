@@ -154,6 +154,21 @@ async function checkDatabase() {
     return;
   }
 
+  // Migrations and the application want different connections, and only one
+  // of them is obvious. `prisma migrate deploy` takes a session-level
+  // advisory lock, and a transaction pooler can hand the next statement to a
+  // different backend, so the session holding the lock and the session
+  // waiting on it are not the same one and the wait ends at P1002. It
+  // depends which backend the pooler gives out, so it passes a few times and
+  // then fails a deploy for no reason anybody can see. DIRECT_DATABASE_URL
+  // is the same database without the pooler, used by the CLI only.
+  if (strict && parsed.host.includes("-pooler") && !value("DIRECT_DATABASE_URL")) {
+    fail(
+      `DATABASE_URL is a pooled connection (${parsed.host}) and DIRECT_DATABASE_URL is not set.`,
+      "Migrations take an advisory lock a transaction pooler cannot hold, so deploys fail intermittently with P1002. Set DIRECT_DATABASE_URL to the same database on the host without `-pooler`. The app keeps the pooled one.",
+    );
+  }
+
   // Pass one, free and offline. A connection string pointing at the machine
   // that built it is the single most common way this goes wrong, because it
   // is what a working local .env contains and copying it up feels like
@@ -269,7 +284,7 @@ if (!smsCanSend) {
 } else if (!smsKeyComplete) {
   warn(
     "SMS sends on the account auth token, which is the master credential for the whole Twilio account.",
-    "It can buy numbers, spend money and read every message ever sent, and it cannot be scoped or rotated on its own. Create a restricted API key and set TWILIO_API_KEY_SID and TWILIO_API_KEY_SECRET instead.",
+    "It can buy numbers, spend money and read every message ever sent, and it cannot be scoped or rotated on its own. Create an API key and set TWILIO_API_KEY_SID and TWILIO_API_KEY_SECRET instead. Use a Standard key: a Restricted one with Create on `messages` is refused with a 401 and Twilio error 70051, which reads exactly like a wrong password.",
   );
 }
 
