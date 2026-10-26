@@ -148,6 +148,51 @@ export function checkCampaignWindow(campaign: CampaignGate, now: Date): ScanFail
   return null;
 }
 
+export type PackCodePreview = { campaignName: string; amount: number; unit: LedgerUnit };
+
+/**
+ * What a code is worth, without claiming it.
+ *
+ * Exists for one screen: a shopper who scanned a pack and is not signed in
+ * is redirected to /wallet/login, and until now that login page said nothing
+ * about what they had just scanned. They had held a pack, used their camera,
+ * and been answered with a demand for a phone number and no reason for it.
+ * The reward was invisible until after they gave it.
+ *
+ * Read-only by construction - it does not touch status, does not open a
+ * transaction, and cannot burn anything. The guards are the same ones
+ * redeemPackCode applies before it writes, so the login page never advertises
+ * a code that would be refused a second later: a voided code, one already
+ * claimed, one belonging to another brand, or one whose campaign has not
+ * started or has finished.
+ *
+ * It reveals nothing a scanner does not already have. The amount is printed
+ * on the pack the code came off, and /s/<code> was already public - a guess
+ * that reaches here could have reached that.
+ */
+export async function describePackCode(
+  rawCode: string,
+  expectedBrandId?: string | null,
+  now: Date = new Date(),
+): Promise<PackCodePreview | null> {
+  const canonical = normalisePackCode(rawCode);
+  if (!looksLikePackCode(canonical)) return null;
+
+  const packCode = await findCode(canonical);
+  // UNSCANNED only. Describing a code somebody else has already claimed
+  // would promise an award the sign-in cannot deliver.
+  if (!packCode || packCode.status !== "UNSCANNED") return null;
+  if (expectedBrandId && packCode.brandId !== expectedBrandId) return null;
+  if (checkCampaignWindow(packCode.campaign, now)) return null;
+
+  const earnRule = packCode.campaign.earnRule;
+  // A share-of-spend rule has no fixed value - what it pays depends on a
+  // basket this code does not carry - so there is no honest figure to show.
+  if (!earnRule || earnRule.type !== "FLAT_PER_SCAN") return null;
+
+  return { campaignName: packCode.campaign.name, amount: earnRule.amount, unit: earnRule.unit };
+}
+
 /**
  * Claims a pack code for a shopper and awards whatever the campaign's
  * EarnRule says it is worth.

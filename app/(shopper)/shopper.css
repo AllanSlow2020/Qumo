@@ -39,6 +39,11 @@
   --sc-ink-3: #8a8a90;
   --sc-line: #e4e4e0;
   --sc-line-soft: #efefec;
+  /* The ring on an uncollected stamp. Deliberately not --sc-line: a hairline
+     that is right for a divider somebody is not meant to look at is too
+     faint for a mark they are counting. It has to be legible at arm's
+     length, in a shop, on a phone at half brightness. */
+  --sc-stamp-off: #c9c9c4;
   /* The brand's colour if it set one, otherwise Qumo's. See brandStyle() in
      lib/brand/theme.ts for why the brand's value arrives under its own name
      instead of being written straight into --sc-btn. */
@@ -65,6 +70,7 @@
     --sc-ink-3: #71717a;
     --sc-line: #232326;
     --sc-line-soft: #1a1a1d;
+    --sc-stamp-off: #46464e;
     /* Three deep on purpose. A brand that set a dark accent gets it; one
        that set only a light accent keeps its identity here rather than
        reverting to Qumo's white, which is what every brand got before the
@@ -87,6 +93,7 @@
   --sc-ink-3: #71717a;
   --sc-line: #232326;
   --sc-line-soft: #1a1a1d;
+  --sc-stamp-off: #46464e;
   /* Same three-deep fallback as the media-query block above. */
   --sc-btn: var(--sc-brand-accent-dark, var(--sc-brand-accent, #f7f7f5));
   --sc-btn-ink: var(--sc-brand-ink-dark, var(--sc-brand-ink, #0a0a0b));
@@ -213,6 +220,23 @@
   margin: 0;
 }
 
+/* The word beside a figure: "stamps" after the 5, "points" after the 40.
+   Deliberately out of the monospace and well down in size - it is a label
+   on the number, not part of it. The space is set here rather than in the
+   string so it does not inherit the figure's wide word space. */
+.sc-figure-unit {
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.42em;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--sc-ink-2);
+  margin-left: 0.28em;
+}
+
+/* On a history row the figure is already small, so the same ratio would set
+   the word at nine pixels. */
+.sc-row-amt .sc-figure-unit { font-size: 0.8em; margin-left: 0.3em; }
+
 /* Money is ink, and carries its emphasis by weight rather than by hue.
    See the note at the top of this file: a red brand would otherwise render
    every amount earned in the colour of money lost. */
@@ -290,6 +314,16 @@
 
 .sc-tile-pos { background: var(--sc-pos-bg); }
 
+/* The one card on this surface that is allowed to lead with the brand's
+   colour rather than carry it on a button: what a shopper scanned, shown
+   before they are asked for a phone number. A hairline the brand's own
+   colour, so it reads as theirs and as the thing on this page that matters,
+   without becoming a block of red behind a figure. */
+.sc-waiting {
+  border-color: var(--sc-btn);
+  background: var(--sc-raised);
+}
+
 /* ---------- balances ---------- */
 
 .sc-balances {
@@ -299,6 +333,60 @@
 }
 
 .sc-balance { display: flex; flex-direction: column; gap: 2px; }
+
+/* ---------- the stamp card ----------
+   The one component on this surface that is a picture rather than a
+   statement. Everything else here is a receipt; a stamp card is the row of
+   gaps somebody is trying to close, and it has to be drawn to work at all.
+
+   This is the use the accent was reserved for at the top of this file.
+   Money is ink; a mark that fills is the brand's colour, and it is the only
+   thing besides a button that gets it. */
+
+.sc-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* "5/10", in the figure face, because it is a figure. Small: the row of
+   marks is the headline and this is the caption that confirms it for
+   anybody who would rather read a number than count discs. */
+.sc-count {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  color: var(--sc-ink-2);
+  white-space: nowrap;
+}
+
+/* A grid rather than a flex row, so ten marks sit in ten equal columns at
+   whatever width the phone is, instead of wrapping one orphan onto a second
+   line at 360px. The column count and the cap on the row's width are set
+   inline by the component, because they depend on how big the card is. */
+.sc-stamps {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.sc-stamp {
+  aspect-ratio: 1;
+  border-radius: 999px;
+  /* Dashed, not solid. An empty mark is a space waiting to be filled, and a
+     solid hairline ring reads as a thing in its own right - ten of them
+     look like a control, ten dashed ones look like a gap. */
+  border: 1.5px dashed var(--sc-stamp-off);
+  background: transparent;
+}
+
+.sc-stamp-on {
+  border: 1.5px solid var(--sc-btn);
+  background: var(--sc-btn);
+}
 
 /* ---------- rows ---------- */
 

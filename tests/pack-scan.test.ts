@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Brand, Campaign, Person } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
 import { generatePackCode, formatPackCode } from "@/lib/packs/code";
-import { checkCampaignWindow, redeemPackCode } from "@/lib/packs/scan";
+import { checkCampaignWindow, describePackCode, redeemPackCode } from "@/lib/packs/scan";
 
 describe("lib/packs/scan", () => {
   const suffix = Date.now();
@@ -46,6 +46,77 @@ describe("lib/packs/scan", () => {
     await prisma.campaign.deleteMany({ where: { brandId: { in: brandIds } } });
     await prisma.person.deleteMany({ where: { id: { in: [shopper.id, otherShopper.id] } } });
     await prisma.brand.deleteMany({ where: { id: { in: brandIds } } });
+  });
+
+  describe("describing a code without claiming it", () => {
+    // What the login screen shows somebody who scanned a pack and is not
+    // signed in. Every guard here is one redeemPackCode applies before it
+    // writes, so the login page can never advertise a code that would be
+    // refused a second later.
+
+    it("says what the code is worth, and leaves it unscanned", async () => {
+      const code = await makeCode(campaign.id, brand.id);
+      const preview = await describePackCode(code, brand.id);
+
+      expect(preview).toEqual({ campaignName: "Scan Campaign", amount: 50, unit: "POINTS" });
+      // The whole contract: this must not burn anything. A preview that
+      // claimed the code would destroy the only code that box will carry.
+      expect((await prisma.packCode.findUnique({ where: { code } }))?.status).toBe("UNSCANNED");
+    });
+
+    it("says nothing about a code somebody has already claimed", async () => {
+      const code = await makeCode(campaign.id, brand.id);
+      await redeemPackCode(code, otherShopper.id);
+      // Promising an award the sign-in cannot deliver is worse than
+      // promising nothing at all.
+      expect(await describePackCode(code, brand.id)).toBeNull();
+    });
+
+    it("says nothing about a voided code", async () => {
+      const code = await makeCode(campaign.id, brand.id, "VOID");
+      expect(await describePackCode(code, brand.id)).toBeNull();
+    });
+
+    it("says nothing about another brand's code", async () => {
+      const code = await makeCode(campaign.id, brand.id);
+      expect(await describePackCode(code, otherBrand.id)).toBeNull();
+    });
+
+    it("says nothing about a code on a paused promotion", async () => {
+      const paused = await prisma.campaign.create({
+        data: { brandId: brand.id, name: "Paused", status: "PAUSED" },
+      });
+      await prisma.earnRule.create({
+        data: { brandId: brand.id, campaignId: paused.id, type: "FLAT_PER_SCAN", unit: "POINTS", amount: 50 },
+      });
+      const code = await makeCode(paused.id, brand.id);
+      expect(await describePackCode(code, brand.id)).toBeNull();
+    });
+
+    it("says nothing about a share-of-spend code, which has no fixed value", async () => {
+      // What it pays depends on a basket this code does not carry, so there
+      // is no honest figure to put on the login screen.
+      const spend = await prisma.campaign.create({
+        data: { brandId: brand.id, name: "Share", status: "ACTIVE" },
+      });
+      await prisma.earnRule.create({
+        data: {
+          brandId: brand.id,
+          campaignId: spend.id,
+          type: "PERCENT_OF_SPEND",
+          unit: "CENTS",
+          amount: 0,
+          basisPoints: 500,
+        },
+      });
+      const code = await makeCode(spend.id, brand.id);
+      expect(await describePackCode(code, brand.id)).toBeNull();
+    });
+
+    it("says nothing about a code that does not exist", async () => {
+      expect(await describePackCode("ZZZZ-ZZZZ-ZZZZ", brand.id)).toBeNull();
+      expect(await describePackCode("nonsense", brand.id)).toBeNull();
+    });
   });
 
   it("awards the campaign's amount and reports the new balance", async () => {

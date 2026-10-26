@@ -5,6 +5,7 @@ import { requireStaff } from "@/lib/staff/current";
 import {
   CampaignError,
   createCampaignForSession,
+  deleteCampaignForSession,
   setCampaignLimitsForSession,
   setCampaignStatusForSession,
 } from "@/lib/campaigns/manage";
@@ -87,6 +88,23 @@ export async function setRule(_prev: PromoActionState, formData: FormData): Prom
 export async function setLimits(_prev: PromoActionState, formData: FormData): Promise<PromoActionState> {
   try {
     await setCampaignLimitsForSession(await engineSession(), formData);
+    return { ok: true };
+  } catch (err) {
+    return toState(err);
+  }
+}
+
+/**
+ * Deleting a promotion.
+ *
+ * As thin as the rest, and the refusals it passes through are the point:
+ * deleteCampaignForSession explains in a sentence what the promotion is
+ * still holding, and that sentence is the only thing standing between a
+ * confirm dialogue and a shopper's unredeemed reward.
+ */
+export async function deleteCampaign(_prev: PromoActionState, formData: FormData): Promise<PromoActionState> {
+  try {
+    await deleteCampaignForSession(await engineSession(), String(formData.get("campaignId") ?? ""));
     return { ok: true };
   } catch (err) {
     return toState(err);

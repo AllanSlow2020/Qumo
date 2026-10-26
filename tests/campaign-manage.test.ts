@@ -5,6 +5,7 @@ import { ForbiddenError } from "@/lib/auth/rbac";
 import {
   CampaignError,
   createCampaignForSession,
+  deleteCampaignForSession,
   listCampaignsForConsole,
   setCampaignLimitsForSession,
   setCampaignStatusForSession,
@@ -216,6 +217,113 @@ describe("running a promotion from the console", () => {
     await prisma.pointsTransaction.deleteMany({ where: { brandMembershipId: membership.id } });
     await prisma.brandMembership.delete({ where: { id: membership.id } });
     await prisma.person.delete({ where: { id: person.id } });
+  });
+
+  it("deletes a promotion that never touched anybody, and its rule with it", async () => {
+    // The case the button exists for: made, configured wrong, never run.
+    const campaign = await newCampaign(`Scrap ${suffix}`);
+    await setEarnRuleForSession(owner(brand.id), form({ campaignId: campaign.id, unit: "CENTS", amount: "100" }));
+
+    await deleteCampaignForSession(owner(brand.id), campaign.id);
+
+    expect(await prisma.campaign.findUnique({ where: { id: campaign.id } })).toBeNull();
+    // By cascade, and asserted rather than assumed: an orphaned earn rule
+    // is a row pointing at a promotion nobody can see.
+    expect(await prisma.earnRule.findUnique({ where: { campaignId: campaign.id } })).toBeNull();
+  });
+
+  it("leaves a record of a promotion that no longer exists", async () => {
+    const campaign = await newCampaign(`Trace ${suffix}`);
+    await deleteCampaignForSession(owner(brand.id), campaign.id);
+
+    // The audit trail is the only place this promotion still exists, so the
+    // name has to have been captured before the row went - a label read
+    // after the delete would be empty.
+    const entry = await prisma.auditEvent.findFirst({
+      where: { brandId: brand.id, action: "campaign.deleted", targetId: campaign.id },
+    });
+    expect(entry?.targetLabel).toBe(`Trace ${suffix}`);
+  });
+
+  it("refuses to delete a promotion that is live", async () => {
+    const campaign = await newCampaign(`Running ${suffix}`);
+    await setEarnRuleForSession(owner(brand.id), form({ campaignId: campaign.id, unit: "STAMPS", amount: "1" }));
+    await setCampaignStatusForSession(owner(brand.id), campaign.id, "ACTIVE");
+
+    await expect(deleteCampaignForSession(owner(brand.id), campaign.id)).rejects.toThrow(/Pause this promotion/);
+    expect(await prisma.campaign.findUnique({ where: { id: campaign.id } })).not.toBeNull();
+
+    await setCampaignStatusForSession(owner(brand.id), campaign.id, "PAUSED");
+  });
+
+  it("refuses to delete a promotion that is in somebody's history", async () => {
+    // The refusal that matters. PointsTransaction.campaign is SetNull, so
+    // the delete would succeed and quietly strip the promotion's name off
+    // every line of this shopper's statement - the balance intact, the
+    // explanation gone.
+    const campaign = await newCampaign(`Ran ${suffix}`);
+    await setEarnRuleForSession(owner(brand.id), form({ campaignId: campaign.id, unit: "CENTS", amount: "100" }));
+
+    const person = await prisma.person.create({
+      data: { phoneHash: `camp-del-${suffix}`, phoneEncrypted: "x", firstName: "T" },
+    });
+    const membership = await prisma.brandMembership.create({
+      data: { brandId: brand.id, personId: person.id },
+    });
+    await prisma.pointsTransaction.create({
+      data: {
+        brandId: brand.id,
+        brandMembershipId: membership.id,
+        campaignId: campaign.id,
+        amount: 400,
+        unit: "CENTS",
+        reason: "PURCHASE_ACCRUAL",
+      },
+    });
+
+    // And it says what it is holding, not just that it is holding something
+    // - "1 line in shoppers' history" is a sentence an owner can act on.
+    await expect(deleteCampaignForSession(owner(brand.id), campaign.id)).rejects.toThrow(
+      /1 line in shoppers' history/,
+    );
+    expect(await prisma.campaign.findUnique({ where: { id: campaign.id } })).not.toBeNull();
+
+    await prisma.pointsTransaction.deleteMany({ where: { brandMembershipId: membership.id } });
+    await prisma.brandMembership.delete({ where: { id: membership.id } });
+    await prisma.person.delete({ where: { id: person.id } });
+  });
+
+  it("refuses to delete a promotion whose codes are already printed", async () => {
+    // Printed codes are out on shelves. Deleting the promotion cascades
+    // them away, and every pack already in somebody's cupboard becomes a
+    // code we claim never to have heard of.
+    const campaign = await newCampaign(`Printed ${suffix}`);
+    const batch = await prisma.packBatch.create({
+      data: { brandId: brand.id, campaignId: campaign.id, label: `Batch ${suffix}`, quantity: 1 },
+    });
+    await prisma.packCode.create({
+      data: { brandId: brand.id, campaignId: campaign.id, batchId: batch.id, code: `PRNT${suffix}`.slice(0, 12) },
+    });
+
+    await expect(deleteCampaignForSession(owner(brand.id), campaign.id)).rejects.toThrow(/pack code/);
+
+    await prisma.packCode.deleteMany({ where: { campaignId: campaign.id } });
+    await prisma.packBatch.deleteMany({ where: { campaignId: campaign.id } });
+    await prisma.campaign.delete({ where: { id: campaign.id } });
+  });
+
+  it("refuses a role that can't delete a promotion", async () => {
+    const campaign = await newCampaign(`Guarded ${suffix}`);
+    await expect(deleteCampaignForSession(marketing(brand.id), campaign.id)).rejects.toThrow(ForbiddenError);
+    expect(await prisma.campaign.findUnique({ where: { id: campaign.id } })).not.toBeNull();
+  });
+
+  it("refuses to delete another brand's promotion", async () => {
+    const campaign = await newCampaign(`Mine ${suffix}`);
+    // Scoped, so the other brand's owner cannot even see it to refuse it
+    // for a more interesting reason.
+    await expect(deleteCampaignForSession(owner(otherBrand.id), campaign.id)).rejects.toThrow(CampaignError);
+    expect(await prisma.campaign.findUnique({ where: { id: campaign.id } })).not.toBeNull();
   });
 
   it("refuses a role that can't change what a promotion costs", async () => {

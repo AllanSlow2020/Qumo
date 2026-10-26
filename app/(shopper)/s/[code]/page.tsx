@@ -84,18 +84,26 @@ export default async function ScanPage({ params }: { params: Promise<{ code: str
     <>
       <BrandHeader />
       <section className="sc-card">
-        <p className="sc-label">
-          {result.brandName} · {result.campaignName}
-        </p>
+        {/* "This code is worth", not "added" and not "you earned": the
+            amount belongs to the code rather than to this tap, which is what
+            keeps the sentence true on a rescan. The wording used to lean on
+            the figure as its own first clause - a display-sized number
+            followed by "from this code. Your balance is ..." - and read as a
+            fragment to anybody who met the number first, which is everybody.
+            It is a labelled figure now, and the sentence stands on its own. */}
+        <p className="sc-label">This {result.campaignName} code is worth</p>
         <p className="sc-figure sc-pos">{formatLedgerAmount(result.amount, result.unit)}</p>
-        {/* "from this code", not "added": the amount belongs to the code,
-            and the sentence stays honest on a rescan. The balance beside it
-            is the number that actually moved, and on a rescan it visibly
-            has not. */}
-        <p className="sc-body">
-          from this code. Your {result.brandName} balance is{" "}
-          <strong style={{ color: "var(--sc-ink)" }}>{formatLedgerAmount(result.newBalance, result.unit)}</strong>.
-        </p>
+
+        {/* The balance is the number that actually moved, and on a rescan it
+            visibly has not - which is the whole reason it is shown beside
+            the amount rather than instead of it. Set as a leader so the two
+            figures line up and read as a running total under a line item,
+            the way they would on the slip this surface is modelled on. */}
+        <div className="sc-ldr">
+          <span>Your {result.brandName} balance</span>
+          <span>{formatLedgerAmount(result.newBalance, result.unit)}</span>
+        </div>
+
         <p className="sc-label">Each code works once, so scanning this one again won&apos;t add more.</p>
 
         {/* A completed card is the moment the whole stamp mechanic exists

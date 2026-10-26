@@ -25,8 +25,10 @@ control of DNS and Vercel can only do that if it holds the zone. Hobby caps
 you at 50 domains per project, and one wildcard covers every brand you will
 ever add.
 
-The nightly cleanup job also fits: Hobby allows cron, once a day, and
-`vercel.json` already schedules it once a day.
+The nightly cleanup jobs also fit, but only just: Hobby allows two cron
+entries at once a day each, and `vercel.json` now carries exactly two -
+`sweep-sessions` at 03:00 and `sweep-dormant` at 03:30. A third would need
+a paid plan.
 
 **Vercel's free plan is not licensed for this.** Hobby is
 non-commercial-personal-use only, and Vercel defines commercial broadly -
@@ -138,8 +140,13 @@ and let it settle while you do everything else.
 ## 3. The Vercel project
 
 Import the repo from GitHub. Vercel detects Next.js and needs no build
-configuration - `vercel.json` is already in the repo and carries the cron
-schedule.
+configuration - `vercel.json` is already in the repo and carries both cron
+schedules.
+
+Both scheduled routes are authenticated by `CRON_SECRET`, and with it unset
+they refuse every call. That is the safe direction, but it also means a
+deployment that never sets it keeps every expired session row and every
+passcode ever sent, for good. Set it.
 
 Then add the environment variables, under Settings → Environment Variables.
 

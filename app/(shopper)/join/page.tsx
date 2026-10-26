@@ -73,16 +73,25 @@ export default async function JoinPage() {
                 with the first and lists the rest rather than pretending
                 there is only ever one. */}
             {offers.length > 1 && (
-              <div className="sc-rows">
-                {offers.slice(1).map((offer) => (
-                  <div className="sc-row" key={offer.campaignId}>
-                    <div className="sc-row-main">
-                      <span>{offer.headline}</span>
-                      {offer.condition && <span className="sc-label">{offer.condition}</span>}
+              <>
+                {/* Labelled, because without it the second promotion sits
+                    directly under the first one's condition in the same
+                    body size and reads as a second sentence about the same
+                    offer - "Earn R5 on every purchase. Collect 1 stamp per
+                    purchase." A shopper cannot tell those are two things
+                    they get rather than one thing described twice. */}
+                <p className="sc-label">Also running</p>
+                <div className="sc-rows">
+                  {offers.slice(1).map((offer) => (
+                    <div className="sc-row" key={offer.campaignId}>
+                      <div className="sc-row-main">
+                        <span>{offer.headline}</span>
+                        {offer.condition && <span className="sc-label">{offer.condition}</span>}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </>
             )}
           </>
         )}

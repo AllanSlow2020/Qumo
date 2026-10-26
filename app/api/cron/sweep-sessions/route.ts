@@ -1,8 +1,9 @@
-import { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { sweepExpiredSessions } from "@/lib/consumer/session";
+import { sweepExpiredPasscodes } from "@/lib/consumer/otp";
 import { sweepExpiredRateLimits } from "@/lib/security/rate-limit";
 import { sweepExpiredResets } from "@/lib/staff/reset";
+import { cronRequestIsAuthorised } from "@/lib/security/cron-auth";
 import { logger } from "@/lib/security/logger";
 
 /**
@@ -20,26 +21,8 @@ import { logger } from "@/lib/security/logger";
  * can match and this always 401s, which is the safe direction for a URL
  * whose whole purpose is deleting rows.
  */
-/**
- * Constant time, like every other secret comparison in this repo.
- *
- * `!==` on strings stops at the first differing byte, which in principle
- * hands the secret over one character at a time. Hard to exploit across a
- * network and completely free to avoid - and the inconsistency was the real
- * finding: every other comparison of a secret here already does this.
- */
-function secretMatches(supplied: string | null, expected: string): boolean {
-  if (!supplied) return false;
-  const a = Buffer.from(supplied);
-  const b = Buffer.from(`Bearer ${expected}`);
-  // Length is checked first because timingSafeEqual throws on a mismatch,
-  // and a length difference is not something worth hiding anyway.
-  return a.length === b.length && timingSafeEqual(a, b);
-}
-
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  const expected = process.env.CRON_SECRET;
-  if (!expected || !secretMatches(request.headers.get("authorization"), expected)) {
+  if (!cronRequestIsAuthorised(request.headers.get("authorization"), process.env.CRON_SECRET)) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
@@ -53,7 +36,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // reset is useless, and keeping it is keeping a record of who forgot their
   // password and when.
   const resetsDeleted = await sweepExpiredResets();
+  // The fourth of the same family, and the one that was missing: PhoneOtp
+  // had no sweep at all, so every passcode ever sent was still on disk -
+  // a permanent log of when each number asked to sign in, kept past any
+  // purpose. See OTP_RETENTION_MS.
+  const passcodesDeleted = await sweepExpiredPasscodes();
 
-  logger.info("session sweep: run complete", { deleted, rateLimitsDeleted, resetsDeleted });
-  return NextResponse.json({ deleted, rateLimitsDeleted, resetsDeleted });
+  logger.info("session sweep: run complete", {
+    deleted,
+    rateLimitsDeleted,
+    resetsDeleted,
+    passcodesDeleted,
+  });
+  return NextResponse.json({ deleted, rateLimitsDeleted, resetsDeleted, passcodesDeleted });
 }
