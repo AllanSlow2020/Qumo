@@ -1047,8 +1047,41 @@ html[data-theme="dark"]:has(.cn) body {
        the content starts rather than against the window edge. */
     top: 20px;
     align-self: start;
+
+    /* A sticky box taller than the window is a trap: it pins at the top and
+       everything past the fold stays past the fold, because the page
+       scrolling underneath never moves it. The editor's three forms in a
+       330px column are comfortably taller than a laptop screen, so the rail
+       is capped to the window and scrolls itself.
+
+       Harmless when it holds the two-field New promotion form, which never
+       reaches the cap. */
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    /* The panel inside has its own rounded border; a couple of pixels of
+       room stops the scrollbar sitting on top of it. */
+    padding-right: 2px;
+    scrollbar-width: thin;
   }
 }
+
+/* The promotion whose editor is open in the rail.
+
+   An accent border rather than a fill. The card already carries a status
+   pill, three metrics and sometimes two warnings in the warning colour;
+   tinting the whole surface on top of that would be one more thing
+   competing, and the question this answers is only "which one is the panel
+   on the right about". A line down the near edge points at it. */
+.cn-panel-on {
+  border-color: color-mix(in srgb, var(--cn-accent) 55%, var(--cn-line));
+  box-shadow:
+    inset 3px 0 0 var(--cn-accent),
+    var(--cn-shadow-card);
+}
+
+/* Pushes a lone action to the far end of its row, which is where Delete
+   sits at the foot of the editor - away from the Save buttons above it. */
+.cn-actions-end { justify-content: flex-end; }
 
 /* ---------- the destructive pair ----------
    Quiet until the pointer is on it. A Delete button that is red from across

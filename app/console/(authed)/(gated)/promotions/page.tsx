@@ -5,8 +5,7 @@ import { brandOrigin } from "@/lib/brand/host";
 import { joinUrl, posterQrSvg } from "@/lib/brand/poster";
 import { listCampaignsForConsole, MANAGE_CAMPAIGN_ROLES } from "@/lib/campaigns/manage";
 import { requireStaff } from "@/lib/staff/current";
-import { CampaignCard } from "./campaign-card";
-import { CreateCampaignForm } from "./create-campaign-form";
+import { PromotionsWorkspace } from "./promotions-workspace";
 
 export default async function ConsolePromotionsPage() {
   const session = await requireStaff();
@@ -44,38 +43,7 @@ export default async function ConsolePromotionsPage() {
           half would have made the thing a brand looks at every day share the
           screen with the thing they do once a month. */}
       <div className="cn-split">
-        <div className="cn-split-main">
-          {campaigns.length === 0 ? (
-            <p className="cn-empty">No promotions yet. Start one on the right.</p>
-          ) : (
-            campaigns.map((campaign) => (
-              <CampaignCard key={campaign.id} campaign={campaign} canManage={canManage} />
-            ))
-          )}
-        </div>
-
-        <aside className="cn-split-side">
-          {canManage ? (
-            <section className="cn-panel">
-              <div className="cn-panel-head">
-                <h2 className="cn-h2">New promotion</h2>
-              </div>
-              <CreateCampaignForm />
-            </section>
-          ) : (
-            <section className="cn-panel">
-              <div className="cn-panel-head">
-                <h2 className="cn-h2">Read only</h2>
-              </div>
-              <div className="cn-panel-body">
-                <p className="cn-body">
-                  Creating and changing promotions needs an owner or admin. You can see everything here, but not
-                  change it.
-                </p>
-              </div>
-            </section>
-          )}
-        </aside>
+        <PromotionsWorkspace campaigns={campaigns} canManage={canManage} />
 
         {/* Its own row rather than a band across the bottom of the page. It
             is reference for what is running above it, so at width it sits
