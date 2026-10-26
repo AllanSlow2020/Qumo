@@ -1047,7 +1047,107 @@ html[data-theme="dark"]:has(.cn) body {
        the content starts rather than against the window edge. */
     top: 20px;
     align-self: start;
+
+    /* A sticky box taller than the window is a trap: it pins at the top and
+       everything past the fold stays past the fold, because the page
+       scrolling underneath never moves it. The editor's three forms in a
+       330px column are comfortably taller than a laptop screen, so the rail
+       is capped to the window and scrolls itself.
+
+       Harmless when it holds the two-field New promotion form, which never
+       reaches the cap. */
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    /* The panel inside has its own rounded border; a couple of pixels of
+       room stops the scrollbar sitting on top of it. */
+    padding-right: 2px;
+    scrollbar-width: thin;
   }
+}
+
+/* The promotion whose editor is open in the rail.
+
+   An accent border rather than a fill. The card already carries a status
+   pill, three metrics and sometimes two warnings in the warning colour;
+   tinting the whole surface on top of that would be one more thing
+   competing, and the question this answers is only "which one is the panel
+   on the right about". A line down the near edge points at it. */
+.cn-panel-on {
+  border-color: color-mix(in srgb, var(--cn-accent) 55%, var(--cn-line));
+  box-shadow:
+    inset 3px 0 0 var(--cn-accent),
+    var(--cn-shadow-card);
+}
+
+/* Pushes a lone action to the far end of its row, which is where Delete
+   sits at the foot of the editor - away from the Save buttons above it. */
+.cn-actions-end { justify-content: flex-end; }
+
+/* ---------- the getting-started list ----------
+   A numbered list that reads as a sequence rather than a set of options,
+   because it is one: the engine refuses to activate a promotion with no
+   rule, and a code scanned under a paused promotion earns nothing. The
+   order is not a suggestion. */
+.cn-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cn-step {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--cn-line-soft);
+}
+
+.cn-step:last-child { border-bottom: 0; }
+
+.cn-step-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+
+.cn-step-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--cn-ink);
+  margin: 0;
+}
+
+/* A ring that fills when the step is done. The same shape as the shopper's
+   stamp card, for the same reason: a row of marks with gaps in it says how
+   far along you are before any of the words are read. */
+.cn-step-mark {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: 999px;
+  border: 1.5px dashed var(--cn-line-strong);
+}
+
+.cn-step-done .cn-step-mark {
+  border: 1.5px solid var(--cn-pos);
+  background: var(--cn-pos);
+}
+
+/* Done is quieter, not struck through. These are things the brand did, not
+   mistakes, and they stay readable so somebody can check what they set. */
+.cn-step-done .cn-step-title { color: var(--cn-ink-2); font-weight: 400; }
+
+/* Present in the document, absent from the layout - not display:none, which
+   would take it out of the accessibility tree along with the pixels. */
+.cn-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ---------- the destructive pair ----------

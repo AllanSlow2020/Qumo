@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { LedgerUnit } from "@prisma/client";
 import { formatLedgerAmount } from "@/lib/consumer/wallet";
 import { getBrandOverview } from "@/lib/console/overview";
+import { getSetupFacts, setupSteps } from "@/lib/console/setup-state";
 import { requireStaff } from "@/lib/staff/current";
 
 function Metric({
@@ -66,9 +67,83 @@ function unitLine(rows: { unit: LedgerUnit; amount: number }[]): string {
   return rows.map((r) => formatLedgerAmount(r.amount, r.unit)).join(" · ");
 }
 
+/**
+ * What is left to do, for a brand that has not had a scan yet.
+ *
+ * Every line is read off the database rather than ticked off by hand, so it
+ * cannot drift from what is actually configured, and it cannot be dismissed
+ * into hiding something unfinished. It ends on its own: the first award
+ * replaces the whole thing with the metrics.
+ */
+function GettingStarted({ steps }: { steps: ReturnType<typeof setupSteps> }) {
+  const done = steps.filter((s) => s.done).length;
+  // The first thing not done. Everything else is listed, but only one of
+  // them carries the button - a checklist with six equal buttons is six
+  // decisions, and there is only one next step.
+  const next = steps.find((s) => !s.done);
+
+  return (
+    <section className="cn-panel">
+      <div className="cn-panel-head">
+        <div>
+          <h2 className="cn-h2">Getting started</h2>
+          <p className="cn-label">
+            You print codes, a customer scans one, and they earn something with you. Here is what
+            stands between here and that.
+          </p>
+        </div>
+        <span className="cn-pill">
+          {done} of {steps.length}
+        </span>
+      </div>
+
+      <div className="cn-panel-body">
+        <ol className="cn-steps">
+          {steps.map((step) => (
+            <li key={step.id} className={`cn-step${step.done ? " cn-step-done" : ""}`}>
+              {/* The mark is decoration; the word in the label is what a
+                  screen reader reads, so the two never disagree. */}
+              <span className="cn-step-mark" aria-hidden="true" />
+              <div className="cn-step-main">
+                <p className="cn-step-title">
+                  {step.title}
+                  <span className="cn-sr">{step.done ? " - done" : " - still to do"}</span>
+                </p>
+                <p className="cn-label">{step.detail}</p>
+                {step.id === next?.id && (
+                  <Link
+                    href={step.href}
+                    className="cn-btn"
+                    style={{ alignSelf: "flex-start", marginTop: 4 }}
+                  >
+                    {step.cta}
+                  </Link>
+                )}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+}
+
 export default async function ConsoleOverviewPage() {
   const session = await requireStaff();
-  const o = await getBrandOverview(session.brandId);
+  const [o, facts] = await Promise.all([
+    getBrandOverview(session.brandId),
+    getSetupFacts(session.brandId),
+  ]);
+
+  /*
+   * One page, two jobs, decided by whether anything has ever happened.
+   *
+   * Before the first award every metric on this page reads "-" or "0", so
+   * showing them is showing nothing while taking up the whole screen. After
+   * it, the guide has nothing left to say. Swapping rather than stacking
+   * keeps the landing page about one thing at a time.
+   */
+  const steps = setupSteps(facts);
 
   const cents = o.outstanding.find((r) => r.unit === "CENTS")?.amount ?? 0;
   const issuedCents = o.issued.find((r) => r.unit === "CENTS")?.amount ?? 0;
@@ -78,44 +153,54 @@ export default async function ConsoleOverviewPage() {
     <>
       <h1 className="cn-h1">Overview</h1>
 
-      <div className="cn-grid">
-        {/* First, and the largest thing on the page, because it is the
+      {!facts.everAwarded && <GettingStarted steps={steps} />}
+
+      {facts.everAwarded && (
+        <div className="cn-grid">
+          {/* First, and the largest thing on the page, because it is the
             question a finance director asks and the one the plan recorded as
             having no answer. It is the sum of every ledger row, so a
             redemption nets it down the moment it happens and it can never
             disagree with the rows behind it. */}
-        <Metric
-          value={unitLine(o.outstanding)}
-          label="Outstanding, owed to shoppers"
-          note={redeemed > 0 ? `${formatLedgerAmount(redeemed, "CENTS")} already redeemed` : undefined}
-        />
-        <Metric value={unitLine(o.issued)} label="Issued in total" note="Before anything was spent" />
-        <Metric
-          value={o.members.toLocaleString("en-ZA")}
-          label="Members"
-          note={
-            o.optedOut > 0
-              ? `${o.optedOut.toLocaleString("en-ZA")} opted out`
-              : `${o.newMembersLast7Days.toLocaleString("en-ZA")} joined this week`
-          }
-        />
-        <Metric
-          value={o.scansLast7Days.toLocaleString("en-ZA")}
-          label="Scans, last 7 days"
-          note={`${o.activeCampaigns} active promotion${o.activeCampaigns === 1 ? "" : "s"}`}
-          series={o.scansByDay}
-        />
-        <Metric
-          value={o.stores.toLocaleString("en-ZA")}
-          label="Stores"
-          note={
-            o.unsignedStores > 0
-              ? `${o.unsignedStores} can't sign their slips`
-              : "All signing their slips"
-          }
-          warn={o.unsignedStores > 0}
-        />
-      </div>
+          <Metric
+            value={unitLine(o.outstanding)}
+            label="Outstanding, owed to shoppers"
+            note={
+              redeemed > 0 ? `${formatLedgerAmount(redeemed, "CENTS")} already redeemed` : undefined
+            }
+          />
+          <Metric
+            value={unitLine(o.issued)}
+            label="Issued in total"
+            note="Before anything was spent"
+          />
+          <Metric
+            value={o.members.toLocaleString("en-ZA")}
+            label="Members"
+            note={
+              o.optedOut > 0
+                ? `${o.optedOut.toLocaleString("en-ZA")} opted out`
+                : `${o.newMembersLast7Days.toLocaleString("en-ZA")} joined this week`
+            }
+          />
+          <Metric
+            value={o.scansLast7Days.toLocaleString("en-ZA")}
+            label="Scans, last 7 days"
+            note={`${o.activeCampaigns} active promotion${o.activeCampaigns === 1 ? "" : "s"}`}
+            series={o.scansByDay}
+          />
+          <Metric
+            value={o.stores.toLocaleString("en-ZA")}
+            label="Stores"
+            note={
+              o.unsignedStores > 0
+                ? `${o.unsignedStores} can't sign their slips`
+                : "All signing their slips"
+            }
+            warn={o.unsignedStores > 0}
+          />
+        </div>
+      )}
 
       {o.uncappedCampaigns > 0 && (
         <section className="cn-panel">
@@ -133,9 +218,9 @@ export default async function ConsoleOverviewPage() {
                 is a way in, and a missing ceiling is what decides how much
                 gets out. */}
             <p className="cn-body">
-              A promotion with no total ceiling can issue value until somebody notices. There is no bound in the
-              engine beyond the one you set here, so this is the number your finance director is asking for when
-              they ask what this can cost.
+              A promotion with no total ceiling can issue value until somebody notices. There is no
+              bound in the engine beyond the one you set here, so this is the number your finance
+              director is asking for when they ask what this can cost.
               {o.uncappedPerPerson > 0 && (
                 <>
                   {" "}
@@ -159,31 +244,38 @@ export default async function ConsoleOverviewPage() {
         <section className="cn-panel">
           <div className="cn-panel-head">
             <h2 className="cn-h2">Unsigned stores are your exposure</h2>
-            <span className="cn-pill cn-pill-warn">{o.unsignedStores} of {o.stores}</span>
+            <span className="cn-pill cn-pill-warn">
+              {o.unsignedStores} of {o.stores}
+            </span>
           </div>
           <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
             {/* Said plainly rather than buried, because it is the one thing
                 on this page a brand can act on and the one that costs them
                 money if they don't. */}
             <p className="cn-body">
-              A store whose point of sale can&apos;t sign a slip is a store where the shopper controls what the slip
-              says.{" "}
+              A store whose point of sale can&apos;t sign a slip is a store where the shopper
+              controls what the slip says.{" "}
               {o.uncappedCampaigns > 0 ? (
                 <>
                   <strong>
-                    And with no ceiling set on {o.uncappedCampaigns === 1 ? "your live promotion" : "your live promotions"},
+                    And with no ceiling set on{" "}
+                    {o.uncappedCampaigns === 1 ? "your live promotion" : "your live promotions"},
                     nothing bounds what that costs.
                   </strong>{" "}
                   Set a ceiling first, then get a signing secret into those tills.
                 </>
               ) : (
                 <>
-                  The ceilings on your promotion bound what that can cost, but they don&apos;t stop it. Getting a
-                  signing secret into those tills is the fix.
+                  The ceilings on your promotion bound what that can cost, but they don&apos;t stop
+                  it. Getting a signing secret into those tills is the fix.
                 </>
               )}
             </p>
-            <Link href="/stores" className="cn-btn cn-btn-quiet" style={{ alignSelf: "flex-start", textDecoration: "none" }}>
+            <Link
+              href="/stores"
+              className="cn-btn cn-btn-quiet"
+              style={{ alignSelf: "flex-start", textDecoration: "none" }}
+            >
               See which stores
             </Link>
           </div>
