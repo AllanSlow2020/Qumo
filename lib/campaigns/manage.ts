@@ -200,6 +200,93 @@ export async function setCampaignLimitsForSession(session: SessionLike, formData
   });
 }
 
+/**
+ * Deleting a promotion, and the four things that forbid it.
+ *
+ * A promotion is a row, but it is not only a row: once it has run, other
+ * people's records point at it, and Postgres is configured to follow those
+ * pointers. Reading the cascades in schema.prisma rather than guessing at
+ * them is what decided this function's shape:
+ *
+ *   - Coupon         cascades. A shopper holding an unredeemed free coffee
+ *                    would lose it, silently, from their phone.
+ *   - PurchaseScan   cascades. That table is what stops a till slip being
+ *                    presented twice; dropping its rows makes every slip
+ *                    this promotion ever accepted replayable against the
+ *                    next one.
+ *   - PackCode       cascades. The evidence that a printed code was already
+ *                    claimed goes with it.
+ *   - PointsTransaction sets null. The ledger survives - the balance is the
+ *                    sum of the rows and nothing is being subtracted - but
+ *                    every line of the shopper's history that named this
+ *                    promotion stops naming it.
+ *
+ * So deletion is offered for exactly the case it is wanted for: a promotion
+ * somebody made, configured wrong, and wants gone before it has touched
+ * anybody. The moment it has touched anybody, the honest action is to pause
+ * it, and that is what the refusal says.
+ *
+ * Nothing here is a soft delete. A promotion that has run keeps existing
+ * because the records that point at it have to keep meaning something, not
+ * because a flag is more convenient.
+ */
+export async function deleteCampaignForSession(session: SessionLike, campaignId: string): Promise<void> {
+  requireRole(session.user.role as Role, MANAGE_CAMPAIGN_ROLES);
+
+  const scoped = forBrand(session.user.brandId);
+  const campaign = await scoped.campaign.findFirst({ where: { id: campaignId } });
+  if (!campaign) {
+    throw new CampaignError("That promotion doesn't exist.");
+  }
+
+  // A live promotion is being scanned right now. Pausing first is one extra
+  // click and it is the click that makes the delete a considered one.
+  if (campaign.status === "ACTIVE") {
+    throw new CampaignError("Pause this promotion before deleting it, so nothing is mid-scan when it goes.");
+  }
+
+  // Counted in one round trip rather than four sequential ones, and counted
+  // through the brand-scoped client so a campaign id from another brand
+  // cannot be used to probe this table.
+  const [awarded, coupons, scans, codes] = await Promise.all([
+    scoped.pointsTransaction.count({ where: { campaignId: campaign.id } }),
+    scoped.coupon.count({ where: { campaignId: campaign.id } }),
+    scoped.purchaseScan.count({ where: { campaignId: campaign.id } }),
+    scoped.packCode.count({ where: { campaignId: campaign.id } }),
+  ]);
+
+  // One sentence naming what actually exists, rather than a generic refusal
+  // - a brand owner reading "it has history" cannot tell whether that means
+  // one test scan or six months of trading.
+  const held = [
+    awarded > 0 ? `${awarded} line${awarded === 1 ? "" : "s"} in shoppers' history` : null,
+    coupons > 0 ? `${coupons} reward${coupons === 1 ? "" : "s"} issued` : null,
+    scans > 0 ? `${scans} till slip${scans === 1 ? "" : "s"} recorded` : null,
+    codes > 0 ? `${codes} pack code${codes === 1 ? "" : "s"} printed` : null,
+  ].filter(Boolean);
+
+  if (held.length > 0) {
+    throw new CampaignError(
+      `This promotion has ${held.join(", ")}, so deleting it would take those with it. Pause it instead - a paused promotion awards nothing and keeps everyone's history intact.`,
+    );
+  }
+
+  // Recorded before the delete, not after: the row the audit entry points at
+  // is about to stop existing, so the label has to be captured while it can
+  // still be read. The audit trail is the only place this promotion will
+  // exist afterwards, which is the whole reason it is written.
+  await record(prisma, session.user, {
+    action: "campaign.deleted",
+    targetId: campaign.id,
+    targetLabel: campaign.name,
+    detail: { status: campaign.status, description: campaign.description },
+  });
+
+  // Its own earn rule and reward go with it, by cascade. Nothing else can,
+  // because the counts above are all zero.
+  await scoped.campaign.delete({ where: { id: campaign.id } });
+}
+
 export type ConsoleCampaign = {
   id: string;
   name: string;

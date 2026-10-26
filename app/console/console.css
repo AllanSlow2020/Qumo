@@ -106,6 +106,13 @@
   --cn-warn-bg: #fefce8;
   /* Destructive only, never decoration. */
   --cn-neg: #e7000b;
+  /* The fill under a destructive button, which is a different job from the
+     colour of an error sentence and needs a different value. --cn-neg is
+     tuned to be read as text on the page's own ground; used as a fill with
+     white on top it lands at 4.6:1, which is a pass by rounding. These two
+     are tuned the other way round. */
+  --cn-danger-fill: #c80710;
+  --cn-danger-ink: #ffffff;
 
   /* Two radii carry the system: a pill for anything interactive, a generous
      round for anything that contains. Plus one small value for the handful
@@ -181,6 +188,12 @@
   --cn-warn: #fbbf24;
   --cn-warn-bg: rgba(251, 191, 36, 0.10);
   --cn-neg: #fb7185;
+  /* Not --cn-neg. That value is a pale rose, picked so an error sentence
+     carries on a dark ground; as a fill it takes white text to 2.3:1 and
+     the most dangerous button in the console becomes the one nobody can
+     read. A destructive fill has to stay a deep red in both themes. */
+  --cn-danger-fill: #c8232f;
+  --cn-danger-ink: #ffffff;
 
   /* No lift in the dark. A drop shadow on a dark ground is a smudge, so the
      card is defined by its step and its hairline alone. */
@@ -968,6 +981,100 @@ html[data-theme="dark"]:has(.cn) body {
 }
 
 .cn-confirm .cn-btn { font-size: 13px; padding: 6px 10px; }
+
+/* ---------- the destructive pair ----------
+   Quiet until the pointer is on it. A Delete button that is red from across
+   the room pulls the eye to the one control nobody should reach for by
+   accident, and sitting in a row beside Edit and Pause it would outrank
+   both. It reads as an ordinary quiet button and declares itself on hover
+   and on focus - which is to say, at the moment somebody is actually
+   considering it. */
+.cn-btn-danger:hover:not(:disabled) {
+  color: var(--cn-neg);
+  border-color: color-mix(in srgb, var(--cn-neg) 45%, transparent);
+  background: color-mix(in srgb, var(--cn-neg) 8%, transparent);
+  filter: none;
+}
+
+.cn-btn-danger:focus-visible { outline-color: var(--cn-neg); }
+
+/* Pushed to the far end of the action row, away from Edit and Pause. The
+   dialogue is what makes a mis-click harmless; the gap is what stops the
+   mis-click. */
+.cn-actions .cn-btn-danger { margin-inline-start: auto; }
+
+/* The other half of the pair, inside the dialogue, where it is the whole
+   reason the dialogue opened and should look like it. */
+.cn-btn-danger-solid {
+  background: var(--cn-danger-fill);
+  color: var(--cn-danger-ink);
+  border-color: transparent;
+}
+
+.cn-btn-danger-solid:focus-visible { outline-color: var(--cn-neg); }
+
+/* ---------- modal dialogue ----------
+   For the handful of actions that cannot be undone. The element does the
+   hard parts - focus trap, inert page, Escape - and these rules only have
+   to make it look like the rest of the console and behave on a phone.
+
+   `margin: auto` is what centres a <dialog>; without it the browser's own
+   centring applies only to the default UA styles and a width set here
+   pins it to the top left. */
+.cn-dialog {
+  margin: auto;
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-card);
+  background: var(--cn-surface);
+  color: var(--cn-ink);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+  overflow: auto;
+}
+
+/* The page behind it, dimmed enough to read as out of reach. Darker in the
+   dark theme rather than lighter: the surface above it is already dark, and
+   a pale scrim would make the dialogue the dimmer of the two. */
+.cn-dialog::backdrop {
+  background: rgba(10, 11, 13, 0.45);
+}
+
+/* Unlike the shopper surface, this console has no prefers-color-scheme
+   rules at all: it is light until somebody picks dark, and the only dark
+   selector in this file is the explicit one. A :not([data-theme="light"])
+   guard copied from shopper.css would have applied the dark backdrop to
+   every default, light console. */
+:root[data-theme="dark"] .cn-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.66);
+}
+
+.cn-dialog-body {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Cancel first in the source and first on screen, which is both the reading
+   order and the safe default for the key somebody taps without looking.
+   Wraps to a column on a narrow phone so neither button ends up at a width
+   nobody can hit. */
+.cn-dialog-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.cn-dialog-actions .cn-btn { font-size: 14px; padding: 9px 16px; }
+
+@media (max-width: 380px) {
+  .cn-dialog-actions,
+  .cn-dialog-actions form { width: 100%; }
+  .cn-dialog-actions .cn-btn { width: 100%; }
+}
 
 /* Loud on purpose: the one moment a secret is on screen. */
 .cn-secret {
