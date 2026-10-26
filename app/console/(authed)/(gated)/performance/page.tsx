@@ -311,7 +311,7 @@ export default async function ConsolePerformancePage({
       {/* The two numbers that decide whether this is working, first and
           largest. Everything under them is the evidence. */}
       <div className="cn-grid cn-grid-2">
-        <div className="cn-metric">
+        <div className="cn-metric cn-metric-hero">
           <div className="cn-metric-v">{percent(rate)}</div>
           <div className="cn-metric-k">Came back</div>
           <div className="cn-metric-note">

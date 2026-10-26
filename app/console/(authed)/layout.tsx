@@ -7,6 +7,7 @@ import { getTheme } from "@/lib/theme";
 import { toggleTheme } from "@/app/theme-actions";
 import { signOut } from "./actions";
 import { ConsoleNav } from "./console-nav";
+import { ConsoleShell } from "./console-shell";
 import { QumoMark } from "../qumo-mark";
 
 /**
@@ -54,27 +55,29 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
   const theme = await getTheme();
 
   return (
-    <>
-      {/* Two rows, not one.
-          Nine nav items, an identity and a sign-out do not fit on one line
-          at 1280px: the nav clipped mid-word into the brand name. Splitting
-          identity from navigation is also the more honest structure - who
-          you are signed in as does not belong in the same row as where you
-          can go. */}
-      <header className="cn-top">
-        <div className="cn-top-in">
+    <ConsoleShell
+      side={
+        <>
           <Link href="/" className="cn-mark" style={{ textDecoration: "none" }}>
             <QumoMark />
             <span className="cn-mark-sr">{PRODUCT_NAME}</span>
             <span>console</span>
           </Link>
-          <div className="cn-who">
-            <div>{brand?.name ?? "-"}</div>
-            <div>
-              {session.name} · {session.role.toLowerCase()} ·{" "}
-              <Link href="/change-password">password</Link> · <Link href="/security">security</Link>
+          {setUp && <ConsoleNav />}
+          <div className="cn-side-foot">
+            <div className="cn-side-brand">{brand?.name ?? "-"}</div>
+            <div className="cn-side-who">
+              {session.name} · {session.role.toLowerCase()}
+            </div>
+            <div className="cn-side-links">
+              <Link href="/change-password">password</Link> ·{" "}
+              <Link href="/security">security</Link>
             </div>
           </div>
+        </>
+      }
+      controls={
+        <>
           <form action={toggleTheme}>
             <button type="submit" className="cn-theme">
               {/* Unset means light, so an unset preference is offered dark.
@@ -88,14 +91,10 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
               Sign out
             </button>
           </form>
-        </div>
-        {setUp && (
-          <div className="cn-nav-row">
-            <ConsoleNav />
-          </div>
-        )}
-      </header>
-      <main className="cn-main">{children}</main>
-    </>
+        </>
+      }
+    >
+      {children}
+    </ConsoleShell>
   );
 }

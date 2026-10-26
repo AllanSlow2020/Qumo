@@ -81,6 +81,10 @@
   /* The tonal sibling to the primary - same shape, same type, less weight.
      Not a muted alternative: a secondary action is still an action. */
   --cn-quiet: #f5f5f5;
+  /* The ground behind the current nav item. A tint of the accent rather
+     than another grey, because it is the one place in the chrome that has
+     to be found without being read. */
+  --cn-nav-on: #eef3ff;
 
   /* ---- charts ----
      Colour here is doing a job the greyscale could not: telling apart
@@ -107,7 +111,7 @@
      round for anything that contains. Plus one small value for the handful
      of marks too short to take a pill without becoming a lozenge. */
   --cn-radius: 18px;
-  --cn-radius-card: 24px;
+  --cn-radius-card: 18px;
   --cn-radius-badge: 18px;
   --cn-radius-small: 6px;
 
@@ -137,11 +141,11 @@
 /* Dark, on the toggle in the masthead.
  *
  * Not a separate design: the same geometry, the same radii, the same type,
- * with the tonal stack inverted. Deliberately not pure black - a #08090a
- * canvas makes every card on it read as the only lit object on the screen,
+ * with the tonal stack inverted. Near black, and deliberately not
+ * black: #000 makes every card read as the only lit object on the screen,
  * which is a landing page's trick and wrong for something somebody sits in
- * for twenty minutes. Lifted to a deep charcoal, with each step above it
- * lifted to match so the hairlines still separate anything.
+ * for twenty minutes. #0c0d10 keeps the depth and still leaves room for
+ * three steps above it, so the hairlines have something to separate.
  *
  * The chart hues brighten rather than change: the same five meanings, at
  * the lightness this ground needs to show them.
@@ -150,20 +154,21 @@
  * the same one the shopper surface uses. */
 :root[data-theme="dark"] .cn {
   color-scheme: dark;
-  --cn-bg: #131417;
-  --cn-surface: #1a1c20;
-  --cn-raised: #232529;
+  --cn-bg: #0c0d10;
+  --cn-surface: #121418;
+  --cn-raised: #1a1d22;
   --cn-ink: #f7f8f8;
   --cn-ink-2: #c4cad3;
   --cn-ink-3: #9aa1ab;
-  --cn-line: #2c2f36;
-  --cn-line-soft: #232529;
+  --cn-line: #22262d;
+  --cn-line-soft: #1a1d22;
 
   /* The action blue holds its own value across both themes; only the ground
      under it changes. */
   --cn-accent: #2563eb;
   --cn-accent-ink: #ffffff;
   --cn-quiet: rgba(255, 255, 255, 0.06);
+  --cn-nav-on: #182233;
 
   --cn-c1: #2dd4bf;
   --cn-c2: #a78bfa;
@@ -201,37 +206,38 @@ html:has(.cn) body {
 
 html[data-theme="dark"]:has(.cn),
 html[data-theme="dark"]:has(.cn) body {
-  background: #131417;
+  background: #0c0d10;
 }
 
 /* ---------- chrome ---------- */
 
-/* One tonal step off the canvas, which is what separates the chrome from
-   the content without spending a divider on it. */
-.cn-top {
-  border-bottom: 1px solid var(--cn-line);
-  background: var(--cn-surface);
-}
+/* ---------- the shell ---------- */
 
-/* The identity row: mark on the left, who you are and the way out on the
- * right. Navigation lives on its own row below - see .cn-nav-row.
+/* Side column and content, as one wrapping row.
  *
- * This started as one row and did not survive contact with eight nav items:
- * at 1280px the nav clipped mid-word into the brand name. Two rows is not a
- * compromise, it is the more honest structure - where you can go and who
- * you are signed in as answer different questions. */
-.cn-top-in {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 0 24px;
+ * Wrapping rather than a drawer: a drawer needs script to open it, and a
+ * console whose navigation disappears with JavaScript off is a console
+ * somebody can be locked out of by a failed chunk. Below the break the
+ * column simply sits above the content, which is the order it is read in
+ * anyway. */
+.cn-shell {
   display: flex;
-  align-items: center;
-  gap: 20px;
-  min-height: 56px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  align-items: stretch;
+  min-height: 100vh;
 }
 
-.cn-top-in .cn-mark { margin-right: auto; white-space: nowrap; }
+.cn-side {
+  flex: 1 1 248px;
+  max-width: 264px;
+  min-width: 232px;
+  background: var(--cn-surface);
+  border-right: 1px solid var(--cn-line);
+  padding: 20px 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
 
 .cn-mark {
   font-size: 16px;
@@ -251,8 +257,12 @@ html[data-theme="dark"]:has(.cn) body {
 /* The Qumo mark, set in the type colour.
  *
  * The file declares fill="currentColor" and no fills of its own, so it
- * inherits whatever the nav's ink is and needs no second asset for the
- * light palette. */
+ * inherits whatever the chrome's ink is and needs no second asset for the
+ * light palette.
+ *
+ * The height is pinned rather than left to the SVG: in the side column
+ * there is no row to constrain it, and unpinned it drew itself at the full
+ * width of the column. */
 .cn-mark svg,
 .cn-mark img {
   height: 17px;
@@ -277,10 +287,60 @@ html[data-theme="dark"]:has(.cn) body {
   border: 0;
 }
 
-/* Light or dark, said as the state you would get rather than as the state
-   you are in. "Light" on a dark console means "switch to light" - a toggle
-   labelled with its current state makes half its readers press it to find
-   out, and the other half press it expecting the opposite. */
+.cn-side .cn-mark { padding: 0 8px; }
+
+/* Content takes everything left over and may shrink to nothing before the
+   column does, so the two never fight over a narrow window. */
+.cn-col {
+  flex: 999 1 560px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The controls that act on the page under them. Deliberately thin: the
+   identity moved into the side column, where it is a fact about the
+   session rather than something competing with the page's own actions. */
+.cn-topbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px 0;
+}
+
+/* The drawer trigger. Absent above the break, where the column is simply
+   there and a button to reveal it would be a button that does nothing. */
+.cn-burger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  margin-right: auto;
+  border: 1px solid var(--cn-line);
+  background: var(--cn-surface);
+  color: var(--cn-ink);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.cn-burger:focus-visible { outline: 2px solid var(--cn-accent); outline-offset: 2px; }
+
+/* Only rendered while the drawer is open (see console-shell.tsx), and
+   still display:none above the break so a drawer left open across a resize
+   cannot leave a transparent click-eater over a desktop page. */
+.cn-scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  border: 0;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.45);
+  cursor: default;
+}
+
 .cn-theme {
   border: 1px solid var(--cn-line);
   background: var(--cn-quiet);
@@ -296,100 +356,143 @@ html[data-theme="dark"]:has(.cn) body {
 .cn-theme:hover { color: var(--cn-ink); border-color: var(--cn-ink-3); }
 .cn-theme:focus-visible { outline: 2px solid var(--cn-ink-2); outline-offset: 2px; }
 
-.cn-nav-row {
-  border-top: 1px solid var(--cn-line-soft);
-}
+/* ---------- side navigation ---------- */
 
 .cn-nav {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 0 18px;
   display: flex;
-  gap: 2px;
-  min-height: 42px;
-  align-items: center;
-  flex-wrap: nowrap;
-  /* Below about 900px there is still more nav than room. It scrolls rather
-     than wrapping, because a nav that changes height moves the page under
-     somebody mid-click. */
-  overflow-x: auto;
-  scrollbar-width: none;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.cn-nav::-webkit-scrollbar { display: none; }
+.cn-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Tracked-out and small, so it reads as a label on the group rather than
+   as the first item in it. */
+.cn-nav-head {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cn-ink-3);
+  margin: 0 0 4px;
+  padding: 0 10px;
+}
 
 .cn-nav a {
-  color: var(--cn-ink-3);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--cn-ink-2);
   text-decoration: none;
-  font-size: 13px;
+  font-size: 13.5px;
+  font-weight: 500;
   letter-spacing: -0.01em;
-  padding: 7px 10px;
-  border-radius: var(--cn-radius);
-  white-space: nowrap;
+  padding: 9px 10px;
+  border-radius: 10px;
 }
+
+.cn-nav a svg { flex: 0 0 auto; opacity: 0.75; }
 
 .cn-nav a:hover {
   color: var(--cn-ink);
   background: var(--cn-quiet);
 }
 
-/* Where you are, said once. The accent is the action colour everywhere
-   else, so the current page is marked in full-contrast ink instead - it is
-   a statement of fact, not something to click. */
+.cn-nav a:hover svg { opacity: 1; }
+
+.cn-nav a:focus-visible {
+  outline: 2px solid var(--cn-accent);
+  outline-offset: -2px;
+}
+
+/* Where you are, said twice over: a filled ground for the eye and a rule
+   down the leading edge for the scan. The accent appears on the icon only
+   - the label stays ink, because the current page is a statement of fact
+   and not a thing to press. */
 .cn-nav a[aria-current="page"] {
   color: var(--cn-ink);
-  background: var(--cn-quiet);
+  font-weight: 600;
+  background: var(--cn-nav-on);
+  box-shadow: inset 2px 0 0 var(--cn-accent);
 }
 
-.cn-who {
-  font-size: 13px;
-  color: var(--cn-ink-3);
-  text-align: right;
-  line-height: 1.35;
-  flex: 0 0 auto;
-  white-space: nowrap;
+.cn-nav a[aria-current="page"] svg { color: var(--cn-accent); opacity: 1; }
+
+/* Pushed to the bottom of the column, which is where somebody looks for
+   who they are rather than where they can go. */
+.cn-side-foot {
+  margin-top: auto;
+  padding: 14px 10px 0;
+  border-top: 1px solid var(--cn-line-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.cn-top-in > form { flex: 0 0 auto; }
+.cn-side-brand { font-size: 13px; font-weight: 600; color: var(--cn-ink); }
+.cn-side-who { font-size: 12px; color: var(--cn-ink-3); }
+.cn-side-links { font-size: 12px; color: var(--cn-ink-3); margin-top: 4px; }
+.cn-side-links a { color: var(--cn-ink-3); }
+.cn-side-links a:hover { color: var(--cn-ink); }
 
-/* The header on a phone.
+/* The shell on a phone: the column becomes a drawer.
  *
- * Above this width the identity row is one line that never wraps, which is
- * right on a laptop and was wrong everywhere else: at 390px the mark, the
- * brand, the signed-in line, the theme toggle and Sign out add up to 630px
- * with nothing allowed to give, so every console page scrolled sideways.
- * The content underneath was fine - it was the chrome dragging the page
- * off its own edge.
+ * It wrapped above the content first. That worked, needed no script, and
+ * cost 790px of navigation before the first number on the page - a phone
+ * opened on Performance showed no performance. Pills got it to 468px,
+ * which is still most of a screen spent on where you already are.
  *
- * So the row wraps here, and the signed-in line is what drops: it is the
- * longest thing in the header and the only one nobody reaches for. The
- * mark, the toggle and the way out stay on the top line, which is the order
- * somebody scanning a phone screen expects.
+ * Off-canvas and slid in on a tap. It is `transform` rather than `left`
+ * because transform is composited and left is not, and this is the one
+ * animation in the console that a mid-range Android has to run smoothly.
  */
-@media (max-width: 640px) {
-  .cn-top-in {
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px 12px;
-    padding: 10px 16px;
+@media (max-width: 760px) {
+  .cn-burger { display: inline-flex; }
+  .cn-scrim { display: block; }
+
+  .cn-side {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 50;
+    width: min(84vw, 300px);
+    max-width: none;
+    border-right: 1px solid var(--cn-line);
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 180ms ease;
+    /* The drawer is the one surface that must sit above the page rather
+       than beside it, so it is the one that gets a shadow. */
+    box-shadow: 0 0 0 100vmax transparent;
   }
 
-  .cn-who {
-    /* Last, full width, and allowed to wrap - the three things it was not. */
-    order: 3;
-    flex: 1 1 100%;
-    text-align: left;
-    white-space: normal;
-  }
+  .cn-shell[data-open] .cn-side { transform: translateX(0); }
+
+  .cn-topbar { padding: 12px 16px 0; }
+  .cn-main { padding: 16px 16px 56px; }
+}
+
+/* Somebody who has asked for less movement gets the drawer without the
+   slide, not without the drawer. */
+@media (prefers-reduced-motion: reduce) {
+  .cn-side { transition: none; }
 }
 
 .cn-main {
-  max-width: 1120px;
+  max-width: 1180px;
+  width: 100%;
   margin: 0 auto;
-  padding: 28px 24px 64px;
+  padding: 20px 24px 64px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
+}
+
+@media (max-width: 760px) {
+  .cn-main { padding: 18px 16px 56px; }
 }
 
 /* ---------- type ---------- */
@@ -414,10 +517,36 @@ html[data-theme="dark"]:has(.cn) body {
   border: 1px solid var(--cn-line);
   border-radius: var(--cn-radius-card);
   box-shadow: var(--cn-shadow-card);
-  padding: 20px;
+  padding: 18px 18px 16px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
+}
+
+/* The one number on the page that decides whether any of this is working.
+ *
+ * It spans the row rather than sitting in a cell, and carries the repeat
+ * breakdown under it, because a rate with no shape to it ("42%") is a
+ * figure somebody nods at. The tint is the only gradient in the console
+ * and it is here for one reason: to say which card to read first on a
+ * screen where every other card is the same weight. */
+.cn-metric-hero {
+  grid-column: 1 / -1;
+  padding: 22px;
+  background: linear-gradient(161deg, var(--cn-nav-on) 0%, var(--cn-surface) 58%);
+  border-color: var(--cn-line-strong);
+}
+
+.cn-metric-hero .cn-metric-v {
+  font-size: 52px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+@media (min-width: 900px) {
+  /* Back to half the row once there is space for the second number beside
+     it, which is the comparison the pair exists to make. */
+  .cn-metric-hero { grid-column: span 1; }
 }
 
 .cn-metric-v {
@@ -1155,11 +1284,18 @@ select.cn-input {
    Deliberately not coloured: on this page "issued more" is not good news
    and "issued less" is not bad news, and a green arrow would be the
    console making a judgement that belongs to the brand. */
+/* A chip rather than a line of grey text. The comparison against the
+   window before is the second thing read on every card, and as plain prose
+   under a 30px figure it was the last. */
 .cn-delta {
-  display: block;
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--cn-ink-3);
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background: var(--cn-quiet);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--cn-ink-2);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1216,10 +1352,15 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   /* The console's own chrome is screen furniture. A nav bar printed onto a
      sheet of stickers costs a label. */
   .cn-noprint,
-  .cn-top,
-  .cn-nav-row {
+  .cn-side,
+  .cn-topbar {
     display: none !important;
   }
+
+  /* The shell is a flex row on screen; on paper there is only one column
+     left, and it must not keep the side column's width reserved. */
+  .cn-shell { display: block !important; }
+  .cn-col { display: block !important; }
 
   /* Black on white regardless of the theme the operator happens to be in.
      A QR printed in a dark theme's inverted palette does not scan. */
