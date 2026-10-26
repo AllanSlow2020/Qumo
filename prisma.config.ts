@@ -23,6 +23,19 @@ import { defineConfig, env } from "prisma/config";
  * with one connection string still runs. It is the deployment that needs
  * both, and scripts/preflight.mjs refuses to build without it when the
  * pooled host is in use.
+ *
+ * ── Why this is `url` and not `directUrl` ────────────────────────────────
+ *
+ * Prisma 7 removed `directUrl`. Every answer written before v7 - and some
+ * written after - puts the direct connection in a `directUrl` property,
+ * and in v7 that property is simply ignored: migrations carry on using
+ * `url`, the advisory lock goes back through the pooler, and the deploy
+ * fails exactly as it did before the fix. It was ignored here first.
+ *
+ * This file configures the Prisma CLI and nothing else. The application
+ * builds its own adapter from DATABASE_URL in lib/db/client.ts and never
+ * reads this, so pointing `url` at the direct connection moves migrations
+ * off the pooler without touching how the app connects.
  */
 const direct = process.env.DIRECT_DATABASE_URL?.trim();
 
@@ -30,7 +43,6 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: { path: "prisma/migrations", seed: "tsx prisma/seed.ts" },
   datasource: {
-    url: env("DATABASE_URL"),
-    ...(direct ? { directUrl: direct } : {}),
+    url: direct ? direct : env("DATABASE_URL"),
   },
 });
