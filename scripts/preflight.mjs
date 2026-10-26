@@ -162,11 +162,25 @@ async function checkDatabase() {
   // depends which backend the pooler gives out, so it passes a few times and
   // then fails a deploy for no reason anybody can see. DIRECT_DATABASE_URL
   // is the same database without the pooler, used by the CLI only.
-  if (strict && parsed.host.includes("-pooler") && !value("DIRECT_DATABASE_URL")) {
-    fail(
-      `DATABASE_URL is a pooled connection (${parsed.host}) and DIRECT_DATABASE_URL is not set.`,
-      "Migrations take an advisory lock a transaction pooler cannot hold, so deploys fail intermittently with P1002. Set DIRECT_DATABASE_URL to the same database on the host without `-pooler`. The app keeps the pooled one.",
-    );
+  if (strict && parsed.host.includes("-pooler")) {
+    const direct = value("DIRECT_DATABASE_URL");
+    if (!direct) {
+      fail(
+        `DATABASE_URL is a pooled connection (${parsed.host}) and DIRECT_DATABASE_URL is not set.`,
+        "Migrations take an advisory lock a transaction pooler cannot hold, so deploys fail intermittently with P1002. Set DIRECT_DATABASE_URL to the same database on the host without `-pooler`. The app keeps the pooled one.",
+      );
+    } else if (parseDatabaseUrl(direct)?.host?.includes("-pooler")) {
+      // Checking the value and not just its presence, because the first
+      // version of this check passed on a DIRECT_DATABASE_URL that was
+      // itself pooled - copied out of a provider dialog with the pooling
+      // toggle left on - and the deploy failed with the same P1002 the
+      // variable exists to prevent. A setting that is present and wrong
+      // reads exactly like one that is right.
+      fail(
+        "DIRECT_DATABASE_URL is also a pooled connection.",
+        "It is the same host as DATABASE_URL, so migrations still take their advisory lock through the pooler and still fail with P1002. It must be the host *without* `-pooler` in it.",
+      );
+    }
   }
 
   // Pass one, free and offline. A connection string pointing at the machine
