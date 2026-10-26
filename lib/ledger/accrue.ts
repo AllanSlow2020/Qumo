@@ -134,6 +134,15 @@ export type AccrualRule = {
 
 export type AccrualReward = {
   id: string;
+  /**
+   * What the member is told they have earned. The schema is explicit that
+   * this is the member-facing one and couponName is the staff label, and
+   * this used to show the staff label - falling back to the literal word
+   * "Reward" when a brand had not set one. The shopper's own wallet reads
+   * rewardName, so the two surfaces disagreed about what the same card
+   * paid out.
+   */
+  rewardName: string | null;
   couponName: string | null;
   codePrefix: string | null;
   couponExpiryDate: Date | null;
@@ -382,7 +391,11 @@ export async function applyAccrual(
       });
 
       balance -= rule.completesAt;
-      coupon = { code, name: reward.couponName ?? "Reward" };
+      // Member-facing first, then the staff label, then a word that is at
+      // least not wrong. A brand that has set neither cannot activate the
+      // promotion any more (lib/campaigns/manage.ts), so the last rung is
+      // for rows that predate that guard.
+      coupon = { code, name: reward.rewardName?.trim() || reward.couponName || "Reward" };
     }
     // Over budget: the stamps stay on the balance rather than vanishing.
     // The shopper earned them, and the brand can raise the cap.

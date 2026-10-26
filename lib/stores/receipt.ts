@@ -130,7 +130,7 @@ async function findSpendCampaign(brandId: string, now: Date) {
     include: {
       earnRule: true,
       reward: {
-        select: { id: true, couponName: true, codePrefix: true, couponExpiryDate: true, maxCoupons: true },
+        select: { id: true, rewardName: true, couponName: true, codePrefix: true, couponExpiryDate: true, maxCoupons: true },
       },
     },
     orderBy: { createdAt: "asc" },

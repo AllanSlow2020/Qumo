@@ -288,6 +288,28 @@ async function main() {
     },
   });
 
+  // The reward the card completes into.
+  //
+  // It was missing, and that is why the demo brand shipped a ten-stamp card
+  // that could never complete: applyAccrual issues a coupon only when a
+  // Reward row exists, so sixty seeded shoppers were collecting toward
+  // nothing. The console now refuses to activate a card in that state, but
+  // a seed that writes rows directly goes round every guard the console
+  // has - which is exactly how this got here.
+  await prisma.reward.upsert({
+    where: { campaignId: rounds.id },
+    update: { rewardName: "a free round" },
+    create: {
+      brandId: brand.id,
+      campaignId: rounds.id,
+      rewardName: "a free round",
+      // The staff label on the coupon itself, which is a different job from
+      // the words the shopper reads.
+      couponName: "Free round",
+      codePrefix: "RND",
+    },
+  });
+
   // Give a slice of the membership some stamps, so a shopper opening their
   // wallet sees a card in progress rather than an empty one.
   const someMembers = await prisma.brandMembership.findMany({ where: { brandId: brand.id }, take: 60 });

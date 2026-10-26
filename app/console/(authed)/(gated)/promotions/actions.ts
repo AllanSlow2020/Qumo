@@ -7,6 +7,7 @@ import {
   createCampaignForSession,
   deleteCampaignForSession,
   setCampaignLimitsForSession,
+  setCardForSession,
   setCampaignStatusForSession,
 } from "@/lib/campaigns/manage";
 import { EarnRuleError, setEarnRuleForSession } from "@/lib/packs/earn-rule";
@@ -79,6 +80,22 @@ export async function setRule(_prev: PromoActionState, formData: FormData): Prom
     } else {
       await setEarnRuleForSession(session, formData);
     }
+    return { ok: true };
+  } catch (err) {
+    return toState(err);
+  }
+}
+
+/**
+ * The stamp card and what completing one earns.
+ *
+ * One action for both halves, matching the one form. Until this existed the
+ * console could set a card's size and nothing at all about its reward, so a
+ * brand could run a card that never paid out.
+ */
+export async function setCard(_prev: PromoActionState, formData: FormData): Promise<PromoActionState> {
+  try {
+    await setCardForSession(await engineSession(), formData);
     return { ok: true };
   } catch (err) {
     return toState(err);
