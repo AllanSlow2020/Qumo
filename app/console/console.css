@@ -982,6 +982,74 @@ html[data-theme="dark"]:has(.cn) body {
 
 .cn-confirm .cn-btn { font-size: 13px; padding: 6px 10px; }
 
+/* ---------- split: what is running, and how to start another ----------
+   Three rows in one grid: the promotions, the rail beside them, and the
+   poster under the promotions. Named areas rather than source order,
+   because the order that is right at width and the order that is right on a
+   phone are different ones, and areas let one DOM serve both.
+
+   On a phone it is a single column in source order - promotions, then the
+   form, then the poster. The form is an action and the poster is something
+   a brand reads once, so the action goes first. At width the poster moves up
+   beside the rail, under the promotions, where it shares their right edge
+   instead of running a band across the whole page. */
+.cn-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "main"
+    "side"
+    "foot";
+  gap: 20px;
+  align-items: start;
+}
+
+@media (min-width: 1040px) {
+  .cn-split {
+    /* 330px holds a name field, a note and a button without wrapping the
+       button's label, and leaves the main column wide enough that
+       .cn-edit's auto-fit still gives two columns of fields rather than
+       one. Both numbers were read off the rendered page, not guessed. */
+    grid-template-columns: minmax(0, 1fr) 330px;
+    grid-template-areas:
+      "main side"
+      "foot side";
+    gap: 24px;
+  }
+}
+
+.cn-split-main { grid-area: main; }
+.cn-split-side { grid-area: side; }
+.cn-split-foot { grid-area: foot; }
+
+/* The cards keep the spacing they had when they were the whole page. */
+.cn-split-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.cn-split-side,
+.cn-split-foot { min-width: 0; }
+
+/* Sticky only where there is a column beside it to scroll past. Below the
+   breakpoint the rail is simply the next thing down the page, and pinning
+   it there would park a form over the list.
+
+   align-self: start is what makes it work at all - a grid item defaults to
+   stretching to its row, and a full-height box has nothing to stick
+   within. */
+@media (min-width: 1040px) {
+  .cn-split-side {
+    position: sticky;
+    /* Matches .cn-main's own top padding, so it settles level with where
+       the content starts rather than against the window edge. */
+    top: 20px;
+    align-self: start;
+  }
+}
+
 /* ---------- the destructive pair ----------
    Quiet until the pointer is on it. A Delete button that is red from across
    the room pulls the eye to the one control nobody should reach for by
