@@ -1,3 +1,4 @@
+import type { LedgerUnit } from "@prisma/client";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireBrand } from "@/lib/brand/current";
@@ -6,9 +7,11 @@ import {
   getWallet,
   getWalletHistory,
   formatLedgerAmount,
+  splitLedgerAmount,
   type BrandWallet,
   type WalletEntry,
 } from "@/lib/consumer/wallet";
+import { cardStanding, getCardTarget, type CardTarget } from "@/lib/consumer/progress";
 import { getPendingSpend } from "@/lib/wallet/spend";
 import { REDEMPTION_AVAILABLE } from "@/lib/wallet/availability";
 import { getProgrammeState } from "@/lib/subscriptions/manage";
@@ -86,6 +89,82 @@ function centsToRands(cents: number): string {
   return (cents / 100).toFixed(2);
 }
 
+/**
+ * A figure, with its unit set as a word rather than as more monospace.
+ *
+ * See splitLedgerAmount: rands come back with no suffix and render exactly
+ * as they always did, so this is a no-op for the balance a shopper checks
+ * most often and a correction for the two that read as typesetting faults.
+ */
+function Figure({
+  amount,
+  unit,
+  className,
+  sign,
+}: {
+  amount: number;
+  unit: LedgerUnit;
+  className: string;
+  sign?: boolean;
+}) {
+  const { figure, suffix } = splitLedgerAmount(amount, unit);
+  return (
+    <p className={className}>
+      {sign && amount > 0 ? "+" : ""}
+      {figure}
+      {suffix && <span className="sc-figure-unit">{suffix}</span>}
+    </p>
+  );
+}
+
+/**
+ * The stamp card, drawn as a card.
+ *
+ * The thing a shopper is actually collecting is a row of gaps, and the only
+ * question they open this screen to answer is how many are left. A count in
+ * a monospace face answers it in principle and in no other way: "5 stamps"
+ * is a fact about a ledger, and nobody has ever walked back into a shop
+ * because of a fact about a ledger.
+ *
+ * The marks are the one place the brand's colour is allowed on this surface
+ * besides a button - see the note at the top of shopper.css, which reserved
+ * the accent for exactly this before anything used it. Money stays ink;
+ * progress is the brand's.
+ */
+function StampCard({ target, have }: { target: CardTarget; have: number }) {
+  const { filled, total, remaining, line } = cardStanding(target, have);
+  // Ten across is as many as fits a 360px phone legibly. Beyond that the
+  // row wraps rather than shrinking the marks to confetti.
+  const columns = Math.min(total, 10);
+
+  return (
+    <section className="sc-card">
+      <div className="sc-card-head">
+        <h2 className="sc-h2">{target.campaignName}</h2>
+        <span className="sc-count">
+          {filled}/{total}
+        </span>
+      </div>
+
+      {/* One element per mark, because that is what it is. The row carries
+          the label and the marks are decoration under it, so a screen
+          reader is told "5 of 10" once rather than ten times. */}
+      <div
+        className="sc-stamps"
+        role="img"
+        aria-label={`${filled} of ${total} collected`}
+        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, maxWidth: columns * 38 + (columns - 1) * 8 }}
+      >
+        {Array.from({ length: total }, (_, i) => (
+          <span key={i} className={`sc-stamp${i < filled ? " sc-stamp-on" : ""}`} aria-hidden="true" />
+        ))}
+      </div>
+
+      <p className="sc-body">{line}</p>
+    </section>
+  );
+}
+
 type PendingSpendView = { id: string; code: string; amountCents: number; expiresAt: Date };
 
 /**
@@ -123,17 +202,26 @@ function PendingSpendCard({ spend }: { spend: PendingSpendView }) {
  */
 function Balances({
   wallet,
+  balances,
   pendingSpend,
   canRedeem,
 }: {
   wallet: BrandWallet;
+  /**
+   * What to show here, which is not always everything the shopper holds. A
+   * unit that has a stamp card drawn for it below is deliberately absent:
+   * the same five stamps printed twice, once as a figure and once as a row
+   * of marks, reads as two different things to anybody who does not already
+   * know it is one.
+   */
+  balances: BrandWallet["balances"];
   pendingSpend: PendingSpendView | null;
   canRedeem: boolean;
 }) {
   const cents = wallet.balances.find((b) => b.unit === "CENTS")?.amount ?? 0;
   // Cash first, because it is the balance a shopper can spend today; the
   // ordering is otherwise whatever the ledger returned.
-  const ordered = [...wallet.balances].sort((a, b) => (a.unit === "CENTS" ? -1 : b.unit === "CENTS" ? 1 : 0));
+  const ordered = [...balances].sort((a, b) => (a.unit === "CENTS" ? -1 : b.unit === "CENTS" ? 1 : 0));
   const [hero, ...rest] = ordered;
 
   return (
@@ -151,14 +239,14 @@ function Balances({
               came to check. Spendable cash leads where it exists, since it
               is the only balance they can do something with today. */}
           <div className="sc-balance">
-            <p className="sc-figure">{formatLedgerAmount(hero.amount, hero.unit)}</p>
+            <Figure amount={hero.amount} unit={hero.unit} className="sc-figure" />
             <p className="sc-label">{UNIT_LABELS[hero.unit] ?? hero.unit}</p>
           </div>
           {rest.length > 0 && (
             <div className="sc-balances">
               {rest.map((balance) => (
                 <div className="sc-balance" key={balance.unit}>
-                  <p className="sc-figure-sm">{formatLedgerAmount(balance.amount, balance.unit)}</p>
+                  <Figure amount={balance.amount} unit={balance.unit} className="sc-figure-sm" />
                   <p className="sc-label">{UNIT_LABELS[balance.unit] ?? balance.unit}</p>
                 </div>
               ))}
@@ -197,10 +285,11 @@ export default async function WalletPage() {
   // brand's own site has any business answering.
   const brand = await requireBrand();
 
-  const [wallets, history, programme] = await Promise.all([
+  const [wallets, history, programme, cardTarget] = await Promise.all([
     getWallet(personId, brand.id),
     getWalletHistory(personId, 50, brand.id),
     getProgrammeState(brand.id),
+    getCardTarget(brand.id),
   ]);
   // A shopper who signed in but has never scanned here has no membership at
   // this brand at all. An empty wallet stands in for one, so the page reads
@@ -215,6 +304,13 @@ export default async function WalletPage() {
 
   const pendingSpend =
     wallets.length > 0 && programme.canRedeem ? await getPendingSpend(personId, brand.id) : null;
+
+  // The card is drawn only while the programme can still earn: a row of
+  // empty marks on a closed programme invites somebody to collect something
+  // that can never complete.
+  const showCard = cardTarget !== null && programme.canEarn;
+  const cardHave = cardTarget ? (wallet.balances.find((b) => b.unit === cardTarget.unit)?.amount ?? 0) : 0;
+  const otherBalances = showCard ? wallet.balances.filter((b) => b.unit !== cardTarget.unit) : wallet.balances;
 
   return (
     <>
@@ -247,7 +343,25 @@ export default async function WalletPage() {
         </section>
       )}
 
-      <Balances wallet={wallet} pendingSpend={pendingSpend} canRedeem={programme.canRedeem} />
+      {/* Skipped entirely when the only thing this shopper holds is the
+          card drawn below. The empty state ("Nothing earned yet") would
+          otherwise sit directly above a half-full stamp card and call it
+          nothing. */}
+      {(otherBalances.length > 0 || !showCard) && (
+        <Balances
+          wallet={wallet}
+          balances={otherBalances}
+          pendingSpend={pendingSpend}
+          canRedeem={programme.canRedeem}
+        />
+      )}
+
+      {/* Under the balances rather than above them. Spendable cash is what
+          somebody standing at a till needs first; the card is what brings
+          them back next week. Drawn only while the programme can still earn
+          - a row of empty marks on a closed programme is an invitation to
+          collect something that will never complete. */}
+      {showCard && <StampCard target={cardTarget} have={cardHave} />}
 
       {history.length > 0 && (
         <section className="sc-card">
@@ -261,10 +375,12 @@ export default async function WalletPage() {
                   <span>{title}</span>
                   <span className="sc-label">{detail}</span>
                 </div>
-                <span className={`sc-row-amt${entry.amount > 0 ? " sc-pos" : ""}`}>
-                  {entry.amount > 0 ? "+" : ""}
-                  {formatLedgerAmount(entry.amount, entry.unit)}
-                </span>
+                <Figure
+                  amount={entry.amount}
+                  unit={entry.unit}
+                  sign
+                  className={`sc-row-amt${entry.amount > 0 ? " sc-pos" : ""}`}
+                />
               </div>
               );
             })}

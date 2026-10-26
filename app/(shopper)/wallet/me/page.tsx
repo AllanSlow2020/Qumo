@@ -39,6 +39,20 @@ export default async function MePage() {
     listActiveSessions(personId),
   ]);
 
+  /*
+   * The current device, then the three most recent others.
+   *
+   * The list is newest first, and the current session is not necessarily the
+   * newest one - sign in on a second phone, come back to this one, and it
+   * drops down the list. A plain slice would then show four rows reading
+   * "Signed in" and never say which one you are on, which is the single
+   * thing this card is for.
+   */
+  const current = sessions.find((s) => s.id === sessionId);
+  const others = sessions.filter((s) => s.id !== sessionId);
+  const shownSessions = [...(current ? [current] : []), ...others.slice(0, current ? 3 : 4)];
+  const hiddenSessions = sessions.length - shownSessions.length;
+
   return (
     <>
       <BrandHeader caption="Your details" />
@@ -99,8 +113,15 @@ export default async function MePage() {
           This covers every brand you&apos;ve joined through {PRODUCT_NAME}, not just {brand.name}.
         </p>
         {/* A plain link, not a button: this is a file download, and letting
-            the browser do what it already does well beats reimplementing it. */}
-        <a href="/api/consumer/export" className="sc-btn" download>
+            the browser do what it already does well beats reimplementing it.
+
+            Ghost rather than the brand's colour. Nothing on this page is the
+            page's purpose - it is the drawer somebody opens to leave, to
+            take a copy, or to sign a lost phone out - and a solid brand-red
+            block made a data export the loudest thing on the screen, louder
+            than the balance it was reached from. The one primary button
+            here is the way back to the rewards. */}
+        <a href="/api/consumer/export" className="sc-btn sc-btn-ghost" download>
           Download my data
         </a>
       </section>
@@ -125,8 +146,16 @@ export default async function MePage() {
       {sessions.length > 1 && (
         <section className="sc-card">
           <h2 className="sc-h2">Signed in on {sessions.length} devices</h2>
+          {/* Four, then a count.
+
+              We cannot name a device - nothing is stored that would let us
+              say "Safari on an iPhone" - so every row past the current one
+              reads "Signed in" and a date. Eight of those is not a list, it
+              is a wall, and it buries the only control on the card that can
+              do anything about it. The ones that matter are the current
+              device and the most recent few; the rest are a number. */}
           <div className="sc-rows">
-            {sessions.map((s) => (
+            {shownSessions.map((s) => (
               <div className="sc-row" key={s.id}>
                 <div className="sc-row-main">
                   <span>{s.id === sessionId ? "This device" : "Signed in"}</span>
@@ -138,13 +167,24 @@ export default async function MePage() {
               </div>
             ))}
           </div>
+          {hiddenSessions > 0 && (
+            <p className="sc-label">
+              and {hiddenSessions} older {hiddenSessions === 1 ? "one" : "ones"}. Signing out everywhere ends all of
+              them, including this device.
+            </p>
+          )}
           <SignOutButton action={signOutEverywhere} variant="quiet">
             Sign out everywhere
           </SignOutButton>
         </section>
       )}
 
-      <Link href="/wallet" className="sc-btn sc-btn-ghost">
+      {/* The one button on this page in the brand's own colour, and the
+          comment on the export above depends on it staying that way. Every
+          control here is a drawer somebody opened to leave, take a copy or
+          sign a lost phone out; the way back to the rewards is the only
+          thing on the screen anybody is pleased to press. */}
+      <Link href="/wallet" className="sc-btn">
         Back to my {brand.name} rewards
       </Link>
     </>

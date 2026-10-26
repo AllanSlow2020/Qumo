@@ -159,6 +159,30 @@ export async function getWalletHistory(personId: string, limit = 50, brandId?: s
  * here and nowhere else - the value stays an integer everywhere it is
  * stored, summed or compared, and only becomes "R4.25" at the edge.
  */
+/**
+ * The same amount, with the number and the word it is counting kept apart.
+ *
+ * formatLedgerAmount returns one string, and every figure on the shopper
+ * surface is set in Martian Mono - a wide monospace, tracked in at -0.05em,
+ * with the open word space the face wants. Put "5 stamps" through it and the
+ * word is dragged along: a display-sized "5" followed by a gap wide enough
+ * to read as a mistake, then a word nobody needed set on a grid.
+ *
+ * Splitting them lets the number stay on the grid, which is the whole reason
+ * for the monospace, and the word go back to the brand's own face at a size
+ * that admits it is a label. Rands have no word, so the suffix is null and
+ * the call site renders nothing extra.
+ */
+export function splitLedgerAmount(amount: number, unit: LedgerUnit): { figure: string; suffix: string | null } {
+  if (unit === "CENTS") {
+    return { figure: formatLedgerAmount(amount, unit), suffix: null };
+  }
+  const one = unit === "STAMPS" ? "stamp" : "point";
+  // No sign added here. A history row wants a leading "+" and a balance
+  // does not, and the caller is the only one that knows which it is.
+  return { figure: String(amount), suffix: `${one}${Math.abs(amount) === 1 ? "" : "s"}` };
+}
+
 export function formatLedgerAmount(amount: number, unit: LedgerUnit): string {
   switch (unit) {
     case "CENTS": {
