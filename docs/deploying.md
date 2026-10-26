@@ -167,6 +167,23 @@ that one before it deploys; it cannot catch a weak `AUTH_SECRET`.
 | `AUTH_TRUST_HOST` | `true` | Config |
 | `CRON_SECRET` | `openssl rand -hex 32` | Secret |
 
+### Tick every environment, not just Production
+
+Vercel scopes each variable to Production, Preview and Development, and the
+dialogue starts with Production alone. Preview is the branch deploy that
+opens on every pull request, and it runs the same preflight: a variable set
+only for Production makes every preview build fail while production carries
+on fine, which reads as "the branch is broken" and is not.
+
+`DIRECT_DATABASE_URL` is the one that catches people, because it was added
+later than the rest - while fixing a production problem, with only the
+Production box ticked. The build then stops with "DATABASE_URL is a pooled
+connection and DIRECT_DATABASE_URL is not set", which is the preflight doing
+its job on an environment nobody finished setting up.
+
+Preview and Production can share a database here. If you would rather they
+did not, give Preview its own Neon branch and set both URLs for it.
+
 ### The Type column matters more than it looks
 
 Vercel offers **Secret** and **Config**. Secret is write-only: once saved,
