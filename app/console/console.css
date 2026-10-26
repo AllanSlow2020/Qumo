@@ -521,7 +521,25 @@ html[data-theme="dark"]:has(.cn) body {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  /* So the figure inside can be sized against the card rather than against
+     the window. A ledger value is not one number - "R3068.45 · 286 stamps"
+     is two units in one metric - and at 30px in a fifth of a row it broke
+     across two lines mid-value. */
+  container-type: inline-size;
 }
+
+
+/* A metric inside a panel is evidence for the panel, not a card of its
+   own. Same type, one step quieter, so a promotion's three figures read as
+   belonging to the promotion above them rather than competing with it. */
+.cn-panel .cn-metric {
+  background: var(--cn-raised);
+  box-shadow: none;
+  border-radius: 14px;
+  padding: 15px 16px 14px;
+}
+
+.cn-panel .cn-metric .cn-metric-v { font-size: 25px; }
 
 /* The one number on the page that decides whether any of this is working.
  *
@@ -557,6 +575,21 @@ html[data-theme="dark"]:has(.cn) body {
   /* Tabular figures so two metrics side by side line up rather than
      wandering - the whole reason these are in a grid is comparison. */
   font-variant-numeric: tabular-nums;
+}
+
+/* Narrow card, smaller figure. Wrapping is still allowed, because some
+   values genuinely are two units long: this is about the break looking
+   chosen rather than survived.
+ *
+ * It sits after the rule it overrides rather than beside the container it
+ * queries. Same specificity, so the later declaration wins, and placed
+ * above it this did precisely nothing while looking entirely correct. */
+@container (max-width: 265px) {
+  .cn-metric-v {
+    font-size: 23px;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
 }
 
 .cn-metric-k { font-size: 12px; color: var(--cn-ink-3); }
