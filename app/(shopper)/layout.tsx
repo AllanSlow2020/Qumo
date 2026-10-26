@@ -39,6 +39,27 @@ export async function generateMetadata(): Promise<Metadata> {
     // reason the header does.
     title: brandTitle(brand),
     description: brand ? `${brand.name} rewards.` : "Rewards programmes, run for brands.",
+    /*
+     * The brand's own mark in the tab, where they have given us one.
+     *
+     * app/icon.svg puts a Qumo Q on every page in the application, which is
+     * right for the console and wrong here: this surface wears the brand,
+     * and the whole argument for it is that a shopper is dealing with
+     * Copper Kettle rather than with an infrastructure vendor they have
+     * never heard of. A Qumo glyph in the tab is a small contradiction of
+     * the one thing this surface is for.
+     *
+     * Declared only when a brand has a logo. Returning undefined leaves the
+     * file-based icon in place, which is the honest fallback: a brand that
+     * has not given us a mark has not given us one to show, and Qumo's is
+     * better than an empty square.
+     *
+     * No size or type is asserted. The logo is whatever the brand uploaded
+     * at whatever aspect ratio, served from their own address, and claiming
+     * it is a 32x32 PNG when it might be a wide SVG would be a worse answer
+     * than letting the browser work it out.
+     */
+    ...(brand?.logoUrl ? { icons: { icon: brand.logoUrl, apple: brand.logoUrl } } : {}),
   };
 }
 
