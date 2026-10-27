@@ -1350,11 +1350,21 @@ html[data-theme="dark"]:has(.cn) body {
 
    65ch rather than a pixel width, so it tracks the reader's own font size
    rather than ours. */
+/* The measure is on the paragraphs, not on the container.
+ *
+ * It was on the container, which silently capped the figures inside it too -
+ * so a three-column comparison that wants the width was squeezed into the
+ * width of a sentence, and the comment claiming otherwise was wrong. Prose
+ * wants 65 characters; a diagram wants the room it has. */
 .cn-prose {
-  max-width: 65ch;
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.cn-prose p,
+.cn-prose h3 {
+  max-width: 65ch;
 }
 
 .cn-prose p {
@@ -1394,6 +1404,185 @@ html[data-theme="dark"]:has(.cn) body {
 }
 
 .cn-explain a { color: var(--cn-ink-2); text-underline-offset: 2px; }
+
+/* ---------- figures in the guide ----------
+   Drawings that carry an idea the prose has to work at: which codes prove a
+   purchase, what a scan actually looks like end to end, and why a twelfth
+   stamp is not wasted.
+
+   They take the panel's full width rather than the 65ch the paragraphs are
+   held to, because a comparison of three things wants the room and a
+   sentence does not. See the note on .cn-prose. */
+.cn-fig {
+  margin: 6px 0 2px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cn-fig-art {
+  width: 48px;
+  height: 40px;
+  display: block;
+  color: var(--cn-ink-2);
+}
+
+.cn-fig-name {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cn-ink);
+}
+
+.cn-fig-body { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--cn-ink-3); }
+
+.cn-fig-cap {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--cn-ink-3);
+  max-width: 62ch;
+}
+
+/* ---- the three kinds of code ---- */
+
+/* Eight rows, shared by every column.
+ *
+ * The comparison is the content here - a reader is meant to run their eye
+ * along "What it proves" and see that one of them says Nothing. Three
+ * independent columns put that row at three different heights, because the
+ * line above it wraps to one line in one column and three in another, and
+ * the eye has to hunt for each label instead of scanning across. Subgrid
+ * makes the columns share the parent's rows, so every label sits on the
+ * same line as its siblings whatever the text above it did.
+ *
+ * Where subgrid is not understood the declaration is dropped and the cards
+ * lay out exactly as they did before: readable, just not aligned. */
+.cn-fig-kinds {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-rows: auto auto repeat(6, auto);
+  gap: 10px;
+}
+
+.cn-fig-kind {
+  display: grid;
+  grid-row: span 8;
+  grid-template-rows: subgrid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+}
+
+/* The one that never pays, drawn as the one that never pays. A reader
+   running their eye along the row should be able to see which column is
+   different before reading a word of it. */
+.cn-fig-kind-off {
+  background: transparent;
+  border-style: dashed;
+}
+
+.cn-fig-kind-off .cn-fig-art,
+.cn-fig-kind-off .cn-fig-name { color: var(--cn-ink-3); }
+
+/* The six label-and-value rows, handed straight back to the parent grid so
+   they line up across the columns rather than within one. */
+.cn-fig-dl {
+  margin: 0;
+  display: grid;
+  grid-row: span 6;
+  grid-template-rows: subgrid;
+  gap: 0;
+}
+
+.cn-fig-dl dt {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--cn-ink-3);
+}
+
+.cn-fig-dl dd {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--cn-ink-2);
+}
+
+.cn-fig-dl dd:last-of-type { margin-bottom: 0; }
+
+/* ---- the journey ---- */
+
+.cn-fig-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  counter-reset: none;
+}
+
+.cn-fig-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 14px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+}
+
+/* The number is the only thing here that says these are ordered, so it is
+   drawn rather than implied by position - the grid reflows to one column on
+   a phone and "left to right" stops meaning anything. */
+.cn-fig-num {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cn-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- the stamp carry-over ---- */
+
+.cn-fig-carry {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+}
+
+.cn-fig-carry-row { display: flex; flex-direction: column; gap: 7px; }
+
+.cn-fig-carry-label { font-size: 12px; color: var(--cn-ink-2); }
+
+.cn-fig-marks { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.cn-fig-mark {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 1.5px dashed var(--cn-line-strong);
+}
+
+.cn-fig-mark-on { border: 1.5px solid var(--cn-accent); background: var(--cn-accent); }
+
+/* Spent, not empty. These ten were collected and then deducted, and drawing
+   them as gaps would say the customer lost them. */
+.cn-fig-mark-spent {
+  border: 1.5px solid var(--cn-line-strong);
+  background: var(--cn-line);
+}
 
 /* ---------- worth a look ----------
    The same shape as the getting-started list and deliberately not the same
