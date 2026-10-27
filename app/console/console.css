@@ -302,6 +302,40 @@ html[data-theme="dark"]:has(.cn) body {
   gap: 22px;
 }
 
+/* The navigation stays put while the page moves under it.
+ *
+ * Sticky rather than fixed, deliberately. Fixed would take the column out
+ * of flow, and the flex row would close the gap it left - so the content
+ * would slide underneath and need a left offset bolted on to compensate,
+ * in a layout whose width is already negotiated between three flex items.
+ * Sticky keeps the column in flow holding its own width, and pins it.
+ *
+ * The two declarations that make it work at all are the height and the
+ * align-self. `.cn-shell` stretches its items, so without them the column
+ * is exactly as tall as the page, and a box as tall as the thing it
+ * scrolls within has nothing to stick to - it simply scrolls away, which
+ * is the state this is fixing. Capping it to the viewport is what gives
+ * sticky somewhere to hold.
+ *
+ * `overflow-y: auto` is for the short window rather than the long one: on
+ * a laptop with the browser bars showing, nine nav items plus the account
+ * footer can be taller than 100dvh, and a pinned column that cannot scroll
+ * is a column whose last item cannot be reached.
+ *
+ * Desktop only. Under 760px the same element is the slide-out drawer, which
+ * is already fixed and already scrolls.
+ */
+@media (min-width: 761px) {
+  .cn-side {
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100dvh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+}
+
 .cn-mark {
   font-size: 16px;
   font-weight: 600;
