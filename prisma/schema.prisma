@@ -233,10 +233,10 @@ enum Role {
 }
 
 model User {
-  id           String   @id @default(cuid())
+  id           String  @id @default(cuid())
   brandId      String
-  brand        Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  email        String   @unique
+  brand        Brand   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  email        String  @unique
   passwordHash String
   name         String
   role         Role
@@ -244,7 +244,7 @@ model User {
   // Coupon.statusChangedByUserId this person ever touched, blanking out
   // "who redeemed/cancelled this" from the audit trail. Blocks login
   // (lib/auth/config.ts) without losing that history.
-  isActive     Boolean  @default(true)
+  isActive     Boolean @default(true)
 
   /// Set when an owner creates the account or resets its password, cleared
   /// the first time the person chooses their own.
@@ -280,8 +280,8 @@ model User {
   /// Refusing anything at or below this step makes each code single-use.
   totpLastStep Int?
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   couponStatusChanges Coupon[]
   couponFraudEvents   CouponFraudEvent[]
@@ -297,12 +297,10 @@ model User {
 /**
  * A single-use way back in when the phone with the authenticator on it is
  * lost, broken or replaced.
- *
  * Every other part of this system refuses to let a brand lock itself out -
  * the last owner cannot be demoted or deactivated - and a second factor
  * without recovery codes reintroduces exactly that failure, only worse,
  * because the way back in would be us editing the database.
- *
  * Stored as a hash, like a session token and unlike the TOTP secret: a
  * recovery code is checked by comparison and never needs to be read back,
  * so there is no reason for the plaintext to survive the screen that showed
@@ -358,7 +356,7 @@ model StaffPasswordReset {
   /// reset.
   tokenHash String @unique
 
-  expiresAt DateTime
+  expiresAt  DateTime
   /// Set when spent, and on every older outstanding reset when a new one is
   /// requested. A superseded link must stop working the moment its
   /// replacement is sent.
@@ -675,26 +673,26 @@ enum CampaignStatus {
 }
 
 model Campaign {
-  id              String            @id @default(cuid())
-  brandId         String
-  brand           Brand             @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  name            String
-  description     String?
-  status          CampaignStatus    @default(DRAFT)
-  startDate       DateTime?
-  endDate         DateTime?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id          String         @id @default(cuid())
+  brandId     String
+  brand       Brand          @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  status      CampaignStatus @default(DRAFT)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
-  reward           Reward?
-  coupons          Coupon[]
-  packBatches      PackBatch[]
-  packCodes        PackCode[]
-  earnRule         EarnRule?
-  purchaseScans    PurchaseScan[]
+  reward             Reward?
+  coupons            Coupon[]
+  packBatches        PackBatch[]
+  packCodes          PackCode[]
+  earnRule           EarnRule?
+  purchaseScans      PurchaseScan[]
+  pointsTransactions PointsTransaction[]
 
   @@index([brandId])
-  pointsTransactions PointsTransaction[]
 }
 
 // Purely changes the copy shown to the member/staff about what's being
@@ -728,15 +726,15 @@ enum RewardType {
 // say the same things for a scan, and two places to configure "how much,
 // and how much completes a card" is one place too many.
 model Reward {
-  id                    String   @id @default(cuid())
-  brandId               String
-  brand                 Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  campaignId            String   @unique
-  campaign              Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  couponName            String?
-  maxCoupons            Int?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id         String   @id @default(cuid())
+  brandId    String
+  brand      Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  campaignId String   @unique
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  couponName String?
+  maxCoupons Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // What the member is told they've earned - distinct from couponName,
   // which is the internal/staff-facing label on the coupon itself.
@@ -763,7 +761,6 @@ model Reward {
   // already caps issuance count at runtime, so no separate runtime check
   // is needed once creation-time validation passes.
   budgetRand Decimal? @db.Decimal(10, 2)
-
 
   coupons Coupon[]
 
@@ -917,6 +914,21 @@ model PackCode {
   @@index([batchId, status])
 }
 
+/// How well a purchase was proved, strongest first.
+///
+/// Stored by name rather than by position, so adding a tier later does not
+/// re-grade every scan already recorded. The comparison lives in
+/// lib/proof/tier.ts; this is only the vocabulary.
+enum ProofTier {
+  /// The till signed the total, so it cannot have been edited on the way.
+  SIGNED
+  /// A Qumo code on the slip, unsigned. Earns once, and only if recent.
+  UNSIGNED
+  /// A photograph of an ordinary slip. Nothing changes at the till, and
+  /// the two remaining defences hold only as well as the read does.
+  PHOTO
+}
+
 enum EarnRuleType {
   // A fixed award per scan, whatever the shopper spent. The only rule a
   // brand without a till can run - and, usefully, also the right rule for
@@ -961,6 +973,15 @@ model EarnRule {
   // went.
   completesAt   Int?
 
+  /// The weakest proof this promotion will award on.
+  ///
+  /// UNSIGNED by default, which is exactly what this code did before the
+  /// column existed: an unsigned store already earned, and already lost
+  /// only the amount-editing defence. So every promotion that predates
+  /// this keeps its behaviour, and accepting photographs is something a
+  /// brand turns on rather than something that happens to them.
+  minProofTier ProofTier @default(UNSIGNED)
+
   // ---- Ceilings ----
   //
   // Three of them, because they stop three different things and any one
@@ -991,8 +1012,8 @@ model EarnRule {
   /// Total value in `unit` this campaign may ever issue. The answer to
   /// "what is our maximum exposure?", which had none before.
   maxTotalAmount          Int?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
   @@index([brandId])
 }
@@ -1123,6 +1144,15 @@ model PurchaseScan {
   // a fraud investigation needs to know which.
   wasSigned     Boolean
 
+  /// What this scan actually proved, on the scale wasSigned was the
+  /// two-value version of.
+  ///
+  /// Both are written from one decision rather than computed separately,
+  /// so they cannot disagree. wasSigned stays because other code still
+  /// reads it; it should be dropped once nothing does, and until then this
+  /// is the column to trust.
+  proofTier ProofTier @default(UNSIGNED)
+
   // What this slip actually gave, recorded on the scan rather than left to
   // be recomputed. Two reasons, and the second is the one that matters:
   //
@@ -1147,18 +1177,15 @@ model PurchaseScan {
 
 /**
  * A fixed-window rate-limit counter, shared by every instance of the app.
- *
  * The limiter this replaces counted in process memory, which meant the real
  * limit was (configured limit) x (however many serverless instances Vercel
  * happened to be running). Three OTP sends per fifteen minutes across four
  * instances is twelve, and nobody could tell you the number in advance.
- *
  * Postgres rather than Redis on purpose. The counters are written on login
  * attempts and scans - hundreds a day at pilot scale, not millions - and a
  * database we already run beats a second vendor, a second bill and a second
  * set of credentials to leak. The interface is one function, so moving to
  * Redis later is one file and no call-site changes.
- *
  * `key` carries its own namespace ("otp:send:<phoneHash>"), so one table
  * serves every limit without them colliding.
  */
@@ -1174,22 +1201,17 @@ model RateLimit {
 
 /**
  * What a member of a brand's staff did, and when.
- *
  * The console can create a promotion that awards money, rotate the secret
  * that makes a till slip trustworthy, reset a colleague's password and
  * cancel the programme. None of that left a trace. A brand asking "who
  * changed this, and when?" had no answer, and neither did we.
- *
  * ── Append-only, and enforced rather than intended ───────────────────────
- *
  * A log that the people it watches can edit is not a log. Nothing in the
  * app updates or deletes a row here, and lib/db/tenant.ts refuses the
  * attempt outright for this model rather than trusting that nobody writes
  * the call - the same reasoning that makes the tenant guard deny unknown
  * operations by default.
- *
  * ── Why the actor's name is copied in ────────────────────────────────────
- *
  * `actorId` points at the User, but `actorName` and `actorEmail` are
  * written at the time. A log is read months later, by which point the
  * person may have been deactivated, renamed, or had their email changed -

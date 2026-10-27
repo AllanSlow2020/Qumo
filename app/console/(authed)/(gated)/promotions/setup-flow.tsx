@@ -35,12 +35,14 @@ import { SetupStepper } from "./setup-stepper";
 export function SetupFlow({
   campaign,
   canManage,
+  photoReady,
   onCreated,
   onClose,
 }: {
   /** Null while no promotion is open, which is the page's starting state. */
   campaign: ConsoleCampaign | null;
   canManage: boolean;
+  photoReady: boolean;
   onCreated: (id: string) => void;
   onClose: () => void;
 }) {
@@ -121,7 +123,7 @@ export function SetupFlow({
           </h3>
 
           {campaign ? (
-            <StepBody campaign={campaign} step={current} onDeleted={onClose} />
+            <StepBody campaign={campaign} step={current} photoReady={photoReady} onDeleted={onClose} />
           ) : (
             <>
               <p className="cn-body" style={{ marginTop: 0 }}>

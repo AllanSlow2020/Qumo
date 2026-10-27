@@ -33,9 +33,12 @@ import { SetupFlow } from "./setup-flow";
 export function PromotionsWorkspace({
   campaigns,
   canManage,
+  photoReady,
 }: {
   campaigns: ConsoleCampaign[];
   canManage: boolean;
+  /** Whether a slip reader is configured, so the photograph tier is real. */
+  photoReady: boolean;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const flowRef = useRef<HTMLDivElement>(null);
@@ -80,6 +83,7 @@ export function PromotionsWorkspace({
           key={selected?.id ?? "new"}
           campaign={selected}
           canManage={canManage}
+          photoReady={photoReady}
           onCreated={setSelectedId}
           onClose={close}
         />

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { CampaignStatus, EarnRuleType, LedgerUnit, Role } from "@prisma/client";
+import type { CampaignStatus, EarnRuleType, LedgerUnit, ProofTier, Role } from "@prisma/client";
 import { forBrand } from "@/lib/db/tenant";
 import { prisma } from "@/lib/db/client";
 import { record } from "@/lib/audit/record";
@@ -473,6 +473,7 @@ export type ConsoleCampaign = {
     basisPoints: number | null;
     minSpendCents: number | null;
     completesAt: number | null;
+    minProofTier: ProofTier;
     maxPerPersonPerDay: number | null;
     maxScansPerPersonPerDay: number | null;
     maxTotalAmount: number | null;
@@ -526,6 +527,7 @@ export async function listCampaignsForConsole(brandId: string): Promise<ConsoleC
           basisPoints: true,
           minSpendCents: true,
           completesAt: true,
+          minProofTier: true,
           maxPerPersonPerDay: true,
           maxScansPerPersonPerDay: true,
           maxTotalAmount: true,

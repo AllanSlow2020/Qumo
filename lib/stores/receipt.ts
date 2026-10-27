@@ -5,6 +5,7 @@ import { isSerializationConflict, MAX_SERIALIZATION_ATTEMPTS } from "@/lib/db/se
 import { applyAccrual, AccrualRefused, percentOfSpend } from "@/lib/ledger/accrue";
 import { getProgrammeState } from "@/lib/subscriptions/manage";
 import { checkCampaignWindow } from "@/lib/packs/scan";
+import { meetsProofTier, type ProofTier } from "@/lib/proof/tier";
 import { parseReceiptPayload, signingMessage, verifySignature } from "./payload";
 
 /**
@@ -40,6 +41,7 @@ export type ReceiptFailureReason =
   | "STORE_INACTIVE"
   | "BAD_SIGNATURE"
   | "SIGNATURE_REQUIRED"
+  | "PROOF_TOO_WEAK"
   | "ALREADY_SCANNED"
   | "TOO_OLD"
   | "FUTURE_DATED"
@@ -72,9 +74,24 @@ export type ReceiptResult =
        */
       alreadyEarned: boolean;
     }
-  | { ok: false; reason: ReceiptFailureReason };
+  | {
+      ok: false;
+      reason: ReceiptFailureReason;
+      /**
+       * On PROOF_TOO_WEAK only: the tier the promotion actually wants.
+       *
+       * Carried out rather than resolved here, so the shopper can be told
+       * what this promotion takes instead of a generic sentence about
+       * proof. tierRefusal() turns it into that sentence.
+       */
+      wanted?: ProofTier;
+    };
 
 export const RECEIPT_FAILURE_MESSAGES: Record<ReceiptFailureReason, string> = {
+  // Overridden at the call site by tierRefusal(), which can name the tier
+  // the promotion actually wants. This is the fallback for anything that
+  // renders a reason without the rule to hand.
+  PROOF_TOO_WEAK: "This promotion needs stronger proof of purchase than that.",
   MALFORMED: "We couldn't read that slip. Try scanning it again.",
   WRONG_BRAND: "That slip belongs to a different brand's rewards. Scan the code on the slip again.",
   PROGRAMME_CLOSED: "This brand's rewards programme has ended, so this slip can't earn. Anything you already earned is still in your rewards.",
@@ -220,7 +237,14 @@ export async function redeemReceipt(
 
   // Signature check before anything else touches the amount, so a forged
   // total is rejected without ever being read as a number that matters.
-  let wasSigned = false;
+  // Derived from what the signature check actually concluded, not from
+  // whether the store holds a secret. The two agree today only because
+  // every mismatch below returns before reaching the write: a signed store
+  // with no signature is SIGNATURE_REQUIRED, and a bad one is
+  // BAD_SIGNATURE. Written this way so that if an early return is ever
+  // softened, the recorded tier follows the verification rather than the
+  // store's configuration.
+  let tier: ProofTier = "UNSIGNED";
   if (store.signingSecretEncrypted) {
     if (!parsed.signature) {
       // A signed store that receives an unsigned slip is being probed:
@@ -237,7 +261,7 @@ export async function redeemReceipt(
     if (!verifySignature(secret, message, parsed.signature)) {
       return { ok: false, reason: "BAD_SIGNATURE" };
     }
-    wasSigned = true;
+    tier = "SIGNED";
   }
 
   const age = now.getTime() - parsed.purchasedAt.getTime();
@@ -255,6 +279,13 @@ export async function redeemReceipt(
   // campaign, and awarding nothing is the right answer until it is fixed.
   if (!campaign || !rule || rule.basisPoints == null) {
     return { ok: false, reason: "NO_CAMPAIGN" };
+  }
+
+  // After the rule is found, because the floor is the rule's, and before
+  // the amount is turned into an award, because a promotion that will not
+  // accept this evidence should not be doing arithmetic on it.
+  if (!meetsProofTier(tier, rule.minProofTier)) {
+    return { ok: false, reason: "PROOF_TOO_WEAK", wanted: rule.minProofTier };
   }
 
   if (rule.minSpendCents != null && parsed.amountCents < rule.minSpendCents) {
@@ -294,7 +325,11 @@ export async function redeemReceipt(
               amountCents: parsed.amountCents,
               purchasedAt: parsed.purchasedAt,
               scannedAt: now,
-              wasSigned,
+              proofTier: tier,
+              // Derived from the tier rather than tracked separately, so
+              // the old column and the new one cannot drift apart while
+              // both still exist.
+              wasSigned: tier === "SIGNED",
             },
           });
 

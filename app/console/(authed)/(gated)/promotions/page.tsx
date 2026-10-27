@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/client";
 import { brandOrigin } from "@/lib/brand/host";
 import { joinUrl, posterQrSvg } from "@/lib/brand/poster";
 import { listCampaignsForConsole, MANAGE_CAMPAIGN_ROLES } from "@/lib/campaigns/manage";
+import { photoCaptureConfigured } from "@/lib/slips/read";
 import { requireStaff } from "@/lib/staff/current";
 import { PromotionsWorkspace } from "./promotions-workspace";
 
@@ -17,6 +18,12 @@ export default async function ConsolePromotionsPage() {
   ]);
 
   const canManage = MANAGE_CAMPAIGN_ROLES.includes(session.role as Role);
+
+  // Read on the server, because it is an environment decision rather than
+  // a brand one. Offering the photograph tier while no reader is
+  // configured would be offering a brand a setting that silently does
+  // nothing to every shopper who tries it.
+  const photoReady = photoCaptureConfigured();
 
   // brandOrigin rather than built here, which is what this was doing and
   // what the CSV route and the label sheet were each doing separately. Three
@@ -47,7 +54,7 @@ export default async function ConsolePromotionsPage() {
           330px rail. See promotions-workspace for why the list moved down
           and what makes that safe. */}
       <div className="cn-promo-stack">
-        <PromotionsWorkspace campaigns={campaigns} canManage={canManage} />
+        <PromotionsWorkspace campaigns={campaigns} canManage={canManage} photoReady={photoReady} />
 
         {/* Last, because it is reference rather than action: the address on
             it never changes and never awards anything, so it belongs below
