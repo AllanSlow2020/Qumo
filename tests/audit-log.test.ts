@@ -158,6 +158,7 @@ describe("what the engine records without being asked", () => {
 describe("describeAction", () => {
   it("turns a stored verb into a sentence", () => {
     expect(describeAction("store.secret_rotated")).toBe("Rotated a store's signing secret");
+    expect(describeAction("campaign.renamed")).toBe("Renamed a promotion");
   });
 
   it("falls back to the raw name rather than rendering a blank row", () => {

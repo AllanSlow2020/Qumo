@@ -130,10 +130,10 @@ export function promotionSteps(campaign: ConsoleCampaign | null): PromotionStep[
         : step("cost", "todo", "Set a total so the promotion stops paying out at a number you chose.");
 
   return [
-    // No rename action exists, so this says what it is and stops. An
-    // instruction to "change it here" would describe a form that is not
-    // built.
-    step("name", "done", `Called ${campaign.name}.`),
+    // "done" rather than "todo": the promotion has a name, so there is
+    // nothing outstanding and the sequence should not open here. The step
+    // is still editable, which is what stops it reading as a dead end.
+    step("name", "done", `Called ${campaign.name}. Change it here if it needs changing; nothing else is affected.`),
     rule
       ? step("award", "done", "A shopper earns something for every scan that checks out.")
       : step("award", "todo", "Decide what a scan is worth. Until this is set the promotion cannot go live."),

@@ -6,6 +6,7 @@ import {
   CampaignError,
   createCampaignForSession,
   deleteCampaignForSession,
+  renameCampaignForSession,
   setCampaignLimitsForSession,
   setCardForSession,
   setCampaignStatusForSession,
@@ -47,6 +48,19 @@ export async function createCampaign(_prev: PromoActionState, formData: FormData
   try {
     const campaign = await createCampaignForSession(await engineSession(), formData);
     return { ok: true, id: campaign.id };
+  } catch (err) {
+    return toState(err);
+  }
+}
+
+export async function renameCampaign(_prev: PromoActionState, formData: FormData): Promise<PromoActionState> {
+  try {
+    await renameCampaignForSession(
+      await engineSession(),
+      String(formData.get("campaignId") ?? ""),
+      formData,
+    );
+    return { ok: true };
   } catch (err) {
     return toState(err);
   }

@@ -61,6 +61,7 @@ const PHRASES: Record<string, string> = {
   "campaign.draft": "Moved a promotion back to draft",
   "campaign.limits_changed": "Changed a promotion's ceilings",
   "campaign.paused": "Paused a promotion",
+  "campaign.renamed": "Renamed a promotion",
   "pack_batch.created": "Generated a batch of print codes",
   "store.created": "Added a store",
   "store.deactivated": "Switched a store off",

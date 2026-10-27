@@ -53,11 +53,28 @@ export function SetupFlow({
   const [open, setOpen] = useState<StepId>(() => firstUnfinishedStep(steps) ?? "live");
 
   const current = steps.find((s) => s.id === open) ?? steps[0]!;
+  const at = steps.findIndex((s) => s.id === current.id);
+  const number = at + 1;
+
+  /*
+   * Next is the next step in the sequence, locked or not.
+   *
+   * It used to be the next *reachable* step, which meant a fresh promotion
+   * showed Back and no Next at all: the one screen where somebody has no
+   * idea what comes next was the one that declined to say. The button is
+   * there now, disabled, naming the step and the single thing that unlocks
+   * it. Back stays reachable-only, since there is never a locked step
+   * behind you.
+   */
+  const next = at >= 0 && at < steps.length - 1 ? steps[at + 1] : undefined;
+  const nextLocked = next?.state === "locked";
   const reachable = steps.filter((s) => s.state !== "locked");
-  const here = reachable.findIndex((s) => s.id === current.id);
-  const back = here > 0 ? reachable[here - 1] : undefined;
-  const next = here >= 0 && here < reachable.length - 1 ? reachable[here + 1] : undefined;
-  const number = steps.findIndex((s) => s.id === current.id) + 1;
+  const behind = reachable.findIndex((s) => s.id === current.id);
+  const back = behind > 0 ? reachable[behind - 1] : undefined;
+
+  // Every locked step in this flow is locked by one of two things, and
+  // which one depends only on whether the promotion exists yet.
+  const unlockedBy = campaign ? "Save what it awards to carry on." : "Create the promotion to carry on.";
 
   if (!canManage) {
     return (
@@ -126,9 +143,18 @@ export function SetupFlow({
                 <span />
               )}
               {next && (
-                <button type="button" className="cn-btn cn-btn-quiet" onClick={() => setOpen(next.id)}>
-                  Next: {next.title}
-                </button>
+                <span className="cn-flow-fwd">
+                  {nextLocked && <span className="cn-label">{unlockedBy}</span>}
+                  <button
+                    type="button"
+                    className="cn-btn cn-btn-quiet"
+                    onClick={() => setOpen(next.id)}
+                    disabled={nextLocked}
+                    aria-disabled={nextLocked || undefined}
+                  >
+                    Next: {next.title}
+                  </button>
+                </span>
               )}
             </div>
           )}

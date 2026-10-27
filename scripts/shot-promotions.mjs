@@ -76,25 +76,32 @@ await shot("05-stamp-card-done");
 await step("Switch it on");
 await shot("06-switch-it-on");
 
+await step("Name it");
+await shot("07-name-step-now-editable");
+
 await backToStart();
+// Step one before anything exists: Next is there, disabled, and says what
+// unlocks it.
+await shot("08-new-next-is-explained");
+
 await openPromo("Scrap me");
-await shot("07-draft-with-locked-steps");
+await shot("09-draft-with-locked-steps");
 await backToStart();
 
 await setTheme("dark");
-await shot("08-dark-step1");
+await shot("10-dark-step1");
 await openPromo("Rounds card");
-await shot("09-dark-flagged-step");
-await shot("10-dark-page-full", { fullPage: true });
+await shot("11-dark-flagged-step");
+await shot("12-dark-page-full", { fullPage: true });
 await backToStart();
 
 await setTheme("light");
 await page.setViewportSize({ width: 390, height: 844 });
 await page.reload({ waitUntil: "networkidle" });
-await shot("11-phone-step1");
+await shot("13-phone-step1");
 await openPromo("Rounds card");
-await shot("12-phone-flagged-step");
-await shot("13-phone-full", { fullPage: true });
+await shot("14-phone-flagged-step");
+await shot("15-phone-full", { fullPage: true });
 
 await ctx.close();
 await browser.close();

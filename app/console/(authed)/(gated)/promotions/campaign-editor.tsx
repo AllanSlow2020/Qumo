@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ConsoleCampaign } from "@/lib/campaigns/manage";
 import type { PromotionStep } from "@/lib/console/promotion-steps";
-import { deleteCampaign, setCard, setLimits, setRule } from "./actions";
+import { deleteCampaign, renameCampaign, setCard, setLimits, setRule } from "./actions";
 import { StatusButton } from "./status-button";
 import { IDLE, type PromoActionState } from "./state";
 
@@ -133,6 +133,74 @@ function StepIntro({ blurb, state }: { blurb: string; state: PromotionStep["stat
     <p className={`cn-body${state === "attention" ? " cn-warn-note" : ""}`} style={{ marginTop: 0 }}>
       {blurb}
     </p>
+  );
+}
+
+/**
+ * Step one on a promotion that already exists.
+ *
+ * It used to render the name as a sentence and nothing else, which made the
+ * first step of a five step sequence the one step that could not be done.
+ * The fields are the ones creation asks for, in the same order, so the step
+ * looks the same whether you are arriving at it or coming back to it.
+ */
+function NameForm({ campaign }: { campaign: ConsoleCampaign }) {
+  const router = useRouter();
+  const [state, action, pending] = useActionState<PromoActionState, FormData>(renameCampaign, IDLE);
+  useEffect(() => {
+    if (state.ok) router.refresh();
+  }, [state, router]);
+
+  return (
+    <form
+      /* Keyed on what came back from the server, like every other form
+         here: these are defaultValues, so without it a rename would save
+         and the boxes would keep showing the old text. */
+      key={`name-${campaign.name}-${campaign.description}`}
+      action={action}
+      className="cn-form"
+    >
+      <input type="hidden" name="campaignId" value={campaign.id} />
+
+      <div className="cn-field">
+        <label htmlFor={`name-${campaign.id}`}>Name</label>
+        <input
+          id={`name-${campaign.id}`}
+          name="name"
+          className="cn-input"
+          required
+          maxLength={120}
+          defaultValue={campaign.name}
+        />
+        <p className="cn-label">For your own reference. Shoppers see what it awards, not what you called it.</p>
+      </div>
+
+      <div className="cn-field">
+        <label htmlFor={`note-${campaign.id}`}>Note (optional)</label>
+        <input
+          id={`note-${campaign.id}`}
+          name="description"
+          className="cn-input"
+          maxLength={500}
+          defaultValue={campaign.description ?? ""}
+        />
+      </div>
+
+      {state.ok === false && (
+        <p className="cn-err" role="alert">
+          {state.error}
+        </p>
+      )}
+      {/* Said here because this is the one form on the page that is safe on
+          a live promotion, and somebody editing a running one should know
+          that before they press it. */}
+      <p className="cn-label">
+        Changing these two is safe at any time. Neither touches what the promotion awards or whether it is running.
+      </p>
+      <button type="submit" className="cn-btn" disabled={pending} style={{ alignSelf: "flex-start" }}>
+        {pending ? "Saving…" : state.ok ? "Saved. Save again" : "Save the name"}
+      </button>
+    </form>
   );
 }
 
@@ -438,9 +506,9 @@ function LiveStep({ campaign, onDeleted }: { campaign: ConsoleCampaign; onDelete
 /**
  * The body of whichever step is open.
  *
- * `name` on an existing promotion has no form behind it, because there is
- * no rename action. It says what the promotion is called and nothing more,
- * which is honest about a step that is already finished.
+ * Every step has something to do in it, including the first. `name` used to
+ * be the exception and read as a dead end: a step you could open, could not
+ * act on, and could not fix a typo from.
  */
 export function StepBody({
   campaign,
@@ -454,6 +522,7 @@ export function StepBody({
   return (
     <>
       <StepIntro blurb={step.blurb} state={step.state} />
+      {step.id === "name" && <NameForm campaign={campaign} />}
       {step.id === "award" && <RuleForm campaign={campaign} />}
       {step.id === "card" && <CardForm campaign={campaign} />}
       {step.id === "cost" && <LimitsForm campaign={campaign} />}

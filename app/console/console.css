@@ -2830,10 +2830,22 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 .cn-flow-nav {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 10px;
   margin-top: 4px;
   padding-top: 14px;
   border-top: 1px solid var(--cn-line);
+}
+
+/* The reason sits beside the disabled button rather than under it, so the
+   sentence and the thing it explains are read in one movement. */
+.cn-flow-fwd {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 /* On a phone the rail becomes a column: five labels across 360px is four
