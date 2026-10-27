@@ -405,7 +405,10 @@ roughly this order of consequence:
    the whole agreement is two sentences and a reply of YES?
 9. What is required before a child can join a programme whose brand sets no
    minimum age?
-10. What retention period should the dormant-account erasure use?
+10. What retention period should the dormant-account erasure use, given
+    that the sweep currently erases unspent balances along with the
+    account? POPIA section 14 argues for a window; CPA sections 35 and 63
+    argue for preserving earned value. See item 4 of `docs/popia.md`.
 
 ---
 

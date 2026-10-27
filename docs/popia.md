@@ -245,13 +245,42 @@ lighter obligation, but it is not nothing.
    back into the constants.
 3. **Draft the brand agreement**, including the operator clause if that is
    the answer, and the section 21 security obligation.
-4. **Choose the dormancy window.** The mechanism is built and tested; the
-   number is not set, and while it is unset the sweep runs and does nothing.
-   Setting `QUMO_DORMANT_ERASE_AFTER_DAYS` is the whole task. Three years is
-   a common answer in South African practice and is a starting point for the
-   conversation, not a recommendation from this document. Anything under a
-   year is refused by the code rather than clamped, because a mistyped value
-   here destroys a customer base overnight.
+4. **Choose the dormancy window, and fix what it erases first.** The
+   mechanism is built and tested; the number is not set, and while it is
+   unset the sweep runs and does nothing. Anything under a year is refused
+   by the code rather than clamped, because a mistyped value here destroys a
+   customer base overnight. Three years is a common answer in South African
+   practice and is a starting point for the conversation, not a
+   recommendation from this document.
+
+   **Setting the variable is not the whole task, and it is not safe to do
+   on its own.** `sweepDormantShoppers()` protects a shopper who is holding
+   an unexpired coupon, and says why: "a shopper sitting on an unexpired
+   coupon has something of value here, dormant or not". It does not protect
+   a shopper holding an unspent **balance**. The ledger exclusion asks
+   whether there is a transaction *since the cutoff*, which is recent
+   activity, not whether the balance is positive. So a shopper who earned
+   value four years ago, never came back, and holds no coupon is erased
+   along with the value, silently, by a nightly job. It is the same shape as
+   the erasure defect this file came out of: reasoned through for one case
+   and missed for the one next to it.
+
+   It is inert today because the window is unset, which is the only reason
+   this is a note rather than an incident. The moment somebody sets the
+   variable it is live, and the variable looks like a one-line change.
+
+   The fix is a decision rather than an obvious patch, because the two
+   regimes pull in opposite directions. POPIA section 14 says personal
+   information must not be kept longer than necessary, which is the entire
+   argument for the sweep. CPA section 35 treats earned loyalty credits as
+   the holder's, and section 63 keeps a prepaid credit or voucher alive for
+   three years. "Keep balances forever" and "erase dormant accounts" cannot
+   both hold, so somebody has to choose between protecting any positive
+   balance indefinitely, expiring balances on a stated period and saying so
+   in the terms, or de-identifying the account while preserving the value.
+   Whichever is chosen, the terms currently promise the shopper that "your
+   balance does not expire while the programme is running", which is true
+   today and false the moment a window is set.
 5. **Register with the Information Regulator** if the decision makes Qumo a
    responsible party, and appoint an Information Officer.
 6. **Give a shopper a way to reach Qumo.** There is none. The only contact
