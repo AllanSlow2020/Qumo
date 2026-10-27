@@ -1341,6 +1341,57 @@ html[data-theme="dark"]:has(.cn) body {
 .cn-btn { transition: filter 120ms ease, background-color 120ms ease, border-color 120ms ease, transform 60ms ease; }
 .cn-btn:active:not(:disabled) { transform: translateY(1px); }
 
+/* ---------- worth a look ----------
+   The same shape as the getting-started list and deliberately not the same
+   component: those are steps in an order, these are unrelated observations
+   that happen to be true at once. A numbered list would imply a sequence
+   that is not there. */
+.cn-notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cn-note {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--cn-line-soft);
+}
+
+.cn-note:first-child { padding-top: 2px; }
+.cn-note:last-child { border-bottom: 0; padding-bottom: 2px; }
+
+.cn-note-main { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+
+.cn-note-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--cn-ink);
+  margin: 0;
+}
+
+/* A rule down the leading edge rather than a tinted panel. These sit inside
+   a card that already has a warning colour available to it, and two amber
+   blocks on one screen stop meaning "look here". */
+.cn-note-warn {
+  padding-left: 12px;
+  box-shadow: inset 2px 0 0 var(--cn-warn);
+}
+
+.cn-note-cta { flex: none; white-space: nowrap; }
+
+@media (max-width: 560px) {
+  /* The button drops under the sentence rather than squeezing it into a
+     column two words wide. */
+  .cn-note { flex-direction: column; gap: 10px; }
+  .cn-note-cta { align-self: flex-start; }
+}
+
 /* ---------- the getting-started list ----------
    A numbered list that reads as a sequence rather than a set of options,
    because it is one: the engine refuses to activate a promotion with no
