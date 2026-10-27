@@ -114,18 +114,43 @@
   --cn-danger-fill: #c80710;
   --cn-danger-ink: #ffffff;
 
-  /* Two radii carry the system: a pill for anything interactive, a generous
-     round for anything that contains. Plus one small value for the handful
-     of marks too short to take a pill without becoming a lozenge. */
+  /* Two radii carry the system, and they deliberately disagree now.
+     Anything interactive is a pill - 18px on a 36px control is exactly
+     half, so a button is a lozenge and reads as pressable from across the
+     room. Anything that *contains* is square-ish, because a container is
+     architecture rather than a control, and an 18px card next to an 18px
+     button said they were the same kind of thing. The contrast between the
+     two is what stops a page of rounded rectangles reading as a template. */
   --cn-radius: 18px;
-  --cn-radius-card: 18px;
+  --cn-radius-card: 8px;
+  /* For anything sitting inside a card. See the note on .cn-panel .cn-metric
+     about concentric corners. */
+  --cn-radius-inner: 5px;
   --cn-radius-badge: 18px;
   --cn-radius-small: 6px;
 
-  /* A hairline plus the faintest lift. The border defines the card; the
-     shadow only stops it sitting flat on the canvas. */
-  --cn-shadow-card: 0 0 0 1px rgba(23, 23, 23, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06),
-    0 1px 2px -1px rgba(0, 0, 0, 0.06);
+  /* Layered, the way a real shadow is: a contact shadow holding the card
+     to the canvas, then two progressively softer and wider casts. One
+     blurred rectangle at a single offset is the look every framework ships
+     with and the reason a page of them reads as generic - a real object
+     occludes light at several distances at once.
+
+     Still quiet. The border is what defines the card; this decides how far
+     off the page it sits. */
+  --cn-shadow-card:
+    0 0 0 1px rgba(17, 17, 26, 0.055),
+    0 1px 2px rgba(17, 17, 26, 0.05),
+    0 5px 12px -2px rgba(17, 17, 26, 0.09),
+    0 18px 34px -12px rgba(17, 17, 26, 0.16);
+
+  /* The same stack, pushed one step further out. Tokenised because the
+     hover rule used to hardcode a light-theme shadow, which meant the dark
+     theme lifted a card into a smudge of black-on-black. */
+  --cn-shadow-hover:
+    0 0 0 1px rgba(17, 17, 26, 0.08),
+    0 2px 4px rgba(17, 17, 26, 0.06),
+    0 10px 22px -4px rgba(17, 17, 26, 0.12),
+    0 28px 52px -16px rgba(17, 17, 26, 0.22);
 
   --cn-line-strong: #d4d4d4;
 
@@ -195,9 +220,34 @@
   --cn-danger-fill: #c8232f;
   --cn-danger-ink: #ffffff;
 
-  /* No lift in the dark. A drop shadow on a dark ground is a smudge, so the
-     card is defined by its step and its hairline alone. */
-  --cn-shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.02);
+  /* This used to say "no lift in the dark - a drop shadow on a dark ground
+     is a smudge", and the first half of that is right about the wrong
+     thing. A *light* theme's shadow on a dark ground is a smudge. A dark
+     one is not: it wants a near-black cast, wide and far, which darkens the
+     canvas around the card rather than greying it.
+     
+     What the old rule left out is where elevation actually comes from in
+     the dark, which is the top edge. A one-pixel inset highlight reads as
+     light landing on the near corner of something raised, and it is the
+     single difference between a dark card that looks machined and one that
+     looks like a div with a border. It is paired with a dark inset along
+     the bottom, because a raised thing catches light on its top edge and
+     loses it on the opposite one - the two together are what give the card
+     a thickness rather than a surface. The hairline is brighter now too,
+     because it has a lit edge to be consistent with. */
+  --cn-shadow-card:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.045),
+    0 3px 6px rgba(0, 0, 0, 0.4),
+    0 14px 30px -10px rgba(0, 0, 0, 0.62);
+
+  --cn-shadow-hover:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 6px 12px rgba(0, 0, 0, 0.45),
+    0 24px 46px -14px rgba(0, 0, 0, 0.72);
   --cn-line-strong: #3d424a;
 }
 
@@ -250,6 +300,40 @@ html[data-theme="dark"]:has(.cn) body {
   display: flex;
   flex-direction: column;
   gap: 22px;
+}
+
+/* The navigation stays put while the page moves under it.
+ *
+ * Sticky rather than fixed, deliberately. Fixed would take the column out
+ * of flow, and the flex row would close the gap it left - so the content
+ * would slide underneath and need a left offset bolted on to compensate,
+ * in a layout whose width is already negotiated between three flex items.
+ * Sticky keeps the column in flow holding its own width, and pins it.
+ *
+ * The two declarations that make it work at all are the height and the
+ * align-self. `.cn-shell` stretches its items, so without them the column
+ * is exactly as tall as the page, and a box as tall as the thing it
+ * scrolls within has nothing to stick to - it simply scrolls away, which
+ * is the state this is fixing. Capping it to the viewport is what gives
+ * sticky somewhere to hold.
+ *
+ * `overflow-y: auto` is for the short window rather than the long one: on
+ * a laptop with the browser bars showing, nine nav items plus the account
+ * footer can be taller than 100dvh, and a pinned column that cannot scroll
+ * is a column whose last item cannot be reached.
+ *
+ * Desktop only. Under 760px the same element is the slide-out drawer, which
+ * is already fixed and already scrolls.
+ */
+@media (min-width: 761px) {
+  .cn-side {
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100dvh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
 }
 
 .cn-mark {
@@ -544,11 +628,18 @@ html[data-theme="dark"]:has(.cn) body {
 
 /* A metric inside a panel is evidence for the panel, not a card of its
    own. Same type, one step quieter, so a promotion's three figures read as
-   belonging to the promotion above them rather than competing with it. */
+   belonging to the promotion above them rather than competing with it.
+
+   The radius is a step tighter than its container's, not a hardcoded 14px
+   as it was: an inner corner has to be the outer corner minus the padding
+   between them, or the two arcs are not concentric and the tile reads as
+   something that landed on the card rather than something cut from it. It
+   was rounder than the card holding it, which is the version of that
+   mistake you can see from across the room. */
 .cn-panel .cn-metric {
   background: var(--cn-raised);
   box-shadow: none;
-  border-radius: 14px;
+  border-radius: var(--cn-radius-inner);
   padding: 15px 16px 14px;
 }
 
@@ -1224,9 +1315,7 @@ html[data-theme="dark"]:has(.cn) body {
   .cn-split-foot > .cn-panel:hover {
     transform: translateY(-2px);
     border-color: var(--cn-line-strong);
-    box-shadow:
-      0 0 0 1px rgba(23, 23, 23, 0.04),
-      0 6px 18px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--cn-shadow-hover);
   }
 
   /* The promotion whose editor is open keeps its accent edge while hovered.
@@ -1236,7 +1325,7 @@ html[data-theme="dark"]:has(.cn) body {
     border-color: color-mix(in srgb, var(--cn-accent) 70%, var(--cn-line));
     box-shadow:
       inset 3px 0 0 var(--cn-accent),
-      0 6px 18px rgba(0, 0, 0, 0.1);
+      var(--cn-shadow-hover);
   }
 
   /* A metric inside a promotion card is part of the card, not a thing of
