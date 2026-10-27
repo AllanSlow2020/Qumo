@@ -661,3 +661,42 @@
   word-break: break-all;
   margin: 0;
 }
+
+/* ---------- the one moving part on this surface ----------
+   Everything else here is modelled on a printed slip, and a printed slip
+   does not move. The stamp card is the exception, because it is the only
+   thing on this surface that is not a record of something already done: it
+   is progress, and watching the marks land is the whole reason anybody
+   collects them.
+
+   Kept to what a till receipt could almost do - each mark appearing in the
+   order it was earned, left to right, and over before a thumb could reach
+   the button underneath. Only the filled ones animate. An empty mark is a
+   gap, and a gap that announces itself is just noise.
+
+   This sits at the end of the file on purpose. The reduced-motion block
+   below it has the same specificity, so anything written after it would
+   win, and a reader who asked for no motion would get all of it. */
+.sc-stamp-on {
+  animation: sc-stamp 260ms cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+}
+
+@keyframes sc-stamp {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+.sc-stamp-on:nth-child(2) { animation-delay: 35ms; }
+.sc-stamp-on:nth-child(3) { animation-delay: 70ms; }
+.sc-stamp-on:nth-child(4) { animation-delay: 105ms; }
+.sc-stamp-on:nth-child(5) { animation-delay: 140ms; }
+.sc-stamp-on:nth-child(6) { animation-delay: 175ms; }
+.sc-stamp-on:nth-child(7) { animation-delay: 210ms; }
+.sc-stamp-on:nth-child(8) { animation-delay: 245ms; }
+/* Stops here. A card of twenty would otherwise still be filling when
+   somebody has read the sentence underneath it and moved on. */
+.sc-stamp-on:nth-child(n + 9) { animation-delay: 280ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-stamp-on { animation: none; }
+}

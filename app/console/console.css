@@ -1083,6 +1083,175 @@ html[data-theme="dark"]:has(.cn) body {
    sits at the foot of the editor - away from the Save buttons above it. */
 .cn-actions-end { justify-content: flex-end; }
 
+/* ---------- arrival ----------
+   The console was static in the way a printed page is static: everything
+   arrives at once, fully formed, and nothing tells you where to look first.
+   These rules give the page an order to arrive in - top-left to
+   bottom-right, the way it is read - and stop short of anything that would
+   still be moving by the time somebody reaches for it.
+
+   Everything here is decoration over content that is already correct in the
+   HTML. A browser that ignores all of it shows the finished page, which is
+   the only acceptable failure mode for a dashboard.
+
+   `both` on fill-mode matters: without it the element is painted at full
+   opacity for the length of its own delay, which is the flicker these
+   rules exist to avoid. */
+@keyframes cn-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.cn-metric,
+.cn-main > .cn-panel,
+.cn-split-main > .cn-panel,
+.cn-split-side > .cn-panel,
+.cn-split-foot > .cn-panel {
+  /* `backwards`, not `both`.
+   *
+   * Both fill modes hold the `from` keyframe through the delay, which is
+   * the flicker these rules exist to stop. `both` also holds the `to`
+   * keyframe for ever afterwards - and a running or filled animation
+   * outranks an ordinary declaration in the cascade, so the hover rules
+   * below would have been quietly dead: the element would have kept
+   * `transform: none` from this animation no matter what a hover said.
+   *
+   * `backwards` hands the element back to the normal cascade the moment it
+   * finishes, and since the `to` keyframe is the element's resting state
+   * anyway, nothing moves when it does. */
+  animation: cn-rise 420ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+/* Staggered by position, not by JavaScript. Eight is where it stops: a
+   ninth card arriving two thirds of a second after the first is no longer
+   an entrance, it is a wait. */
+.cn-metric:nth-child(2),
+.cn-main > .cn-panel:nth-child(2) { animation-delay: 40ms; }
+.cn-metric:nth-child(3),
+.cn-main > .cn-panel:nth-child(3) { animation-delay: 80ms; }
+.cn-metric:nth-child(4),
+.cn-main > .cn-panel:nth-child(4) { animation-delay: 120ms; }
+.cn-metric:nth-child(5),
+.cn-main > .cn-panel:nth-child(5) { animation-delay: 160ms; }
+.cn-metric:nth-child(n + 6),
+.cn-main > .cn-panel:nth-child(n + 6) { animation-delay: 200ms; }
+
+.cn-split-main > .cn-panel:nth-child(2) { animation-delay: 60ms; }
+.cn-split-main > .cn-panel:nth-child(3) { animation-delay: 120ms; }
+.cn-split-main > .cn-panel:nth-child(n + 4) { animation-delay: 180ms; }
+
+/* The rail is the one panel that also arrives mid-session: clicking Edit
+   swaps what is in it, the new panel is a new element, and the same rule
+   replays. So it is quicker than the rest and never delayed - a stagger
+   that reads as considered on page load reads as lag when it is the
+   response to a click. */
+.cn-split-side > .cn-panel {
+  animation-duration: 240ms;
+  animation-delay: 0ms;
+}
+
+/* A step in the getting-started list, in reading order and faster than the
+   panels, because six of them at panel speed is a queue. */
+.cn-step { animation: cn-rise 300ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+.cn-step:nth-child(2) { animation-delay: 45ms; }
+.cn-step:nth-child(3) { animation-delay: 90ms; }
+.cn-step:nth-child(4) { animation-delay: 135ms; }
+.cn-step:nth-child(5) { animation-delay: 180ms; }
+.cn-step:nth-child(n + 6) { animation-delay: 225ms; }
+
+/* The mark filling when a step is already done. Scale only - a step that
+   was done before the page loaded should settle, not announce itself. */
+.cn-step-done .cn-step-mark { animation: cn-pop 320ms cubic-bezier(0.34, 1.4, 0.64, 1) backwards 260ms; }
+
+@keyframes cn-pop {
+  from { transform: scale(0.4); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* Bars growing out of the baseline they are measured from. The height is
+   set inline per bar, so the animation scales rather than touching it. */
+.cn-spark i,
+.cn-chart i {
+  transform-origin: bottom;
+  animation: cn-grow 420ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+@keyframes cn-grow {
+  from { transform: scaleY(0); }
+  to { transform: none; }
+}
+
+.cn-spark i:nth-child(2), .cn-chart i:nth-child(2) { animation-delay: 30ms; }
+.cn-spark i:nth-child(3), .cn-chart i:nth-child(3) { animation-delay: 60ms; }
+.cn-spark i:nth-child(4), .cn-chart i:nth-child(4) { animation-delay: 90ms; }
+.cn-spark i:nth-child(5), .cn-chart i:nth-child(5) { animation-delay: 120ms; }
+.cn-spark i:nth-child(6), .cn-chart i:nth-child(6) { animation-delay: 150ms; }
+.cn-spark i:nth-child(n + 7), .cn-chart i:nth-child(n + 7) { animation-delay: 180ms; }
+
+/* ---------- hover ----------
+   Only where there is a pointer that can hover. On a touch screen :hover
+   sticks after a tap, so a card would stay lifted until something else was
+   tapped - the state would read as "selected" on the one page where
+   selected already means something.
+
+   A lift and a brighter edge, nothing that moves anything else: transform
+   and box-shadow are the two properties that cost no layout, which is what
+   keeps this smooth on the mid-range Android this console is written for. */
+@media (hover: hover) and (pointer: fine) {
+  .cn-metric,
+  .cn-main > .cn-panel,
+  .cn-split-main > .cn-panel,
+  .cn-split-foot > .cn-panel {
+    transition:
+      transform 170ms cubic-bezier(0.22, 0.61, 0.36, 1),
+      box-shadow 170ms ease,
+      border-color 170ms ease;
+  }
+
+  .cn-metric:hover {
+    transform: translateY(-2px);
+    border-color: var(--cn-line-strong);
+  }
+
+  .cn-main > .cn-panel:hover,
+  .cn-split-main > .cn-panel:hover,
+  .cn-split-foot > .cn-panel:hover {
+    transform: translateY(-2px);
+    border-color: var(--cn-line-strong);
+    box-shadow:
+      0 0 0 1px rgba(23, 23, 23, 0.04),
+      0 6px 18px rgba(0, 0, 0, 0.1);
+  }
+
+  /* The promotion whose editor is open keeps its accent edge while hovered.
+     Without repeating the inset here the lift would wipe the one mark that
+     says which card the rail belongs to. */
+  .cn-split-main > .cn-panel.cn-panel-on:hover {
+    border-color: color-mix(in srgb, var(--cn-accent) 70%, var(--cn-line));
+    box-shadow:
+      inset 3px 0 0 var(--cn-accent),
+      0 6px 18px rgba(0, 0, 0, 0.1);
+  }
+
+  /* A metric inside a promotion card is part of the card, not a thing of
+     its own - two lifts at once reads as the page coming apart. */
+  .cn-panel .cn-metric:hover {
+    transform: none;
+    border-color: var(--cn-line);
+  }
+}
+
+/* Pressing something should feel like pressing something. 60ms, which is
+   below the threshold at which a delay reads as lag. */
+.cn-btn { transition: filter 120ms ease, background-color 120ms ease, border-color 120ms ease, transform 60ms ease; }
+.cn-btn:active:not(:disabled) { transform: translateY(1px); }
+
 /* ---------- the getting-started list ----------
    A numbered list that reads as a sequence rather than a set of options,
    because it is one: the engine refuses to activate a promotion with no
@@ -1832,4 +2001,51 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 
 @media (max-width: 860px) {
   .cn-setup-cols { grid-template-columns: 1fr; gap: 28px; }
+}
+
+
+/* ---------- less motion, and why this is the last block in the file ------
+   Somebody who asked their operating system for less motion gets a page
+   that assembles instantly, not a slower version of the same thing.
+
+   It sits at the bottom because the cascade decided it had to. These
+   selectors are no more specific than the ones they undo, so when the same
+   overrides lived higher up the file every animation rule written after
+   them simply won, and a reduced-motion browser got the full set of
+   entrances while reporting that it had asked for none. The only thing
+   that changed was the line number.
+
+   `animation: none` rather than a zero duration, so the `from` keyframe can
+   never be the state an element is left in. */
+@media (prefers-reduced-motion: reduce) {
+  .cn-metric,
+  .cn-main > .cn-panel,
+  .cn-split-main > .cn-panel,
+  .cn-split-side > .cn-panel,
+  .cn-split-foot > .cn-panel,
+  .cn-step,
+  .cn-step-done .cn-step-mark,
+  .cn-spark i,
+  .cn-chart i {
+    animation: none;
+  }
+
+  .cn-btn { transition: none; }
+  .cn-btn:active:not(:disabled) { transform: none; }
+
+  /* The hover treatment stays - a brighter edge is information, not motion -
+     but it arrives without being animated into place, and nothing lifts. */
+  .cn-metric,
+  .cn-main > .cn-panel,
+  .cn-split-main > .cn-panel,
+  .cn-split-foot > .cn-panel {
+    transition: none;
+  }
+
+  .cn-metric:hover,
+  .cn-main > .cn-panel:hover,
+  .cn-split-main > .cn-panel:hover,
+  .cn-split-foot > .cn-panel:hover {
+    transform: none;
+  }
 }

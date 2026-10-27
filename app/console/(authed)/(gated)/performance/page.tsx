@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatLedgerAmount } from "@/lib/consumer/wallet";
 import { requireStaff } from "@/lib/staff/current";
+import { Ticker } from "@/app/console/ticker";
 import {
   costPerMemberCents,
   delta,
@@ -312,7 +313,9 @@ export default async function ConsolePerformancePage({
           largest. Everything under them is the evidence. */}
       <div className="cn-grid cn-grid-2">
         <div className="cn-metric cn-metric-hero">
-          <div className="cn-metric-v">{percent(rate)}</div>
+          <div className="cn-metric-v">
+            <Ticker value={percent(rate)} />
+          </div>
           <div className="cn-metric-k">Came back</div>
           <div className="cn-metric-note">
             {rate === null
@@ -324,7 +327,9 @@ export default async function ConsolePerformancePage({
         </div>
 
         <div className="cn-metric">
-          <div className="cn-metric-v">{perMember === null ? "-" : formatLedgerAmount(perMember, "CENTS")}</div>
+          <div className="cn-metric-v">
+            <Ticker value={perMember === null ? "-" : formatLedgerAmount(perMember, "CENTS")} />
+          </div>
           <div className="cn-metric-k">Cost per person reached</div>
           <div className="cn-metric-note">
             {perMember === null
@@ -337,12 +342,16 @@ export default async function ConsolePerformancePage({
 
       <div className="cn-grid">
         <div className="cn-metric">
-          <div className="cn-metric-v">{unitLine(p.outstanding)}</div>
+          <div className="cn-metric-v">
+            <Ticker value={unitLine(p.outstanding)} />
+          </div>
           <div className="cn-metric-k">Still owed to shoppers</div>
           <div className="cn-metric-note">All time, not this window</div>
         </div>
         <div className="cn-metric">
-          <div className="cn-metric-v">{(p.slips + p.packCodes).toLocaleString("en-ZA")}</div>
+          <div className="cn-metric-v">
+            <Ticker value={(p.slips + p.packCodes).toLocaleString("en-ZA")} />
+          </div>
           <div className="cn-metric-k">Scans</div>
           {/* The split, not one of the two with the other as a footnote.
               Which mechanism a brand leans on is theirs to choose, and a
@@ -352,7 +361,9 @@ export default async function ConsolePerformancePage({
           <Change change={scansChange} />
         </div>
         <div className="cn-metric">
-          <div className="cn-metric-v">{p.membersReached.toLocaleString("en-ZA")}</div>
+          <div className="cn-metric-v">
+            <Ticker value={p.membersReached.toLocaleString("en-ZA")} />
+          </div>
           <div className="cn-metric-k">People who earned</div>
           <div className="cn-metric-note">{p.newMembers.toLocaleString("en-ZA")} joined in this window</div>
           <Change change={reachedChange} />
