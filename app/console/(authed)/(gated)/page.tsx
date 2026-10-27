@@ -3,6 +3,7 @@ import type { LedgerUnit } from "@prisma/client";
 import { formatLedgerAmount } from "@/lib/consumer/wallet";
 import { getBrandOverview } from "@/lib/console/overview";
 import { getSetupFacts, setupSteps } from "@/lib/console/setup-state";
+import { getObservationFacts, observations } from "@/lib/console/observations";
 import { requireStaff } from "@/lib/staff/current";
 import { Ticker } from "@/app/console/ticker";
 
@@ -131,11 +132,49 @@ function GettingStarted({ steps }: { steps: ReturnType<typeof setupSteps> }) {
   );
 }
 
+/**
+ * What is worth looking at, once the programme is running.
+ *
+ * Silent when there is nothing to say, which is most weeks and is the point:
+ * a panel that always has something in it teaches people to stop reading it.
+ * See lib/console/observations.ts for what is deliberately not in here.
+ */
+function WorthALook({ items }: { items: ReturnType<typeof observations> }) {
+  return (
+    <section className="cn-panel">
+      <div className="cn-panel-head">
+        <div>
+          <h2 className="cn-h2">Worth a look</h2>
+          <p className="cn-label">Read off your own numbers, not general advice.</p>
+        </div>
+        <span className="cn-pill">{items.length}</span>
+      </div>
+
+      <div className="cn-panel-body">
+        <ul className="cn-notes">
+          {items.map((item) => (
+            <li key={item.id} className={`cn-note${item.tone === "warn" ? " cn-note-warn" : ""}`}>
+              <div className="cn-note-main">
+                <p className="cn-note-title">{item.title}</p>
+                <p className="cn-label">{item.detail}</p>
+              </div>
+              <Link href={item.href} className="cn-btn cn-btn-quiet cn-note-cta">
+                {item.cta}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
 export default async function ConsoleOverviewPage() {
   const session = await requireStaff();
-  const [o, facts] = await Promise.all([
+  const [o, facts, obsFacts] = await Promise.all([
     getBrandOverview(session.brandId),
     getSetupFacts(session.brandId),
+    getObservationFacts(session.brandId),
   ]);
 
   /*
@@ -147,6 +186,9 @@ export default async function ConsoleOverviewPage() {
    * keeps the landing page about one thing at a time.
    */
   const steps = setupSteps(facts);
+  // Only once the programme is running. Before the first scan there is
+  // nothing to observe, and the guide is already saying the useful thing.
+  const notes = facts.everAwarded ? observations(obsFacts) : [];
 
   const cents = o.outstanding.find((r) => r.unit === "CENTS")?.amount ?? 0;
   const issuedCents = o.issued.find((r) => r.unit === "CENTS")?.amount ?? 0;
@@ -204,6 +246,12 @@ export default async function ConsoleOverviewPage() {
           />
         </div>
       )}
+
+      {/* Above the two standing warnings rather than below them. Those say
+          what is unbounded; this says what is about to change, and a brand
+          reading top to bottom should meet the thing with a date on it
+          first. */}
+      {notes.length > 0 && <WorthALook items={notes} />}
 
       {o.uncappedCampaigns > 0 && (
         <section className="cn-panel">
