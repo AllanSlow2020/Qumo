@@ -1405,6 +1405,57 @@ html[data-theme="dark"]:has(.cn) body {
 
 .cn-explain a { color: var(--cn-ink-2); text-underline-offset: 2px; }
 
+/* ---------- contents ----------
+   Seven sections is past the point where a reader can hold the shape of a
+   page in their head, and the only thing worse than a long page is a long
+   page that gives no sign of how long. This says how many there are and
+   lets somebody start in the middle.
+
+   Plain anchors, no scroll-spy. Marking the current section as you scroll
+   needs an observer, a client boundary and a decision about what "current"
+   means when two headings are on screen - and none of that helps the thing
+   people actually do here, which is read a list and click one. */
+.cn-toc {
+  list-style: none;
+  margin: 0;
+  padding: 8px 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.cn-toc a {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 7px 10px;
+  border-radius: var(--cn-radius-inner);
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--cn-ink-2);
+  text-decoration: none;
+}
+
+.cn-toc a:hover { background: var(--cn-quiet); color: var(--cn-ink); }
+
+.cn-toc a:focus-visible {
+  outline: 2px solid var(--cn-accent);
+  outline-offset: -2px;
+}
+
+.cn-toc-n {
+  flex: none;
+  width: 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cn-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* An anchored jump puts the heading hard against the top of the window,
+   where it reads as cut off rather than as the start of something. */
+.cn-panel[id] { scroll-margin-top: 20px; }
+
 /* ---------- figures in the guide ----------
    Drawings that carry an idea the prose has to work at: which codes prove a
    purchase, what a scan actually looks like end to end, and why a twelfth
@@ -1583,6 +1634,184 @@ html[data-theme="dark"]:has(.cn) body {
   border: 1.5px solid var(--cn-line-strong);
   background: var(--cn-line);
 }
+
+/* ---- the loop ---- */
+
+/* Four stages that come back round. The return is drawn, because it is the
+   claim: a line of boxes would end at "they earned something" and stop
+   making the argument the section is there to make. */
+.cn-fig-loop {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.cn-fig-loop-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px 14px 14px 16px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+}
+
+.cn-fig-loop-dot {
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--cn-accent);
+}
+
+.cn-fig-loop-back {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  width: 24px;
+  color: var(--cn-accent);
+}
+
+.cn-fig-loop-back svg { width: 100%; height: auto; display: block; }
+
+/* ---- the award shapes ---- */
+
+.cn-fig-shapes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.cn-fig-shape {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+}
+
+/* The example, set in the figure face so it reads as a quantity rather than
+   as more prose. */
+.cn-fig-eg {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cn-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.cn-fig-needs {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--cn-ink-3);
+}
+
+/* ---- the ceiling ---- */
+
+.cn-fig-ceiling {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+}
+
+.cn-fig-ceiling-bar {
+  position: relative;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--cn-quiet);
+  box-shadow: inset 0 0 0 1px var(--cn-line);
+}
+
+.cn-fig-ceiling-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: var(--cn-accent);
+}
+
+/* The ceiling drawn as a wall at the end rather than as the end of the bar,
+   because the bar can reach it and the wall is what it reaches. */
+.cn-fig-ceiling-cap {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  right: 0;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--cn-warn);
+}
+
+.cn-fig-ceiling-keys { display: flex; flex-direction: column; gap: 6px; }
+
+.cn-fig-key {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: baseline;
+}
+
+.cn-fig-key-fill { background: var(--cn-accent); }
+.cn-fig-key-cap { background: var(--cn-warn); }
+
+/* ---- the honour window ---- */
+
+.cn-fig-time {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+}
+
+.cn-fig-time-track {
+  display: grid;
+  grid-template-columns: 10px 1fr 10px;
+  align-items: center;
+  gap: 6px;
+}
+
+.cn-fig-time-mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--cn-accent);
+}
+
+.cn-fig-time-end { background: var(--cn-ink-3); }
+
+/* The window itself: present, bounded at both ends, and not a gradient
+   fading out - the date it ends is a date, not a mood. */
+.cn-fig-time-span {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--cn-accent), var(--cn-ink-3));
+}
+
+.cn-fig-time-keys {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.cn-fig-time-keys > div { display: flex; flex-direction: column; gap: 4px; }
 
 /* ---------- worth a look ----------
    The same shape as the getting-started list and deliberately not the same
