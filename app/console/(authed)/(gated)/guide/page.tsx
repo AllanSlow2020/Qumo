@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HONOUR_WINDOW_DAYS } from "@/lib/subscriptions/state";
 import { REDEMPTION_AVAILABLE } from "@/lib/wallet/availability";
 import { PRODUCT_NAME } from "@/lib/product";
+import { CardCarry, CodeKinds, ScanJourney } from "./figures";
 
 /**
  * How the thing works, in one place you can go to rather than on every page
@@ -67,6 +68,8 @@ export default function ConsoleGuidePage() {
           This is the one idea worth getting right, because every other decision follows from it.
         </p>
 
+        <CodeKinds />
+
         <h3 className="cn-h2">A poster code</h3>
         <p>
           One code, printed once, on a poster or a table-talker or a shelf tag. Anybody who walks past can scan it,
@@ -131,9 +134,10 @@ export default function ConsoleGuidePage() {
         </p>
         <p>
           Completion is recorded as a deduction, not a reset - a card&apos;s worth of stamps is taken off and anything
-          over the line carries to the next card. So the eleventh purchase in a row is not wasted, and the history
-          explains where the stamps went.
+          over the line carries to the next card, so the eleventh purchase in a row is not wasted.
         </p>
+
+        <CardCarry />
       </Section>
 
       <Section id="cost" title="What it can cost you, and what bounds it">
@@ -159,6 +163,7 @@ export default function ConsoleGuidePage() {
       </Section>
 
       <Section id="shopper" title="What your customer sees">
+        <ScanJourney />
         <p>
           Your name at the top, your colour on the button. Not ours - {PRODUCT_NAME} appears once, in small type at
           the bottom, saying who runs the thing. Set yours under <Link href="/settings">Programme</Link>.
