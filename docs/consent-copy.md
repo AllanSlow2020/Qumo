@@ -70,11 +70,11 @@ At /legal/privacy, linked from the tick box.
 
 ### What we keep
 
-Your mobile number, and a record of every scan, reward and redemption you make with brands on Qumo. Your number is stored encrypted, and is used to sign you in and to send you one-time codes. You have one account here however many brands you use, so the number is held once, by us, rather than once per brand.
+Your mobile number, and a record of every scan and every reward you earn with brands on Qumo, and of what you spend with a brand once redemption opens. Your number is stored encrypted, and is used to sign you in and to send you one-time codes. You have one account here however many brands you use, so the number is held once, by us, rather than once per brand.
 
 ### What brands can see
 
-A brand can see your activity with that brand only: the scans you made, the rewards you earned and what you have spent with them. A brand cannot see your activity with any other brand, or that you use any other brand at all. It also never sees your mobile number. The brand's screens identify you by a membership that belongs to them, and the number stays with us.
+A brand can see your activity with that brand only: the scans you made, the rewards you earned and what you have spent with them. A brand cannot see your activity with any other brand, or that you use any other brand at all. It also never sees your mobile number, and it has no screen that shows you as a person at all: a brand sees the totals for its own programme, not a list of who is in it.
 
 ### Who answers for what
 
@@ -158,13 +158,13 @@ Sent when somebody replies TERMS. Built from the privacy notice above rather tha
 
 *Recorded as `sms-v3`.*
 
-*2275 characters, 15 SMS segments.*
+*2357 characters, 16 SMS segments.*
 
 > Qumo privacy notice. We hold your account. Each brand holds its own programme record.
 >
-> What we keep: Your mobile number, and a record of every scan, reward and redemption you make with brands on Qumo. Your number is stored encrypted, and is used to sign you in and to send you one-time codes. You have one account here however many brands you use, so the number is held once, by us, rather than once per brand.
+> What we keep: Your mobile number, and a record of every scan and every reward you earn with brands on Qumo, and of what you spend with a brand once redemption opens. Your number is stored encrypted, and is used to sign you in and to send you one-time codes. You have one account here however many brands you use, so the number is held once, by us, rather than once per brand.
 >
-> What brands can see: A brand can see your activity with that brand only: the scans you made, the rewards you earned and what you have spent with them. A brand cannot see your activity with any other brand, or that you use any other brand at all. It also never sees your mobile number. The brand's screens identify you by a membership that belongs to them, and the number stays with us.
+> What brands can see: A brand can see your activity with that brand only: the scans you made, the rewards you earned and what you have spent with them. A brand cannot see your activity with any other brand, or that you use any other brand at all. It also never sees your mobile number, and it has no screen that shows you as a person at all: a brand sees the totals for its own programme, not a list of who is in it.
 >
 > Who answers for what: Two parties, and the split is worth knowing if you ever want to take something up with somebody. Qumo answers for your account: your mobile number, your age confirmation, this agreement, and keeping all of it secure. Those are ours, they are held once for you across every brand, and no brand sees them. Each brand answers for its own programme: what it offers, what a scan is worth, and the record of what you earned with them. The brand is where you start for either kind of question, and anything that is ours they bring to us. A way to reach Qumo directly is not built yet, and this notice will say so until it is.
 >

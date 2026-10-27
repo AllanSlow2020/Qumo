@@ -75,6 +75,19 @@ export const WEB_CONSENT_VERSION = "web-v5";
  * shopper to take their number up with the brand was sending them to the one
  * party that does not hold it.
  *
+ * Two smaller corrections ride along inside web-v5, both found by checking
+ * a drafted rewrite against the code rather than by reading the copy. The
+ * notice claimed a record of every "redemption", which cannot exist while
+ * REDEMPTION_AVAILABLE is false. And it said a brand's screens identify a
+ * shopper "by a membership that belongs to them", which overstated what a
+ * brand can reach: the console holds no reference to a membership anywhere,
+ * the only per-member queries are groupBy aggregates, and
+ * PackCode.scannedByMembershipId never leaves the scan logic. No screen a
+ * brand can open shows an individual shopper, which is a stronger thing to
+ * be able to say and so worth saying accurately. Both land inside web-v5
+ * rather than bumping again, because web-v5 has never been served: nobody
+ * has consented under it, so there is nothing to re-ask.
+ *
  * So web-v5 splits the answer: the account is ours and each brand's
  * programme is the brand's. It is the largest change of substance this
  * notice has had, because it changes who the shopper is being told to
@@ -94,11 +107,11 @@ export const CONSENT_CHECKBOX_LABEL = `I agree to ${PRODUCT_NAME} storing my mob
 export const CONSENT_POINTS: { heading: string; body: string }[] = [
   {
     heading: "What we keep",
-    body: `Your mobile number, and a record of every scan, reward and redemption you make with brands on ${PRODUCT_NAME}. Your number is stored encrypted, and is used to sign you in and to send you one-time codes. You have one account here however many brands you use, so the number is held once, by us, rather than once per brand.`,
+    body: `Your mobile number, and a record of every scan and every reward you earn with brands on ${PRODUCT_NAME}, and of what you spend with a brand once redemption opens. Your number is stored encrypted, and is used to sign you in and to send you one-time codes. You have one account here however many brands you use, so the number is held once, by us, rather than once per brand.`,
   },
   {
     heading: "What brands can see",
-    body: "A brand can see your activity with that brand only: the scans you made, the rewards you earned and what you have spent with them. A brand cannot see your activity with any other brand, or that you use any other brand at all. It also never sees your mobile number. The brand's screens identify you by a membership that belongs to them, and the number stays with us.",
+    body: "A brand can see your activity with that brand only: the scans you made, the rewards you earned and what you have spent with them. A brand cannot see your activity with any other brand, or that you use any other brand at all. It also never sees your mobile number, and it has no screen that shows you as a person at all: a brand sees the totals for its own programme, not a list of who is in it.",
   },
   {
     heading: "Who answers for what",
