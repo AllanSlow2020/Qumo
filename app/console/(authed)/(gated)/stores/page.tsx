@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Role } from "@prisma/client";
 import { listStores, MANAGE_STORE_ROLES } from "@/lib/stores/manage";
 import { requireStaff } from "@/lib/staff/current";
@@ -22,6 +23,12 @@ export default async function ConsoleStoresPage() {
       <p className="cn-body">
         Every till that can put a Qumo code on a slip. The store code is what the point of sale prints into the QR;
         whether it&apos;s signed is what decides how much that slip proves.
+      </p>
+      {/* A pointer rather than an explanation. The concept behind this page
+          is explained once, in one place, instead of in a paragraph every
+          daily user scrolls past for the rest of the year. */}
+      <p className="cn-explain">
+        New to this? <Link href="/guide#cost">Why a till that cannot sign is the hole</Link>
       </p>
 
       {unsigned > 0 && (

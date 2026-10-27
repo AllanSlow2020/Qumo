@@ -1341,6 +1341,60 @@ html[data-theme="dark"]:has(.cn) body {
 .cn-btn { transition: filter 120ms ease, background-color 120ms ease, border-color 120ms ease, transform 60ms ease; }
 .cn-btn:active:not(:disabled) { transform: translateY(1px); }
 
+/* ---------- prose ----------
+   The one place in the console with more than three sentences in a row, and
+   the only place that needs a reading measure. Everything else here is
+   labels and figures in a column whose width is already decided by the data
+   in it; running explanation across a 1180px page gives a line so long the
+   eye loses its place on the way back.
+
+   65ch rather than a pixel width, so it tracks the reader's own font size
+   rather than ours. */
+.cn-prose {
+  max-width: 65ch;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cn-prose p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--cn-ink-2);
+}
+
+/* A sub-heading inside a section, set apart by space above rather than by
+   size: it is a third level and there is not room below .cn-h2 to make one
+   out of type alone without it reading as a label. */
+.cn-prose h3 {
+  margin: 10px 0 -2px;
+  color: var(--cn-ink);
+}
+
+.cn-prose strong { color: var(--cn-ink); font-weight: 600; }
+
+/* The link back into the working pages. Underlined, because a link inside a
+   paragraph that is only a colour is a link somebody has to hunt for. */
+.cn-prose a {
+  color: var(--cn-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--cn-line-strong);
+}
+
+.cn-prose a:hover { text-decoration-color: var(--cn-accent); }
+
+/* A quiet pointer from a working page into the part of the guide that
+   explains it. Small and at the end of the page's own introduction, so it
+   is there for somebody looking and invisible to somebody who is not. */
+.cn-explain {
+  font-size: 12px;
+  color: var(--cn-ink-3);
+}
+
+.cn-explain a { color: var(--cn-ink-2); text-underline-offset: 2px; }
+
 /* ---------- worth a look ----------
    The same shape as the getting-started list and deliberately not the same
    component: those are steps in an order, these are unrelated observations

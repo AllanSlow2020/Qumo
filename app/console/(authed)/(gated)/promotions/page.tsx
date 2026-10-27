@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { headers } from "next/headers";
 import type { Role } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
@@ -32,6 +33,12 @@ export default async function ConsolePromotionsPage() {
       <h1 className="cn-h1">Promotions</h1>
       <p className="cn-body">
         What a shopper earns, and what that can cost you. {live} of {campaigns.length} live.
+      </p>
+      {/* A pointer rather than an explanation. The concept behind this page
+          is explained once, in one place, instead of in a paragraph every
+          daily user scrolls past for the rest of the year. */}
+      <p className="cn-explain">
+        New to this? <Link href="/guide#awards">What a promotion can award</Link>
       </p>
 
       {/* What is running on the left, the way to start another on the right.
