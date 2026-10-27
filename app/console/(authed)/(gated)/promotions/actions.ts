@@ -45,8 +45,8 @@ async function engineSession() {
 
 export async function createCampaign(_prev: PromoActionState, formData: FormData): Promise<PromoActionState> {
   try {
-    await createCampaignForSession(await engineSession(), formData);
-    return { ok: true };
+    const campaign = await createCampaignForSession(await engineSession(), formData);
+    return { ok: true, id: campaign.id };
   } catch (err) {
     return toState(err);
   }

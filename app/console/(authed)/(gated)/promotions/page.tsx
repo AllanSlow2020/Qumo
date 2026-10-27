@@ -41,23 +41,18 @@ export default async function ConsolePromotionsPage() {
         New to this? <Link href="/guide#awards">What a promotion can award</Link>
       </p>
 
-      {/* What is running on the left, the way to start another on the right.
-          Three rows in one grid rather than a two-column block with a band
-          under it, because the poster belongs to this page in a different
-          way from the other two and the layout should say so.
-
-          The rail is narrow on purpose. It holds two fields, and an equal
-          half would have made the thing a brand looks at every day share the
-          screen with the thing they do once a month. */}
-      <div className="cn-split">
+      {/* Setting one up, then what is already running, then the poster.
+          Stacked rather than split: the setup flow is a sequence with an
+          explanation at every step, and an explanation does not fit in a
+          330px rail. See promotions-workspace for why the list moved down
+          and what makes that safe. */}
+      <div className="cn-promo-stack">
         <PromotionsWorkspace campaigns={campaigns} canManage={canManage} />
 
-        {/* Its own row rather than a band across the bottom of the page. It
-            is reference for what is running above it, so at width it sits
-            under the promotions and shares their right edge; on a phone it
-            falls below the form, because an action a brand reaches for
-            should not be buried under something they read once. */}
-        <div className="cn-split-foot">
+        {/* Last, because it is reference rather than action: the address on
+            it never changes and never awards anything, so it belongs below
+            the two things that do. */}
+        <div>
           <section className="cn-panel">
             <div className="cn-panel-head">
               <h2 className="cn-h2">Your poster address</h2>

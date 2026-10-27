@@ -1203,7 +1203,8 @@ html[data-theme="dark"]:has(.cn) body {
 .cn-main > .cn-panel,
 .cn-split-main > .cn-panel,
 .cn-split-side > .cn-panel,
-.cn-split-foot > .cn-panel {
+.cn-split-foot > .cn-panel,
+.cn-promo-grid > .cn-panel {
   /* `backwards`, not `both`.
    *
    * Both fill modes hold the `from` keyframe through the delay, which is
@@ -1233,9 +1234,12 @@ html[data-theme="dark"]:has(.cn) body {
 .cn-metric:nth-child(n + 6),
 .cn-main > .cn-panel:nth-child(n + 6) { animation-delay: 200ms; }
 
-.cn-split-main > .cn-panel:nth-child(2) { animation-delay: 60ms; }
-.cn-split-main > .cn-panel:nth-child(3) { animation-delay: 120ms; }
-.cn-split-main > .cn-panel:nth-child(n + 4) { animation-delay: 180ms; }
+.cn-split-main > .cn-panel:nth-child(2),
+.cn-promo-grid > .cn-panel:nth-child(2) { animation-delay: 60ms; }
+.cn-split-main > .cn-panel:nth-child(3),
+.cn-promo-grid > .cn-panel:nth-child(3) { animation-delay: 120ms; }
+.cn-split-main > .cn-panel:nth-child(n + 4),
+.cn-promo-grid > .cn-panel:nth-child(n + 4) { animation-delay: 180ms; }
 
 /* The rail is the one panel that also arrives mid-session: clicking Edit
    swaps what is in it, the new panel is a new element, and the same rule
@@ -1305,6 +1309,13 @@ html[data-theme="dark"]:has(.cn) body {
       border-color 170ms ease;
   }
 
+  .cn-promo-grid > .cn-panel {
+    transition:
+      transform 170ms cubic-bezier(0.22, 0.61, 0.36, 1),
+      box-shadow 170ms ease,
+      border-color 170ms ease;
+  }
+
   .cn-metric:hover {
     transform: translateY(-2px);
     border-color: var(--cn-line-strong);
@@ -1312,7 +1323,8 @@ html[data-theme="dark"]:has(.cn) body {
 
   .cn-main > .cn-panel:hover,
   .cn-split-main > .cn-panel:hover,
-  .cn-split-foot > .cn-panel:hover {
+  .cn-split-foot > .cn-panel:hover,
+  .cn-promo-grid > .cn-panel:hover {
     transform: translateY(-2px);
     border-color: var(--cn-line-strong);
     box-shadow: var(--cn-shadow-hover);
@@ -1321,7 +1333,8 @@ html[data-theme="dark"]:has(.cn) body {
   /* The promotion whose editor is open keeps its accent edge while hovered.
      Without repeating the inset here the lift would wipe the one mark that
      says which card the rail belongs to. */
-  .cn-split-main > .cn-panel.cn-panel-on:hover {
+  .cn-split-main > .cn-panel.cn-panel-on:hover,
+  .cn-promo-grid > .cn-panel.cn-panel-on:hover {
     border-color: color-mix(in srgb, var(--cn-accent) 70%, var(--cn-line));
     box-shadow:
       inset 3px 0 0 var(--cn-accent),
@@ -2629,12 +2642,220 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 
    `animation: none` rather than a zero duration, so the `from` keyframe can
    never be the state an element is left in. */
+/* ── The promotion setup flow ─────────────────────────────────────────────
+   A sequence of five steps, with the open one's form under the rail.
+
+   Named cn-flow-* rather than cn-step-*, which is already the overview's
+   account-setup checklist. Two meanings of "step" on one stylesheet is how
+   a border-bottom meant for a list row turns up under a marker on another
+   page. */
+
+.cn-promo-stack { display: flex; flex-direction: column; gap: 22px; }
+
+.cn-promo-list { display: flex; flex-direction: column; gap: 14px; }
+
+/* Cards sit side by side once there is room, because the list is a glance
+   rather than a read. auto-fill with a floor, so one promotion does not
+   stretch to the full width of a desktop and read as a form. */
+.cn-promo-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+}
+
+.cn-flow-rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+}
+
+.cn-flow-step {
+  flex: 1 1 150px;
+  min-width: 0;
+  position: relative;
+}
+
+/* The connector. Drawn behind the marker and stopped short of it on both
+   sides, so the line reads as joining the circles rather than passing
+   under them. Not on the first step, which has nothing to its left. */
+.cn-flow-step + .cn-flow-step::before {
+  content: "";
+  position: absolute;
+  top: 20px;
+  left: -4px;
+  width: calc(50% - 18px);
+  height: 1px;
+  background: var(--cn-line);
+}
+
+.cn-flow-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 6px 8px;
+  border: 0;
+  border-radius: var(--cn-radius-card);
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+.cn-flow-btn:disabled { cursor: default; }
+
+.cn-flow-btn:focus-visible {
+  outline: 2px solid var(--cn-accent);
+  outline-offset: 2px;
+}
+
+.cn-flow-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--cn-line);
+  background: var(--cn-surface);
+  color: var(--cn-ink-3);
+  transition: transform 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.cn-flow-btn:not(:disabled):hover .cn-flow-mark { transform: translateY(-1px); }
+
+/* Every state changes the shape as well as the colour. Four of these have
+   to be told apart by somebody who cannot separate the blue from the
+   amber. */
+.cn-flow-mark[data-state="done"] {
+  border-color: var(--cn-accent);
+  background: var(--cn-accent);
+  color: var(--cn-accent-ink);
+}
+
+.cn-flow-mark[data-state="attention"] {
+  border-color: var(--cn-warn);
+  background: var(--cn-warn-bg);
+  color: var(--cn-warn);
+}
+
+.cn-flow-mark[data-state="skipped"] {
+  border-style: dashed;
+  color: var(--cn-ink-3);
+}
+
+.cn-flow-mark[data-state="locked"] {
+  color: var(--cn-ink-3);
+  opacity: 0.45;
+}
+
+/* The open step, whatever else it is. A 2px ring rather than a colour swap,
+   so "where am I" survives on top of "what state is this in". */
+.cn-flow-mark-open {
+  border-width: 2px;
+  border-color: var(--cn-accent);
+  color: var(--cn-accent);
+  box-shadow: 0 0 0 4px var(--cn-quiet);
+}
+
+.cn-flow-mark-open[data-state="done"] { color: var(--cn-accent-ink); }
+.cn-flow-mark-open[data-state="attention"] { border-color: var(--cn-warn); color: var(--cn-warn); }
+
+.cn-flow-icon { display: block; }
+
+/* The third channel, which is the one that survives greyscale. */
+.cn-flow-badge {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  border-radius: 50%;
+  background: var(--cn-surface);
+  color: var(--cn-accent);
+}
+
+.cn-flow-mark[data-state="attention"] .cn-flow-badge { color: var(--cn-warn); }
+
+.cn-flow-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+
+.cn-flow-n {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cn-ink-3);
+}
+
+.cn-flow-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cn-ink-2);
+  line-height: 1.25;
+}
+
+.cn-flow-step[aria-current="step"] .cn-flow-title { color: var(--cn-ink); }
+.cn-flow-step[data-state="locked"] .cn-flow-title { color: var(--cn-ink-3); opacity: 0.6; }
+
+.cn-flow-opt {
+  font-size: 11px;
+  color: var(--cn-ink-3);
+}
+
+/* The open step's body. Boxed and inset so the rail reads as the map and
+   this reads as the place you are. */
+.cn-flow-panel {
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-card);
+  background: var(--cn-bg);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cn-flow-panel > h3 { margin: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.cn-flow-of {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cn-ink-3);
+}
+
+.cn-flow-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--cn-line);
+}
+
+/* On a phone the rail becomes a column: five labels across 360px is four
+   words wrapped to three lines each. The connector goes with it, because a
+   horizontal line between vertically stacked markers joins nothing. */
+@media (max-width: 640px) {
+  .cn-flow-rail { flex-direction: column; gap: 2px; }
+  .cn-flow-step { flex: none; }
+  .cn-flow-step + .cn-flow-step::before { display: none; }
+  .cn-flow-btn { flex-direction: row; text-align: left; padding: 6px; }
+  .cn-flow-text { align-items: flex-start; }
+  .cn-flow-mark { width: 34px; height: 34px; }
+  .cn-flow-panel { padding: 14px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cn-metric,
   .cn-main > .cn-panel,
   .cn-split-main > .cn-panel,
   .cn-split-side > .cn-panel,
   .cn-split-foot > .cn-panel,
+  .cn-promo-grid > .cn-panel,
   .cn-step,
   .cn-step-done .cn-step-mark,
   .cn-spark i,
@@ -2650,14 +2871,18 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   .cn-metric,
   .cn-main > .cn-panel,
   .cn-split-main > .cn-panel,
-  .cn-split-foot > .cn-panel {
+  .cn-split-foot > .cn-panel,
+  .cn-promo-grid > .cn-panel,
+  .cn-flow-mark {
     transition: none;
   }
 
   .cn-metric:hover,
   .cn-main > .cn-panel:hover,
   .cn-split-main > .cn-panel:hover,
-  .cn-split-foot > .cn-panel:hover {
+  .cn-split-foot > .cn-panel:hover,
+  .cn-promo-grid > .cn-panel:hover,
+  .cn-flow-btn:not(:disabled):hover .cn-flow-mark {
     transform: none;
   }
 }

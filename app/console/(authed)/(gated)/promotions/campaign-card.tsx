@@ -1,11 +1,8 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import type { ConsoleCampaign } from "@/lib/campaigns/manage";
 import { Ticker } from "@/app/console/ticker";
-import { setStatus } from "./actions";
-import { IDLE, type PromoActionState } from "./state";
+import { StatusButton } from "./status-button";
 
 /** Cents to rands for display; everything is stored and compared as integers. */
 function money(cents: number): string {
@@ -26,40 +23,6 @@ function unitAmount(amount: number, unit: string): string {
  * same sequence, refusing to activate a promotion with no rule and refusing
  * a ceiling on one that awards nothing yet.
  */
-/**
- * Switching a promotion on or off.
- *
- * Its own component so it can be remounted by key when the campaign
- * changes, which resets the action state. Without that, "set what this
- * promotion awards before switching it on" stayed on screen after the rule
- * had been set - an error describing a state that no longer existed.
- */
-function StatusButton({ campaign, live }: { campaign: ConsoleCampaign; live: boolean }) {
-  const router = useRouter();
-  const [state, action, pending] = useActionState<PromoActionState, FormData>(setStatus, IDLE);
-
-  useEffect(() => {
-    if (state.ok) router.refresh();
-  }, [state, router]);
-
-  return (
-    <>
-      <form action={action}>
-        <input type="hidden" name="campaignId" value={campaign.id} />
-        <input type="hidden" name="status" value={live ? "PAUSED" : "ACTIVE"} />
-        <button type="submit" className="cn-btn cn-btn-quiet" disabled={pending}>
-          {pending ? "…" : live ? "Pause" : "Switch on"}
-        </button>
-      </form>
-      {state.ok === false && (
-        <p className="cn-err" role="alert">
-          {state.error}
-        </p>
-      )}
-    </>
-  );
-}
-
 /**
  * One promotion, as the list shows it: what it does, what it has cost, and
  * whether it is on. No forms - those moved to the rail (campaign-editor).

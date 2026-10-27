@@ -5,20 +5,30 @@ import { useRouter } from "next/navigation";
 import { createCampaign } from "./actions";
 import { IDLE, type PromoActionState } from "./state";
 
-export function CreateCampaignForm() {
+export function CreateCampaignForm({ onCreated }: { onCreated: (id: string) => void }) {
   const router = useRouter();
   const [state, action, pending] = useActionState<PromoActionState, FormData>(createCampaign, IDLE);
   const formRef = useRef<HTMLFormElement>(null);
 
+  /*
+   * Opens the promotion it just made, so the flow carries on into step two
+   * rather than leaving somebody on step one with their new promotion in
+   * the list below and no obvious way forward.
+   *
+   * The id comes back on the action's own result. Reading it off the
+   * refreshed list instead would mean guessing which row is new, and "the
+   * most recent" is a guess that breaks the moment two people are working.
+   */
   useEffect(() => {
     if (state.ok) {
       formRef.current?.reset();
       router.refresh();
+      if (state.id) onCreated(state.id);
     }
-  }, [state, router]);
+  }, [state, router, onCreated]);
 
   return (
-    <form ref={formRef} action={action} className="cn-form cn-panel-body">
+    <form ref={formRef} action={action} className="cn-form">
       <div className="cn-field">
         <label htmlFor="promo-name">Name</label>
         <input id="promo-name" name="name" className="cn-input" required maxLength={120} placeholder="5% back" />
