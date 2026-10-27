@@ -13,11 +13,20 @@ import { OPERATOR_NAME, PRODUCT_NAME } from "@/lib/product";
  * ─────────────────────────────────────────────────────────────────────────
  *  NOT YET REVIEWED BY A LAWYER. Written in good faith to describe what the
  *  system actually does, and deliberately claiming nothing it does not. It
- *  must be reviewed against POPIA - and rewritten to match whichever
- *  position the business takes - BEFORE the first real shopper registers.
- *  See docs/popia.md: the operator vs responsible party decision
- *  changes what this copy has to say, and retrofitting consent onto people
- *  who already signed up is materially harder than getting it right once.
+ *  must be reviewed against POPIA BEFORE the first real shopper registers,
+ *  because retrofitting consent onto people who already signed up is
+ *  materially harder than getting it right once.
+ *
+ *  It says what it says deliberately. docs/popia.md used to carry the
+ *  operator vs responsible party question as open, while this file quietly
+ *  answered it - it told shoppers Qumo held everything "on behalf of the
+ *  brands", which is operator language, and the schema disagrees: Person
+ *  has no brandId, phoneHash is unique across the whole platform, and
+ *  consent and the age confirmation are taken once by us and reused for
+ *  every brand. A notice cannot abstain. Leaving it vague would still have
+ *  been an answer, just an unexamined one, so it now describes the split
+ *  the code actually implements and the brief argues for the same split in
+ *  the same words. A lawyer who lands somewhere else changes both.
  * ─────────────────────────────────────────────────────────────────────────
  *
  * Bump the version whenever the wording changes in substance. Rows keep the
@@ -25,7 +34,7 @@ import { OPERATOR_NAME, PRODUCT_NAME } from "@/lib/product";
  * always answer what a given person actually saw. A shopper whose recorded
  * version is behind re-affirms on their next sign-in (lib/consumer/otp.ts).
  */
-export const WEB_CONSENT_VERSION = "web-v4";
+export const WEB_CONSENT_VERSION = "web-v5";
 
 /**
  * web-v1 said the same things under the product's old working title. That
@@ -55,6 +64,23 @@ export const WEB_CONSENT_VERSION = "web-v4";
  * The same correction moved deletion from "contact us and we will action
  * it" to a button on the shopper's own details page, which is the part of
  * this change that is in their favour.
+ *
+ * web-v4 said Qumo holds this information "on behalf of the
+ * brands you interact with". Read against POPIA that is a claim about who
+ * answers to the shopper, and it points at the brand. The schema points the
+ * other way for everything that identifies a person: Person carries no
+ * brandId, phoneHash is unique platform-wide, and the consent and the age
+ * confirmation are taken once and honoured for every brand a person goes on
+ * to use. A brand cannot answer for a record it cannot see, so telling a
+ * shopper to take their number up with the brand was sending them to the one
+ * party that does not hold it.
+ *
+ * So web-v5 splits the answer: the account is ours and each brand's
+ * programme is the brand's. It is the largest change of substance this
+ * notice has had, because it changes who the shopper is being told to
+ * complain to. It also costs nothing today - there are no real shoppers, so
+ * nobody is re-consented by it, which is precisely why it is being made now
+ * rather than after a pilot.
  */
 
 /** The single line beside the tick box. Kept short enough to actually be read. */
@@ -68,15 +94,15 @@ export const CONSENT_CHECKBOX_LABEL = `I agree to ${PRODUCT_NAME} storing my mob
 export const CONSENT_POINTS: { heading: string; body: string }[] = [
   {
     heading: "What we keep",
-    body: `Your mobile number, and a record of every scan, reward and redemption you make with brands on ${PRODUCT_NAME}. Your number is stored encrypted, and is used to sign you in and to send you one-time codes.`,
+    body: `Your mobile number, and a record of every scan, reward and redemption you make with brands on ${PRODUCT_NAME}. Your number is stored encrypted, and is used to sign you in and to send you one-time codes. You have one account here however many brands you use, so the number is held once, by us, rather than once per brand.`,
   },
   {
     heading: "What brands can see",
-    body: "A brand can see your activity with that brand only: the scans you made, the rewards you earned and what you have spent with them. A brand cannot see your activity with any other brand, or that you use any other brand at all.",
+    body: "A brand can see your activity with that brand only: the scans you made, the rewards you earned and what you have spent with them. A brand cannot see your activity with any other brand, or that you use any other brand at all. It also never sees your mobile number. The brand's screens identify you by a membership that belongs to them, and the number stays with us.",
   },
   {
-    heading: "Who operates it",
-    body: `${OPERATOR_NAME} holds this information on behalf of the brands you interact with, and uses it to run the rewards programme. The brand decides what the programme offers; we count it and keep the record.`,
+    heading: "Who answers for what",
+    body: `Two parties, and the split is worth knowing if you ever want to take something up with somebody. ${OPERATOR_NAME} answers for your account: your mobile number, your age confirmation, this agreement, and keeping all of it secure. Those are ours, they are held once for you across every brand, and no brand sees them. Each brand answers for its own programme: what it offers, what a scan is worth, and the record of what you earned with them. The brand is where you start for either kind of question, and anything that is ours they bring to us. A way to reach ${OPERATOR_NAME} directly is not built yet, and this notice will say so until it is.`,
   },
   {
     heading: "Your balances",
@@ -133,8 +159,15 @@ export const CONSENT_POINTS: { heading: string; body: string }[] = [
  * stops being true, and the natural shape is the same one the web uses:
  * check the version on the next inbound message and send the change before
  * acting on it.
+ *
+ * sms-v3 follows web-v5 for the same mechanical reason sms-v2 followed
+ * web-v4: SMS_TERMS_BODY is built from CONSENT_POINTS, so correcting who
+ * answers for what changed what a TERMS reply sends, and the joiner was
+ * told TERMS is where the full notice lives. The lead-in sentence below
+ * carried the "on behalf of" wording in its own right and is corrected with
+ * it.
  */
-export const SMS_CONSENT_VERSION = "sms-v2";
+export const SMS_CONSENT_VERSION = "sms-v3";
 
 /**
  * Sent to an unrecognised number before any account exists for it.
@@ -155,7 +188,18 @@ export const SMS_JOIN_TERMS = `${PRODUCT_NAME}: reply YES to join. We keep your 
  * Built from CONSENT_POINTS rather than retyped, so the SMS and the web
  * notice cannot drift into saying different things. The order is the order
  * a person needs it in, which is the order the array is already written in.
+ *
+ * It costs what it costs, and the number is worth knowing before anyone
+ * lengthens a point above: correcting who answers for what took this from
+ * eleven segments to fifteen. Nobody edits this string, so nobody sees the
+ * price of editing the array that builds it. docs/consent-copy.md prints
+ * the character and segment count beside the rendered message for exactly
+ * that reason. Fifteen segments is still the right trade - this is sent
+ * only when somebody asks for it, and a consent record that cannot be
+ * defended is more expensive than any number of messages - but a point
+ * added here for the sake of completeness is paid for by every shopper who
+ * ever replies TERMS.
  */
-export const SMS_TERMS_BODY = [`${PRODUCT_NAME}. ${OPERATOR_NAME} holds this record on behalf of the brands you use.`]
+export const SMS_TERMS_BODY = [`${PRODUCT_NAME} privacy notice. We hold your account. Each brand holds its own programme record.`]
   .concat(CONSENT_POINTS.map((point) => `${point.heading}: ${point.body}`))
   .join("\n\n");
