@@ -21,6 +21,12 @@ export default async function ConsoleCodesPage() {
         Unique codes to print on packs, neck tags and stickers. Unlike a poster, each one is single-use, which is
         what lets it be worth something.
       </p>
+      {/* A pointer rather than an explanation. The concept behind this page
+          is explained once, in one place, instead of in a paragraph every
+          daily user scrolls past for the rest of the year. */}
+      <p className="cn-explain">
+        New to this? <Link href="/guide#codes">How codes work, and which ones pay</Link>
+      </p>
 
       <section className="cn-panel">
         <div className="cn-panel-head">
