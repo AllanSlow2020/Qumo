@@ -18,10 +18,14 @@ import { OPERATOR_NAME, PRODUCT_NAME } from "@/lib/product";
  * ─────────────────────────────────────────────────────────────────────────
  *  NOT YET REVIEWED BY A LAWYER. Same standing as the consent copy: written
  *  in good faith, claiming nothing the system does not do, and needing a
- *  review against the CPA and POPIA before the first real shopper. The
- *  operator vs responsible party question in docs/qumo-architecture.md
- *  changes clause 2, and settling it is the point at which this wants
- *  looking at properly.
+ *  review against the CPA and POPIA before the first real shopper.
+ *
+ *  Clause 2 is the one to read first. It already describes two parties and
+ *  puts the record on our side of the line, which is the position the
+ *  privacy notice now takes as well - the two documents disagreed about
+ *  this until the notice was corrected to web-v5, and the brief in
+ *  docs/popia.md sets out why that is the side the code is built on. These
+ *  words are unchanged by that correction, so this version is not bumped.
  * ─────────────────────────────────────────────────────────────────────────
  *
  * Versioned like the consent copy, and for the same reason: a shopper who

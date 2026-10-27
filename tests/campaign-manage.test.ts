@@ -7,6 +7,7 @@ import {
   createCampaignForSession,
   deleteCampaignForSession,
   listCampaignsForConsole,
+  renameCampaignForSession,
   setCampaignLimitsForSession,
   setCampaignStatusForSession,
   setCardForSession,
@@ -677,5 +678,101 @@ describe("the seven-day scan series", () => {
     const { scansByDay } = await getBrandOverview(brand.id);
     expect(scansByDay).toHaveLength(7);
     expect(scansByDay.reduce((sum, d) => sum + d.count, 0)).toBe(3);
+  });
+});
+
+describe("renaming a promotion", () => {
+  const suffix = `rn-${Date.now()}`;
+  let brand: Brand;
+  let otherBrand: Brand;
+
+  const owner = (brandId: string) => ({ user: { id: `${brandId}-o`, brandId, role: "OWNER", name: "Owner" } });
+  const viewer = (brandId: string) => ({ user: { id: `${brandId}-v`, brandId, role: "VIEWER", name: "Viewer" } });
+
+  const form = (fields: Record<string, string>): FormData => {
+    const fd = new FormData();
+    for (const [k, v] of Object.entries(fields)) fd.set(k, v);
+    return fd;
+  };
+
+  beforeAll(async () => {
+    brand = await prisma.brand.create({ data: { name: "Renamer", slug: `${suffix}-a` } });
+    otherBrand = await prisma.brand.create({ data: { name: "Neighbour", slug: `${suffix}-b` } });
+  });
+
+  afterAll(async () => {
+    for (const b of [brand, otherBrand]) {
+      await prisma.auditEvent.deleteMany({ where: { brandId: b.id } });
+      await prisma.campaign.deleteMany({ where: { brandId: b.id } });
+      await prisma.brand.delete({ where: { id: b.id } });
+    }
+  });
+
+  it("changes the name and the note together", async () => {
+    const made = await createCampaignForSession(owner(brand.id), form({ name: "Typo", description: "old note" }));
+    const after = await renameCampaignForSession(
+      owner(brand.id),
+      made.id,
+      form({ name: "Fixed", description: "new note" }),
+    );
+    expect(after.name).toBe("Fixed");
+    expect(after.description).toBe("new note");
+  });
+
+  it("clears the note when it is submitted empty", async () => {
+    const made = await createCampaignForSession(owner(brand.id), form({ name: "Noted", description: "something" }));
+    const after = await renameCampaignForSession(owner(brand.id), made.id, form({ name: "Noted", description: "" }));
+    expect(after.description).toBeNull();
+  });
+
+  it("leaves the rule and the status alone, so it is safe on a live promotion", async () => {
+    const made = await createCampaignForSession(owner(brand.id), form({ name: "Live one" }));
+    await setEarnRuleForSession(owner(brand.id), form({ campaignId: made.id, unit: "POINTS", amount: "5" }));
+    await setCampaignStatusForSession(owner(brand.id), made.id, "ACTIVE");
+
+    await renameCampaignForSession(owner(brand.id), made.id, form({ name: "Live one, renamed" }));
+
+    const [listed] = (await listCampaignsForConsole(brand.id)).filter((c) => c.id === made.id);
+    expect(listed!.name).toBe("Live one, renamed");
+    expect(listed!.status).toBe("ACTIVE");
+    expect(listed!.rule?.amount).toBe(5);
+  });
+
+  it("refuses a blank name rather than storing one", async () => {
+    const made = await createCampaignForSession(owner(brand.id), form({ name: "Keeps its name" }));
+    await expect(renameCampaignForSession(owner(brand.id), made.id, form({ name: "   " }))).rejects.toThrow();
+
+    const [listed] = (await listCampaignsForConsole(brand.id)).filter((c) => c.id === made.id);
+    expect(listed!.name).toBe("Keeps its name");
+  });
+
+  it("refuses a role that cannot manage promotions", async () => {
+    const made = await createCampaignForSession(owner(brand.id), form({ name: "Not yours to rename" }));
+    await expect(
+      renameCampaignForSession(viewer(brand.id), made.id, form({ name: "Renamed by a viewer" })),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it("cannot reach another brand's promotion", async () => {
+    const theirs = await createCampaignForSession(owner(otherBrand.id), form({ name: "Theirs" }));
+    await expect(
+      renameCampaignForSession(owner(brand.id), theirs.id, form({ name: "Mine now" })),
+    ).rejects.toBeInstanceOf(CampaignError);
+
+    const [listed] = (await listCampaignsForConsole(otherBrand.id)).filter((c) => c.id === theirs.id);
+    expect(listed!.name).toBe("Theirs");
+  });
+
+  it("writes an audit entry naming what it is called now", async () => {
+    const made = await createCampaignForSession(owner(brand.id), form({ name: "Before" }));
+    await renameCampaignForSession(owner(brand.id), made.id, form({ name: "After" }));
+
+    const entry = await prisma.auditEvent.findFirst({
+      where: { brandId: brand.id, action: "campaign.renamed", targetId: made.id },
+      orderBy: { createdAt: "desc" },
+    });
+    // The new name, not the old one: an entry reading "Renamed a promotion"
+    // against the name it no longer has answers the question backwards.
+    expect(entry?.targetLabel).toBe("After");
   });
 });

@@ -74,6 +74,51 @@ export async function createCampaignForSession(session: SessionLike, formData: F
 }
 
 /**
+ * Changes a promotion's name and note.
+ *
+ * Added because the setup flow's first step had nothing behind it: it said
+ * what the promotion was called and offered no way to change it, which is a
+ * step in a sequence that cannot be done. The alternative was to drop the
+ * step, and a brand who mistypes a name on the screen that exists to name
+ * things should not have to delete the promotion to fix it.
+ *
+ * The same schema as creation, deliberately. A name that was valid when
+ * typed into one form should not be refused by the other, and two schemas
+ * that are meant to agree are two schemas that will stop agreeing.
+ *
+ * Only ever the label. Nothing here touches what the promotion awards, what
+ * it may cost or whether it is running, so it is safe on a live promotion
+ * in a way that none of the other forms are.
+ */
+export async function renameCampaignForSession(session: SessionLike, campaignId: string, formData: FormData) {
+  requireRole(session.user.role as Role, MANAGE_CAMPAIGN_ROLES);
+
+  const parsed = createSchema.parse({
+    name: formData.get("name"),
+    description: formData.get("description") || undefined,
+  });
+
+  const scoped = forBrand(session.user.brandId);
+  const campaign = await scoped.campaign.findUnique({ where: { id: campaignId } });
+  if (!campaign) throw new CampaignError("That promotion no longer exists.");
+
+  const updated = await scoped.campaign.update({
+    where: { id: campaign.id },
+    data: { name: parsed.name, description: parsed.description ?? null },
+  });
+
+  await record(prisma, session.user, {
+    action: "campaign.renamed",
+    targetId: updated.id,
+    // The new name, because an audit entry reading "Renamed a promotion"
+    // against the old one answers the question backwards.
+    targetLabel: updated.name,
+  });
+
+  return updated;
+}
+
+/**
  * Switches a promotion on or off.
  *
  * Activation carries the same "only one spend-based rule at a time" check

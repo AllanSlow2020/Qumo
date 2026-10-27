@@ -20,7 +20,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "demo": "tsx scripts/demo.ts",
     "sms:test": "tsx scripts/sms-test.ts",
-    "preflight": "QUMO_PREFLIGHT=strict node scripts/preflight.mjs"
+    "preflight": "QUMO_PREFLIGHT=strict node scripts/preflight.mjs",
+    "legal:copy": "tsx scripts/legal-copy.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
