@@ -1,6 +1,6 @@
 # Brief: the Qumo marketing site
 
-For building qumo.app in Lovable. The site is a separate codebase from the
+For building qumo-app.com in Lovable. The site is a separate codebase from the
 product, so this is the document that keeps the two in agreement: what the
 site may truthfully claim, what it must look like, where it lives in DNS,
 and what its call to action can actually do.
@@ -14,7 +14,7 @@ Hand it to Lovable as the project brief. It is self-contained.
 **There is no self-service signup, so "sign up" cannot be the call to
 action yet.**
 
-A brand is created at `app.qumo.app/provision`. That route is gated by a
+A brand is created at `app.qumo-app.com/provision`. That route is gated by a
 setup key held in the environment and handed out by hand, and it is
 deliberately not linked from anywhere in the console. The comment on it is
 explicit: somebody who needs it has been told the address along with the
@@ -70,15 +70,15 @@ particular order:
 
 | Host | Serves |
 |---|---|
-| `qumo.app` (apex) | **this site** |
-| `www.qumo.app` | **this site** |
-| `app.qumo.app` | the brand console (existing) |
-| `<brand>.qumo.app` | each brand's shopper programme (existing) |
+| `qumo-app.com` (apex) | **this site** |
+| `www.qumo-app.com` | **this site** |
+| `app.qumo-app.com` | the brand console (existing) |
+| `<brand>.qumo-app.com` | each brand's shopper programme (existing) |
 
 Two things make this work. `www` and `app` are both already in the
 product's reserved subdomain list, so no brand can ever claim either.
 And the zone has to stay with Vercel, because a wildcard record for
-`*.qumo.app` is only available to the provider holding the zone. The apex
+`*.qumo-app.com` is only available to the provider holding the zone. The apex
 and `www` are then ordinary records inside that zone pointing at Lovable.
 Explicit records beat the wildcard, so `www` resolving to Lovable does not
 conflict with brands resolving to Vercel.
