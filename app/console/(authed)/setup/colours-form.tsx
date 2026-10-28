@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { ROOT_DOMAIN } from "@/lib/brand/host";
 import { LogoField } from "@/app/console/logo-field";
 import { saveColours } from "./actions";
 import { IDLE, type SetupState } from "./state";
@@ -225,7 +226,12 @@ export function ColoursForm({
             </div>
           </div>
           <p className="cn-label">
-            Live at <span className="cn-mono">{slug}.qumo-app.com</span> the moment you save.
+            {/* From ROOT_DOMAIN rather than typed out. This is the one place
+                in the app that printed the domain as a literal, which
+                meant it would have gone on telling brands the old address
+                after a domain move while every real link followed the
+                environment variable. */}
+            Live at <span className="cn-mono">{slug}.{ROOT_DOMAIN}</span> the moment you save.
           </p>
         </div>
       </div>
