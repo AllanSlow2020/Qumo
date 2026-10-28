@@ -30,9 +30,10 @@ export default async function ConsolePromotionsPage({
   // nothing to every shopper who tries it.
   const photoReady = photoCaptureConfigured();
 
-  // ?ui=drawer puts the setup flow in a panel that slides in from the
-  // right, so both shells can be compared against the same data. Read here
-  // rather than in the client: it never changes while somebody is working.
+  // The setup flow lives in a panel that slides in from the right.
+  // ?ui=stacked is the way back to the previous layout without a deploy.
+  // Read here rather than in the client: it never changes while somebody
+  // is working.
   const mode = consoleUiMode((await searchParams).ui);
 
   // brandOrigin rather than built here, which is what this was doing and

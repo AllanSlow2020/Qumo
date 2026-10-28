@@ -10,28 +10,26 @@ import { SetupFlow } from "./setup-flow";
 /**
  * The setup flow and what is already running, in one of two shells.
  *
- * ── stacked ──────────────────────────────────────────────────────────────
+ * ── drawer, the default ──────────────────────────────────────────────────
  *
- * What ships. The flow sits above the list. It used to sit in a 330px rail
- * beside it, on the argument that the list is what a brand reads every day
- * and the form is what they use once a month, so the list should have the
- * width. That was right about the priority and wrong about the
- * consequence: the rail was too narrow to explain anything, so three forms
- * in it were nine unexplained fields. Putting the sequence first only
- * works because it is a sequence - one step is short enough that the list
- * still starts near the fold.
+ * The list gets the whole page and the flow slides over it when you open
+ * one. This is the arrangement the original split layout was reaching for:
+ * the thing read daily owns the screen, and the thing used occasionally
+ * arrives when asked for and leaves again.
  *
- * ── drawer, behind ?ui=drawer ────────────────────────────────────────────
+ * ── stacked, behind ?ui=stacked ──────────────────────────────────────────
  *
- * The candidate. The list gets the whole page and the flow slides over it
- * when you open one, which is the arrangement the original split was
- * reaching for: the thing read daily owns the screen, and the thing used
- * occasionally arrives when asked for and leaves again.
+ * What shipped before, kept as the way back without a deploy. The flow
+ * sits above the list. Before that it sat in a 330px rail beside it, on
+ * the argument that the list is what a brand reads every day and the form
+ * is what they use once a month, so the list should have the width. That
+ * was right about the priority and wrong about the consequence: the rail
+ * was too narrow to explain anything, so three forms in it were nine
+ * unexplained fields.
  *
- * Both shells render the same SetupFlow with the same props. That is the
- * point of doing it this way rather than building a second editor: what is
- * being compared is the shell, and anything that behaves differently
- * inside it would make the comparison about something else.
+ * Both shells render the same SetupFlow with the same props, which is what
+ * made them comparable and is now what keeps the fallback honest: if the
+ * drawer has to be switched off, nothing about the flow itself changes.
  *
  * ── What the two share ───────────────────────────────────────────────────
  *
