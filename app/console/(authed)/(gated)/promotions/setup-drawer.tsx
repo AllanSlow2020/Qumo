@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { useHydrated } from "@/app/console/use-hydrated";
 
 /**
  * The setup flow in a panel that slides in from the right.
@@ -17,6 +19,19 @@ import { useEffect, useRef, type ReactNode } from "react";
  * cannot open a second promotion without closing this one. That is the
  * trade being evaluated: visible-but-inert is still a long way better than
  * scrolled off the top, which is what the stacked layout does.
+ *
+ * ── Why it is portalled to the body ──────────────────────────────────────
+ *
+ * The same reason the delete dialogue is, and not because this one sits in
+ * a list today. showModal() puts an element in the top layer and moving
+ * its DOM node takes it back out: it stays open, stops being modal, loses
+ * its backdrop and drops into normal flow. Nothing reorders around this
+ * drawer at the moment, so it is safe where it is - and "safe where it is"
+ * is a property of the tree above it rather than of this component, which
+ * means it stops being true the day somebody rearranges the page.
+ *
+ * Both dialogues render on the body so that nobody has to work out which
+ * ones are safe.
  *
  * ── Why the animation is in CSS and not here ─────────────────────────────
  *
@@ -38,6 +53,9 @@ export function SetupDrawer({
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  // Portal targets exist only in the browser, and the drawer is shut on
+  // first paint, so rendering nothing on the server costs nothing.
+  const mounted = useHydrated();
 
   // showModal() is the only way to get the backdrop, the focus trap and the
   // inert page. Driven from an effect rather than from the click that set
@@ -50,7 +68,7 @@ export function SetupDrawer({
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
-  return (
+  const drawer = (
     <dialog
       ref={ref}
       className="cn-drawer"
@@ -69,4 +87,6 @@ export function SetupDrawer({
       <div className="cn-drawer-body">{children}</div>
     </dialog>
   );
+
+  return mounted ? createPortal(drawer, document.body) : null;
 }
