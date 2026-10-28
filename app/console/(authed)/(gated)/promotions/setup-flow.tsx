@@ -35,12 +35,17 @@ import { SetupStepper } from "./setup-stepper";
 export function SetupFlow({
   campaign,
   canManage,
+  photoReady,
+  closeLabel,
   onCreated,
   onClose,
 }: {
   /** Null while no promotion is open, which is the page's starting state. */
   campaign: ConsoleCampaign | null;
   canManage: boolean;
+  photoReady: boolean;
+  /** What the header button says: closing a drawer and starting another are different acts. */
+  closeLabel: string;
   onCreated: (id: string) => void;
   onClose: () => void;
 }) {
@@ -106,7 +111,7 @@ export function SetupFlow({
             back to step one. With nothing open there is nothing to close. */}
         {campaign && (
           <button type="button" className="cn-btn cn-btn-quiet" onClick={onClose}>
-            Start another
+            {closeLabel}
           </button>
         )}
       </div>
@@ -121,7 +126,7 @@ export function SetupFlow({
           </h3>
 
           {campaign ? (
-            <StepBody campaign={campaign} step={current} onDeleted={onClose} />
+            <StepBody campaign={campaign} step={current} photoReady={photoReady} onDeleted={onClose} />
           ) : (
             <>
               <p className="cn-body" style={{ marginTop: 0 }}>

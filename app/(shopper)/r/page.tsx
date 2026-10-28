@@ -4,6 +4,7 @@ import { requireBrand } from "@/lib/brand/current";
 import { getConsumerSession } from "@/lib/consumer/session";
 import { needsAgeStep } from "@/lib/consumer/age-check";
 import { formatLedgerAmount } from "@/lib/consumer/wallet";
+import { tierRefusal } from "@/lib/proof/tier";
 import { redeemReceipt, RECEIPT_FAILURE_MESSAGES } from "@/lib/stores/receipt";
 import { BrandHeader } from "../brand-header";
 
@@ -60,7 +61,13 @@ export default async function ReceiptScanPage({
         <BrandHeader />
         <section className="sc-card">
           <h1 className="sc-h1">That didn&apos;t work</h1>
-          <p className="sc-body">{RECEIPT_FAILURE_MESSAGES[result.reason]}</p>
+          {/* The tier refusal can name what this promotion does take, which
+              a generic sentence cannot. Somebody photographing a slip at a
+              brand that only accepts signed slips has done nothing wrong,
+              and needs to be told where to point the camera instead. */}
+          <p className="sc-body">
+            {result.wanted ? tierRefusal(result.wanted) : RECEIPT_FAILURE_MESSAGES[result.reason]}
+          </p>
           <Link href="/wallet" className="sc-btn sc-btn-ghost">
             Go to my rewards
           </Link>

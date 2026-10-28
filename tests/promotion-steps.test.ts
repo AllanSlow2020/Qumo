@@ -18,6 +18,7 @@ const RULE: Rule = {
   basisPoints: null,
   minSpendCents: null,
   completesAt: null,
+  minProofTier: "UNSIGNED",
   maxPerPersonPerDay: null,
   maxScansPerPersonPerDay: null,
   maxTotalAmount: null,

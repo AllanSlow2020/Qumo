@@ -5,10 +5,16 @@ import { prisma } from "@/lib/db/client";
 import { brandOrigin } from "@/lib/brand/host";
 import { joinUrl, posterQrSvg } from "@/lib/brand/poster";
 import { listCampaignsForConsole, MANAGE_CAMPAIGN_ROLES } from "@/lib/campaigns/manage";
+import { consoleUiMode } from "@/lib/console/ui-mode";
+import { photoCaptureConfigured } from "@/lib/slips/read";
 import { requireStaff } from "@/lib/staff/current";
 import { PromotionsWorkspace } from "./promotions-workspace";
 
-export default async function ConsolePromotionsPage() {
+export default async function ConsolePromotionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await requireStaff();
 
   const [brand, campaigns] = await Promise.all([
@@ -17,6 +23,18 @@ export default async function ConsolePromotionsPage() {
   ]);
 
   const canManage = MANAGE_CAMPAIGN_ROLES.includes(session.role as Role);
+
+  // Read on the server, because it is an environment decision rather than
+  // a brand one. Offering the photograph tier while no reader is
+  // configured would be offering a brand a setting that silently does
+  // nothing to every shopper who tries it.
+  const photoReady = photoCaptureConfigured();
+
+  // The setup flow lives in a panel that slides in from the right.
+  // ?ui=stacked is the way back to the previous layout without a deploy.
+  // Read here rather than in the client: it never changes while somebody
+  // is working.
+  const mode = consoleUiMode((await searchParams).ui);
 
   // brandOrigin rather than built here, which is what this was doing and
   // what the CSV route and the label sheet were each doing separately. Three
@@ -47,7 +65,7 @@ export default async function ConsolePromotionsPage() {
           330px rail. See promotions-workspace for why the list moved down
           and what makes that safe. */}
       <div className="cn-promo-stack">
-        <PromotionsWorkspace campaigns={campaigns} canManage={canManage} />
+        <PromotionsWorkspace campaigns={campaigns} canManage={canManage} photoReady={photoReady} mode={mode} />
 
         {/* Last, because it is reference rather than action: the address on
             it never changes and never awards anything, so it belongs below

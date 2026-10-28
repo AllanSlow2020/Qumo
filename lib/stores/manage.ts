@@ -211,6 +211,16 @@ const spendRuleSchema = z.object({
   // typo, not a promotion.
   basisPoints: z.coerce.number().int().min(1).max(10_000),
   minSpendCents: z.coerce.number().int().min(0).max(10_000_000).optional(),
+  /**
+   * How much proof this promotion insists on.
+   *
+   * Optional because the form may not send it, and absent means leave it
+   * alone rather than reset it: this is the one field here a brand might
+   * reasonably have tightened for a reason, and a form that quietly
+   * returned it to the default on an unrelated save would be handing back
+   * a protection somebody chose.
+   */
+  minProofTier: z.enum(["SIGNED", "UNSIGNED", "PHOTO"]).optional(),
 });
 
 /**
@@ -231,6 +241,7 @@ export async function setSpendRuleForSession(session: SessionLike, formData: For
     unit: formData.get("unit"),
     basisPoints: formData.get("basisPoints"),
     minSpendCents: formData.get("minSpendCents") || undefined,
+    minProofTier: formData.get("minProofTier") || undefined,
   });
 
   const scoped = forBrand(session.user.brandId);
@@ -264,6 +275,9 @@ export async function setSpendRuleForSession(session: SessionLike, formData: For
       amount: 0,
       basisPoints: parsed.basisPoints,
       minSpendCents: parsed.minSpendCents ?? null,
+      // Spread rather than `?? default`, so leaving it out leaves it as it
+      // was. See the note on the schema.
+      ...(parsed.minProofTier ? { minProofTier: parsed.minProofTier } : {}),
     },
     create: {
       brandId: session.user.brandId,
@@ -273,6 +287,9 @@ export async function setSpendRuleForSession(session: SessionLike, formData: For
       amount: 0,
       basisPoints: parsed.basisPoints,
       minSpendCents: parsed.minSpendCents ?? null,
+      // Spread rather than `?? default`, so leaving it out leaves it as it
+      // was. See the note on the schema.
+      ...(parsed.minProofTier ? { minProofTier: parsed.minProofTier } : {}),
     },
   });
 }
