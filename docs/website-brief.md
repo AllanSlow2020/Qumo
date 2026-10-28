@@ -1,6 +1,6 @@
 # Brief: the Qumo marketing site
 
-For building qumo-app.com in Lovable. The site is a separate codebase from the
+For building qumo.co.za in Lovable. The site is a separate codebase from the
 product, so this is the document that keeps the two in agreement: what the
 site may truthfully claim, what it must look like, where it lives in DNS,
 and what its call to action can actually do.
@@ -65,26 +65,25 @@ website choice touches work already in flight.
 
 ## 3. Where the site lives
 
-The product uses a subdomain per brand, so DNS has to be set up in a
-particular order:
+Its own domain, which is the decision that makes this easy.
 
 | Host | Serves |
 |---|---|
-| `qumo-app.com` (apex) | **this site** |
-| `www.qumo-app.com` | **this site** |
+| `qumo.co.za`, `www.qumo.co.za` | **this site** |
 | `app.qumo-app.com` | the brand console (existing) |
 | `<brand>.qumo-app.com` | each brand's shopper programme (existing) |
+| `qumo-app.com` (apex) | a dead end today; redirect it here |
 
-Two things make this work. `www` and `app` are both already in the
-product's reserved subdomain list, so no brand can ever claim either.
-And the zone has to stay with Vercel, because a wildcard record for
-`*.qumo-app.com` is only available to the provider holding the zone. The apex
-and `www` are then ordinary records inside that zone pointing at Lovable.
-Explicit records beat the wildcard, so `www` resolving to Lovable does not
-conflict with brands resolving to Vercel.
+An earlier version of this brief had the site on the same domain as the
+product, which meant inheriting the product's DNS constraints: brand
+subdomains need a wildcard record, and only the provider holding the zone
+can serve one. None of that applies now. `qumo.co.za` is a separate zone
+pointed wherever the site is hosted with ordinary records, and standing it
+up cannot affect anything already running.
 
-The apex currently renders a "this link needs a brand" dead end, so there
-is nothing to remove.
+The site is acquisition only. A brand reads it, asks for access, and is
+handed to the console by a link. They do not come back, nothing is shared
+between the two, and there is no session or account state to integrate.
 
 ## 4. Design: match the product, do not invent a second look
 

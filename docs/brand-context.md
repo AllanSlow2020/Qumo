@@ -10,8 +10,8 @@ Last updated 28 October 2026, against the running product.
 
 ## 0. What this is for, and the one rule
 
-The output is a brand guide, and then a marketing site built in Lovable at
-`qumo-app.com`. Section 7 holds the visual assets that already exist and
+The output is a brand guide, and then an acquisition site built in Lovable
+at `qumo.co.za`. Section 7 holds the visual assets that already exist and
 should be built on rather than replaced. Section 9 holds what the site may
 and may not claim.
 
@@ -242,29 +242,49 @@ the surface a shopper sees, which belongs to the client.
 
 ## 8. Naming and addresses
 
-**Product name:** Qumo. **Operating company:** Qumo.
-
-The production root domain is **`qumo-app.com`**.
+Two domains, each with one job. **This is settled**, so nothing in the
+design needs to hedge about it.
 
 | Address | What it serves | Status |
 |---|---|---|
-| `app.qumo-app.com` | The brand console | Live |
-| `<brand>.qumo-app.com` | Each brand's shopper programme | Live |
-| `qumo-app.com` and `www.qumo-app.com` | **The marketing site** | To build |
+| `qumo.co.za`, `www.qumo.co.za` | **The acquisition site.** This document exists to get it designed. | To build |
+| `app.qumo-app.com` | The brand console, where a brand sets promotions up | Live |
+| `<brand>.qumo-app.com` | Each brand's own shopper programme | Live |
+| `qumo-app.com` (apex) | A dead end today; should redirect to the site | |
 
-`www`, `app`, `admin`, `api`, `console`, `dashboard`, `static`, `assets`,
-`mail`, `status`, `docs`, `help` and `support` are all reserved in the
-product, so no brand can ever claim one. The apex currently renders a
-"this link needs a brand" dead end, so the marketing site displaces
-nothing.
+The site is **acquisition only**. A brand arrives, reads, asks for access,
+and is handed over to the console. They do not come back: day-to-day work
+happens in the console, and a shopper never sees the site at all.
 
-**DNS constraint.** Brand subdomains need a wildcard record, and only the
-provider holding the zone can serve one. The zone therefore stays with
-Vercel, and the apex and `www` become ordinary records inside it pointing
-at wherever the site is hosted. Explicit records beat the wildcard, so
-`www` resolving elsewhere does not disturb brands.
+Nothing is shared between the two. No session, no sign-in, no account
+state, no SSO. **The handover is a link.** That makes the site far simpler
+than a product marketing site usually is: a brochure with one action, on
+its own domain, with no integration to build and nothing to keep in sync
+except the claims in section 9.
 
----
+### DNS, which is simpler than it would have been
+
+Because the site has its own domain, it carries none of the product's
+constraints. `qumo.co.za` points at whatever hosts the site using ordinary
+records. The wildcard that serves `<brand>.qumo-app.com` belongs to the
+other domain and is not touched, so standing the site up cannot affect
+anything that is already running.
+
+### What the handover cannot do yet
+
+**There is no self-service signup.** A brand is created on a route gated by
+a setup key that is handed over by hand, and that route is deliberately
+unlinked from everywhere. So a "Sign up" button cannot yet drop somebody
+into a working account.
+
+Until that changes, the site's single action is **request access**: an
+email or a booking link, after which the brand is provisioned manually and
+sent the console address. That is the right shape for a pilot anyway,
+where every brand is a conversation.
+
+Design the call to action so swapping it for a real signup later is a link
+change rather than a redesign: one primary button, one place, repeated at
+top and bottom.
 
 ## 9. What the site may and may not claim
 
@@ -306,21 +326,15 @@ at wherever the site is hosted. Explicit records beat the wildcard, so
 
 Open, and genuinely open:
 
-1. **Whether `qumo-app.com` is the brand's public face.** It works, it is
-   owned, and the product lives on it. It is also a hyphenated domain with
-   "app" in it, which reads more like infrastructure than a brand. A
-   `.co.za` carries real local trust in this market. Splitting the
-   marketing site onto a different domain from the product is a brand
-   decision with a cost on both sides.
-2. **What Qumo looks like away from a screen.** Everything that exists is
+1. **What Qumo looks like away from a screen.** Everything that exists is
    UI. There is no wordmark treatment, no print behaviour, no photography
    direction, no illustration style.
-3. **Whether the blue stays.** `#2563eb` is a capable interface accent and
+2. **Whether the blue stays.** `#2563eb` is a capable interface accent and
    was chosen as one. Whether it is the brand colour is a different
    question nobody has answered.
-4. **How the two identities are described together.** "Our product wears
+3. **How the two identities are described together.** "Our product wears
    our client's identity" is a real positioning asset and currently exists
    only as an implementation detail.
-5. **What the call to action is.** There is no self-service signup: a
-   brand is provisioned by hand with a setup key. The site's primary
-   action has to be "request access" or similar until that changes.
+4. **How much the site should show of the console.** The product's own
+   screens are the most convincing thing about it and the hardest to keep
+   current. A screenshot ages; an illustration does not but proves less.
