@@ -44,8 +44,16 @@ export function SetupFlow({
   campaign: ConsoleCampaign | null;
   canManage: boolean;
   photoReady: boolean;
-  /** What the header button says: closing a drawer and starting another are different acts. */
-  closeLabel: string;
+  /**
+   * What the header button says, or null for no button.
+   *
+   * The decision belongs to the caller because it depends on the shell. In
+   * a drawer there is always something to close, including a promotion
+   * being created; on the page there is nothing to close until one is
+   * open. Deciding it here from `campaign` got that wrong in the drawer
+   * and left the create form with no way out but Escape.
+   */
+  closeLabel: string | null;
   onCreated: (id: string) => void;
   onClose: () => void;
 }) {
@@ -107,9 +115,7 @@ export function SetupFlow({
               : "Five steps, starting with a name. Nothing awards anything until the last one."}
           </p>
         </div>
-        {/* Only when a promotion is open, because closing hands the flow
-            back to step one. With nothing open there is nothing to close. */}
-        {campaign && (
+        {closeLabel !== null && (
           <button type="button" className="cn-btn cn-btn-quiet" onClick={onClose}>
             {closeLabel}
           </button>

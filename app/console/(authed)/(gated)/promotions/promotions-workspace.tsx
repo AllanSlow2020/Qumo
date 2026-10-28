@@ -114,7 +114,10 @@ export function PromotionsWorkspace({
       campaign={selected}
       canManage={canManage}
       photoReady={photoReady}
-      closeLabel={drawer ? "Close" : "Start another"}
+      // In the drawer there is always something to close, including a
+      // promotion being created. On the page there is nothing to close
+      // until one is open.
+      closeLabel={drawer ? "Close" : selected ? "Start another" : null}
       onCreated={setSelectedId}
       onClose={close}
     />
