@@ -159,7 +159,9 @@ Claims that are true of the running product today:
 - **No invented numbers.** No customer counts, no uplift percentages, no
   logos of brands that are not customers, no testimonials. There is one
   demo brand and no live brands.
-- **No pricing** until Allan sets it.
+- **No prices.** The plan names and what is in each belong on the site;
+  no rand figure goes there until it has been tested on a real brand. The
+  figures live in the decks. See `docs/pricing-tiers.md`.
 - Do not describe WhatsApp as available. It is planned and not built.
 
 ## 7. Shape of the page
@@ -171,7 +173,8 @@ place:
 2. How it works, in three steps: shopper buys, shopper scans, brand sees it.
 3. The three earning shapes, shown rather than listed.
 4. What a brand gets: the console, the codes, the separation guarantee.
-5. What it costs to start, or "request access" if pricing is unset.
+5. The three plans by name and shape, with no figures. See
+   `docs/pricing-tiers.md`.
 6. One call to action, repeated at top and bottom, going to the same place.
 
 Add a privacy page for the site itself if anything is ever collected. While
