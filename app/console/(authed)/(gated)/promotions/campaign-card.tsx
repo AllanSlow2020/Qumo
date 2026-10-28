@@ -1,6 +1,7 @@
 "use client";
 
 import type { ConsoleCampaign } from "@/lib/campaigns/manage";
+import { shapeOfRule } from "@/lib/console/promotion-shape";
 import { Ticker } from "@/app/console/ticker";
 import { DeleteButton } from "./delete-button";
 import { StatusButton } from "./status-button";
@@ -49,6 +50,11 @@ export function CampaignCard({
   const rule = campaign.rule;
   const live = campaign.status === "ACTIVE";
   const unit = rule?.unit ?? "CENTS";
+  // What kind of promotion this is, in the brand's terms rather than the
+  // row's. A stamp card used to headline "1 stamps / Per scan", which is
+  // true, useless, and not the number anybody running a coffee card wants
+  // to see. The number they want is how many fill a card.
+  const shape = shapeOfRule(rule);
 
   // The number a finance director cares about, per promotion: how much of
   // the agreed budget this campaign has already spent. Only meaningful when
@@ -76,20 +82,41 @@ export function CampaignCard({
               <div className="cn-metric-v">
                 <Ticker
                   value={
-                    rule.type === "PERCENT_OF_SPEND" && rule.basisPoints
-                      ? `${Number((rule.basisPoints / 100).toFixed(2))}%`
-                      : unitAmount(rule.amount, unit)
+                    shape === "STAMP_CARD"
+                      ? rule.completesAt
+                        ? `Buy ${rule.completesAt}`
+                        : "No card yet"
+                      : rule.type === "PERCENT_OF_SPEND" && rule.basisPoints
+                        ? `${Number((rule.basisPoints / 100).toFixed(2))}%`
+                        : unitAmount(rule.amount, unit)
                   }
                 />
               </div>
-              <div className="cn-metric-k">{rule.type === "PERCENT_OF_SPEND" ? "Of every basket" : "Per scan"}</div>
-              {rule.minSpendCents ? (
-                <div className="cn-metric-note">Baskets over {money(rule.minSpendCents)}</div>
+              <div className="cn-metric-k">
+                {shape === "STAMP_CARD"
+                  ? rule.completesAt
+                    ? "Stamps fill a card"
+                    : "A stamp a purchase"
+                  : rule.type === "PERCENT_OF_SPEND"
+                    ? "Of every basket"
+                    : "Per scan"}
+              </div>
+              {/* A rule none of the three kinds describe. It still runs, so
+                  the card says what it is doing rather than drawing it as
+                  the nearest thing it resembles. */}
+              {!shape ? (
+                <div className="cn-metric-note cn-warn-note">
+                  A share of the basket, paid in {unit === "STAMPS" ? "stamps" : "points"}. Multiplied by what was
+                  spent. Open it and choose a kind.
+                </div>
               ) : rule.completesAt ? (
                 <div className={`cn-metric-note${campaign.reward ? "" : " cn-warn-note"}`}>
-                  {rule.completesAt} completes a card
-                  {campaign.reward ? `: ${campaign.reward.rewardName}` : ", earning nothing"}
+                  {campaign.reward ? `and get ${campaign.reward.rewardName}` : "and get nothing, which is not set yet"}
                 </div>
+              ) : rule.minSpendCents ? (
+                <div className="cn-metric-note">Baskets over {money(rule.minSpendCents)}</div>
+              ) : shape === "STAMP_CARD" ? (
+                <div className="cn-metric-note cn-warn-note">Nothing says how many fill a card</div>
               ) : null}
             </div>
 

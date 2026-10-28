@@ -785,9 +785,16 @@ model Coupon {
   brandMembershipId String
   brandMembership   BrandMembership @relation(fields: [brandMembershipId], references: [id], onDelete: Cascade)
   code              String          @unique
-  // REDEEMED/CANCELLED are now reachable via manual staff action
-  // (lib/coupons/manage.ts) - real till-side POS integration is still the
-  // mockup's own "Future Integration" placeholder, not built here.
+  // Nothing moves a coupon out of ISSUED. This comment used to say that
+  // REDEEMED and CANCELLED were reachable through a manual staff action in
+  // lib/coupons/manage.ts; that file does not exist, and `REDEEMED` appears
+  // in this schema and in no TypeScript file in the repository.
+  //
+  // So a completed stamp card issues a coupon that stays ISSUED for ever,
+  // and CouponFraudEvent.ALREADY_REDEEMED can never fire, because nothing
+  // ever sets the status it would be checking. A brand honouring these by
+  // eye has no defence against the same screenshot at every counter.
+  // See docs/seattle-coffee-review.md.
   status            CouponStatus    @default(ISSUED)
   issuedAt          DateTime        @default(now())
   expiresAt         DateTime?

@@ -303,7 +303,7 @@ def s21():
          "foot_note": "Rises as the campaign works"},
         {"tag": "Door 03", "title": "TAP", "sub": "No camera, no typing",
          "points": ["An NFC tag holds the same address", "Tap opens it, the page awards it",
-                    "For premium packs or the counter"],
+                    "One tag per item, like a pack code"],
          "foot_label": "Works today, needs tags", "foot": "Cost per tag",
          "foot_note": "Fixed at production, whatever engagement does"},
     ], Inches(3.30))
@@ -356,10 +356,11 @@ def s23():
          "points": ["Scan and text doors", "Up to 100,000 scans a month",
                     "Campaigns and stores unlimited", "Till slips and store attribution"],
          "foot_label": "Per month, indicative", "foot": "R25,000"},
-        {"tag": "Tier 03", "title": "PLATFORM", "sub": "National, all doors",
-         "points": ["Scan, text and tap", "500,000+ scans a month", "CRM integration and API",
-                    "Multi-brand and multi-market"],
-         "foot_label": "Per month, indicative", "foot": "R60,000"},
+        {"tag": "Tier 03", "title": "PLATFORM", "sub": "National, every door",
+         "points": ["Scan, text and tap", "500,000+ scans a month",
+                    "Photographed slips accepted", "Several brands on one account"],
+         "foot_label": "Per month, indicative", "foot": "R60,000",
+         "foot_note": "CRM and API are on the roadmap"},
     ], Inches(3.20))
     footer(s)
 

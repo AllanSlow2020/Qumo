@@ -197,10 +197,11 @@ def p09():
          "points": ["Scan and text doors", "Up to 100,000 scans a month",
                     "Campaigns and stores unlimited", "Till slips and store attribution"],
          "foot_label": "Per month, indicative", "foot": "R25,000"},
-        {"tag": "Tier 03", "title": "PLATFORM", "sub": "National, all doors",
+        {"tag": "Tier 03", "title": "PLATFORM", "sub": "National, every door",
          "points": ["Scan, text and tap", "500,000+ scans a month",
-                    "CRM integration and API", "Multi-brand and multi-market"],
-         "foot_label": "Per month, indicative", "foot": "R60,000"},
+                    "Photographed slips accepted", "Several brands on one account"],
+         "foot_label": "Per month, indicative", "foot": "R60,000",
+         "foot_note": "CRM and API are on the roadmap"},
     ], Inches(3.38), hgt=Inches(3.38))
     footer(s)
 
@@ -213,7 +214,7 @@ def p10():
     text(s, "We will have your first real numbers inside one print cycle, and you will not have "
             "spent anything to find out.",
          M, Inches(5.08), Inches(9.4), Inches(0.9), size=14.5, colour=BODY, spacing=1.45)
-    text(s, "qumo-app.com", M, Inches(6.02), Inches(6), Inches(0.36), size=15, bold=True,
+    text(s, "qumo.co.za", M, Inches(6.02), Inches(6), Inches(0.36), size=15, bold=True,
          colour=ACCENT, font=MONO, spacing=1.0)
     footer(s)
 

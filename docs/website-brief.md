@@ -1,6 +1,6 @@
 # Brief: the Qumo marketing site
 
-For building qumo.app in Lovable. The site is a separate codebase from the
+For building qumo.co.za in Lovable. The site is a separate codebase from the
 product, so this is the document that keeps the two in agreement: what the
 site may truthfully claim, what it must look like, where it lives in DNS,
 and what its call to action can actually do.
@@ -14,7 +14,7 @@ Hand it to Lovable as the project brief. It is self-contained.
 **There is no self-service signup, so "sign up" cannot be the call to
 action yet.**
 
-A brand is created at `app.qumo.app/provision`. That route is gated by a
+A brand is created at `app.qumo-app.com/provision`. That route is gated by a
 setup key held in the environment and handed out by hand, and it is
 deliberately not linked from anywhere in the console. The comment on it is
 explicit: somebody who needs it has been told the address along with the
@@ -65,26 +65,25 @@ website choice touches work already in flight.
 
 ## 3. Where the site lives
 
-The product uses a subdomain per brand, so DNS has to be set up in a
-particular order:
+Its own domain, which is the decision that makes this easy.
 
 | Host | Serves |
 |---|---|
-| `qumo.app` (apex) | **this site** |
-| `www.qumo.app` | **this site** |
-| `app.qumo.app` | the brand console (existing) |
-| `<brand>.qumo.app` | each brand's shopper programme (existing) |
+| `qumo.co.za`, `www.qumo.co.za` | **this site** |
+| `app.qumo-app.com` | the brand console (existing) |
+| `<brand>.qumo-app.com` | each brand's shopper programme (existing) |
+| `qumo-app.com` (apex) | a dead end today; redirect it here |
 
-Two things make this work. `www` and `app` are both already in the
-product's reserved subdomain list, so no brand can ever claim either.
-And the zone has to stay with Vercel, because a wildcard record for
-`*.qumo.app` is only available to the provider holding the zone. The apex
-and `www` are then ordinary records inside that zone pointing at Lovable.
-Explicit records beat the wildcard, so `www` resolving to Lovable does not
-conflict with brands resolving to Vercel.
+An earlier version of this brief had the site on the same domain as the
+product, which meant inheriting the product's DNS constraints: brand
+subdomains need a wildcard record, and only the provider holding the zone
+can serve one. None of that applies now. `qumo.co.za` is a separate zone
+pointed wherever the site is hosted with ordinary records, and standing it
+up cannot affect anything already running.
 
-The apex currently renders a "this link needs a brand" dead end, so there
-is nothing to remove.
+The site is acquisition only. A brand reads it, asks for access, and is
+handed to the console by a link. They do not come back, nothing is shared
+between the two, and there is no session or account state to integrate.
 
 ## 4. Design: match the product, do not invent a second look
 
@@ -160,7 +159,9 @@ Claims that are true of the running product today:
 - **No invented numbers.** No customer counts, no uplift percentages, no
   logos of brands that are not customers, no testimonials. There is one
   demo brand and no live brands.
-- **No pricing** until Allan sets it.
+- **No prices.** The plan names and what is in each belong on the site;
+  no rand figure goes there until it has been tested on a real brand. The
+  figures live in the decks. See `docs/pricing-tiers.md`.
 - Do not describe WhatsApp as available. It is planned and not built.
 
 ## 7. Shape of the page
@@ -172,7 +173,8 @@ place:
 2. How it works, in three steps: shopper buys, shopper scans, brand sees it.
 3. The three earning shapes, shown rather than listed.
 4. What a brand gets: the console, the codes, the separation guarantee.
-5. What it costs to start, or "request access" if pricing is unset.
+5. The three plans by name and shape, with no figures. See
+   `docs/pricing-tiers.md`.
 6. One call to action, repeated at top and bottom, going to the same place.
 
 Add a privacy page for the site itself if anything is ever collected. While

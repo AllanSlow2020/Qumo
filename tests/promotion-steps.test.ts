@@ -24,6 +24,19 @@ const RULE: Rule = {
   maxTotalAmount: null,
 };
 
+/**
+ * The same row with a different unit, which is a different promotion.
+ *
+ * RULE is a stamp card: flat, in stamps. FIXED is a flat award in rands.
+ * One row type, and the card step treats them differently on purpose,
+ * because a stamp card with no threshold is unfinished and a cash-back
+ * promotion with no threshold is simply a promotion that adds up.
+ */
+const FIXED: Rule = { ...RULE, unit: "CENTS", amount: 500 };
+
+/** The combination the console no longer offers: a share of spend, in stamps. */
+const BROKEN: Rule = { ...RULE, type: "PERCENT_OF_SPEND", unit: "STAMPS", basisPoints: 500, amount: 0 };
+
 const campaign = (over: Partial<ConsoleCampaign> = {}): ConsoleCampaign => ({
   id: "c1",
   name: "Rounds card",
@@ -71,12 +84,22 @@ describe("the five steps of setting one promotion up", () => {
   });
 });
 
-describe("the card step, which has three different answers", () => {
+describe("the card step, which has four different answers", () => {
   it("counts no threshold as a finished decision rather than an omission", () => {
-    const c = campaign({ rule: RULE });
+    const c = campaign({ rule: FIXED });
     expect(stateOf(c, "card")).toBe("skipped");
     // The distinction that matters: skipped does not hold the sequence up.
     expect(firstUnfinishedStep(promotionSteps(c))).not.toBe("card");
+  });
+
+  it("holds a stamp card up until it says how many stamps fill it", () => {
+    // Same row shape as the test above and the opposite answer, because a
+    // stamp card that never completes is not a promotion that adds up: it
+    // is a card nobody can finish. Calling this skipped is what let the
+    // sequence walk a coffee shop straight past the number of coffees.
+    const c = campaign({ rule: RULE });
+    expect(stateOf(c, "card")).toBe("todo");
+    expect(firstUnfinishedStep(promotionSteps(c))).toBe("card");
   });
 
   it("flags a threshold with no reward, because the card would hand over nothing", () => {
@@ -95,12 +118,38 @@ describe("the card step, which has three different answers", () => {
     expect(blurbOf(c, "card")).toContain("a free coffee");
   });
 
-  it("is always marked optional, so skipping it does not read as missing it", () => {
-    for (const c of [campaign(), campaign({ rule: RULE }), campaign({ rule: { ...RULE, completesAt: 3 } })]) {
+  it("is marked optional for every kind but a stamp card", () => {
+    for (const c of [campaign(), campaign({ rule: FIXED }), campaign({ rule: { ...FIXED, completesAt: 3 } })]) {
       expect(promotionSteps(c).find((s) => s.id === "card")!.optional).toBe(true);
     }
     // And nothing else is.
-    expect(promotionSteps(campaign({ rule: RULE })).filter((s) => s.optional).map((s) => s.id)).toEqual(["card"]);
+    expect(promotionSteps(campaign({ rule: FIXED })).filter((s) => s.optional).map((s) => s.id)).toEqual(["card"]);
+  });
+
+  it("is not optional on a stamp card, where the card is the promotion", () => {
+    for (const c of [
+      campaign({ rule: RULE }),
+      campaign({ rule: { ...RULE, completesAt: 10 } }),
+      campaign({ rule: { ...RULE, completesAt: 10 }, reward: { rewardName: "a free coffee", maxCoupons: null } }),
+    ]) {
+      expect(promotionSteps(c).find((s) => s.id === "card")!.optional).toBe(false);
+    }
+  });
+});
+
+describe("a rule that is none of the three kinds", () => {
+  it("flags the award step rather than calling it done", () => {
+    // A share of the basket paid in stamps multiplies the award by what
+    // was spent. The rail saying "done" would be arguing with the error
+    // the panel prints three inches below it.
+    const c = campaign({ rule: BROKEN });
+    expect(stateOf(c, "award")).toBe("attention");
+    expect(blurbOf(c, "award")).toMatch(/no longer offers/);
+    expect(firstUnfinishedStep(promotionSteps(c))).toBe("award");
+  });
+
+  it("does not treat it as a stamp card, whatever the unit says", () => {
+    expect(promotionSteps(campaign({ rule: BROKEN })).find((s) => s.id === "card")!.optional).toBe(true);
   });
 });
 
@@ -127,7 +176,7 @@ describe("switching on", () => {
   });
 
   it("is the last thing to do once there is a rule", () => {
-    const c = campaign({ rule: { ...RULE, maxTotalAmount: 1000 } });
+    const c = campaign({ rule: { ...FIXED, maxTotalAmount: 1000 } });
     expect(stateOf(c, "live")).toBe("todo");
     expect(firstUnfinishedStep(promotionSteps(c))).toBe("live");
   });
@@ -157,7 +206,7 @@ describe("which step the page opens on", () => {
     expect(firstUnfinishedStep(promotionSteps(done))).toBeNull();
 
     // And a promotion that skipped the card still counts as settled.
-    const noCard = campaign({ rule: { ...RULE, maxTotalAmount: 999 }, status: "ACTIVE" });
+    const noCard = campaign({ rule: { ...FIXED, maxTotalAmount: 999 }, status: "ACTIVE" });
     expect(firstUnfinishedStep(promotionSteps(noCard))).toBeNull();
   });
 });
