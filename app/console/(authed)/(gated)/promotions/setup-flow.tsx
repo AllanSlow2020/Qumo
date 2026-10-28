@@ -36,6 +36,7 @@ export function SetupFlow({
   campaign,
   canManage,
   photoReady,
+  closeLabel,
   onCreated,
   onClose,
 }: {
@@ -43,6 +44,8 @@ export function SetupFlow({
   campaign: ConsoleCampaign | null;
   canManage: boolean;
   photoReady: boolean;
+  /** What the header button says: closing a drawer and starting another are different acts. */
+  closeLabel: string;
   onCreated: (id: string) => void;
   onClose: () => void;
 }) {
@@ -108,7 +111,7 @@ export function SetupFlow({
             back to step one. With nothing open there is nothing to close. */}
         {campaign && (
           <button type="button" className="cn-btn cn-btn-quiet" onClick={onClose}>
-            Start another
+            {closeLabel}
           </button>
         )}
       </div>

@@ -2,45 +2,56 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ConsoleCampaign } from "@/lib/campaigns/manage";
+import type { ConsoleUiMode } from "@/lib/console/ui-mode";
 import { CampaignCard } from "./campaign-card";
+import { SetupDrawer } from "./setup-drawer";
 import { SetupFlow } from "./setup-flow";
 
 /**
- * The setup flow, and under it what is already running.
+ * The setup flow and what is already running, in one of two shells.
  *
- * ── Why setup is on top now ──────────────────────────────────────────────
+ * ── stacked ──────────────────────────────────────────────────────────────
  *
- * It used to sit in a 330px rail beside the list, on the argument that the
- * list is what a brand reads every day and the form is what they use once a
- * month, so the list should have the width. That argument was right about
- * the priority and wrong about the consequence: the rail was too narrow to
- * explain anything, so the three forms in it were nine unexplained fields,
- * and a brand setting up their first promotion was the one person the page
- * had no room for.
+ * What ships. The flow sits above the list. It used to sit in a 330px rail
+ * beside it, on the argument that the list is what a brand reads every day
+ * and the form is what they use once a month, so the list should have the
+ * width. That was right about the priority and wrong about the
+ * consequence: the rail was too narrow to explain anything, so three forms
+ * in it were nine unexplained fields. Putting the sequence first only
+ * works because it is a sequence - one step is short enough that the list
+ * still starts near the fold.
  *
- * Putting the sequence first only works because it is a sequence. One step
- * is short, so the list still starts above the fold on a laptop. Three
- * stacked forms there would have buried it, which is exactly what the old
- * comment warned about.
+ * ── drawer, behind ?ui=drawer ────────────────────────────────────────────
  *
- * ── What the two halves share ────────────────────────────────────────────
+ * The candidate. The list gets the whole page and the flow slides over it
+ * when you open one, which is the arrangement the original split was
+ * reaching for: the thing read daily owns the screen, and the thing used
+ * occasionally arrives when asked for and leaves again.
+ *
+ * Both shells render the same SetupFlow with the same props. That is the
+ * point of doing it this way rather than building a second editor: what is
+ * being compared is the shell, and anything that behaves differently
+ * inside it would make the comparison about something else.
+ *
+ * ── What the two share ───────────────────────────────────────────────────
  *
  * Which promotion is open. The flow needs it to know whose steps to draw,
- * and every card needs it to know whether it is the one being worked on. A
- * panel of fields belonging to no visible row is a panel belonging to
- * nobody.
+ * and every card needs it to know whether it is the one being worked on.
  */
 export function PromotionsWorkspace({
   campaigns,
   canManage,
   photoReady,
+  mode,
 }: {
   campaigns: ConsoleCampaign[];
   canManage: boolean;
-  /** Whether a slip reader is configured, so the photograph tier is real. */
   photoReady: boolean;
+  mode: ConsoleUiMode;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  /** Only consulted in drawer mode, where a null selection still means "new". */
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const flowRef = useRef<HTMLDivElement>(null);
 
   /*
@@ -49,73 +60,126 @@ export function PromotionsWorkspace({
    *
    * The list is re-fetched by router.refresh() after every save, so a held
    * copy would go stale the moment somebody changed what a promotion
-   * awards: the steps would keep showing the old state while the card below
-   * showed the new one. Resolving by id means the flow always renders what
-   * the server last said.
-   *
-   * It also handles deletion for free: the row disappears from the list,
-   * find() returns undefined, and the flow falls back to step one instead
-   * of editing something that no longer exists.
+   * awards: the steps would keep showing the old state while the card
+   * below showed the new one. Resolving by id means the flow always
+   * renders what the server last said, and deletion is handled for free -
+   * the row disappears, find() returns undefined, and the flow falls back
+   * to step one instead of editing something that no longer exists.
    */
   const selected = campaigns.find((c) => c.id === selectedId) ?? null;
+  const drawer = mode === "drawer";
 
   /*
-   * Bring the flow into view when a promotion is opened from the list
-   * below. "nearest" rather than "start", so opening one while the flow is
-   * already on screen scrolls not at all.
+   * Stacked only. On a phone the flow is above a list that may be long, so
+   * tapping Edit on the fourth promotion would otherwise do nothing a
+   * thumb could see. "nearest" so a wide screen, where the flow is already
+   * in view, scrolls not at all. The drawer needs none of this: it arrives
+   * over whatever you were looking at.
    */
   useEffect(() => {
-    if (selectedId) flowRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }, [selectedId]);
+    if (!drawer && selectedId) flowRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [selectedId, drawer]);
 
-  // Stable, because CreateCampaignForm has it in an effect's dependencies.
-  const close = useCallback(() => setSelectedId(null), []);
+  const close = useCallback(() => {
+    setDrawerOpen(false);
+    setSelectedId(null);
+  }, []);
 
-  return (
-    <>
-      <div ref={flowRef}>
-        {/* Keyed on the promotion, so opening a different one rebuilds the
-            flow and its step state. Every field inside is a defaultValue,
-            which React applies at mount and never again: without this,
-            opening a second promotion would show the first one's numbers in
-            boxes labelled with the second one's name. */}
-        <SetupFlow
-          key={selected?.id ?? "new"}
-          campaign={selected}
-          canManage={canManage}
-          photoReady={photoReady}
-          onCreated={setSelectedId}
-          onClose={close}
-        />
-      </div>
+  const openNew = useCallback(() => {
+    setSelectedId(null);
+    setDrawerOpen(true);
+  }, []);
 
-      <div className="cn-promo-list">
+  // In the drawer, Edit opens it. Stacked keeps the toggle it had: pressing
+  // Edit on the promotion already open closes it, which is what a button
+  // reading "Editing" and looking pressed implies.
+  const onEdit = useCallback(
+    (id: string) => {
+      if (drawer) {
+        setSelectedId(id);
+        setDrawerOpen(true);
+        return;
+      }
+      setSelectedId((cur) => (cur === id ? null : id));
+    },
+    [drawer],
+  );
+
+  const flow = (
+    /* Keyed on the promotion, so opening a different one rebuilds the flow
+       and its step state. Every field inside is a defaultValue, which React
+       applies at mount and never again: without this, opening a second
+       promotion would show the first one's numbers in boxes labelled with
+       the second one's name. */
+    <SetupFlow
+      key={selected?.id ?? "new"}
+      campaign={selected}
+      canManage={canManage}
+      photoReady={photoReady}
+      closeLabel={drawer ? "Close" : "Start another"}
+      onCreated={setSelectedId}
+      onClose={close}
+    />
+  );
+
+  const list = (
+    <div className="cn-promo-list">
+      <div className="cn-promo-head">
         <h2 className="cn-h1" style={{ fontSize: 20 }}>
           {campaigns.length === 0 ? "Nothing running yet" : "What is running"}
         </h2>
-        {campaigns.length === 0 ? (
-          <p className="cn-empty">No promotions yet. The steps above make the first one.</p>
-        ) : (
-          <div className="cn-promo-grid">
-            {campaigns.map((campaign) => (
-              <CampaignCard
-                key={campaign.id}
-                campaign={campaign}
-                canManage={canManage}
-                selected={campaign.id === selectedId}
-                // A toggle, not a one-way door. Pressing Edit on the
-                // promotion already open closes it, which is what a button
-                // that reads "Editing" and looks pressed implies.
-                onEdit={() => setSelectedId((cur) => (cur === campaign.id ? null : campaign.id))}
-                // Only clears the selection when it was this one. Deleting a
-                // draft while editing a different promotion should not close
-                // the editor you are working in.
-                onDeleted={() => setSelectedId((cur) => (cur === campaign.id ? null : cur))}
-              />
-            ))}
-          </div>
+        {/* The only way into the flow in drawer mode, so it is a real
+            button rather than a link in prose. */}
+        {drawer && canManage && (
+          <button type="button" className="cn-btn" onClick={openNew}>
+            New promotion
+          </button>
         )}
       </div>
+
+      {campaigns.length === 0 ? (
+        <p className="cn-empty">
+          {drawer ? "No promotions yet. Start one with the button above." : "No promotions yet. The steps above make the first one."}
+        </p>
+      ) : (
+        <div className="cn-promo-grid">
+          {campaigns.map((campaign) => (
+            <CampaignCard
+              key={campaign.id}
+              campaign={campaign}
+              canManage={canManage}
+              selected={campaign.id === selectedId}
+              onEdit={() => onEdit(campaign.id)}
+              // Only clears the selection when it was this one. Deleting a
+              // draft while editing a different promotion should not close
+              // the editor you are working in.
+              onDeleted={() => setSelectedId((cur) => (cur === campaign.id ? null : cur))}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  if (drawer) {
+    return (
+      <>
+        {list}
+        <SetupDrawer
+          open={drawerOpen}
+          onClose={close}
+          label={selected ? `Set up ${selected.name}` : "Set up a promotion"}
+        >
+          {flow}
+        </SetupDrawer>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div ref={flowRef}>{flow}</div>
+      {list}
     </>
   );
 }
