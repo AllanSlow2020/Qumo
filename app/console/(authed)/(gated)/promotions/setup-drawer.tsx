@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { useHydrated } from "@/app/console/use-hydrated";
+import { useConsolePortalTarget } from "@/app/console/use-hydrated";
 
 /**
  * The setup flow in a panel that slides in from the right.
@@ -53,9 +53,9 @@ export function SetupDrawer({
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
-  // Portal targets exist only in the browser, and the drawer is shut on
-  // first paint, so rendering nothing on the server costs nothing.
-  const mounted = useHydrated();
+  // Null on the server and through hydration. The drawer is shut on first
+  // paint anyway, so rendering it in place until then costs nothing.
+  const portal = useConsolePortalTarget();
 
   // showModal() is the only way to get the backdrop, the focus trap and the
   // inert page. Driven from an effect rather than from the click that set
@@ -88,5 +88,5 @@ export function SetupDrawer({
     </dialog>
   );
 
-  return mounted ? createPortal(drawer, document.body) : null;
+  return portal ? createPortal(drawer, portal) : drawer;
 }

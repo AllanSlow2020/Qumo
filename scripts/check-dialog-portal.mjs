@@ -49,8 +49,15 @@ const measure = (selector) =>
     const b = d.getBoundingClientRect();
     return {
       modal: d.matches(":modal"),
-      onBody: d.parentElement?.tagName === "BODY",
       insideCard: !!d.closest(".cn-panel"),
+      insideList: !!d.closest(".cn-promo-grid"),
+      themed: !!d.closest(".cn"),
+      // The check that was missing the first time round. A dialogue
+      // portalled outside .cn loses every custom property, so
+      // var(--cn-surface) resolves to nothing and the panel paints
+      // transparent: the page shows through it and the text lands on the
+      // list. Geometry alone does not notice.
+      opaque: !/transparent|rgba\(0,\s*0,\s*0,\s*0\)/.test(getComputedStyle(d).backgroundColor),
       centred: Math.abs(b.x - (innerWidth - b.width) / 2) < 2,
     };
   }, selector);
@@ -63,7 +70,9 @@ await page.waitForTimeout(400);
 
 let before = await measure("dialog.cn-dialog");
 check(before?.modal === true, "delete confirmation opens modal");
-check(before?.onBody === true, "delete confirmation renders on the body");
+check(before?.insideList === false, "delete confirmation is outside the reordering list");
+check(before?.themed === true, "delete confirmation inherits the console tokens");
+check(before?.opaque === true, "delete confirmation has a background");
 check(before?.insideCard === false, "delete confirmation is not inside a card");
 check(before?.centred === true, "delete confirmation is centred");
 
@@ -87,8 +96,13 @@ await page.waitForTimeout(300);
 await page.getByRole("button", { name: "New promotion" }).click();
 await page.waitForTimeout(600);
 const drawer = await measure("dialog.cn-drawer");
+check(
+  (await page.locator(".cn-drawer").getByRole("button", { name: "Close" }).count()) === 1,
+  "setup drawer can be closed without the keyboard",
+);
 check(drawer?.modal === true, "setup drawer opens modal");
-check(drawer?.onBody === true, "setup drawer renders on the body");
+check(drawer?.themed === true, "setup drawer inherits the console tokens");
+check(drawer?.opaque === true, "setup drawer has a background");
 
 await ctx.close();
 await browser.close();

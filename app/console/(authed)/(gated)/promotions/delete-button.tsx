@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { useHydrated } from "@/app/console/use-hydrated";
+import { useConsolePortalTarget } from "@/app/console/use-hydrated";
 import type { ConsoleCampaign } from "@/lib/campaigns/manage";
 import { deleteCampaign } from "./actions";
 import { IDLE, type PromoActionState } from "./state";
@@ -76,10 +76,9 @@ export function DeleteButton({
   const router = useRouter();
   const ref = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
-  // The portal target only exists in the browser, and the dialogue is shut
-  // on first paint anyway, so rendering nothing on the server costs
-  // nothing and avoids reaching for document during SSR.
-  const mounted = useHydrated();
+  // Null on the server and through hydration. The dialogue is shut on
+  // first paint anyway, so rendering it in place until then costs nothing.
+  const portal = useConsolePortalTarget();
   const [state, action, pending] = useActionState<PromoActionState, FormData>(deleteCampaign, IDLE);
 
   const live = campaign.status === "ACTIVE";
@@ -177,7 +176,11 @@ export function DeleteButton({
       >
         Delete
       </button>
-      {mounted && createPortal(dialog, document.body)}
+      {/* In place rather than nothing when there is no target: that is the
+          behaviour this had before the portal, which is styled correctly
+          and only vulnerable to the reorder bug. A dialogue that does not
+          render at all would be worse than either. */}
+      {portal ? createPortal(dialog, portal) : dialog}
     </>
   );
 }
