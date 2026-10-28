@@ -5,6 +5,12 @@ what blocks what, and marked by who can actually do each one.
 
 **[A]** Allan. **[L]** needs a lawyer. **[C]** Claude can build it.
 
+There is a spreadsheet of the same list beside this file,
+`docs/open-items.xlsx`, with a status column, a target date and somewhere
+to write notes. It is the one to track work in. This file stays the
+narrative version, with the reasoning in prose, and it is the one to hand
+to a lawyer.
+
 Last updated 28 October 2026.
 
 ---
