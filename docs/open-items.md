@@ -79,6 +79,11 @@ the same conversation as the POPIA items rather than a second one.
   including the one that is easy to miss: a cloud reader makes that vendor
   a POPIA operator and, if offshore, a cross-border flow the notice has to
   disclose. A reader running in our own process avoids all of it.
+- **[A] Brands whose door is the till.** A coffee chain identifies a
+  shopper at the point of sale and hands the reward over at the same
+  counter. Qumo has no till door and no point of sale integration, and
+  both sit behind the two product gaps above. Worth costing only if brands
+  of that shape are a target. See `docs/seattle-coffee-review.md`.
 - **[A] USSD, or not.** The competitor sells it hard to feature-phone and
   data-off shoppers and we are simply absent from that market. A strategy
   question, not a backlog item. See `docs/competitive-position.md`.
@@ -87,6 +92,18 @@ the same conversation as the POPIA items rather than a second one.
 
 ## 4. Product gaps
 
+- **[C] A coupon cannot be redeemed.** Separate from the item below and
+  worse. A completed stamp card issues a real coupon and nothing anywhere
+  can mark it used: `REDEEMED` is in `schema.prisma` and in no TypeScript
+  file. `CouponFraudEvent.ALREADY_REDEEMED` therefore can never fire, so
+  the same screenshot works at every counter. See
+  `docs/seattle-coffee-review.md`.
+- **[C] A stamp card cannot be earned from a till slip.** The slip path
+  resolves campaigns through one filter, `type: "PERCENT_OF_SPEND"`, so
+  the only way to get stamps out of a slip is a share-of-spend rule in
+  stamps, which multiplies stamps by rands. At the form's own default that
+  is 500 stamps on a R100 basket. A flat-per-slip rule fixes it and
+  removes the reason anyone would configure the broken combination.
 - **[C] Redemption.** `REDEMPTION_AVAILABLE` is false. The largest
   unfinished edge, and CPA section 35 has views about it.
 - **[C] Correct-the-read.** Proposed and not built: let a shopper fix a
