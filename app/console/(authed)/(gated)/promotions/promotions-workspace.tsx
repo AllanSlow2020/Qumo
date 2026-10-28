@@ -107,6 +107,10 @@ export function PromotionsWorkspace({
                 // promotion already open closes it, which is what a button
                 // that reads "Editing" and looks pressed implies.
                 onEdit={() => setSelectedId((cur) => (cur === campaign.id ? null : campaign.id))}
+                // Only clears the selection when it was this one. Deleting a
+                // draft while editing a different promotion should not close
+                // the editor you are working in.
+                onDeleted={() => setSelectedId((cur) => (cur === campaign.id ? null : cur))}
               />
             ))}
           </div>

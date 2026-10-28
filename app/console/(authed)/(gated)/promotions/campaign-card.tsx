@@ -2,6 +2,7 @@
 
 import type { ConsoleCampaign } from "@/lib/campaigns/manage";
 import { Ticker } from "@/app/console/ticker";
+import { DeleteButton } from "./delete-button";
 import { StatusButton } from "./status-button";
 
 /** Cents to rands for display; everything is stored and compared as integers. */
@@ -36,11 +37,14 @@ export function CampaignCard({
   canManage,
   selected,
   onEdit,
+  onDeleted,
 }: {
   campaign: ConsoleCampaign;
   canManage: boolean;
   selected: boolean;
   onEdit: () => void;
+  /** Clears any selection pointing at this promotion before it disappears. */
+  onDeleted: () => void;
 }) {
   const rule = campaign.rule;
   const live = campaign.status === "ACTIVE";
@@ -154,6 +158,11 @@ export function CampaignCard({
             </button>
 
             <StatusButton key={`${campaign.status}-${rule ? "ruled" : "bare"}`} campaign={campaign} live={live} />
+
+            {/* Last in the row, and quiet, because it is the only one here
+                that cannot be undone. The dialogue is what makes it safe to
+                sit beside two ordinary buttons. */}
+            <DeleteButton campaign={campaign} onDeleted={onDeleted} />
           </div>
         )}
 
