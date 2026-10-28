@@ -1,4 +1,5 @@
 import type { ConsoleCampaign } from "@/lib/campaigns/manage";
+import { shapeNeedsCard, shapeOfRule } from "@/lib/console/promotion-shape";
 
 /**
  * Setting up one promotion, as an ordered sequence rather than three forms
@@ -91,27 +92,46 @@ export function promotionSteps(campaign: ConsoleCampaign | null): PromotionStep[
     ];
   }
 
-  // The card step is three different answers, not one. No rule yet means
+  // Which of the three kinds this is, or null for a rule none of them
+  // describe. Everything below reads off it rather than off the row,
+  // because a flat rule in stamps and a flat rule in rands are the same
+  // row type and two different promotions.
+  const shape = shapeOfRule(rule);
+
+  // The card step is four different answers, not one. No rule yet means
   // nothing to decide against; a threshold with no reward is the failure
   // that fills a card and hands over nothing; no threshold at all is a
-  // finished decision rather than an omission.
+  // finished decision rather than an omission, unless this is a stamp
+  // card, where it is the whole promotion.
+  //
+  // That last branch is why `optional` is computed rather than passed as
+  // true. Calling the card optional on a stamp card was the console
+  // telling a coffee shop that the number of coffees was a detail it
+  // could skip, and `firstUnfinishedStep` then walked straight past it.
+  const needsCard = shapeNeedsCard(shape);
   const card: PromotionStep = !rule
     ? step("card", "locked", "Decide what a scan awards first. A card counts stamps, so it needs the stamps.", true)
     : rule.completesAt == null
-      ? step(
-          "card",
-          "skipped",
-          "This promotion adds up and never completes, which is a perfectly ordinary promotion. Add a card here if you want one.",
-          true,
-        )
+      ? needsCard
+        ? step(
+            "card",
+            "todo",
+            "A stamp card has to say how many stamps fill it. Buy ten and get the next one free: put 10 here.",
+          )
+        : step(
+            "card",
+            "skipped",
+            "This promotion adds up and never completes, which is a perfectly ordinary promotion. Add a card here if you want one.",
+            true,
+          )
       : reward == null
         ? step(
             "card",
             "attention",
             `A card completes at ${rule.completesAt} and nothing says what it earns, so a shopper would collect forever and be given nothing. Name the reward before switching it on.`,
-            true,
+            !needsCard,
           )
-        : step("card", "done", `Completes at ${rule.completesAt}, earning ${reward.rewardName}.`, true);
+        : step("card", "done", `Completes at ${rule.completesAt}, earning ${reward.rewardName}.`, !needsCard);
 
   // A budget is what stands between a store that cannot sign its slips and
   // an unbounded payout, so a promotion already live without one is the
@@ -134,8 +154,20 @@ export function promotionSteps(campaign: ConsoleCampaign | null): PromotionStep[
     // nothing outstanding and the sequence should not open here. The step
     // is still editable, which is what stops it reading as a dead end.
     step("name", "done", `Called ${campaign.name}. Change it here if it needs changing; nothing else is affected.`),
+    // A rule that is none of the three kinds is not "done". It is the
+    // share-in-stamps combination, which multiplies the award by what was
+    // spent, and a rail that called it done would be arguing with the
+    // error the panel prints underneath it.
     rule
-      ? step("award", "done", "A shopper earns something for every scan that checks out.")
+      ? shape
+        // Not the kind's own blurb: the chooser three lines below prints
+        // that, and the same sentence twice on one short panel reads as a
+        // mistake rather than as emphasis.
+        ? step("award", "done", "A shopper earns something for every scan that checks out.")
+        // Short on purpose. The panel prints the arithmetic underneath,
+        // and two paragraphs making the same point reads as a stutter
+        // rather than as emphasis.
+        : step("award", "attention", "This is set up in a way the console no longer offers.")
       : step("award", "todo", "Decide what a scan is worth. Until this is set the promotion cannot go live."),
     card,
     cost,
