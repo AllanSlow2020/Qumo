@@ -223,8 +223,41 @@ production domain, which will stop `copper-kettle.localhost:3000` working
 - so keep this `.env` for pointing at production, and run `pnpm bootstrap`
 to get a local one back.
 
-Leave `TWILIO_*` and `ERROR_WEBHOOK_URL` empty for now. What that costs you
-is in **Where the demo is thin** below.
+Leave `ERROR_WEBHOOK_URL` empty for now. What that costs you is in **Where
+the demo is thin** below.
+
+`TWILIO_*` is no longer "later". The sender is a South African mobile
+number, **+27 60 086 7513**, bought on the Qumo-App regulatory bundle, with
+messaging and voice enabled on it. Set `TWILIO_FROM_NUMBER` to exactly that,
+in full international form.
+
+Three things decide whether a passcode actually arrives, and only one of
+them is in this repository.
+
+1. **Credentials.** `TWILIO_ACCOUNT_SID` plus an API key pair. Use a
+   **Standard** key: a Restricted key with Create on `messages` is refused
+   with a 401 and Twilio error `70051`, which reads exactly like a wrong
+   password. `scripts/preflight.mjs` warns if a deployment is sending on
+   `TWILIO_AUTH_TOKEN` instead, and that warning is worth obeying: the auth
+   token is the master credential for the whole account and there is only
+   one of it.
+2. **Geo Permissions**, under Messaging, Settings. South Africa has to be
+   enabled. This is invisible from inside the application: a send with it
+   off is recorded as a success and no phone ever rings. It is the most
+   common cause of "the passcode never came".
+3. **Any restriction on the number itself.** Twilio tags a number when its
+   regulatory bundle limits what it may do. Whatever the tag says,
+   `pnpm sms:test +27…` is the arbiter: it sends one real message and
+   reports the provider's own error code.
+
+Then, and only once a real passcode has arrived on a real handset, clear
+`DEMO_LOGIN_PHONES` and `DEMO_LOGIN_CODE` in production. In that order.
+Clearing them first locks you out of the test you were about to run.
+
+Receiving is a separate job and is not finished. `SMS_WEBHOOK_SECRET` and a
+webhook pointed at `/api/sms/inbound?token=…` wire up the route, but it
+answers in plain text and Twilio expects TwiML, so a shopper who texts the
+number gets no reply until that envelope is written.
 
 The build runs `scripts/preflight.mjs` first and refuses to deploy if any of
 the four secrets is missing, if `ENCRYPTION_KEY` is the wrong length, or if
