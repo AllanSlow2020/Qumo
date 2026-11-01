@@ -12,6 +12,11 @@ replacing from nothing.
 
 ## 0. Read this part first
 
+This brief is the drafting instruction for the shopper-facing documents
+only. `docs/legal-engagement.md` is the covering brief for everything a
+lawyer is being asked for, including the company and intellectual property
+items, and says what order to take them in.
+
 **You are not giving legal advice, and neither did this brief.** The
 statutory references below were checked against the Act text and secondary
 sources in October 2026, and one was wrong on the first pass: loyalty

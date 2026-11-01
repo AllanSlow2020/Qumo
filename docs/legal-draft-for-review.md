@@ -16,6 +16,8 @@ and the passcode sweep. Two of its queries were answerable from the code and
 are answered inline rather than sent on. One answer turned up a defect and
 is flagged under "Using what you have earned".
 
+`docs/legal-engagement.md` is the covering brief for the whole engagement: this document is one of four workstreams in it, and it says which of the others change this one's answers.
+
 This is a first draft for a lawyer to mark up. It is not legal advice and not ready to publish. It is written from `consent-copy.md` and `terms-brief.md`, and every statutory reference needs checking against the Acts.
 
 How to read the flags:
