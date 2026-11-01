@@ -30,7 +30,7 @@ rather than scattered.
 Two of them gate a pilot with real shoppers. Two do not, and are cheaper
 to settle now than later.
 
-### A. Shopper terms and privacy notice — **gates a pilot**
+### A. Shopper terms and privacy notice. **Gates a pilot**
 
 The drafting job. Everything needed is already written.
 
@@ -50,7 +50,7 @@ section 63's three-year life reaches earned credits, and whether POPIA
 section 57 requires prior authorisation for one phone number identifying
 one shopper across many brands.
 
-### B. The responsible-party decision — **gates a pilot**
+### B. The responsible-party decision. **Gates a pilot**
 
 Not drafting. A single structural answer that changes the product if it
 goes the other way.
@@ -67,9 +67,15 @@ section 22.
 
 ### C. The brand agreement
 
-The contract between Qumo and each brand. Needs the operator clause and
-the section 21 security obligation, and has to sit consistently with
-whatever B decides.
+The contract between Qumo and each brand. **A full first draft now exists
+at `docs/brand-agreement-draft.md`**, written from what the product
+actually does and flagged throughout.
+
+Three clauses in it are the review: **7**, which says plainly that a
+reward code is issued and cannot be marked redeemed; **9**, which carries
+the responsible-party split from B and must not be settled before B is;
+and **13**, which has to match the cancellation behaviour exactly, because
+the product will do that whatever the contract says.
 
 ### D. Company and intellectual property
 
@@ -130,8 +136,11 @@ about stopping somebody starting.
 
 1. **A and B together**, in one conversation. They are the same body of
    facts and B changes A's answer.
-2. **D at the same meeting.** It is four short items and the marginal cost
-   of raising them alongside is small. The trade mark search in particular
+2. **D at the same meeting.** Two of the four are drafted already, in
+   `docs/nda-and-assignment-draft.md`, so they are a redline rather than a
+   drafting job. The assignment is the one to do first: it costs almost
+   nothing now and gets awkward the longer the company trades on work it
+   may not own. The trade mark search in particular
    should start early, because a collision is cheaper to discover now.
 3. **C once B is settled**, since the operator clause depends on it.
 
@@ -143,4 +152,6 @@ about stopping somebody starting.
 | `docs/legal-draft-for-review.md` | A first draft to mark up, queries flagged in place |
 | `docs/consent-copy.md` | What the product shows today, generated from the code |
 | `docs/popia.md` | The responsible-party argument |
+| `docs/brand-agreement-draft.md` | A full draft of the brand agreement, flagged throughout |
+| `docs/nda-and-assignment-draft.md` | The IP assignment and the mutual NDA, both drafted |
 | `docs/open-items.md` | Everything outstanding, including which items are waiting on this engagement |

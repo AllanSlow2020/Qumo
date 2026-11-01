@@ -37,8 +37,9 @@ is first.
   not for a responsible party.
 - **[A/L] Write down the breach process** (section 22). Who decides, how
   fast, who signs the notification.
-- **[L] Draft the brand agreement**, including the operator clause and the
-  section 21 security obligation.
+- **[L] Review the brand agreement.** Drafted, not reviewed:
+  `docs/brand-agreement-draft.md`. The operator clause and the section 21
+  obligation are in it and depend on the split above.
 
 ## 2. Legal questions already written down
 
@@ -76,16 +77,17 @@ instruction rather than four conversations.
 - **[A/L] Assign the IP to the company.** The work was done by the founder
   personally and QUMO-APP (PTY) LTD is a different legal person, so
   copyright may sit in the wrong place. Harmless until a raise, a sale or
-  a disagreement. A one-page assignment fixes it.
+  a disagreement. Drafted in `docs/nda-and-assignment-draft.md`.
 - **[L] Who owns AI-authored code.** Most of this repository was written
   by Claude under direction: 97 commits to 38. Anthropic's terms assign
   output ownership to the customer, and South Africa is one of the few
   jurisdictions whose Copyright Act addresses computer-generated works
   directly. Probably a clean answer, which is why it is worth confirming
   rather than assuming. Same question for the Lovable-built site.
-- **[L] A short mutual NDA** to send before brand meetings. Worth having,
-  and worth knowing that large brands and their agencies often refuse to
-  sign one from a small supplier.
+- **[L] A short mutual NDA** to send before brand meetings. Drafted in
+  `docs/nda-and-assignment-draft.md`. Worth having, and worth knowing that
+  large brands and their agencies often refuse to sign one from a small
+  supplier.
 
 ## 3. Decisions only you can take
 
