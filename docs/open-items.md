@@ -11,7 +11,7 @@ to write notes. It is the one to track work in. This file stays the
 narrative version, with the reasoning in prose, and it is the one to hand
 to a lawyer.
 
-Last updated 28 October 2026.
+Last updated 1 November 2026.
 
 ---
 
@@ -37,13 +37,17 @@ is first.
   not for a responsible party.
 - **[A/L] Write down the breach process** (section 22). Who decides, how
   fast, who signs the notification.
-- **[L] Draft the brand agreement**, including the operator clause and the
-  section 21 security obligation.
+- **[L] Review the brand agreement.** Drafted, not reviewed:
+  `docs/brand-agreement-draft.md`. The operator clause and the section 21
+  obligation are in it and depend on the split above.
 
 ## 2. Legal questions already written down
 
-All in `docs/terms-brief.md` with the section numbers. Worth settling in
-the same conversation as the POPIA items rather than a second one.
+The shopper-facing ones are in `docs/terms-brief.md` with the section
+numbers. The company and intellectual property ones are at the end of this
+list. `docs/legal-engagement.md` is the covering brief for the lot: what
+to ask, in what order, and the company facts a lawyer asks for first. One
+instruction rather than four conversations.
 
 - **[L] CPA section 35.** Loyalty credits are a legal medium of exchange
   "despite any provision in any law, agreement or notice to the contrary".
@@ -63,6 +67,27 @@ the same conversation as the POPIA items rather than a second one.
   so nothing stops a child joining. A product fix, not a drafting one.
 - **[L] Taking payment online**, if self-serve signup happens: CPA on
   cancellation and refunds, ECTA on electronic transactions.
+- **[A/L] Register Qumo as a trade mark.** There is none. A CIPC company
+  registration and two domains stop somebody registering the identical
+  company name; they do not stop somebody trading as Qumo. Classes 9, 35
+  and 42. **Search before filing and before any further spend on the
+  brand:** there may be an existing Qumo in consumer electronics
+  elsewhere, and a collision is far cheaper to find now than after a brand
+  guide, a site and a print run.
+- **[A/L] Assign the IP to the company.** The work was done by the founder
+  personally and QUMO-APP (PTY) LTD is a different legal person, so
+  copyright may sit in the wrong place. Harmless until a raise, a sale or
+  a disagreement. Drafted in `docs/nda-and-assignment-draft.md`.
+- **[L] Who owns AI-authored code.** Most of this repository was written
+  by Claude under direction: 97 commits to 38. Anthropic's terms assign
+  output ownership to the customer, and South Africa is one of the few
+  jurisdictions whose Copyright Act addresses computer-generated works
+  directly. Probably a clean answer, which is why it is worth confirming
+  rather than assuming. Same question for the Lovable-built site.
+- **[L] A short mutual NDA** to send before brand meetings. Drafted in
+  `docs/nda-and-assignment-draft.md`. Worth having, and worth knowing that
+  large brands and their agencies often refuse to sign one from a small
+  supplier.
 
 ## 3. Decisions only you can take
 

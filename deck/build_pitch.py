@@ -29,7 +29,7 @@ from style import *  # noqa: F403 - a deck is a drawing script, not a library
 import style
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(style.HERE, "Qumo-pitch.pptx")
-style.start("For brands", 11)
+style.start("For brands", 12)
 
 
 def p01():
@@ -109,6 +109,35 @@ def p04():
 
 
 def p05():
+    s = slide(); masthead(s); kicker(s, "Whether anybody will bother")
+    h1(s, "Nobody here needs an eleventh loyalty card")
+    text(s, "Loyalty is not a new idea to a South African shopper. The 2025/6 Truth and BrandMapp "
+            "whitepaper puts 85% of economically active households in a programme already, "
+            "averaging more than ten each. Signing people up stopped being the hard part some "
+            "time ago.",
+         M, Inches(2.42), Inches(11.4), Inches(1.0), size=13, colour=BODY, spacing=1.55)
+    stats(s, [
+        ("85%", "already in a programme"),
+        ("10.4", "programmes per person"),
+        ("4.6", "the same figure in 2015"),
+    ], Inches(3.58))
+    box(s, M, Inches(4.78), CONTENT, Inches(1.02), border=ACCENT)
+    text(s, "The contest is not whether somebody joins. It is whether they are still using it "
+            "three months later.",
+         M + Inches(0.42), Inches(5.00), CONTENT - Inches(0.84), Inches(0.6), size=16, bold=True,
+         colour=INK, spacing=1.3)
+    text(s, "Which argues for this rather than against it. A Qumo account is not an eleventh "
+            "programme: it is one account across every brand on the platform, so somebody joining "
+            "your promotion may already have it.",
+         M, Inches(5.98), Inches(11.4), Inches(0.6), size=12, colour=MUTED, spacing=1.45)
+    text(s, "Truth and BrandMapp Loyalty Whitepaper 2025/6. Economically active: households "
+            "earning R10,000 a month or more.",
+         M, Inches(6.56), Inches(11.4), Inches(0.26), size=8.5, colour=FOOT, font=MONO,
+         spacing=1.1)
+    footer(s)
+
+
+def p06():
     s = slide(); masthead(s); kicker(s, "Whose programme it is")
     y = h1(s, "It is your brand\non the page, not ours", w=Inches(4.9))
     text(s, "Your name at the top, your colour on the button, your address in the bar. Qumo is one "
@@ -124,7 +153,7 @@ def p05():
     footer(s)
 
 
-def p06():
+def p07():
     s = slide(); masthead(s); kicker(s, "What you get back")
     h1(s, "Who came back, what it cost, and what you still owe")
     stats(s, [("52%", "came back"), ("R12.97", "per person reached"), ("137", "people earned"),
@@ -143,7 +172,7 @@ def p06():
     footer(s)
 
 
-def p07():
+def p08():
     s = slide(); masthead(s); kicker(s, "Why this is not a slide deck")
     h1(s, "It is built, and you can scan one in this room")
     text(s, "Most things pitched at this stage are a concept with a timeline attached. This is a "
@@ -158,7 +187,7 @@ def p07():
     footer(s)
 
 
-def p08():
+def p09():
     s = slide(); masthead(s); kicker(s, "The ask")
     h1(s, "One product line, one print run, no invoice")
     text(s, "The fastest way to find out whether this works for you is to run it, so the first one "
@@ -181,7 +210,7 @@ def p08():
     footer(s)
 
 
-def p09():
+def p10():
     s = slide(); masthead(s); kicker(s, "Indicative · for discussion")
     h1(s, "And what it costs if you keep it")
     text(s, "Two managed promotions a year costs about R80,000 and ends twice. Launch is R90,000 a "
@@ -206,7 +235,7 @@ def p09():
     footer(s)
 
 
-def p10():
+def p11():
     s = slide()
     logo(s, M, Inches(2.2), Inches(0.62))
     text(s, "Give us one line and\none print run", M, Inches(3.15), Inches(10.4),
@@ -219,7 +248,7 @@ def p10():
     footer(s)
 
 
-def p11():
+def p12():
     s = slide(); masthead(s); kicker(s, "If somebody already runs your promotions")
     h1(s, "We are not asking you to cancel anything")
     text(s, "A brand running on-pack codes already has an agency or a promotions vendor, and they "
@@ -241,7 +270,7 @@ def p11():
     footer(s)
 
 
-for fn in [p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11]:
+for fn in [p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12]:
     fn()
 
 print(f"{style.save(OUT)} slides -> {OUT}")

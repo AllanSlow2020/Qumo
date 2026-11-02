@@ -1,19 +1,27 @@
 # Qumo: product context for a brand guide
 
-Everything a designer needs to build a brand guide for Qumo, and from it a
-marketing site. Written to be handed over whole; it assumes no access to
-the codebase and no prior conversation.
+Everything a designer needs to build a brand guide for Qumo, and from it
+the two things that hang off one: a marketing site and a document system.
+Written to be handed over whole; it assumes no access to the codebase and
+no prior conversation.
 
-Last updated 28 October 2026, against the running product.
+Last updated 2 November 2026, against the running product.
 
 ---
 
 ## 0. What this is for, and the one rule
 
-The output is a brand guide, and then an acquisition site built in Lovable
-at `qumo.co.za`. Section 7 holds the visual assets that already exist and
-should be built on rather than replaced. Section 9 holds what the site may
-and may not claim.
+The output is a brand guide, and from it two applications:
+
+1. **The acquisition site** at `qumo.co.za`, already built in Lovable and
+   live. Section 8 describes what is on it. This is now refinement rather
+   than a blank page.
+2. **A document system**: letterhead, agreements, briefs. Section 11 says
+   what exists, what is needed, and the one constraint that matters about
+   how the output will be used.
+
+Section 7 holds the visual assets that already exist and should be built
+on rather than replaced. Section 10 holds what may and may not be claimed.
 
 **The rule, which matters more than any colour in here:** this product's
 copy describes what the system actually does and refuses to claim what it
@@ -39,14 +47,44 @@ until they stop it.
 
 - A shopper scans a code: a till slip, a code printed under a pack, or a
   sticker.
-- Three promotion shapes: a **flat amount per scan**, a **share of the
-  basket** (needs a till slip, because only a slip says what was spent),
-  and a **stamp card** that completes into a reward.
+- Three promotion shapes, and these are the exact words the console uses,
+  so marketing material should not invent others: **a stamp card** (buy
+  ten, get one free), **a share of what they spend** (needs a till slip,
+  because only a slip says what was spent), and **the same amount every
+  scan**.
 - Each slip and each code earns **once, ever**. A slip more than 30 days
   old is refused.
 - A promotion can cap what one person earns in a day and what it gives out
   in total, applied at the moment of the scan.
 - Nothing awards anything until the brand switches it on.
+
+### What a balance is denominated in, which is a position rather than an option
+
+**Rands, by default and by recommendation.** The ledger holds cents, the
+share-of-spend rule computes cents, and both live demo promotions pay
+rands. A shopper understands R12.50 without being taught anything.
+
+Points remain available and are deliberately not presented as an equal
+choice. Two reasons, and the second matters more. A shopper has to learn a
+conversion rate before they can tell what a scan was worth. And points are
+the loyalty industry's standard device for quietly devaluing what somebody
+earned, by changing the rate later, which sits badly against a product
+whose whole posture is an immutable ledger and a balance that is the sum
+of its rows.
+
+Stamps are a different thing again and are untouched by this. A stamp card
+is a counter toward a named reward, not a currency.
+
+**For marketing material:** lead with rands. Do not present points as a
+co-equal option, and do not invent a Qumo currency with a name. If a
+comparison is ever needed, the line is that real money needs no
+explaining.
+
+One open question sits under this and belongs to the lawyer, not to
+design: whether denominating in rands changes the Consumer Protection Act
+analysis at all. Section 35 appears to make loyalty credits a medium of
+exchange whatever the unit is called, in which case the choice is purely a
+product one. It is question 2.1 in `docs/legal-engagement.md`.
 
 ### What a shopper gets
 
@@ -60,6 +98,13 @@ anybody.
 
 **Redemption is not open.** Value is earned and recorded; spending it is
 not live. No marketing material may imply otherwise.
+
+More precisely, and this got sharper recently: a completed stamp card does
+issue a real reward code to the shopper, and **nothing in the product can
+mark that code as used.** So the loop ends at the shopper's phone. Honouring
+a reward is something a brand does at its own counter, outside Qumo. Any
+design that depicts a reward being redeemed is depicting something that
+does not exist.
 
 ---
 
@@ -247,10 +292,10 @@ design needs to hedge about it.
 
 | Address | What it serves | Status |
 |---|---|---|
-| `qumo.co.za`, `www.qumo.co.za` | **The acquisition site.** This document exists to get it designed. | To build |
+| `qumo.co.za` | **The acquisition site.** Built in Lovable, live, and described below. `www` resolves to it. | Live |
 | `app.qumo-app.com` | The brand console, where a brand sets promotions up | Live |
 | `<brand>.qumo-app.com` | Each brand's own shopper programme | Live |
-| `qumo-app.com` (apex) | A dead end today; should redirect to the site | |
+| `qumo-app.com` (apex) | Redirects to the site | |
 
 The site is **acquisition only**. A brand arrives, reads, asks for access,
 and is handed over to the console. They do not come back: day-to-day work
@@ -260,7 +305,35 @@ Nothing is shared between the two. No session, no sign-in, no account
 state, no SSO. **The handover is a link.** That makes the site far simpler
 than a product marketing site usually is: a brochure with one action, on
 its own domain, with no integration to build and nothing to keep in sync
-except the claims in section 9.
+except the claims in section 10.
+
+### What is on the site today
+
+Eight sections, in this order, all written in the voice in section 6:
+
+1. **Hero.** "A loyalty programme your brand runs itself." One action,
+   "request access", and under it "Brands pay Qumo. Shoppers pay nothing."
+2. **How it works**, in three steps.
+3. **Three ways to earn**, with the five guard rules along a rule beneath:
+   each code earns once ever, slips over 30 days refused, edited totals
+   refused on a signed slip, caps apply at the moment of the scan, nothing
+   earns until you switch it on.
+4. **What a brand gets**, as a bento of seven cards including "You never
+   see a shopper's number" and "Your data is kept apart".
+5. **Proof of purchase**, as a table of two tiers with what each
+   guarantees and what it costs.
+6. **The shopper's side**, explaining that the programme wears the brand's
+   identity and Qumo appears once in a footer.
+7. **Plans.** Three named plans with no prices. See section 9.
+8. **Where Qumo stands today.** "Early, and clear about it", with a status
+   list showing earning, counting and console working and redemption not
+   open.
+9. **Request access.**
+
+The honesty section sits immediately before the ask, deliberately. That
+ordering is the most load-bearing thing about the page and a redesign
+should keep it: the page earns the request by having just admitted what is
+missing.
 
 ### DNS, which is simpler than it would have been
 
@@ -286,7 +359,37 @@ Design the call to action so swapping it for a real signup later is a link
 change rather than a redesign: one primary button, one place, repeated at
 top and bottom.
 
-## 9. What the site may and may not claim
+## 9. Plans, and the rule about prices
+
+Three plans exist and are named. They appear by name on the site and in
+the sales deck, and they carry **figures in the deck only**.
+
+| | Launch | Programme | Platform |
+|---|---|---|---|
+| Shape | One campaign, one door | Always-on, two doors | National, every door |
+| Doors | Scan | Scan and text | Scan, text and tap |
+| And | Console, analytics, pack codes | Campaigns and stores unlimited | Photographed slips accepted |
+| And | One brand, one campaign | Till slips and store attribution | Several brands on one account |
+| Site shows | A first product line | A programme that stays on | A national range |
+
+**Why no figures on the site.** The pitch opens by removing budget from
+the first meeting: the first promotion is free on one product line, and
+what converts a brand is their own numbers afterwards. A price list pulls
+budget forward to before the demo, where it is weakest. There is also no
+payment provider wired, so a price beside a button that cannot take money
+reads as unfinished. And the figures are untested, with no customer having
+paid any of them.
+
+The site instead names the plans, says it is a monthly subscription rather
+than a project fee, and closes with "Priced monthly on scan volume. Tell
+us the range you have in mind and the volume you expect, and we will come
+back with a figure."
+
+Figures go on the site after three pilots, when they are real.
+
+---
+
+## 10. What may and may not be claimed
 
 **True of the running product today:**
 
@@ -307,7 +410,8 @@ top and bottom.
 **Must not be claimed:**
 
 - **Not that redemption is live.** It is not. No "spend your points"
-  screens or mockups.
+  screens or mockups, and nothing showing a reward being accepted at a
+  till: a reward code is issued and the product cannot record it as used.
 - **Not that Qumo is POPIA compliant.** A legal review has not happened.
   Describe what the product does, not that a regulator approves.
 - **Not that age is verified.** A shopper types a date and nothing checks
@@ -316,13 +420,74 @@ top and bottom.
 - **No invented numbers.** No customer counts, no uplift percentages, no
   client logos, no testimonials. There is one demo brand and no live
   brands.
-- **No pricing** until it is set.
+- **No figures on the site.** The plans are named; the rands live in the
+  deck. See section 9.
 - **Not that WhatsApp is available.** Planned, not built.
 - **Not photo capture of slips.** Built, switched off, no reader chosen.
 
 ---
 
-## 10. What the brand guide still has to decide
+## 11. The document system
+
+New scope, and the part with the least existing material.
+
+### The company, for letterhead
+
+| | |
+|---|---|
+| Legal name | QUMO-APP (PTY) LTD |
+| Registration | 2026/858757/07 |
+| Jurisdiction | South Africa |
+| Footer line in use today | `QUMO-APP (PTY) LTD  ·  2026/858757/07  ·  South Africa` |
+
+### What exists
+
+**A sales deck house style**, in use for two decks, one 23 slides and one
+11. Dark ground `#0c0d10`, white ink, the same `#2563eb` accent, Arial for
+text and Consolas for anything tabular or code-like. Thin hairline rules,
+small monospaced kickers in caps with letter-spacing, three-card layouts
+with a divider above a footer figure. Every slide carries a footer rule
+with "Qumo · indicative, for discussion" and a page number.
+
+**A set of A4 documents**, generated from markdown: six of them, covering
+instructions to counsel, a brand agreement, an IP assignment and NDA, the
+shopper terms and privacy notice, a drafting brief and a position paper.
+They currently use the Qumo mark as page-one letterhead, Arial, a rule
+under the title, a `DRAFT FOR LEGAL REVIEW` line in accent blue, and the
+company footer above. Tables have a grey header row. Shaded inline spans
+mark the passages that are questions for the reviewer rather than drafted
+text.
+
+**The mark**, as a wordmark, rendered at 4200 by 1380 with transparency in
+three colourways: ink, blue and white.
+
+### What is needed
+
+A document system the brand can grow into: letterhead, a type scale that
+works at A4 rather than on a screen, table and list treatments, a
+convention for marking draft status, and a treatment for the reviewer
+flags. Cover page or no cover page is an open question; today there is a
+title block at the head of page one and no separate cover.
+
+### The one constraint that matters
+
+**These documents are generated, not typed.** The markdown in `docs/` is
+the source, and a script turns all six into Word files in one run. That is
+deliberate: the markdown is what gets edited, reviewed in a diff and
+checked by the house-style tests, and hand-made copies drift from it
+within a week in a way nobody notices, because nobody diffs a `.docx`.
+
+So the useful output here is **a design, not a set of finished files.**
+Specification, measurements, colours, type sizes, spacing, a rendered
+example of each element. That gets implemented in the generator once and
+then every document follows it, including documents that do not exist yet.
+A beautiful one-off Word file is worth less than the spec behind it,
+because the next version of that document will be generated and will not
+match it.
+
+---
+
+## 12. What the brand guide still has to decide
 
 Open, and genuinely open:
 
@@ -338,3 +503,11 @@ Open, and genuinely open:
 4. **How much the site should show of the console.** The product's own
    screens are the most convincing thing about it and the hardest to keep
    current. A screenshot ages; an illustration does not but proves less.
+5. **Whether the deck's dark ground and the documents' light one are one
+   system or two.** They share an accent and a typeface and nothing else.
+   That may be right, since a projected slide and a printed page are
+   different problems, but nobody has decided it on purpose.
+6. **A trade mark search is in progress** on the name Qumo. It is worth
+   knowing before deep investment in a wordmark treatment: if it comes
+   back with a conflict in software, advertising or SaaS classes, the name
+   question reopens and anything built on it has to move.
