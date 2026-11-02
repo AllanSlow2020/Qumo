@@ -314,11 +314,21 @@ function FixedForm({ campaign }: { campaign: ConsoleCampaign }) {
           <option value="CENTS">Rands</option>
           <option value="POINTS">Points</option>
         </select>
+        {/* Both halves, as with the proof tier: a brand choosing a unit is
+            making a trade and should see what it costs. Rands is the
+            recommendation and the default, and the reason is on the
+            screen rather than assumed. */}
         <p className="cn-label">
           {unit === "CENTS"
-            ? "A balance in rands, which a shopper can be given back at a till once redemption opens."
+            ? "A balance in rands, which a shopper understands without being taught and can be given back at a till once redemption opens."
             : "A balance in points, which means whatever your programme says it means."}
         </p>
+        {unit === "POINTS" && (
+          <p className="cn-label cn-warn-note">
+            A shopper has to learn the rate before they can tell what a scan was worth, and a rate
+            you can change later is a rate they will ask about. Rands avoids both.
+          </p>
+        )}
       </div>
 
       <div className="cn-field">

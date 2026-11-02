@@ -58,6 +58,34 @@ until they stop it.
   in total, applied at the moment of the scan.
 - Nothing awards anything until the brand switches it on.
 
+### What a balance is denominated in, which is a position rather than an option
+
+**Rands, by default and by recommendation.** The ledger holds cents, the
+share-of-spend rule computes cents, and both live demo promotions pay
+rands. A shopper understands R12.50 without being taught anything.
+
+Points remain available and are deliberately not presented as an equal
+choice. Two reasons, and the second matters more. A shopper has to learn a
+conversion rate before they can tell what a scan was worth. And points are
+the loyalty industry's standard device for quietly devaluing what somebody
+earned, by changing the rate later, which sits badly against a product
+whose whole posture is an immutable ledger and a balance that is the sum
+of its rows.
+
+Stamps are a different thing again and are untouched by this. A stamp card
+is a counter toward a named reward, not a currency.
+
+**For marketing material:** lead with rands. Do not present points as a
+co-equal option, and do not invent a Qumo currency with a name. If a
+comparison is ever needed, the line is that real money needs no
+explaining.
+
+One open question sits under this and belongs to the lawyer, not to
+design: whether denominating in rands changes the Consumer Protection Act
+analysis at all. Section 35 appears to make loyalty credits a medium of
+exchange whatever the unit is called, in which case the choice is purely a
+product one. It is question 2.1 in `docs/legal-engagement.md`.
+
 ### What a shopper gets
 
 A wallet, reached by phone number and a one-time code. No app to install,
