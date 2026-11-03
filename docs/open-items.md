@@ -11,7 +11,7 @@ to write notes. It is the one to track work in. This file stays the
 narrative version, with the reasoning in prose, and it is the one to hand
 to a lawyer.
 
-Last updated 1 November 2026.
+Last updated 3 November 2026.
 
 ---
 
@@ -150,14 +150,27 @@ instruction rather than four conversations.
 
 - **[A] Tick `DIRECT_DATABASE_URL` for Preview** in Vercel. Production has
   it. Until then every Preview build fails and that failure means nothing.
-- **[A] Twilio.** Once approved and a real number is live, confirm an SMS
-  actually arrives, **then** clear `DEMO_LOGIN_PHONES` and
-  `DEMO_LOGIN_CODE` in production.
+- **Settled: Twilio sends.** On 3 November a real passcode reached a real
+  handset and a shopper signed in, the first time that has happened.
+  `DEMO_LOGIN_PHONES` and `DEMO_LOGIN_CODE` are deleted.
+- **[A] Get off the Twilio auth token.** It works, and it sends on the
+  master credential for the whole account: it can buy numbers, spend
+  money and read every message ever sent, and it cannot be scoped or
+  rotated on its own. The preflight warns on every build. Two API key
+  pairs were tried and both were refused, once with `20003` and once with
+  `70051`, so this needs a fresh attempt from a known-good baseline
+  rather than more guessing. See `docs/deploying.md`.
+- **[A] Delete the surplus Twilio API keys.** Five exist for one
+  integration, two of them Restricted. That surplus is most of why the
+  afternoon of 3 November went the way it did.
 - **[A] Vercel plan.** Hobby is licensed for non-commercial personal use
   only and Vercel reads that broadly. See `docs/deploying.md`.
 - **[A] Neon region.** The database is in `us-east-2`. Relevant to the
   section 72 question above.
 - **[A] `ERROR_WEBHOOK_URL` is unset**, so nothing is alerting anywhere.
+  This stopped being theoretical on 3 November: every failed passcode
+  wrote `sms send rejected` with Twilio's own error code from 16:18
+  onwards, and nothing said so, which cost an afternoon.
 - **[A] Attach a reward** to Copper Kettle's live `Rounds card` in
   production. It completes at 10 and names nothing, so shoppers would
   collect forever and be handed nothing.
