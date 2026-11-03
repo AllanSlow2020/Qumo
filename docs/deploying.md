@@ -231,15 +231,27 @@ number, **+27 60 086 7513**, bought on the Qumo-App regulatory bundle, with
 messaging and voice enabled on it. Set `TWILIO_FROM_NUMBER` to exactly that,
 in full international form.
 
-**It works, and it is running on the wrong credential.** On 3 November a
-real passcode reached a real handset and a shopper signed in, which is the
-first time that has happened. `DEMO_LOGIN_PHONES` and `DEMO_LOGIN_CODE`
-are deleted.
+**It works, and it runs on a scoped API key.** On 3 November a real
+passcode reached a real handset and a shopper signed in, which is the first
+time that has happened. `DEMO_LOGIN_PHONES` and `DEMO_LOGIN_CODE` are
+deleted.
 
-But it sends on `TWILIO_AUTH_TOKEN`, the master credential for the whole
-Twilio account, and `scripts/preflight.mjs` warns about that on every
-build. **That warning is correct and the swap back to an API key is
-outstanding.**
+It took three credentials to get there. Two API key pairs were refused,
+once with `20003` and once with `70051`, and the account auth token worked
+first time, which is what proved the fault was in the pair rather than in
+the account, the number or the country. What finally worked was creating a
+key and copying the SID and the secret off that one creation screen in a
+single action. Twilio shows a secret once, so pairing one key's SID with a
+different key's secret is the easy mistake to make, and it is almost
+certainly what both refusals were. Production now authenticates with the
+Standard key `qumo-live`, and `scripts/preflight.mjs` no longer prints its
+auth-token warning: that warning's absence from a build log is how you
+tell, without opening Vercel, which credential a deployment is using.
+
+`TWILIO_AUTH_TOKEN` is still set in Vercel and is now dormant, because
+`resolveTwilioCredentials` prefers the key pair when both halves are
+present. Delete it anyway. There is no reason for the master credential for
+the whole account to sit in an environment that does not read it.
 
 ### What a passcode has to get past
 

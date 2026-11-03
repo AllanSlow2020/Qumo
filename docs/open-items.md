@@ -150,19 +150,22 @@ instruction rather than four conversations.
 
 - **[A] Tick `DIRECT_DATABASE_URL` for Preview** in Vercel. Production has
   it. Until then every Preview build fails and that failure means nothing.
-- **Settled: Twilio sends.** On 3 November a real passcode reached a real
-  handset and a shopper signed in, the first time that has happened.
-  `DEMO_LOGIN_PHONES` and `DEMO_LOGIN_CODE` are deleted.
-- **[A] Get off the Twilio auth token.** It works, and it sends on the
-  master credential for the whole account: it can buy numbers, spend
-  money and read every message ever sent, and it cannot be scoped or
-  rotated on its own. The preflight warns on every build. Two API key
-  pairs were tried and both were refused, once with `20003` and once with
-  `70051`, so this needs a fresh attempt from a known-good baseline
-  rather than more guessing. See `docs/deploying.md`.
-- **[A] Delete the surplus Twilio API keys.** Five exist for one
-  integration, two of them Restricted. That surplus is most of why the
-  afternoon of 3 November went the way it did.
+- **Settled: Twilio sends, on a scoped API key.** On 3 November a real
+  passcode reached a real handset and a shopper signed in, the first time
+  that has happened. `DEMO_LOGIN_PHONES` and `DEMO_LOGIN_CODE` are
+  deleted. Production authenticates with the Standard key `qumo-live`, and
+  the preflight's auth-token warning is gone from the build log, which is
+  the confirmation that the scoped key is the one in use. The fix was
+  copying the key SID and its secret off a single Twilio creation screen
+  in one action. See `docs/deploying.md`.
+- **[A] Delete `TWILIO_AUTH_TOKEN` from Vercel** and redeploy. It is
+  dormant now, because `resolveTwilioCredentials` prefers the key pair,
+  but it is still the master credential for the whole account: it can buy
+  numbers, spend money and read every message ever sent, and it cannot be
+  scoped or rotated on its own.
+- **[A] Delete the surplus Twilio API keys.** Six exist for one
+  integration. Keep `qumo-live` and delete the rest. That surplus is most
+  of why the afternoon of 3 November went the way it did.
 - **[A] Vercel plan.** Hobby is licensed for non-commercial personal use
   only and Vercel reads that broadly. See `docs/deploying.md`.
 - **[A] Neon region.** The database is in `us-east-2`. Relevant to the
