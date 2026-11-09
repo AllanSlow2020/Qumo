@@ -32,9 +32,17 @@ is first.
   copy beside it.
 - **[A] Appoint an Information Officer and register** with the Information
   Regulator, if the split is confirmed.
-- **[C] Give a shopper a way to reach Qumo.** There is none. Every route
-  runs through whichever brand they scanned. Tolerable for an operator,
-  not for a responsible party.
+- **Settled: a shopper can reach Qumo.** There is a contact page at
+  `/legal/contact` saying which questions are the brand's and which are
+  ours, the privacy notice and the terms both carry the address, and the
+  footer links to it from every shopper screen. Both documents are now
+  signed by QUMO-APP (PTY) LTD and its registration number rather than by
+  a product name. The notice is `web-v6` and the terms are `terms-v2`, so
+  anyone already signed in re-affirms at their next sign-in.
+- **[A] Make `help@qumo.co.za` deliver** somewhere you actually read,
+  before the first real shopper is shown it. It is published in the
+  product now. An address that bounces is worse than the silence it
+  replaced, and no test can catch it.
 - **[A/L] Write down the breach process** (section 22). Who decides, how
   fast, who signs the notification.
 - **[L] Review the brand agreement.** Drafted, not reviewed:

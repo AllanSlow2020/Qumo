@@ -283,19 +283,27 @@ lighter obligation, but it is not nothing.
    today and false the moment a window is set.
 5. **Register with the Information Regulator** if the decision makes Qumo a
    responsible party, and appoint an Information Officer.
-6. **Give a shopper a way to reach Qumo.** There is none. The only contact
-   route anywhere in the shopper-facing product is the brand's own, in
-   `app/(shopper)/qumo-footer.tsx`, and every route into Qumo runs through
-   whichever brand the shopper happens to have scanned. That is tolerable
-   while Qumo is purely an operator, because the brand is then the right
-   first stop. It is not tolerable if the split above is confirmed: a
-   responsible party has to be reachable by the people whose information it
-   holds, has to name an Information Officer, and cannot route a complaint
-   about its own handling through a third party who cannot see the record.
-   The notice says plainly that no direct route exists rather than implying
-   one, which is the right behaviour for today and a poor one to still be
-   true at a pilot. Found by loading the page rather than by reading the
-   code, which is the usual way.
+6. ~~**Give a shopper a way to reach Qumo.**~~ **Done, with one thing
+   outstanding.** There used to be no route at all: the only contact
+   anywhere in the shopper-facing product was the brand's own, so every
+   path into Qumo ran through whichever brand the shopper happened to have
+   scanned. Tolerable while Qumo is purely an operator, and not tolerable
+   under the split above, because a responsible party cannot route a
+   complaint about its own handling through a third party who cannot see
+   the record.
+
+   There is now a contact page at `/legal/contact` which says which
+   questions are the brand's and which are ours, the privacy notice and
+   the terms both carry the address, and the footer links to it from every
+   shopper screen. The notice and the terms are also signed by the legal
+   person rather than the product: QUMO-APP (PTY) LTD, registration
+   2026/858757/07.
+
+   **Outstanding:** `help@qumo.co.za` has to deliver somewhere a person
+   reads, before the first real shopper is shown it. A published address
+   that bounces is worse than the silence it replaced. Nothing in the code
+   can check this. The Information Officer named in the same clause of the
+   draft notice is still not appointed, which is item 5 above.
 7. **Write down what happens after a breach** (section 22). There is no
    documented process, and that is a policy gap rather than a code one - the
    system can already answer "whose data" from the memberships and the

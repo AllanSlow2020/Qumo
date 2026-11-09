@@ -118,7 +118,7 @@ We send you the one-time sign-in codes you ask for. These are not marketing. We 
 
 ### Complaints
 
-Start with the brand you scanned. For anything about your account you can also write to us at [[SHOPPER SUPPORT ADDRESS]]. [[GAP: no such route exists today. Do not publish this line until it does.]] Our Information Officer is [[INFORMATION OFFICER NAME]], [[INFORMATION OFFICER EMAIL]]. [[GAP: none appointed or registered.]]
+Start with the brand you scanned. For anything about your account you can also write to us at help@qumo.co.za, and you do not have to go through the brand to do it. Our Information Officer is [[INFORMATION OFFICER NAME]], [[INFORMATION OFFICER EMAIL]]. [[GAP: none appointed or registered.]]
 
 You may also complain to the Information Regulator at inforegulator.org.za. [[QUERY: confirm current contact details before adding an email or address.]]
 
@@ -190,29 +190,33 @@ The 60-day closure window, the cheating and forfeiture clause, and "redemption i
 
 ## 4. Placeholders to fill
 
-Nine facts are still needed before anything is published. None has been invented.
+Six facts are still needed before anything is published. None has been invented.
 
-- [[REGISTERED COMPANY NAME]]
-- [[COMPANY REGISTRATION NUMBER]]
 - [[REGISTERED ADDRESS]]
 - [[INFORMATION OFFICER NAME]]
 - [[INFORMATION OFFICER EMAIL]]
-- [[SHOPPER SUPPORT ADDRESS]]
 - [[HOSTING PROVIDERS AND REGIONS]]
 - [[DORMANCY WINDOW]]
 - A commencement date, which has not been added to the copy.
+
+Three have since been filled. The company is QUMO-APP (PTY) LTD,
+registration 2026/858757/07, as published on qumo.co.za and now carried at
+the foot of the notice and the terms in the product itself. Confirm the
+number against the CIPC certificate before anything is filed on it. The
+shopper support address is help@qumo.co.za, which has to deliver somewhere
+a person reads before the first real shopper is shown it.
 
 ## 5. Gaps found while writing
 
 Ten places where the law reaches past what the product does. No clause was written for any of them.
 
 1. **Children.** A brand with no minimum age never asks one, so nothing stops a child joining. This needs a product fix, not a clause.
-2. **No way to reach Qumo.** The complaints section cannot honestly name a route until one exists.
+2. ~~**No way to reach Qumo.**~~ Closed. There is a contact page in the product, the privacy notice and the terms both carry the address, and the footer links to it from every shopper screen. The Information Officer in the same clause is still open, below.
 3. **No Information Officer** has been appointed or registered.
 4. **No breach process** (s22). Nothing is written down on who decides, how fast, or who notifies.
 5. **No objection route** for shoppers.
 6. **No operator agreement** with any brand (s21).
-7. **No redemption mechanism**, which is the CPA s35 exposure.
+7. **No redemption mechanism for a rand balance**, which is the remaining CPA s35 exposure. A reward from a completed card can now be taken at a counter and the terms say so; spending a balance at a till is still shut, because the two-phase flow assumes every till has a staffed Qumo login.
 8. **Competitions.** If a brand adds a prize draw, the terms need a competitions section (CPA s36) first.
 9. **SMS channel.** The join message and full notice need regenerating from this text. The consent record is still two sentences and a YES. WhatsApp will need its own copy and version.
 10. **No dormancy period** has been chosen, so retention has no stated upper limit.

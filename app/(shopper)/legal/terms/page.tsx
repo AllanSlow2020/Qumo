@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { TERMS_POINTS, TERMS_VERSION } from "@/lib/consumer/terms";
-import { OPERATOR_NAME, PRODUCT_NAME } from "@/lib/product";
+import { OPERATOR_LEGAL_NAME, OPERATOR_REGISTRATION, PRODUCT_NAME } from "@/lib/product";
 import { BrandHeader } from "../../brand-header";
 
 export const metadata: Metadata = {
@@ -37,7 +37,7 @@ export default function TermsPage() {
         ))}
 
         <p className="sc-label">
-          Version {TERMS_VERSION} · {OPERATOR_NAME}. What we keep about you is a separate document.
+          Version {TERMS_VERSION} · {OPERATOR_LEGAL_NAME} ({OPERATOR_REGISTRATION}). What we keep about you is a separate document.
         </p>
       </section>
 

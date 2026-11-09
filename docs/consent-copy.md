@@ -58,7 +58,7 @@ the product feels finished.
 
 Beside the checkbox on the registration screen, linking to both documents below.
 
-*Recorded as `web-v5`.*
+*Recorded as `web-v6`.*
 
 > I agree to Qumo storing my mobile number and my activity with the brands I scan, as described in the privacy notice and the terms.
 
@@ -66,7 +66,7 @@ Beside the checkbox on the registration screen, linking to both documents below.
 
 At /legal/privacy, linked from the tick box.
 
-*Recorded as `web-v5`.*
+*Recorded as `web-v6`.*
 
 ### What we keep
 
@@ -78,7 +78,7 @@ A brand can see your activity with that brand only: the scans you made, the rewa
 
 ### Who answers for what
 
-Two parties, and the split is worth knowing if you ever want to take something up with somebody. Qumo answers for your account: your mobile number, your age confirmation, this agreement, and keeping all of it secure. Those are ours, they are held once for you across every brand, and no brand sees them. Each brand answers for its own programme: what it offers, what a scan is worth, and the record of what you earned with them. The brand is where you start for either kind of question, and anything that is ours they bring to us. A way to reach Qumo directly is not built yet, and this notice will say so until it is.
+Two parties, and the split is worth knowing if you ever want to take something up with somebody. Qumo answers for your account: your mobile number, your age confirmation, this agreement, and keeping all of it secure. Those are ours, they are held once for you across every brand, and no brand sees them. Each brand answers for its own programme: what it offers, what a scan is worth, and the record of what you earned with them. The brand is where you start for either kind of question, and anything that is ours they bring to us. You can also come to us directly, at help@qumo.co.za, and you do not have to go through the brand first to do it.
 
 ### Your balances
 
@@ -96,7 +96,7 @@ We will send you the one-time codes you ask for. We will not send you marketing 
 
 At /legal/terms, linked from the tick box.
 
-*Recorded as `terms-v1`.*
+*Recorded as `terms-v2`.*
 
 ### What this is
 
@@ -104,7 +104,7 @@ A rewards programme run by a brand you buy from. Qumo is the software it runs on
 
 ### Who you are dealing with
 
-Two parties, and it is worth knowing which is which. The brand sold you the thing and runs the promotion. Qumo runs the programme it is counted in and keeps the record. So anything about a price, a product or a store is the brand's; anything about a balance, a scan that did not work, or a record that looks wrong is ours, and the brand can raise it with us on your behalf.
+Two parties, and it is worth knowing which is which. The brand sold you the thing and runs the promotion. Qumo runs the programme it is counted in and keeps the record. So anything about a price, a product or a store is the brand's; anything about a balance, a scan that did not work, or a record that looks wrong is ours. The brand can raise it with us on your behalf, and you can reach us yourself at help@qumo.co.za without going through them.
 
 ### What a balance is
 
@@ -120,7 +120,7 @@ A code we cannot verify earns nothing. That covers a slip whose signature does n
 
 ### Using what you have earned
 
-Redemption is not open yet. What you earn is recorded and held for you; the brand decides how you eventually use it and will tell you when that opens. Your balance does not expire while the programme is running. An individual reward, such as a coupon for a completed card, can carry its own expiry date, and where it does, that date is shown on the reward itself.
+A reward from a completed card is yours to take: the code is in your rewards and a member of staff enters it at the counter, once. A balance in rands or points is different, and cannot be spent at a till yet. What you earn is recorded and held for you; the brand decides how you eventually use it and will tell you when that opens. Your balance does not expire while the programme is running. An individual reward can carry its own expiry date, and where it does, that date is shown on the reward itself.
 
 ### If the brand ends the programme
 
@@ -158,7 +158,7 @@ Sent when somebody replies TERMS. Built from the privacy notice above rather tha
 
 *Recorded as `sms-v3`.*
 
-*2357 characters, 16 SMS segments.*
+*2383 characters, 16 SMS segments.*
 
 > Qumo privacy notice. We hold your account. Each brand holds its own programme record.
 >
@@ -166,7 +166,7 @@ Sent when somebody replies TERMS. Built from the privacy notice above rather tha
 >
 > What brands can see: A brand can see your activity with that brand only: the scans you made, the rewards you earned and what you have spent with them. A brand cannot see your activity with any other brand, or that you use any other brand at all. It also never sees your mobile number, and it has no screen that shows you as a person at all: a brand sees the totals for its own programme, not a list of who is in it.
 >
-> Who answers for what: Two parties, and the split is worth knowing if you ever want to take something up with somebody. Qumo answers for your account: your mobile number, your age confirmation, this agreement, and keeping all of it secure. Those are ours, they are held once for you across every brand, and no brand sees them. Each brand answers for its own programme: what it offers, what a scan is worth, and the record of what you earned with them. The brand is where you start for either kind of question, and anything that is ours they bring to us. A way to reach Qumo directly is not built yet, and this notice will say so until it is.
+> Who answers for what: Two parties, and the split is worth knowing if you ever want to take something up with somebody. Qumo answers for your account: your mobile number, your age confirmation, this agreement, and keeping all of it secure. Those are ours, they are held once for you across every brand, and no brand sees them. Each brand answers for its own programme: what it offers, what a scan is worth, and the record of what you earned with them. The brand is where you start for either kind of question, and anything that is ours they bring to us. You can also come to us directly, at help@qumo.co.za, and you do not have to go through the brand first to do it.
 >
 > Your balances: Points, stamps and wallet value are earned with one brand and can only be used with that brand. They are not money, cannot be transferred between brands, and cannot be exchanged for cash.
 >
