@@ -111,10 +111,12 @@ def p04():
 def p05():
     s = slide(); masthead(s); kicker(s, "Whether anybody will bother")
     h1(s, "Nobody here needs an eleventh loyalty card")
+    # Every figure on this slide is read from the whitepaper itself, not from coverage of it:
+    # 85% on p. 9, 10.4 and 4.6 on pp. 12-13. Sources and exact sentences are in
+    # docs/competitive-position.md, section 8. Do not add a figure here that is not in it.
     text(s, "Loyalty is not a new idea to a South African shopper. The 2025/6 Truth and BrandMapp "
-            "whitepaper puts 85% of economically active households in a programme already, "
-            "averaging more than ten each. Signing people up stopped being the hard part some "
-            "time ago.",
+            "whitepaper finds 85% of economically active South Africans in a programme, using "
+            "more than ten each. Signing people up stopped being the hard part some time ago.",
          M, Inches(2.42), Inches(11.4), Inches(1.0), size=13, colour=BODY, spacing=1.55)
     stats(s, [
         ("85%", "already in a programme"),
@@ -130,8 +132,8 @@ def p05():
             "programme: it is one account across every brand on the platform, so somebody joining "
             "your promotion may already have it.",
          M, Inches(5.98), Inches(11.4), Inches(0.6), size=12, colour=MUTED, spacing=1.45)
-    text(s, "Truth and BrandMapp Loyalty Whitepaper 2025/6. Economically active: households "
-            "earning R10,000 a month or more.",
+    text(s, "Truth and BrandMapp Loyalty Whitepaper 2025/6, pp. 9 and 12-13. Economically "
+            "active: household income of R10,000 a month or more.",
          M, Inches(6.56), Inches(11.4), Inches(0.26), size=8.5, colour=FOOT, font=MONO,
          spacing=1.1)
     footer(s)
