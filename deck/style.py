@@ -138,6 +138,11 @@ def footer(s):
          align=PP_ALIGN.RIGHT, spacing=1.0)
 
 
+def cite(s, txt, y, w=Inches(11.4)):
+    """The source line under a slide's evidence: small, quiet, always present."""
+    text(s, txt, M, y, w, Inches(0.26), size=8.5, colour=FOOT, font=MONO, spacing=1.1)
+
+
 def kicker(s, label, colour=ACCENT, y=Inches(1.00)):
     hline(s, M, y + Inches(0.055), Inches(0.30), colour, Emu(19050))
     text(s, label.upper(), M + Inches(0.41), y - Inches(0.055), Inches(9), Inches(0.26),

@@ -310,7 +310,9 @@ def s21():
                     "One tag per item, like a pack code"],
          "foot_label": "Works today, needs tags", "foot": "Cost per tag",
          "foot_note": "Fixed at production, whatever engagement does"},
-    ], Inches(3.30))
+    ], Inches(3.30), hgt=Inches(3.22))
+    cite(s, "Truth and BrandMapp Loyalty Whitepaper 2025/6, pp. 65-67: 72% of the mass market name "
+            "a card, 27% an app, and the report blames data costs.", Inches(6.58))
     footer(s)
 
 

@@ -1,5 +1,5 @@
 """
-The Qumo pitch: eleven slides, to win a second meeting.
+The Qumo pitch: thirteen slides and a backup, to win a second meeting.
 
 Not the product overview. That one answers "what does it do" and runs to
 twenty-three slides; this one answers "why should a brand care, and what are
@@ -30,7 +30,7 @@ import style
 
 ARGS = [a for a in sys.argv[1:] if not a.startswith("--")]
 OUT = ARGS[0] if ARGS else os.path.join(style.HERE, "Qumo-pitch.pptx")
-style.start("For brands", 12)
+style.start("For brands", 14)
 
 
 def p01():
@@ -53,6 +53,8 @@ def p02():
     text(s, "They pick it off a shelf in a shop you do not own and pay at a till you cannot see. "
             "No name, no number, no second conversation. The retailer knows who they are. You do not.",
          M, Inches(2.55), Inches(10.2), Inches(1.0), size=13, colour=BODY, spacing=1.55)
+    text(s, "78% say their loyalty programme significantly influences where they buy groceries.",
+         M, Inches(3.42), Inches(11.0), Inches(0.4), size=13, bold=True, colour=INK, spacing=1.3)
     cards = [
         ("The retailer keeps them", "Clicks, Pick n Pay and Checkers run the loyalty card. What "
          "it learns about your buyer stays with them."),
@@ -70,6 +72,8 @@ def p02():
              bold=True, colour=INK, spacing=1.15)
         text(s, b, x + Inches(0.3), Inches(4.80), w - Inches(0.6), Inches(1.1), size=11.5,
              colour=MUTED, spacing=1.35)
+    cite(s, "Truth and BrandMapp Loyalty Whitepaper 2025/6, p. 24. Economically active: household "
+            "income of R10,000 a month or more.", Inches(6.40))
     footer(s)
 
 
@@ -102,7 +106,7 @@ def p04():
     dotted(s, ["They buy the pack in whatever shop they already buy it in",
                "They scan the code printed under the cap, the label or the lid",
                "A mobile number and a texted code, once, and never again after that",
-               "The value lands on a balance they spend on the next one they buy"],
+               "The value lands on a balance with your brand, from the first scan"],
            M, Inches(3.35), Inches(10.4), size=12.5, gap=Inches(0.34))
     stats(s, [("0", "apps to download"), ("1", "scan to earn"), ("6", "digit sign-in"),
               ("You set it", "per pack, capped")], Inches(5.35))
@@ -133,10 +137,32 @@ def p05():
             "programme: it is one account across every brand on the platform, so somebody joining "
             "your promotion may already have it.",
          M, Inches(5.98), Inches(11.4), Inches(0.6), size=12, colour=MUTED, spacing=1.45)
-    text(s, "Truth and BrandMapp Loyalty Whitepaper 2025/6, pp. 9 and 12-13. Economically "
-            "active: household income of R10,000 a month or more.",
-         M, Inches(6.56), Inches(11.4), Inches(0.26), size=8.5, colour=FOOT, font=MONO,
-         spacing=1.1)
+    cite(s, "Truth and BrandMapp Loyalty Whitepaper 2025/6, pp. 9 and 12-13. Economically "
+            "active: household income of R10,000 a month or more.", Inches(6.56))
+    footer(s)
+
+
+def p05b():
+    s = slide(); masthead(s); kicker(s, "What shoppers say they want")
+    h1(s, "Cash, straight away, and nothing to work out")
+    text(s, "Asked what they would most enjoy from a loyalty programme, South Africans have put real "
+            "cashback first since the study began. Close behind it is a reward that arrives at "
+            "once, rather than after a threshold.",
+         M, Inches(2.42), Inches(11.4), Inches(1.0), size=13, colour=BODY, spacing=1.55)
+    stats(s, [
+        ("45%", "name real cashback, the top answer"),
+        ("40%", "want rewarding instantly"),
+        ("37%", "want points usable as cash"),
+    ], Inches(3.58))
+    box(s, M, Inches(4.78), CONTENT, Inches(1.02), border=ACCENT)
+    text(s, "A Qumo reward is credited the moment the code is scanned, from the first pack.",
+         M + Inches(0.42), Inches(5.00), CONTENT - Inches(0.84), Inches(0.6), size=16, bold=True,
+         colour=INK, spacing=1.3)
+    text(s, "Not built yet: spending that balance at a till. A pilot is where a brand decides how "
+            "its customers redeem.",
+         M, Inches(5.98), Inches(11.4), Inches(0.6), size=12, colour=MUTED, spacing=1.45)
+    cite(s, "Truth and BrandMapp Loyalty Whitepaper 2025/6, pp. 22, 58 and 60. Economically active: "
+            "household income of R10,000 a month or more. Several answers allowed.", Inches(6.56))
     footer(s)
 
 
@@ -254,9 +280,10 @@ def p11():
 def p12():
     s = slide(); masthead(s); kicker(s, "If somebody already runs your promotions")
     h1(s, "We are not asking you to cancel anything")
-    text(s, "A brand running on-pack codes already has an agency or a promotions vendor, and they "
-            "are good at what they do. This is where Qumo sits beside them rather than instead.",
-         M, Inches(2.42), Inches(11.0), Inches(0.8), size=12.5, colour=BODY, spacing=1.55)
+    text(s, "A brand running on-pack codes already has an agency, and shoppers like draws: the mass "
+            "market ranks competition entries third of what it would most enjoy, at 38%. Qumo sits "
+            "beside that, not instead of it.",
+         M, Inches(2.42), Inches(11.0), Inches(1.0), size=12.5, colour=BODY, spacing=1.55)
     rows(s, [
         ("What they do well",
          "The mechanic, the prize fulfilment, the winner admin and the paperwork a draw needs."),
@@ -269,11 +296,34 @@ def p12():
         ("Run both if you like",
          "One code can carry a draw and a balance. We would rather be the half that keeps the "
          "customer than the half that picks a winner."),
-    ], Inches(3.30))
+    ], Inches(3.40), gap=Inches(0.78))
+    cite(s, "Truth and BrandMapp Loyalty Whitepaper 2025/6, p. 59. Mass market: household income "
+            "under R10,000 a month. Several answers allowed.", Inches(6.56))
     footer(s)
 
 
-for fn in [p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12]:
+def p13():
+    s = slide(); masthead(s); kicker(s, "If somebody asks about cards")
+    h1(s, "Most South Africans still reach for a card")
+    stats(s, [("64%", "card, economically active"), ("33%", "phone number, same group"),
+              ("72%", "card, mass market"), ("32%", "phone number, same group")], Inches(2.35))
+    rows(s, [
+        ("Why", "The whitepaper's own reading is \"ongoing challenges with data access, cellphone "
+         "reception and data costs\". A card works when the data does not."),
+        ("What we ask for", "A cellphone number. In the mass market it is the second most named "
+         "way into a programme, ahead of an app at 27%."),
+        ("What it still needs", "A camera and data, to scan. The text door, for a phone without "
+         "data, is built and needs a short code before it is live."),
+        ("What we will not do", "Issue a card. A card per brand is the eleventh card nobody "
+         "needs."),
+    ], Inches(3.55), gap=Inches(0.74))
+    cite(s, "Truth and BrandMapp Loyalty Whitepaper 2025/6, pp. 64-67. The question: how South "
+            "Africans prefer to make use of a loyalty programme. Several answers allowed.",
+         Inches(6.56))
+    footer(s)
+
+
+for fn in [p01, p02, p03, p04, p05, p05b, p06, p07, p08, p09, p10, p11, p12, p13]:
     fn()
 
 print(f"{style.save(OUT, 'pitch')} slides -> {OUT}")

@@ -93,9 +93,72 @@ FIGURES = [
      "where": "Economically active", "source": "truth-2025", "locator": "p. 9",
      "claim": "The income line that defines 'economically active'",
      "quote": "economically active South Africans (with a household income of R10,000+ p.m.)"},
-    {"id": "wp-edition", "figure": "2025/6", "decks": ["pitch"], "kind": "primary",
+    {"id": "wp-threshold-mass", "figure": "R10,000", "decks": ["pitch"], "kind": "primary",
+     "where": "Mass market: household income", "source": "truth-2025", "locator": "p. 11",
+     "claim": "The income line that defines 'mass market'",
+     "quote": "For mass market consumers (with a household income of less than R10,000 p.m.)"},
+    {"id": "wp-edition", "figure": "2025/6", "decks": ["pitch", "deck"], "kind": "primary",
      "source": "truth-2025", "locator": "cover",
      "claim": "The edition named in the citation", "quote": "2025/6"},
+
+    {"id": "wp-groceries", "figure": "78%", "decks": ["pitch"], "kind": "primary",
+     "where": "groceries", "source": "truth-2025", "locator": "p. 24 (chart)",
+     "claim": "Say the loyalty programme they belong to significantly influences where they "
+              "buy groceries (economically active)",
+     "quote": "How do loyalty programmes influence consumer behaviour in different sectors? - "
+              "Economically active. 78% Where you shop for groceries",
+     "caution": "The question as asked (p. 24): 'Which of the following things are significantly "
+                "influenced by the loyalty programme you belong to?' Several answers allowed."},
+    {"id": "wp-cashback", "figure": "45%", "decks": ["pitch"], "kind": "primary",
+     "where": "cashback", "source": "truth-2025", "locator": "p. 58 (chart); p. 60",
+     "claim": "Name real cashback among the benefits they would most enjoy, the top answer "
+              "(economically active)",
+     "quote": "Which of the following benefits would you most enjoy in your loyalty programme? "
+              "- Economically active. Real cashback rewards 45%. And p. 60: \"Since the initial "
+              "BrandMapp study, it has remained the number one preferred benefit in South "
+              "Africa.\"",
+     "caution": "Several answers allowed: 45% named it, not 45% chose it over everything else."},
+    {"id": "wp-instant", "figure": "40%", "decks": ["pitch"], "kind": "primary",
+     "where": "instantly", "source": "truth-2025", "locator": "p. 22 (chart); p. 60",
+     "claim": "Agree 'I want to be instantly rewarded for my loyalty to a brand' "
+              "(economically active)",
+     "quote": "40% I want to be instantly rewarded for my loyalty to a brand. And p. 60: \"40% of "
+              "South African loyalty users want to be instantly rewarded\""},
+    {"id": "wp-points-cash", "figure": "37%", "decks": ["pitch"], "kind": "primary",
+     "where": "usable as cash", "source": "truth-2025", "locator": "p. 58 (chart)",
+     "claim": "Name points that can be used as cash, second answer (economically active)",
+     "quote": "Points that can be used as cash 37%"},
+    {"id": "wp-competitions", "figure": "38%", "decks": ["pitch"], "kind": "primary",
+     "where": "competition entries", "source": "truth-2025", "locator": "p. 59 (chart)",
+     "claim": "Name competition entries among the benefits they would most enjoy, third answer "
+              "(mass market)",
+     "quote": "Which of the following benefits would you most enjoy in your loyalty programme? "
+              "- Mass market. Real cashback rewards 40%, Birthday offer 39%, Competition entries "
+              "38%"},
+    {"id": "wp-card-ea", "figure": "64%", "decks": ["pitch"], "kind": "primary",
+     "source": "truth-2025", "locator": "p. 64 (chart)",
+     "claim": "Name swiping a card as a way they prefer to use a programme (economically active)",
+     "quote": "How South Africans prefer to make use of a loyalty programme - Economically "
+              "active. Swiping a card 64%, Scanning an app 37%, Providing a cellphone number 33%"},
+    {"id": "wp-phone-ea", "figure": "33%", "decks": ["pitch"], "kind": "primary",
+     "where": "phone number", "source": "truth-2025", "locator": "p. 64 (chart)",
+     "claim": "Name providing a cellphone number (economically active)",
+     "quote": "Providing a cellphone number 33%"},
+    {"id": "wp-card-mass", "figure": "72%", "decks": ["pitch", "deck"], "kind": "primary",
+     "source": "truth-2025", "locator": "p. 65 (chart); p. 67",
+     "claim": "Name swiping a card (mass market)",
+     "quote": "How South Africans prefer to make use of a loyalty programme - Mass market. "
+              "Swiping a card 72%, Providing a cellphone number 32%, Scanning an app 27%. And "
+              "p. 67: \"This likely reflects ongoing challenges with data access, cellphone "
+              "reception and data costs\""},
+    {"id": "wp-phone-mass", "figure": "32%", "decks": ["pitch"], "kind": "primary",
+     "where": "phone number", "source": "truth-2025", "locator": "p. 65 (chart)",
+     "claim": "Name providing a cellphone number, second answer (mass market)",
+     "quote": "Providing a cellphone number 32%"},
+    {"id": "wp-app-mass", "figure": "27%", "decks": ["pitch", "deck"], "kind": "primary",
+     "where": "app", "source": "truth-2025", "locator": "p. 65 (chart)",
+     "claim": "Name scanning an app (mass market)",
+     "quote": "Scanning an app 27%"},
 
     # ── Promotions spend: the open gap ────────────────────────────────
     {"id": "promo-cost", "figure": "R40,000", "decks": ["pitch"], "kind": "unsourced",

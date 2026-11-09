@@ -12,7 +12,18 @@ Generated from `deck/sources.py` by `python3 deck/sources.py`. Edit that file, n
 | 10.4 | Average number of loyalty programmes actively used | truth-2025, p. 13 | "The BrandMapp data reveals that the average number of loyalty programmes which South Africans actively use is 10.4 programmes." |
 | 4.6, 2015 | The same average in 2015 | truth-2025, p. 12 | "+228% increase from 4.6 in 2015" *Caution: Quote the 4.6, never the 228%: 10.4 is 2.26 times 4.6, a 126% increase.* |
 | R10,000 | The income line that defines 'economically active' | truth-2025, p. 9 | "economically active South Africans (with a household income of R10,000+ p.m.)" |
+| R10,000 | The income line that defines 'mass market' | truth-2025, p. 11 | "For mass market consumers (with a household income of less than R10,000 p.m.)" |
 | 2025/6 | The edition named in the citation | truth-2025, cover | "2025/6" |
+| 78% | Say the loyalty programme they belong to significantly influences where they buy groceries (economically active) | truth-2025, p. 24 (chart) | "How do loyalty programmes influence consumer behaviour in different sectors? - Economically active. 78% Where you shop for groceries" *Caution: The question as asked (p. 24): 'Which of the following things are significantly influenced by the loyalty programme you belong to?' Several answers allowed.* |
+| 45% | Name real cashback among the benefits they would most enjoy, the top answer (economically active) | truth-2025, p. 58 (chart); p. 60 | "Which of the following benefits would you most enjoy in your loyalty programme? - Economically active. Real cashback rewards 45%. And p. 60: "Since the initial BrandMapp study, it has remained the number one preferred benefit in South Africa."" *Caution: Several answers allowed: 45% named it, not 45% chose it over everything else.* |
+| 40% | Agree 'I want to be instantly rewarded for my loyalty to a brand' (economically active) | truth-2025, p. 22 (chart); p. 60 | "40% I want to be instantly rewarded for my loyalty to a brand. And p. 60: "40% of South African loyalty users want to be instantly rewarded"" |
+| 37% | Name points that can be used as cash, second answer (economically active) | truth-2025, p. 58 (chart) | "Points that can be used as cash 37%" |
+| 38% | Name competition entries among the benefits they would most enjoy, third answer (mass market) | truth-2025, p. 59 (chart) | "Which of the following benefits would you most enjoy in your loyalty programme? - Mass market. Real cashback rewards 40%, Birthday offer 39%, Competition entries 38%" |
+| 64% | Name swiping a card as a way they prefer to use a programme (economically active) | truth-2025, p. 64 (chart) | "How South Africans prefer to make use of a loyalty programme - Economically active. Swiping a card 64%, Scanning an app 37%, Providing a cellphone number 33%" |
+| 33% | Name providing a cellphone number (economically active) | truth-2025, p. 64 (chart) | "Providing a cellphone number 33%" |
+| 72% | Name swiping a card (mass market) | truth-2025, p. 65 (chart); p. 67 | "How South Africans prefer to make use of a loyalty programme - Mass market. Swiping a card 72%, Providing a cellphone number 32%, Scanning an app 27%. And p. 67: "This likely reflects ongoing challenges with data access, cellphone reception and data costs"" |
+| 32% | Name providing a cellphone number, second answer (mass market) | truth-2025, p. 65 (chart) | "Providing a cellphone number 32%" |
+| 27% | Name scanning an app (mass market) | truth-2025, p. 65 (chart) | "Scanning an app 27%" |
 
 ## Facts about Qumo, with evidence
 

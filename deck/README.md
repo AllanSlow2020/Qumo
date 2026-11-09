@@ -5,7 +5,7 @@ Two of them, generated rather than drawn.
 | | | |
 |---|---|---|
 | `build_deck.py` | 23 slides | the product overview: what it does, every screen |
-| `build_pitch.py` | 12 slides | the pitch: why a brand should care, and the ask |
+| `build_pitch.py` | 14 slides | the pitch: why a brand should care, and the ask; the last two answer objections |
 
 The point of them being code is that they are regenerated from the running
 product. Their central claim is that every screen in them is a live render,
