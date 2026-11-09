@@ -91,7 +91,8 @@ def p03():
          colour=INK, spacing=1.25)
     text(s, "Qumo is the same print run, the same code under the pack, and the same budget. What "
             "changes is that the code opens your own page, the person is recognised the next time, "
-            "and the value you hand out buys a second purchase instead of a prize draw.",
+            "and the value you hand out stays on a balance with your brand instead of going to a "
+            "prize draw.",
          M, Inches(5.75), Inches(11.2), Inches(0.8), size=12.5, colour=MUTED, spacing=1.5)
     footer(s)
 
