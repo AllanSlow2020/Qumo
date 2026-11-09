@@ -1,4 +1,4 @@
-import { OPERATOR_NAME, PRODUCT_NAME } from "@/lib/product";
+import { OPERATOR_NAME, PRODUCT_NAME, SHOPPER_SUPPORT_EMAIL } from "@/lib/product";
 
 /**
  * What a shopper agrees to when they register on the web, and the version
@@ -34,7 +34,7 @@ import { OPERATOR_NAME, PRODUCT_NAME } from "@/lib/product";
  * always answer what a given person actually saw. A shopper whose recorded
  * version is behind re-affirms on their next sign-in (lib/consumer/otp.ts).
  */
-export const WEB_CONSENT_VERSION = "web-v5";
+export const WEB_CONSENT_VERSION = "web-v6";
 
 /**
  * web-v1 said the same things under the product's old working title. That
@@ -94,6 +94,24 @@ export const WEB_CONSENT_VERSION = "web-v5";
  * complain to. It also costs nothing today - there are no real shoppers, so
  * nobody is re-consented by it, which is precisely why it is being made now
  * rather than after a pilot.
+ *
+ * web-v6 closes the hole web-v5 opened and admitted to. Having told a
+ * shopper that the account is ours rather than the brand's, the notice
+ * then said that a way to reach us directly was not built yet, which is a
+ * responsible party naming itself and giving no address. That sentence was
+ * written to be temporary and this is it being made good: there is a
+ * contact page now, the address is on it, and the notice points at it.
+ *
+ * The same bump picks up the legal person. The notice signed off as
+ * "Qumo", which is a product; a shopper is entitled to the name of the
+ * company that holds their number, and a name they could take to the
+ * Regulator. The foot of the notice now carries QUMO-APP (PTY) LTD and its
+ * registration number.
+ *
+ * Unlike web-v5 this one is not free. A shopper has signed in under web-v5
+ * since it was served, so somebody re-affirms on their next sign-in. That
+ * is the mechanism working rather than a cost to avoid: the change is in
+ * their favour and it is exactly the kind they should be told about.
  */
 
 /** The single line beside the tick box. Kept short enough to actually be read. */
@@ -115,7 +133,7 @@ export const CONSENT_POINTS: { heading: string; body: string }[] = [
   },
   {
     heading: "Who answers for what",
-    body: `Two parties, and the split is worth knowing if you ever want to take something up with somebody. ${OPERATOR_NAME} answers for your account: your mobile number, your age confirmation, this agreement, and keeping all of it secure. Those are ours, they are held once for you across every brand, and no brand sees them. Each brand answers for its own programme: what it offers, what a scan is worth, and the record of what you earned with them. The brand is where you start for either kind of question, and anything that is ours they bring to us. A way to reach ${OPERATOR_NAME} directly is not built yet, and this notice will say so until it is.`,
+    body: `Two parties, and the split is worth knowing if you ever want to take something up with somebody. ${OPERATOR_NAME} answers for your account: your mobile number, your age confirmation, this agreement, and keeping all of it secure. Those are ours, they are held once for you across every brand, and no brand sees them. Each brand answers for its own programme: what it offers, what a scan is worth, and the record of what you earned with them. The brand is where you start for either kind of question, and anything that is ours they bring to us. You can also come to us directly, at ${SHOPPER_SUPPORT_EMAIL}, and you do not have to go through the brand first to do it.`,
   },
   {
     heading: "Your balances",

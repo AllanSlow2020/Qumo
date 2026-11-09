@@ -191,6 +191,14 @@ export default function ConsoleGuidePage() {
               taken off and anything over the line carries to the next card, so the eleventh
               purchase in a row is not wasted.
             </p>
+            <p>
+              <strong>A stamp comes from either door.</strong> A till slip from one of your stores,
+              or a code under a pack. If your tills print Qumo codes, only one promotion can earn
+              from a slip at a time: a slip says which store and what the basket came to, and
+              nothing that says which promotion it belongs to, so a second one would make the same
+              receipt worth two different things. The console refuses the second rather than
+              picking one.
+            </p>
 
             <CardCarry />
           </Section>
@@ -242,8 +250,10 @@ export default function ConsoleGuidePage() {
               {!REDEMPTION_AVAILABLE && (
                 <>
                   {" "}
-                  Spending a balance at a counter is not built yet, so today a balance accumulates
-                  and a completed card issues a code they can show you.
+                  Spending a rand balance at a counter is not built yet, so today a balance
+                  accumulates. A completed card is different: it issues a code they can show you,
+                  and you take it on <Link href="/redeem">Redeem</Link>, which is what stops the
+                  same code working at the next counter.
                 </>
               )}
             </p>

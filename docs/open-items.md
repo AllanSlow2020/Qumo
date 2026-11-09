@@ -11,7 +11,7 @@ to write notes. It is the one to track work in. This file stays the
 narrative version, with the reasoning in prose, and it is the one to hand
 to a lawyer.
 
-Last updated 1 November 2026.
+Last updated 3 November 2026.
 
 ---
 
@@ -32,9 +32,28 @@ is first.
   copy beside it.
 - **[A] Appoint an Information Officer and register** with the Information
   Regulator, if the split is confirmed.
-- **[C] Give a shopper a way to reach Qumo.** There is none. Every route
-  runs through whichever brand they scanned. Tolerable for an operator,
-  not for a responsible party.
+- **Settled: a shopper can reach Qumo.** There is a contact page at
+  `/legal/contact` saying which questions are the brand's and which are
+  ours, the privacy notice and the terms both carry the address, and the
+  footer links to it from every shopper screen. Both documents are now
+  signed by QUMO-APP (PTY) LTD and its registration number rather than by
+  a product name. The notice is `web-v6` and the terms are `terms-v2`, so
+  anyone already signed in re-affirms at their next sign-in.
+- **Settled: an inbound SMS gets a reply.** `/api/sms/inbound` answered in
+  plain text, which Twilio reads as an application error: it logs a schema
+  warning and sends the shopper nothing, so the channel looked like it
+  worked from our side and was silence from theirs. It answers in TwiML
+  now. Switching it on is two settings in Twilio and one in Vercel, and
+  `docs/deploying.md` has both.
+- **[A] Point the Twilio number at the inbound webhook.** Set
+  `SMS_WEBHOOK_SECRET` in Vercel, put the same string in the "A message
+  comes in" URL on the number, then text it `HELP`. Until then a shopper
+  who texts the number still gets nothing, because the route refuses
+  everything while the secret is unset.
+- **[A] Make `help@qumo.co.za` deliver** somewhere you actually read,
+  before the first real shopper is shown it. It is published in the
+  product now. An address that bounces is worse than the silence it
+  replaced, and no test can catch it.
 - **[A/L] Write down the breach process** (section 22). Who decides, how
   fast, who signs the notification.
 - **[L] Review the brand agreement.** Drafted, not reviewed:
@@ -117,20 +136,32 @@ instruction rather than four conversations.
 
 ## 4. Product gaps
 
-- **[C] A coupon cannot be redeemed.** Separate from the item below and
-  worse. A completed stamp card issues a real coupon and nothing anywhere
-  can mark it used: `REDEEMED` is in `schema.prisma` and in no TypeScript
-  file. `CouponFraudEvent.ALREADY_REDEEMED` therefore can never fire, so
-  the same screenshot works at every counter. See
-  `docs/seattle-coffee-review.md`.
-- **[C] A stamp card cannot be earned from a till slip.** The slip path
-  resolves campaigns through one filter, `type: "PERCENT_OF_SPEND"`, so
-  the only way to get stamps out of a slip is a share-of-spend rule in
-  stamps, which multiplies stamps by rands. At the form's own default that
-  is 500 stamps on a R100 basket. A flat-per-slip rule fixes it and
-  removes the reason anyone would configure the broken combination.
-- **[C] Redemption.** `REDEMPTION_AVAILABLE` is false. The largest
-  unfinished edge, and CPA section 35 has views about it.
+- **Settled: a coupon can be redeemed, once.** `lib/coupons/manage.ts`
+  moves a coupon out of `ISSUED`, a console screen under Redeem takes the
+  code at the counter, and the shopper's wallet now lists their codes so
+  there is something to show. A conditional update on status settles two
+  counters trying the same coupon in the same second, and every refusal
+  writes a `CouponFraudEvent`, mistyped codes included. No migration was
+  needed: every column was already in the schema. The remaining decision
+  is a per-store staff role, so a barista's login cannot also change the
+  earn rate. See `docs/seattle-coffee-review.md`.
+- **Settled: a stamp card can be earned from a till slip.** The slip path
+  used to resolve campaigns through one filter, `type: "PERCENT_OF_SPEND"`,
+  so the only way to get stamps out of a slip was a share-of-spend rule in
+  stamps, which multiplies stamps by rands: 500 stamps on a R100 basket at
+  the form's own default. A flat rule has nothing to multiply, and
+  `lib/campaigns/slip-earning.ts` now decides what a slip can satisfy for
+  both the engine and the console. A coffee shop with a till and no printed
+  pack codes can run "buy ten, get one free", which it could not before.
+  Two promotions a slip could both satisfy are refused at activation, and
+  an overlap that predates the rule is named on the Overview rather than
+  resolved in silence.
+- **[C] Spending a rand balance at a till.** `REDEMPTION_AVAILABLE` is
+  still false, and this is now the only half of redemption that is shut:
+  `confirmWalletSpend` has an engine and a test suite and no caller, because
+  the two-phase flow assumes every till has a staffed Qumo login. That is a
+  question for the first brand whose counters would run it rather than a
+  guess made here. CPA section 35 has views about it.
 - **[C] Correct-the-read.** Proposed and not built: let a shopper fix a
   misread slip in the moment, identity fields only, never the amount. It
   is what makes photo capture defensible without storing anybody's
@@ -149,15 +180,47 @@ instruction rather than four conversations.
 ## 5. Operations
 
 - **[A] Tick `DIRECT_DATABASE_URL` for Preview** in Vercel. Production has
-  it. Until then every Preview build fails and that failure means nothing.
-- **[A] Twilio.** Once approved and a real number is live, confirm an SMS
-  actually arrives, **then** clear `DEMO_LOGIN_PHONES` and
-  `DEMO_LOGIN_CODE` in production.
+  it, Preview does not, so `scripts/preflight.mjs` stops every Preview
+  build before it reaches the migration it would fail on. The value is the
+  Neon string with `-pooler` taken out of the host; preflight refuses a
+  pooled one too, because the first version of that check passed on a
+  `DIRECT_DATABASE_URL` copied out of a provider dialog with the pooling
+  toggle left on. Until this is ticked every Preview build fails and that
+  failure means nothing, which is its own cost: a check that is always red
+  is a check nobody reads.
+- **[A] Decide whether Preview should have its own database.** The build
+  runs `prisma migrate deploy` on every deployment, Preview included. If
+  Preview and Production share one `DATABASE_URL`, a Preview build of any
+  branch carrying a migration applies that migration to the production
+  database before anybody has reviewed the pull request. Nothing has been
+  harmed by this yet, because no branch in flight carries one. A Neon
+  branch database for Preview is the real answer and it is a bigger job
+  than the item above, which is why they are separate: tick the variable
+  to get the check green, then decide this on its own merits.
+- **Settled: Twilio sends, on a scoped API key.** On 3 November a real
+  passcode reached a real handset and a shopper signed in, the first time
+  that has happened. `DEMO_LOGIN_PHONES` and `DEMO_LOGIN_CODE` are
+  deleted. Production authenticates with the Standard key `qumo-live`, and
+  the preflight's auth-token warning is gone from the build log, which is
+  the confirmation that the scoped key is the one in use. The fix was
+  copying the key SID and its secret off a single Twilio creation screen
+  in one action. See `docs/deploying.md`.
+- **[A] Delete `TWILIO_AUTH_TOKEN` from Vercel** and redeploy. It is
+  dormant now, because `resolveTwilioCredentials` prefers the key pair,
+  but it is still the master credential for the whole account: it can buy
+  numbers, spend money and read every message ever sent, and it cannot be
+  scoped or rotated on its own.
+- **[A] Delete the surplus Twilio API keys.** Six exist for one
+  integration. Keep `qumo-live` and delete the rest. That surplus is most
+  of why the afternoon of 3 November went the way it did.
 - **[A] Vercel plan.** Hobby is licensed for non-commercial personal use
   only and Vercel reads that broadly. See `docs/deploying.md`.
 - **[A] Neon region.** The database is in `us-east-2`. Relevant to the
   section 72 question above.
 - **[A] `ERROR_WEBHOOK_URL` is unset**, so nothing is alerting anywhere.
+  This stopped being theoretical on 3 November: every failed passcode
+  wrote `sms send rejected` with Twilio's own error code from 16:18
+  onwards, and nothing said so, which cost an afternoon.
 - **[A] Attach a reward** to Copper Kettle's live `Rounds card` in
   production. It completes at 10 and names nothing, so shoppers would
   collect forever and be handed nothing.

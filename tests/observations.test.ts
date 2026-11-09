@@ -10,11 +10,39 @@ const facts = (over: Partial<ObservationFacts> = {}): ObservationFacts => ({
   budgets: [],
   batches: [],
   live: [],
+  slipRivals: [],
   now: NOW,
   ...over,
 });
 
 const ids = (f: ObservationFacts) => observations(f).map((o) => o.id);
+
+const rival = (name: string) => ({ campaignId: name.toLowerCase().replace(/\s+/g, "-"), name });
+
+describe("more than one promotion on one till slip", () => {
+  it("says nothing for a single slip promotion", () => {
+    expect(ids(facts({ slipRivals: [rival("Rounds card")] }))).not.toContain("slip-rivals");
+  });
+
+  it("names the one that wins and the ones earning nothing", () => {
+    const found = observations(facts({ slipRivals: [rival("Rounds card"), rival("5% back")] }));
+    const note = found.find((o) => o.id === "slip-rivals");
+    expect(note).toBeDefined();
+    expect(note?.tone).toBe("warn");
+    // The oldest is first in the list, and it is the one the engine picks.
+    expect(note?.detail).toMatch(/every slip goes to Rounds card/);
+    expect(note?.detail).toMatch(/5% back is switched on and earning nothing/);
+  });
+
+  it("reads as a list once there are three", () => {
+    const found = observations(
+      facts({ slipRivals: [rival("Rounds card"), rival("5% back"), rival("Winter")] }),
+    );
+    const note = found.find((o) => o.id === "slip-rivals");
+    expect(note?.title).toMatch(/^3 promotions/);
+    expect(note?.detail).toMatch(/5% back and Winter are switched on/);
+  });
+});
 
 describe("what is worth looking at", () => {
   it("says nothing when there is nothing to say", () => {

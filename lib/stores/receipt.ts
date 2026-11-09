@@ -2,7 +2,8 @@ import { Prisma, type LedgerUnit } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
 import { decryptSecret } from "@/lib/security/crypto";
 import { isSerializationConflict, MAX_SERIALIZATION_ATTEMPTS } from "@/lib/db/serialization";
-import { applyAccrual, AccrualRefused, percentOfSpend } from "@/lib/ledger/accrue";
+import { applyAccrual, AccrualRefused } from "@/lib/ledger/accrue";
+import { isSlipEarnable, slipAward } from "@/lib/campaigns/slip-earning";
 import { getProgrammeState } from "@/lib/subscriptions/manage";
 import { checkCampaignWindow } from "@/lib/packs/scan";
 import { meetsProofTier, type ProofTier } from "@/lib/proof/tier";
@@ -136,14 +137,24 @@ async function findStore(storeCode: string) {
 }
 
 /**
- * The brand's live percent-of-spend campaign. At most one can be active at
- * a time - enforced when a rule is configured (lib/stores/manage.ts), so
- * that this resolution is never ambiguous and a slip can never be worth a
- * different amount depending on which campaign happened to be found first.
+ * The brand's live promotion that a till slip can earn from.
+ *
+ * Both kinds now: a share of the basket, and a flat amount per slip. The
+ * flat one is what lets a coffee shop run "buy ten, get one free" from a
+ * till they already have, which was impossible while this filtered on
+ * `type: "PERCENT_OF_SPEND"` alone. See lib/campaigns/slip-earning.ts.
+ *
+ * At most one such promotion may be switched on at a time, refused in
+ * lib/campaigns/manage.ts, so this resolution is not ambiguous and a slip
+ * cannot be worth a different thing depending on which row was found
+ * first. `createdAt` ascending is the tiebreak for brands that already
+ * had an overlap before that rule covered both kinds: the older promotion
+ * wins, which is at least stable, and the console says so on the
+ * promotions screen rather than leaving it to be discovered at a till.
  */
-async function findSpendCampaign(brandId: string, now: Date) {
+async function findSlipCampaign(brandId: string, now: Date) {
   const campaigns = await prisma.campaign.findMany({
-    where: { brandId, status: "ACTIVE", earnRule: { type: "PERCENT_OF_SPEND" } },
+    where: { brandId, status: "ACTIVE", earnRule: { isNot: null } },
     include: {
       earnRule: true,
       reward: {
@@ -153,7 +164,11 @@ async function findSpendCampaign(brandId: string, now: Date) {
     orderBy: { createdAt: "asc" },
   });
 
-  return campaigns.find((campaign) => checkCampaignWindow(campaign, now) === null) ?? null;
+  return (
+    campaigns.find(
+      (campaign) => isSlipEarnable(campaign.earnRule) && checkCampaignWindow(campaign, now) === null,
+    ) ?? null
+  );
 }
 
 /**
@@ -272,12 +287,12 @@ export async function redeemReceipt(
     return { ok: false, reason: "FUTURE_DATED" };
   }
 
-  const campaign = await findSpendCampaign(store.brandId, now);
+  const campaign = await findSlipCampaign(store.brandId, now);
   const rule = campaign?.earnRule;
-  // basisPoints is nullable on the model because a FLAT_PER_SCAN rule has
-  // no use for it; a PERCENT_OF_SPEND rule without one is a half-configured
-  // campaign, and awarding nothing is the right answer until it is fixed.
-  if (!campaign || !rule || rule.basisPoints == null) {
+  // A half-configured promotion - a share with no percentage, a flat rule
+  // worth nothing - is treated as no promotion rather than as a scan that
+  // burns the slip for zero. Switching it back makes the slip work again.
+  if (!campaign || !rule || !isSlipEarnable(rule)) {
     return { ok: false, reason: "NO_CAMPAIGN" };
   }
 
@@ -292,10 +307,11 @@ export async function redeemReceipt(
     return { ok: false, reason: "BELOW_MINIMUM" };
   }
 
-  const awarded = percentOfSpend(parsed.amountCents, rule.basisPoints);
+  const awarded = slipAward(rule, parsed.amountCents);
   if (awarded <= 0) {
-    // A basket small enough that the percentage rounds to nothing. Told as
-    // a minimum rather than as a zero award, which would read as a bug.
+    // Only reachable on a share of spend, where a basket can be small
+    // enough that the percentage rounds to nothing. Told as a minimum
+    // rather than as a zero award, which would read as a bug.
     return { ok: false, reason: "BELOW_MINIMUM" };
   }
 

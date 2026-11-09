@@ -85,6 +85,19 @@ const GROUPS: Group[] = [
     heading: "Running it",
     items: [
       {
+        /* First in the group, because it is the one item here somebody
+           opens several times a day with a person waiting, while the rest
+           are opened when something is being set up. */
+        href: "/redeem",
+        label: "Redeem",
+        icon: icon(
+          <>
+            <path d="M8.4 2H13a1 1 0 0 1 1 1v4.6a1 1 0 0 1-.3.7l-6 6a1 1 0 0 1-1.4 0L2.7 9.7a1 1 0 0 1 0-1.4l6-6A1 1 0 0 1 8.4 2z" />
+            <path d="M10.9 5.1h.01" />
+          </>,
+        ),
+      },
+      {
         href: "/promotions",
         label: "Promotions",
         icon: icon(<path d="M2.5 6.5 8 2l5.5 4.5V13a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1z" />),

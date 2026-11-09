@@ -1,5 +1,5 @@
 import { HONOUR_WINDOW_DAYS } from "@/lib/subscriptions/state";
-import { OPERATOR_NAME, PRODUCT_NAME } from "@/lib/product";
+import { OPERATOR_NAME, PRODUCT_NAME, SHOPPER_SUPPORT_EMAIL } from "@/lib/product";
 
 /**
  * The terms a shopper is on, rendered at /legal/terms.
@@ -32,7 +32,19 @@ import { OPERATOR_NAME, PRODUCT_NAME } from "@/lib/product";
  * disputes something is entitled to be judged against the words they were
  * shown. Bump on any change of substance.
  */
-export const TERMS_VERSION = "terms-v1";
+/**
+ * terms-v2 makes two corrections, both of which the code moved under it.
+ *
+ * Redemption was described as shut. A completed card's reward can now be
+ * taken at a counter, so the clause said a thing about this system that
+ * had stopped being true, and in the direction that matters: a shopper
+ * reading it would not know to ask for what they had earned.
+ *
+ * And the clause on who you are dealing with routed everything through the
+ * brand. A shopper can reach us directly now, and the terms should say so
+ * in the same breath as the privacy notice does.
+ */
+export const TERMS_VERSION = "terms-v2";
 
 export const TERMS_POINTS: { heading: string; body: string }[] = [
   {
@@ -41,7 +53,7 @@ export const TERMS_POINTS: { heading: string; body: string }[] = [
   },
   {
     heading: "Who you are dealing with",
-    body: `Two parties, and it is worth knowing which is which. The brand sold you the thing and runs the promotion. ${OPERATOR_NAME} runs the programme it is counted in and keeps the record. So anything about a price, a product or a store is the brand's; anything about a balance, a scan that did not work, or a record that looks wrong is ours, and the brand can raise it with us on your behalf.`,
+    body: `Two parties, and it is worth knowing which is which. The brand sold you the thing and runs the promotion. ${OPERATOR_NAME} runs the programme it is counted in and keeps the record. So anything about a price, a product or a store is the brand's; anything about a balance, a scan that did not work, or a record that looks wrong is ours. The brand can raise it with us on your behalf, and you can reach us yourself at ${SHOPPER_SUPPORT_EMAIL} without going through them.`,
   },
   {
     heading: "What a balance is",
@@ -57,7 +69,7 @@ export const TERMS_POINTS: { heading: string; body: string }[] = [
   },
   {
     heading: "Using what you have earned",
-    body: "Redemption is not open yet. What you earn is recorded and held for you; the brand decides how you eventually use it and will tell you when that opens. Your balance does not expire while the programme is running. An individual reward, such as a coupon for a completed card, can carry its own expiry date, and where it does, that date is shown on the reward itself.",
+    body: "A reward from a completed card is yours to take: the code is in your rewards and a member of staff enters it at the counter, once. A balance in rands or points is different, and cannot be spent at a till yet. What you earn is recorded and held for you; the brand decides how you eventually use it and will tell you when that opens. Your balance does not expire while the programme is running. An individual reward can carry its own expiry date, and where it does, that date is shown on the reward itself.",
   },
   {
     heading: "If the brand ends the programme",

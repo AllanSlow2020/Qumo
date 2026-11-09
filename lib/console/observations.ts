@@ -1,4 +1,5 @@
 import { forBrand } from "@/lib/db/tenant";
+import { isSlipEarnable } from "@/lib/campaigns/slip-earning";
 import type { LedgerUnit } from "@prisma/client";
 
 /**
@@ -51,6 +52,12 @@ export type ObservationFacts = {
   batches: { batchId: string; label: string; total: number; scanned: number }[];
   /** Live promotions that award something, and when each last did. */
   live: { campaignId: string; name: string; lastAwardAt: Date | null }[];
+  /**
+   * Live promotions a till slip could satisfy, oldest first, and only for a
+   * brand that has a till printing Qumo codes. Empty for everyone else,
+   * because without a slip door there is nothing to be ambiguous about.
+   */
+  slipRivals: { campaignId: string; name: string }[];
   now: Date;
 };
 
@@ -135,6 +142,27 @@ export function observations(f: ObservationFacts): Observation[] {
     }
   }
 
+  /*
+   * More than one promotion a slip could satisfy.
+   *
+   * The engine resolves this to the oldest and keeps going, which is
+   * stable but silent, and silence here means a brand finds out when a
+   * shopper asks why a R200 basket gave them a stamp. Activation refuses
+   * to create this state; it is still reachable the other way round, by a
+   * brand with two live flat promotions adding their first till.
+   */
+  if (f.slipRivals.length > 1) {
+    const [winner, ...rest] = f.slipRivals;
+    out.push({
+      id: "slip-rivals",
+      tone: "warn",
+      title: `${f.slipRivals.length} promotions are earning from the same till slip`,
+      detail: `A slip says which store and what the basket came to, and nothing that says which promotion it belongs to, so every slip goes to ${winner!.name} because it is the oldest. ${rest.map((r) => r.name).join(" and ")} ${rest.length === 1 ? "is" : "are"} switched on and earning nothing from your tills. Pause all but one.`,
+      href: "/promotions",
+      cta: "Open promotions",
+    });
+  }
+
   for (const card of f.cards) {
     // Not "nobody has completed one" on its own - that is true of every card
     // on its first day. It needs enough stamps out that somebody should have.
@@ -155,14 +183,25 @@ export function observations(f: ObservationFacts): Observation[] {
 export async function getObservationFacts(brandId: string, now: Date = new Date()): Promise<ObservationFacts> {
   const scoped = forBrand(brandId);
 
-  const [campaigns, issuedRows, couponRows, batchRows, scannedRows, lastRows] = await Promise.all([
+  const [campaigns, issuedRows, couponRows, batchRows, scannedRows, lastRows, slipDoor] = await Promise.all([
     scoped.campaign.findMany({
       where: { status: "ACTIVE", earnRule: { isNot: null } },
       select: {
         id: true,
         name: true,
-        earnRule: { select: { unit: true, completesAt: true, maxTotalAmount: true } },
+        earnRule: {
+          select: {
+            unit: true,
+            completesAt: true,
+            maxTotalAmount: true,
+            type: true,
+            amount: true,
+            basisPoints: true,
+          },
+        },
       },
+      // Oldest first, because that is the order the slip path resolves in.
+      orderBy: { createdAt: "asc" },
     }),
     // Credits only. A redemption is not an issue, and netting them would
     // make a budget look further from its ceiling than it is.
@@ -171,6 +210,7 @@ export async function getObservationFacts(brandId: string, now: Date = new Date(
     scoped.packBatch.findMany({ select: { id: true, label: true, quantity: true, campaignId: true } }),
     scoped.packCode.groupBy({ by: ["batchId"], where: { status: "SCANNED" }, _count: { _all: true } }),
     scoped.pointsTransaction.groupBy({ by: ["campaignId"], where: { amount: { gt: 0 } }, _max: { createdAt: true } }),
+    scoped.store.findFirst({ where: { isActive: true }, select: { id: true } }),
   ]);
 
   // campaignId is nullable on PointsTransaction - it is SetNull, so a
@@ -184,6 +224,7 @@ export async function getObservationFacts(brandId: string, now: Date = new Date(
   const cards: ObservationFacts["cards"] = [];
   const budgets: ObservationFacts["budgets"] = [];
   const live: ObservationFacts["live"] = [];
+  const slipRivals: ObservationFacts["slipRivals"] = [];
 
   for (const c of campaigns) {
     const rule = c.earnRule;
@@ -203,6 +244,9 @@ export async function getObservationFacts(brandId: string, now: Date = new Date(
     if (rule.maxTotalAmount) {
       budgets.push({ campaignId: c.id, name: c.name, unit: rule.unit, issued, cap: rule.maxTotalAmount });
     }
+    if (slipDoor && isSlipEarnable(rule)) {
+      slipRivals.push({ campaignId: c.id, name: c.name });
+    }
   }
 
   const batches = batchRows.map((b) => ({
@@ -212,5 +256,5 @@ export async function getObservationFacts(brandId: string, now: Date = new Date(
     scanned: scannedBy.get(b.id) ?? 0,
   }));
 
-  return { cards, budgets, batches, live, now };
+  return { cards, budgets, batches, live, slipRivals, now };
 }

@@ -3009,3 +3009,55 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   .cn-drawer,
   .cn-drawer[open] { translate: 0 0; }
 }
+
+/* ---------- the counter's verdict ---------- */
+
+/* Read across a counter with a shopper waiting, which is why it is a block
+   with a colour rather than a line of text: the answer has to be legible
+   from a standing position and at a glance, and the difference between
+   "hand it over" and "already taken" must not depend on reading a
+   sentence. The left bar carries the meaning in both themes - a filled
+   green or red panel either fails contrast in the light theme or glows in
+   the dark one. */
+.cn-verdict {
+  margin-top: 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius);
+  background: var(--cn-quiet);
+}
+.cn-verdict-ok { box-shadow: inset 4px 0 0 var(--cn-pos); }
+.cn-verdict-no { box-shadow: inset 4px 0 0 var(--cn-neg); }
+
+.cn-verdict-head {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--cn-ink-3);
+}
+.cn-verdict-ok .cn-verdict-head { color: var(--cn-pos); }
+.cn-verdict-no .cn-verdict-head { color: var(--cn-neg); }
+
+.cn-verdict-main {
+  margin: 6px 0 0;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--cn-ink);
+  word-break: break-word;
+}
+.cn-verdict-sub {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--cn-ink-2);
+}
+
+/* Big enough to read back to somebody while typing it, and spaced so two
+   adjacent characters of a code are never mistaken for one. */
+.cn-code-entry {
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  max-width: 340px;
+}

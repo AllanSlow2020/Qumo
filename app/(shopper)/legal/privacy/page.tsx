@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { CONSENT_POINTS, WEB_CONSENT_VERSION } from "@/lib/consumer/consent";
-import { OPERATOR_NAME, PRODUCT_NAME } from "@/lib/product";
+import { OPERATOR_LEGAL_NAME, OPERATOR_REGISTRATION, PRODUCT_NAME } from "@/lib/product";
 import { BrandHeader } from "../../brand-header";
 
 export const metadata: Metadata = {
@@ -37,7 +37,7 @@ export default function PrivacyNoticePage() {
         ))}
 
         <p className="sc-label">
-          Version {WEB_CONSENT_VERSION} · {OPERATOR_NAME}. If this notice changes in substance, we&apos;ll ask you to
+          Version {WEB_CONSENT_VERSION} · {OPERATOR_LEGAL_NAME} ({OPERATOR_REGISTRATION}). If this notice changes in substance, we&apos;ll ask you to
           agree again the next time you sign in.
         </p>
       </section>

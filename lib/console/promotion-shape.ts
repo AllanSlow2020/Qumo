@@ -13,7 +13,10 @@ import type { EarnRuleType, LedgerUnit } from "@prisma/client";
  * of spend awarded in stamps multiplies stamps by rands, so at the form's
  * own default of 500 basis points a R100 basket awarded 500 stamps. The
  * demo data contains exactly that, and whoever set it up was not being
- * careless: it is the only lever that produces stamps from a till slip.
+ * careless: at the time it was the only lever that produced stamps from a
+ * till slip. It is not any more - a flat rule earns from a slip now, which
+ * is what removes the reason anybody would reach for that combination.
+ * See lib/campaigns/slip-earning.ts.
  *
  * So the fix is not a better label on the old question. It is asking one
  * question with three answers and deriving the row from it.
@@ -46,7 +49,7 @@ export const SHAPE_COPY: Record<PromotionShape, ShapeCopy> = {
     label: "A stamp card. Buy ten, get one free",
     blurb:
       "Every purchase earns one stamp. When the card is full the shopper is given whatever you name on the next step.",
-    door: "Stamps come from a code under a pack or on a sticker. A till slip cannot award a stamp yet.",
+    door: "One purchase, one stamp: a till slip from one of your stores, or a code under a pack.",
   },
   SHARE_OF_SPEND: {
     label: "A share of what they spend",
@@ -56,7 +59,7 @@ export const SHAPE_COPY: Record<PromotionShape, ShapeCopy> = {
   FIXED_PER_SCAN: {
     label: "The same amount every scan",
     blurb: "Every valid scan earns the same, whatever was bought. The simplest promotion to run and to explain.",
-    door: "Works on anything unique: a code under a pack, a sticker on a bottle.",
+    door: "Works on anything unique: a till slip, a code under a pack, a sticker on a bottle.",
   },
 };
 
