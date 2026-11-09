@@ -299,11 +299,15 @@ lighter obligation, but it is not nothing.
    person rather than the product: QUMO-APP (PTY) LTD, registration
    2026/858757/07.
 
-   **Outstanding:** `help@qumo.co.za` has to deliver somewhere a person
-   reads, before the first real shopper is shown it. A published address
-   that bounces is worse than the silence it replaced. Nothing in the code
-   can check this. The Information Officer named in the same clause of the
-   draft notice is still not appointed, which is item 5 above.
+   `help@qumo.co.za` delivers. Confirmed on 9 November by sending to it
+   from an unrelated account and watching the message arrive. The domain
+   had no MX record at all until that day, so the address was published
+   before it worked, which is the sequence to avoid rather than repeat:
+   an address that bounces is worse than the silence it replaced, and
+   nothing in the code can check it. See `docs/deploying.md`.
+
+   **Outstanding:** the Information Officer named in the same clause of
+   the draft notice is still not appointed, which is item 5 above.
 7. **Write down what happens after a breach** (section 22). There is no
    documented process, and that is a policy gap rather than a code one - the
    system can already answer "whose data" from the memberships and the

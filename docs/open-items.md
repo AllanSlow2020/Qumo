@@ -74,13 +74,13 @@ is first.
   the number to a Messaging Service allows the built-in keyword handling
   to be configured. Renaming our keywords instead would mean telling
   shoppers to reply with something other than YES, which is worse.
-- **[A] Confirm `help@qumo.co.za` actually delivers.** Close, not done.
-  The domain had no MX record at all until 9 November, which is why the
-  first test messages neither arrived nor bounced quickly. Two MX records
-  now point at ImprovMX, forwarding `help@` and `access@` to a personal
-  inbox. What is outstanding is the proof: send a test and see it land.
-  An address published in a privacy notice that nobody has watched a
-  message arrive at is still an assumption. See `docs/deploying.md`.
+- **Settled: `help@qumo.co.za` delivers.** The domain had no MX record at
+  all until 9 November, which is why the first tests neither arrived nor
+  bounced quickly. Two MX records now point at ImprovMX, forwarding
+  `help@` and `access@` to a personal inbox, and both were confirmed by
+  sending from an unrelated account and watching the messages arrive. The
+  address was published before it worked, which is the sequence to avoid
+  rather than repeat. See `docs/deploying.md`.
 - **[A] Turn the domain lock on** for `qumo.co.za` and check
   `qumo-app.com` too. It is currently off. These two carry a registered
   company's name, its marketing site, its product and now its support
