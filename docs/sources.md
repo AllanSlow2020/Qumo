@@ -1,6 +1,6 @@
 # Sources for every figure in the decks
 
-Generated from `deck/sources.py` by `python3 deck/sources.py`. Edit that file, not this one. Every build of `deck/build_deck.py` and `deck/build_pitch.py` reads the figures back out of the finished deck and refuses to save it if one is not listed here. `--strict` also refuses the open gaps: use it for any copy that goes to a brand or an investor.
+Generated from `deck/sources.py` by `python3 deck/sources.py`. Edit that file, not this one. Every build of `deck/build_deck.py` reads the figures back out of the finished deck and refuses to save it if one is not listed here. `--strict` also refuses the open gaps: use it for any copy that goes to a brand or an investor.
 
 **Open gaps, which `--strict` refuses:** R40,000 (what a managed on-pack promotion costs a brand in South Africa), R80,000 (what two managed promotions a year cost).
 
@@ -33,11 +33,9 @@ Generated from `deck/sources.py` by `python3 deck/sources.py`. Edit that file, n
 | 1 | Scans needed to earn | One scan of a code awards it; each code earns once (lib/packs/code.ts). |
 | 6 | Length of the texted sign-in code | lib/consumer/otp.ts: const CODE_DIGITS = 6 |
 | 800+ | Automated tests passing | pnpm test against a local Postgres on 2026-11-09: 811 tests in 71 files, all passing. Re-run before quoting a more exact figure. |
-| 17 | Screens in the decks, each a capture of the running product | deck/shots/ holds 17 captures, written by deck/capture.mjs. |
+| 17 | Screens in the decks, each a capture of the running product | deck/shots/ holds 17 captures, written by deck/capture.mjs; every one appears in the deck. |
 | 2 | Ways a purchase is proved: a code under the pack, or a till slip | lib/packs/ (pack codes) and lib/stores/receipt.ts (till slips). *Caution: docs/brand-context.md section 8 says 'three ways to earn' for the site, meaning the three promotion shapes. Different axis; do not mix them.* |
 | 0 | Nothing in the deck is a mock-up | Every screen is a capture of a running build (deck/capture.mjs). |
-| 84 | Days of seeded history in the demo database | scripts/demo.ts: const HISTORY_DAYS = 84 |
-| 5 | Stores in the demo database | scripts/demo.ts: 'five Cape Town stores' (the STORES list) |
 
 ## Demo data (slide must say illustrative)
 
@@ -47,8 +45,6 @@ Generated from `deck/sources.py` by `python3 deck/sources.py`. Edit that file, n
 | R12.97 | Cost per person reached on the performance screen | scripts/demo.ts |
 | 137 | People who earned, on the performance screen | scripts/demo.ts |
 | R3,155 | Value still owed, on the overview screen | scripts/demo.ts |
-| 143, 30 | Scans in the last 30 days, on the performance screen | scripts/demo.ts |
-| 103 | People who joined in the window, on the performance screen | scripts/demo.ts |
 
 ## Qumo's proposed prices (slide must say indicative)
 

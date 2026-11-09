@@ -311,7 +311,7 @@ liability, or breakage, for any sector.
 - *The sales argument* ("value earned and never spent") **has no source in
   this whitepaper and should not be presented as a market fact.** The
   brand figures above cut the other way for the big programmes. I did not
-  find the phrase in `deck/build_pitch.py` or `deck/build_deck.py`, so no
+  find the phrase in the pitch or overview deck (now merged into `deck/build_deck.py`), so no
   slide needs taking down. It should not be added until somebody finds a
   real source. A defensible version is narrower, and it is sourced:
   *a third of loyalty users say they hate points expiring before they can
@@ -372,7 +372,7 @@ settings first.
 
 ### 8.4 Where every deck figure comes from
 
-`docs/sources.md`, generated from `deck/sources.py`. Every build of either
+`docs/sources.md`, generated from `deck/sources.py`. Every build of the
 deck checks each figure on each slide against it and refuses to save a deck
 containing a figure with no source. `--strict` also refuses the open gaps,
 which today are the R40,000 on-pack promotion cost and the R80,000 worked

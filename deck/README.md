@@ -1,15 +1,20 @@
-# The decks
+# The deck
 
-Two of them, generated rather than drawn.
+One presentation, generated rather than drawn: `build_deck.py` writes
+`Qumo.pptx`.
 
-| | | |
+| Slides | Part | What it is for |
 |---|---|---|
-| `build_deck.py` | 23 slides | the product overview: what it does, every screen |
-| `build_pitch.py` | 14 slides | the pitch: why a brand should care, and the ask; the last two answer objections |
+| 1-12 | The pitch | Presented. Why a brand should care, and the ask, in fifteen minutes |
+| 13-33 | Appendix | Not presented. What the brand sees, what the customer sees, and the questions that come next: turned to when somebody asks, and left behind afterwards |
 
-The point of them being code is that they are regenerated from the running
-product. Their central claim is that every screen in them is a live render,
-not a mockup.
+There used to be a separate product overview. It was folded in as the
+appendix because the two kept drifting apart: the same mechanic, pricing
+and status slides lived in both, and their figures disagreed.
+
+The point of it being code is that it is regenerated from the running
+product. Its central claim is that every screen in it is a live render,
+not a mockup. Every one of the 17 screenshots appears somewhere in it.
 
 This directory lives in the repo because it has already been lost twice to
 an ephemeral working directory, each time costing a full rebuild.
@@ -26,8 +31,7 @@ product.
 | | |
 |---|---|
 | `style.py` | the house style: palette, geometry, and every drawing primitive |
-| `build_deck.py` | the product overview |
-| `build_pitch.py` | the pitch |
+| `build_deck.py` | the deck: the pitch, then the appendix |
 | `capture.mjs` | photographs the running product into `shots/` |
 | `art/` | the Qumo mark, rendered from `public/qumo.svg` in three colours |
 | `shots/` | the screenshots, committed so the deck builds from a clone |
@@ -46,7 +50,7 @@ indicative. The overview deck's screen count is counted from `shots/`
 rather than trusted.
 
 ```bash
-python3 deck/build_pitch.py --strict
+python3 deck/build_deck.py --strict
 ```
 
 `--strict` also refuses known gaps (entries marked `unsourced`). Use it for
@@ -86,7 +90,6 @@ CHROMIUM_PATH=/path/to/chromium \
 
 python3 -m pip install -r deck/requirements.txt
 python3 deck/build_deck.py deck/Qumo.pptx
-python3 deck/build_pitch.py deck/Qumo-pitch.pptx
 ```
 
 The last argument is optional and is a pack code that will be burned to
@@ -94,8 +97,8 @@ photograph the award screen. Mint one for the purpose rather than taking it
 out of a live print run. Without it the deck still builds and that one
 slide falls back to the wallet.
 
-Building the decks alone, with the screens already in the repo, is just the
-last three lines.
+Building the deck alone, with the screens already in the repo, is just the
+last two lines.
 
 **Install with `python3 -m pip`, not bare `pip`.** On more than one image
 `pip` belongs to a different interpreter than `python3`, and the install
@@ -110,7 +113,6 @@ across the footer rule.
 
 ```bash
 libreoffice --headless --convert-to pdf --outdir deck deck/Qumo.pptx
-libreoffice --headless --convert-to pdf --outdir deck deck/Qumo-pitch.pptx
 ```
 
 Then look at every page, and grep the extracted text for anything that
