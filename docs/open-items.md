@@ -51,26 +51,38 @@ is first.
   real handset and getting a real answer back from production. That one
   message exercises the whole chain: carrier, Twilio, Vercel, the secret
   comparison, the handler, the TwiML envelope and the reply.
-- **[A/C] Twilio swallows some of our keywords.** Texting `HELP` returns
-  Twilio's own stock reply, "Reply STOP to unsubscribe. Msg&Data Rates
-  May Apply", and not ours: Twilio answers a reserved set of keywords
-  itself before the webhook is called. Observed for `HELP`. Our table in
-  `lib/sms/inbound.ts` overlaps that set in three rows: HELP (HELP,
-  INFO), STOP (STOP, END, CANCEL, UNSUBSCRIBE) and JOIN (**YES**).
+- **[A/C] Twilio answers `HELP` instead of us, and owns `STOP`.** Twilio
+  handles a reserved set of keywords itself, before the webhook is
+  called. Our table in `lib/sms/inbound.ts` overlaps that set in three
+  rows, and the three have turned out differently.
 
-  The JOIN row is the one that matters, and it is not yet confirmed. An
-  affirmative reply is the consent record for an SMS joiner, so if Twilio
-  consumes `YES` the SMS join flow cannot record consent at all and
-  nobody would find out until a real shopper tried it. Test by texting
-  `YES` from a number that is already a member: `handleJoin` returns
-  early for an existing person without re-stamping consent, so the test
-  has no side effect.
+  **JOIN is fine.** This was the row worth worrying about, because an
+  affirmative reply is the consent record for an SMS joiner, so a
+  swallowed `YES` would mean the join flow could not record consent at
+  all. Tested on 9 November from a number that was already a member:
+  `YES` reached `handleJoin` and got our reply, not Twilio's. Twilio
+  appears to treat its opt-in keywords as meaningful only for a number
+  that has previously opted out, which is the next item.
 
-  STOP being handled by Twilio is half good: carrier-grade opt-out beats
-  ours. But `handleStop()` never runs, so our own record of who opted out
-  is never written.
+  **HELP never reaches us.** A shopper texting `HELP` gets "Reply STOP to
+  unsubscribe. Msg&Data Rates May Apply" instead of our line telling them
+  to reply YES to join and send a code to earn. Low harm, real cost: the
+  one message whose entire job is to explain the service does not.
 
-  The fix, if confirmed, is on Twilio's side rather than ours: attaching
+  **STOP is Twilio's, and that is mostly good.** Carrier-grade opt-out
+  beats ours and should stay. What it costs is that `handleStop()` never
+  runs, so our own record of who opted out is never written. The shopper
+  stops receiving messages, and Qumo does not know they asked to.
+
+  **The untested edge, and it is the one to think about.** A shopper who
+  texts `STOP` is blocked at Twilio. If they later text `YES` to come
+  back, Twilio is likely to consume that `YES` as its own opt-in keyword,
+  unblock them, and never call the webhook. They would be reachable again
+  and still not rejoined at Qumo, and nothing would say so. Testing this
+  means opting a real handset out and back in, which is reversible but
+  blocks that number in the meantime.
+
+  The fix for all three is on Twilio's side rather than ours: attaching
   the number to a Messaging Service allows the built-in keyword handling
   to be configured. Renaming our keywords instead would mean telling
   shoppers to reply with something other than YES, which is worse.
