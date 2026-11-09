@@ -58,7 +58,11 @@ def start(deck_title, total):
     return prs
 
 
-def save(path):
+def save(path, deck):
+    """Check every figure against deck/sources.py, then write. Exits without
+    writing if a figure has no source, so a deck that fails is never left on disk."""
+    import sources
+    sources.enforce(prs, deck)
     prs.save(path)
     return _page["n"]
 

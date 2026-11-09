@@ -325,44 +325,55 @@ liability, or breakage, for any sector.
 
 ### 8.3 SA SME loyalty vendors: pricing and proof of purchase
 
-**Not verified. Nothing in this section may go in the deck.**
+One of seven verified so far. Only the verified rows may be quoted.
 
-The brief was to read LoyaltyPro, Preepoints, SME Loyalty, Rewardfinity,
-Bizzfo, Lekka and LoyaltyPass from each vendor's own pricing page. I could
-not do that:
+#### Verified: LoyaltyPro
 
-- **I could not identify the vendors' own websites.** Web searches for
-  each name turned up no first-party site for LoyaltyPro, Preepoints, SME
-  Loyalty, Rewardfinity or LoyaltyPass under those names. "Lekka" turns up
-  only as **Lekka Card**, on Capterra. "Bizzfo" turns up only as a
-  point-of-sale product (Bizzfo POS), with no loyalty pricing. I did not
-  guess at domains.
-- **This session's network allows only truth.co.za, bizcommunity.com,
-  businesstech.co.za and iol.co.za**, so a vendor page would be refused
-  even with a correct URL.
+Read 9 November 2026 from <https://get.loyaltypro.io/>. That is the
+vendor's own site. Its FAQ answers are in the site's own JavaScript bundle,
+which is where the quotes below come from.
 
-What search did return is listed below. It is an aggregator's summary,
-which is exactly what the brief said not to rely on, and it is here only
-so the next pass knows where to start:
+| | What the page says |
+|---|---|
+| **Price** | Basic *"R49/month"*, Premium *"R159/month"*. FAQ: *"You get 2 months completely free to test out LoyaltyPro from the moment you sign up … Basic is R49/month and Premium is R159/month."* VAT is not mentioned. |
+| **Contract** | *"LoyaltyPro has no contracts or lock-in periods. You simply pay for the month ahead"*. Payment is by *"a YOCO payment link"*. |
+| **Limits** | Basic: *"Up to 2 Products/Services"*. Customer email notifications, employee logins and CSV export are Premium only. *"Currently, each location needs its own account."* |
+| **What a coffee shop pays** | **R49 a month** if it rewards one or two items and staff tell customers their balance. **R159 a month** for anything more, for customer emails, or for staff logins. Each extra branch needs another account. The first two months are free. |
+| **Proof of purchase** | **None. A member of staff adds the points.** *"Every time a customer visits, tap to add a point."* Customers are added by the business (*"Quickly add customers with their name and contact details"*), and identity is an email address. The site and its bundle mention no QR code, receipt, slip or till integration. |
+| **Unaudited claim on the page** | *"Our clients see an average 30% increase in repeat business"*. No method is given. Do not repeat it. |
 
-| Vendor | Unverified lead | Where from |
-|---|---|---|
-| Lekka Card | "Starting price R249,00", free version and free trial; rewards "via QR codes, with no app downloads or hardware needed" | Capterra listing, <https://www.capterra.co.za/software/1102950/Lekka-Card> |
-| Bizzfo | POS "Basic plan at $12 per month"; no loyalty product found | softwarereview.com / TrustRadius listings |
-| LoyaltyPro, Preepoints, SME Loyalty, Rewardfinity, LoyaltyPass | Nothing found under these names | — |
+**What this means for Qumo.** For LoyaltyPro the suspicion is confirmed:
+nothing proves a purchase happened. A point is whatever the person at the
+counter decides to give, so the programme is only as honest as that
+person. That is acceptable for a coffee shop rewarding its own regulars.
+It does not work for a brand paying for rewards across stores it does not
+run, which is the case Qumo's signed slip and single-use pack code exist
+for. It also sets the price level: **a coffee shop can buy loyalty software
+for R49 a month.** Qumo should not be pitched to coffee shops on price, and
+the decks do not try to.
 
-So the coffee-shop cost table and the proof-of-purchase comparison are
-still to do. **The suspicion that none of them prove a purchase is
-unconfirmed, and it should not be stated to an investor yet.** To finish
-it, I need:
+#### Not yet verified
 
-1. The URL of each vendor's own pricing page, or its homepage.
-2. Those hosts added to the session's network allowlist.
+- **Preepoints, SME Loyalty, Rewardfinity, LoyaltyPass.** No site of their
+  own was found under these names. I need the URL from wherever you found
+  them.
+- **Lekka.** Found only as "Lekka Card" on Capterra, which gives a
+  starting price of R249 and describes rewards "via QR codes". That is
+  unverified. Its own URL is needed.
+- **Bizzfo.** Found only as a point-of-sale product, with no loyalty
+  pricing. Its own URL is needed.
 
-For each vendor the table should then record: monthly fee at the
-smallest paid tier that fits one coffee shop with one till; setup or
-hardware fees; per-customer or per-message charges such as SMS; and what
-the product takes as evidence that a purchase happened (staff tap,
-customer self-scan of a static QR, POS integration, receipt photo, or
-nothing). Each entry needs a quotation from the page, the URL, and the
-date it was read.
+For each one the table needs: the monthly fee at the smallest tier that fits
+one coffee shop with one till; setup or hardware fees; per-customer or
+per-message charges; and what it takes as evidence that a purchase happened.
+Each entry needs a quotation from the vendor's own page, the URL, and the
+date it was read. Every new host has to be allowed in the session's network
+settings first.
+
+### 8.4 Where every deck figure comes from
+
+`docs/sources.md`, generated from `deck/sources.py`. Every build of either
+deck checks each figure on each slide against it and refuses to save a deck
+containing a figure with no source. `--strict` also refuses the open gaps,
+which today are the R40,000 on-pack promotion cost and the R80,000 worked
+out from it.

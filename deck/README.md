@@ -35,6 +35,24 @@ product.
 
 The built `.pptx` files and any rendered PDF are build output and are not tracked.
 
+## Every figure has a source
+
+`sources.py` lists every figure that appears on a slide: where it came from,
+the exact words for anything read in a document, and the evidence for
+anything about Qumo itself. Each build reads the text back out of the
+finished deck and refuses to save it if a figure is not listed, or if demo
+figures or proposed prices sit on a slide that does not say illustrative or
+indicative. The overview deck's screen count is counted from `shots/`
+rather than trusted.
+
+```bash
+python3 deck/build_pitch.py --strict
+```
+
+`--strict` also refuses known gaps (entries marked `unsourced`). Use it for
+any copy that leaves the building. `python3 deck/sources.py` rewrites the
+readable register at `docs/sources.md`.
+
 ## Building it
 
 The capture step needs a running app with seeded demo data, because it

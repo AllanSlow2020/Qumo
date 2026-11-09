@@ -28,7 +28,8 @@ import os
 from style import *  # noqa: F403 - a deck is a drawing script, not a library
 import style
 
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(style.HERE, "Qumo-pitch.pptx")
+ARGS = [a for a in sys.argv[1:] if not a.startswith("--")]
+OUT = ARGS[0] if ARGS else os.path.join(style.HERE, "Qumo-pitch.pptx")
 style.start("For brands", 12)
 
 
@@ -181,7 +182,7 @@ def p08():
             "working product. Every screen in this deck is a photograph of it running, not a "
             "drawing of what it might look like.",
          M, Inches(2.5), Inches(10.6), Inches(1.0), size=13, colour=BODY, spacing=1.55)
-    stats(s, [("625", "tests passing"), ("17", "screens, all real"), ("2", "ways to earn"),
+    stats(s, [("800+", "tests passing"), ("17", "screens, all real"), ("2", "ways to earn"),
               ("0", "lines of it imaginary")], Inches(3.85))
     text(s, "Ask for a code before you leave. It will be printed, it will work once, and the "
             "balance it creates will be sitting in the console when you check.",
@@ -275,4 +276,4 @@ def p12():
 for fn in [p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12]:
     fn()
 
-print(f"{style.save(OUT)} slides -> {OUT}")
+print(f"{style.save(OUT, 'pitch')} slides -> {OUT}")

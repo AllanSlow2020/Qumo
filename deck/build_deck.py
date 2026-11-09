@@ -15,7 +15,8 @@ import os
 from style import *  # noqa: F403 - a deck is a drawing script, not a library
 import style
 
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(style.HERE, "Qumo.pptx")
+ARGS = [a for a in sys.argv[1:] if not a.startswith("--")]
+OUT = ARGS[0] if ARGS else os.path.join(style.HERE, "Qumo.pptx")
 style.start("Product overview", 23)
 
 # ---------------- slides ----------------
@@ -42,7 +43,7 @@ def s02():
             "holding the pack.",
          M, Inches(2.55), Inches(9.6), Inches(1.0), size=13, colour=BODY, spacing=1.55)
     stats(s, [("0", "apps to download"), ("1", "scan to earn"), ("6", "digit sign-in"),
-              ("R5.00", "per pack, capped")], Inches(4.35))
+              ("You set it", "per pack, capped")], Inches(4.35))
     footer(s)
 
 
@@ -147,7 +148,10 @@ def s11():
     h1(s, "The screen the programme gets judged on")
     stats(s, [("143", "scans, 30 days"), ("52%", "came back"), ("R12.97", "per person reached"),
               ("137", "people earned"), ("103", "joined this window")], Inches(2.35))
-    shot(s, "console-performance", M, Inches(3.55), Inches(6.5), Inches(3.2))
+    text(s, "FIGURES ILLUSTRATIVE  ·  DEMO DATA, PHOTOGRAPHED FROM THE CONSOLE",
+         M, Inches(3.33), Inches(9), Inches(0.2), size=8, colour=FOOT, font=MONO,
+         spacing=1.0, spc=1.2)
+    shot(s, "console-performance", M, Inches(3.58), Inches(6.5), Inches(3.17))
     text(s, "The repeat bar splits once, twice-or-thrice and four-or-more, because the average of "
             "one scan and five scans says nothing about either group.",
          Inches(7.55), Inches(3.65), Inches(4.94), Inches(1.0), size=12, colour=BODY, spacing=1.55)
@@ -274,8 +278,8 @@ def s20():
     text(s, "Every screen in this deck was photographed from a running build against a real "
             "database, not drawn for the occasion.",
          M, Inches(2.45), Inches(10.4), Inches(0.7), size=13, colour=BODY, spacing=1.55)
-    stats(s, [("19", "screens, all real"), ("625", "tests passing"), ("84", "days of data"),
-              ("5", "stores live")], Inches(3.45))
+    stats(s, [("17", "screens, all real"), ("800+", "tests passing"),
+              ("84", "days of demo history"), ("5", "demo stores")], Inches(3.45))
     text(s, "Which changes what a first engagement is buying. The engine is not the risk any more, "
             "so the work ahead is the decisions that are specific to one brand rather than the "
             "machinery underneath them.",
@@ -369,4 +373,4 @@ for fn in [s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12,
            s13, s14, s15, s16, s17, s18, s19, s20, s21, s22, s23]:
     fn()
 
-print(f"{style.save(OUT)} slides -> {OUT}")
+print(f"{style.save(OUT, 'deck')} slides -> {OUT}")
