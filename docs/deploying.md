@@ -231,28 +231,68 @@ number, **+27 60 086 7513**, bought on the Qumo-App regulatory bundle, with
 messaging and voice enabled on it. Set `TWILIO_FROM_NUMBER` to exactly that,
 in full international form.
 
-Three things decide whether a passcode actually arrives, and only one of
-them is in this repository.
+**It works, and it runs on a scoped API key.** On 3 November a real
+passcode reached a real handset and a shopper signed in, which is the first
+time that has happened. `DEMO_LOGIN_PHONES` and `DEMO_LOGIN_CODE` are
+deleted.
 
-1. **Credentials.** `TWILIO_ACCOUNT_SID` plus an API key pair. Use a
-   **Standard** key: a Restricted key with Create on `messages` is refused
-   with a 401 and Twilio error `70051`, which reads exactly like a wrong
-   password. `scripts/preflight.mjs` warns if a deployment is sending on
-   `TWILIO_AUTH_TOKEN` instead, and that warning is worth obeying: the auth
-   token is the master credential for the whole account and there is only
-   one of it.
+It took three credentials to get there. Two API key pairs were refused,
+once with `20003` and once with `70051`, and the account auth token worked
+first time, which is what proved the fault was in the pair rather than in
+the account, the number or the country. What finally worked was creating a
+key and copying the SID and the secret off that one creation screen in a
+single action. Twilio shows a secret once, so pairing one key's SID with a
+different key's secret is the easy mistake to make, and it is almost
+certainly what both refusals were. Production now authenticates with the
+Standard key `qumo-live`, and `scripts/preflight.mjs` no longer prints its
+auth-token warning: that warning's absence from a build log is how you
+tell, without opening Vercel, which credential a deployment is using.
+
+`TWILIO_AUTH_TOKEN` is still set in Vercel and is now dormant, because
+`resolveTwilioCredentials` prefers the key pair when both halves are
+present. Delete it anyway. There is no reason for the master credential for
+the whole account to sit in an environment that does not read it.
+
+### What a passcode has to get past
+
+Three things, and only the first is in this repository.
+
+1. **Credentials.** `TWILIO_ACCOUNT_SID` plus either an API key pair or
+   the auth token, and never a half-set pair: `resolveTwilioCredentials`
+   returns null rather than quietly downgrading, so the app falls silently
+   back to the logging stub and nothing reaches Twilio at all.
 2. **Geo Permissions**, under Messaging, Settings. South Africa has to be
-   enabled. This is invisible from inside the application: a send with it
-   off is recorded as a success and no phone ever rings. It is the most
-   common cause of "the passcode never came".
+   enabled. Invisible from inside the application: with it off a send is
+   recorded as a success and no phone ever rings.
 3. **Any restriction on the number itself.** Twilio tags a number when its
-   regulatory bundle limits what it may do. Whatever the tag says,
-   `pnpm sms:test +27…` is the arbiter: it sends one real message and
-   reports the provider's own error code.
+   regulatory bundle limits what it may do. This number carries "can
+   send/receive sms to domestic numbers only", which is harmless here and
+   means a foreign handset can never be used to test.
 
-Then, and only once a real passcode has arrived on a real handset, clear
-`DEMO_LOGIN_PHONES` and `DEMO_LOGIN_CODE` in production. In that order.
-Clearing them first locks you out of the test you were about to run.
+### How to diagnose the next one, which took a whole afternoon to learn
+
+**The log line is `sms send rejected`**, written by `TwilioSmsClient` with
+the HTTP status and Twilio's own numeric error code. Search production
+runtime logs for it. The code names the cause; the status alone does not,
+because a wrong credential, an unpermitted key and a disabled country all
+arrive as a 401.
+
+**If instead you find `sms (simulated) send`**, no Twilio call was made at
+all: credentials did not resolve and the passcode was printed to the log
+in plain text. Read it from there and sign in while you fix the cause.
+
+**If you find neither**, the request never reached the app.
+
+Two observed codes, and the honest state of what we know about them:
+`20003` came with a mismatched key pair and went away when the pair was
+replaced. `70051` came from a key that Twilio's console lists as
+Standard, so the explanation that it means "Restricted key" is **not**
+confirmed, and Twilio's error documentation was not reachable to check.
+If it appears again, look it up rather than trusting this paragraph.
+
+**Faster than any of it:** `ERROR_WEBHOOK_URL`. Both failures above were
+written with `logger.error`, so a configured webhook would have put the
+code in front of somebody within seconds instead of after an afternoon.
 
 Receiving works, and it needs two things done in Twilio that nothing here
 can do for you.
