@@ -180,7 +180,23 @@ instruction rather than four conversations.
 ## 5. Operations
 
 - **[A] Tick `DIRECT_DATABASE_URL` for Preview** in Vercel. Production has
-  it. Until then every Preview build fails and that failure means nothing.
+  it, Preview does not, so `scripts/preflight.mjs` stops every Preview
+  build before it reaches the migration it would fail on. The value is the
+  Neon string with `-pooler` taken out of the host; preflight refuses a
+  pooled one too, because the first version of that check passed on a
+  `DIRECT_DATABASE_URL` copied out of a provider dialog with the pooling
+  toggle left on. Until this is ticked every Preview build fails and that
+  failure means nothing, which is its own cost: a check that is always red
+  is a check nobody reads.
+- **[A] Decide whether Preview should have its own database.** The build
+  runs `prisma migrate deploy` on every deployment, Preview included. If
+  Preview and Production share one `DATABASE_URL`, a Preview build of any
+  branch carrying a migration applies that migration to the production
+  database before anybody has reviewed the pull request. Nothing has been
+  harmed by this yet, because no branch in flight carries one. A Neon
+  branch database for Preview is the real answer and it is a bigger job
+  than the item above, which is why they are separate: tick the variable
+  to get the check green, then decide this on its own merits.
 - **Settled: Twilio sends, on a scoped API key.** On 3 November a real
   passcode reached a real handset and a shopper signed in, the first time
   that has happened. `DEMO_LOGIN_PHONES` and `DEMO_LOGIN_CODE` are
