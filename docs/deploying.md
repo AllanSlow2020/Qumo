@@ -399,6 +399,15 @@ address is interpolated into versioned consent copy, so changing it bumps
 the privacy notice and re-consents every signed-in shopper. Choosing it
 once and keeping it is worth more than the mailbox it currently lacks.
 
+**Do not test it from the inbox it forwards to.** Gmail silently drops a
+message arriving with a Message-ID it has just sent itself, so a
+self-addressed test either vanishes or arrives mangled: ImprovMX rewrites
+the Message-ID and re-signs with its own DKIM to get it through, which
+breaks DMARC alignment and often lands it in spam with a "via
+improvmx.net" marker. None of that happens to mail from anybody else.
+Test from a different account, or the setup looks broken when it is
+working.
+
 What forwarding does not give you is the ability to *send* as the
 address. A shopper making a formal request about their own information
 would get a reply from a personal account. That is tolerable while there
