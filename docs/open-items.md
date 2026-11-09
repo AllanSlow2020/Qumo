@@ -45,15 +45,47 @@ is first.
   worked from our side and was silence from theirs. It answers in TwiML
   now. Switching it on is two settings in Twilio and one in Vercel, and
   `docs/deploying.md` has both.
-- **[A] Point the Twilio number at the inbound webhook.** Set
-  `SMS_WEBHOOK_SECRET` in Vercel, put the same string in the "A message
-  comes in" URL on the number, then text it `HELP`. Until then a shopper
-  who texts the number still gets nothing, because the route refuses
-  everything while the secret is unset.
-- **[A] Make `help@qumo.co.za` deliver** somewhere you actually read,
-  before the first real shopper is shown it. It is published in the
-  product now. An address that bounces is worse than the silence it
-  replaced, and no test can catch it.
+- **Settled: the Twilio number answers.** `SMS_WEBHOOK_SECRET` is set in
+  Vercel and the number's "A message comes in" webhook points at
+  `/api/sms/inbound`. Proved on 9 November by texting `BALANCE` from a
+  real handset and getting a real answer back from production. That one
+  message exercises the whole chain: carrier, Twilio, Vercel, the secret
+  comparison, the handler, the TwiML envelope and the reply.
+- **[A/C] Twilio swallows some of our keywords.** Texting `HELP` returns
+  Twilio's own stock reply, "Reply STOP to unsubscribe. Msg&Data Rates
+  May Apply", and not ours: Twilio answers a reserved set of keywords
+  itself before the webhook is called. Observed for `HELP`. Our table in
+  `lib/sms/inbound.ts` overlaps that set in three rows: HELP (HELP,
+  INFO), STOP (STOP, END, CANCEL, UNSUBSCRIBE) and JOIN (**YES**).
+
+  The JOIN row is the one that matters, and it is not yet confirmed. An
+  affirmative reply is the consent record for an SMS joiner, so if Twilio
+  consumes `YES` the SMS join flow cannot record consent at all and
+  nobody would find out until a real shopper tried it. Test by texting
+  `YES` from a number that is already a member: `handleJoin` returns
+  early for an existing person without re-stamping consent, so the test
+  has no side effect.
+
+  STOP being handled by Twilio is half good: carrier-grade opt-out beats
+  ours. But `handleStop()` never runs, so our own record of who opted out
+  is never written.
+
+  The fix, if confirmed, is on Twilio's side rather than ours: attaching
+  the number to a Messaging Service allows the built-in keyword handling
+  to be configured. Renaming our keywords instead would mean telling
+  shoppers to reply with something other than YES, which is worse.
+- **Settled: `help@qumo.co.za` delivers.** The domain had no MX record at
+  all until 9 November, which is why the first tests neither arrived nor
+  bounced quickly. Two MX records now point at ImprovMX, forwarding
+  `help@` and `access@` to a personal inbox, and both were confirmed by
+  sending from an unrelated account and watching the messages arrive. The
+  address was published before it worked, which is the sequence to avoid
+  rather than repeat. See `docs/deploying.md`.
+- **[A] Turn the domain lock on** for `qumo.co.za` and check
+  `qumo-app.com` too. It is currently off. These two carry a registered
+  company's name, its marketing site, its product and now its support
+  address, and an unlocked domain is meaningfully easier to have
+  transferred away by somebody who talks their way past a registrar.
 - **[A/L] Write down the breach process** (section 22). Who decides, how
   fast, who signs the notification.
 - **[L] Review the brand agreement.** Drafted, not reviewed:
@@ -179,15 +211,15 @@ instruction rather than four conversations.
 
 ## 5. Operations
 
-- **[A] Tick `DIRECT_DATABASE_URL` for Preview** in Vercel. Production has
-  it, Preview does not, so `scripts/preflight.mjs` stops every Preview
-  build before it reaches the migration it would fail on. The value is the
-  Neon string with `-pooler` taken out of the host; preflight refuses a
-  pooled one too, because the first version of that check passed on a
-  `DIRECT_DATABASE_URL` copied out of a provider dialog with the pooling
-  toggle left on. Until this is ticked every Preview build fails and that
-  failure means nothing, which is its own cost: a check that is always red
-  is a check nobody reads.
+- **Settled: `DIRECT_DATABASE_URL` is set for Preview.** It was Production
+  only, so `scripts/preflight.mjs` stopped every Preview build before it
+  reached the migration it would have failed on. Proved fixed on 9
+  November by the Preview build of pull request 28, which got past
+  preflight: that check is a hard refusal, not a warning, so a build
+  reaching Next at all is the evidence. Preflight also refuses a
+  `DIRECT_DATABASE_URL` that is itself pooled, because the first version
+  of that check passed on one copied out of a provider dialog with the
+  pooling toggle left on.
 - **[A] Decide whether Preview should have its own database.** The build
   runs `prisma migrate deploy` on every deployment, Preview included. If
   Preview and Production share one `DATABASE_URL`, a Preview build of any

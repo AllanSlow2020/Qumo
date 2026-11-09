@@ -203,8 +203,9 @@ Three have since been filled. The company is QUMO-APP (PTY) LTD,
 registration 2026/858757/07, as published on qumo.co.za and now carried at
 the foot of the notice and the terms in the product itself. Confirm the
 number against the CIPC certificate before anything is filed on it. The
-shopper support address is help@qumo.co.za, which has to deliver somewhere
-a person reads before the first real shopper is shown it.
+shopper support address is help@qumo.co.za, which was confirmed to deliver
+on 9 November by sending to it from an unrelated account and watching the
+message arrive.
 
 ## 5. Gaps found while writing
 

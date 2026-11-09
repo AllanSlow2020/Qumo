@@ -347,25 +347,80 @@ Add the wildcard first. It is the one with a plan and a nameserver
 condition attached, so it is the one that tells you early whether the
 rest of this is going to work.
 
-### The second domain
+### The second domain, and what actually happened to it
 
-`qumo.co.za` was bought first and is no longer the product. It is a
-redirect, and it should be one rather than a second live root: two roots
-serving the same brand means two sets of cookies, two origins a shopper
-can be signed in on, and a pack printed with whichever one somebody had
-in their head that week.
+This section used to say that `qumo.co.za` should be added to Vercel and
+redirected at `qumo-app.com`. That plan was overtaken: the marketing site
+was built on Lovable and `qumo.co.za` now points at it. The two domains
+are separate on purpose and neither redirects to the other.
 
-Add `qumo.co.za` and `www.qumo.co.za` to the Vercel project too, and set
-a redirect to `qumo-app.com`. There is nothing to add for
-`*.qumo.co.za`: no brand is served there, so no wildcard and no
-certificate for one.
+| Domain | Serves | Hosted by |
+|---|---|---|
+| `qumo-app.com` and `*.qumo-app.com` | the product: every brand's shopper site, and the console at `app.` | Vercel |
+| `qumo.co.za` and `www.qumo.co.za` | the marketing site | Lovable, at A record `185.158.133.1` |
 
-Worth knowing what the redirect does **not** cover. A shopper who scans a
-pack printed with a `qumo.co.za` address is carrying a path,
-`/s/<code>`, and a redirect that drops the path sends them to a page that
-asks which brand they want. Nothing is printed yet, so this is theory
-rather than a problem, and it stays theory as long as every print run
-carries the product root.
+**The three `qumo.co.za` entries in the Vercel project are leftovers of
+the old plan and should be deleted.** They have sat at Invalid
+Configuration since they were added, and now there is an explanation
+rather than a mystery: the DNS points at Lovable, so Vercel was never
+going to be able to validate them. They are not broken, they are
+describing a decision that was reversed.
+
+Nothing is lost by the reversal. The reason for wanting one root was that
+two live roots serving the *same* thing split cookies and origins. These
+two serve different things, and a shopper never sees `qumo.co.za` at all.
+
+The caveat worth keeping: a pack printed with a `qumo.co.za` address
+would carry a path, `/s/<code>`, that the marketing site knows nothing
+about. Nothing is printed yet, and it stays theory as long as every print
+run carries the product root.
+
+### The shopper support address
+
+`help@qumo.co.za` is published in the privacy notice, the terms and the
+contact page, so the domain has to accept mail. It did not until 9
+November: there was no MX record at all, which is why the first test
+messages neither arrived nor bounced quickly. A sending server with no MX
+to use falls back to the A record, tries port 25 against a web host, and
+retries for hours before giving up.
+
+Mail is now forwarded rather than hosted. Two MX records at GoDaddy point
+at ImprovMX, which forwards `help@` and `access@` to a personal inbox.
+
+| Type | Name | Value | Priority |
+|---|---|---|---|
+| MX | `@` | `mx1.improvmx.com` | 10 |
+| MX | `@` | `mx2.improvmx.com` | 20 |
+
+Forwarding rather than a mailbox is a deliberate first step, not a
+shortcut. It costs nothing, it unblocks a pilot, and the address does not
+change when it is upgraded, which matters more than it sounds: the
+address is interpolated into versioned consent copy, so changing it bumps
+the privacy notice and re-consents every signed-in shopper. Choosing it
+once and keeping it is worth more than the mailbox it currently lacks.
+
+**Do not test it from the inbox it forwards to.** Gmail silently drops a
+message arriving with a Message-ID it has just sent itself, so a
+self-addressed test either vanishes or arrives mangled: ImprovMX rewrites
+the Message-ID and re-signs with its own DKIM to get it through, which
+breaks DMARC alignment and often lands it in spam with a "via
+improvmx.net" marker. None of that happens to mail from anybody else.
+Test from a different account, or the setup looks broken when it is
+working.
+
+What forwarding does not give you is the ability to *send* as the
+address. A shopper making a formal request about their own information
+would get a reply from a personal account. That is tolerable while there
+are no shoppers and worth fixing when a brand signs: GoDaddy's
+Professional Email on this domain is about R27 a month, and the existing
+plan on another domain cannot be moved to it.
+
+**There is no `v=spf1` record, deliberately.** SPF governs sending, and
+nothing sends as `@qumo.co.za` today. Before one is added, check what the
+`_lovable-email` TXT record and the `notify` NS delegation to
+`lovable.cloud` are for: only one SPF record may exist, so if Lovable
+also sends as this domain, both senders have to be described in the same
+one or mail starts failing quietly.
 
 ### On GoDaddy
 
