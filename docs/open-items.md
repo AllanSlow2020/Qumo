@@ -179,15 +179,15 @@ instruction rather than four conversations.
 
 ## 5. Operations
 
-- **[A] Tick `DIRECT_DATABASE_URL` for Preview** in Vercel. Production has
-  it, Preview does not, so `scripts/preflight.mjs` stops every Preview
-  build before it reaches the migration it would fail on. The value is the
-  Neon string with `-pooler` taken out of the host; preflight refuses a
-  pooled one too, because the first version of that check passed on a
-  `DIRECT_DATABASE_URL` copied out of a provider dialog with the pooling
-  toggle left on. Until this is ticked every Preview build fails and that
-  failure means nothing, which is its own cost: a check that is always red
-  is a check nobody reads.
+- **Settled: `DIRECT_DATABASE_URL` is set for Preview.** It was Production
+  only, so `scripts/preflight.mjs` stopped every Preview build before it
+  reached the migration it would have failed on. Proved fixed on 9
+  November by the Preview build of pull request 28, which got past
+  preflight: that check is a hard refusal, not a warning, so a build
+  reaching Next at all is the evidence. Preflight also refuses a
+  `DIRECT_DATABASE_URL` that is itself pooled, because the first version
+  of that check passed on one copied out of a provider dialog with the
+  pooling toggle left on.
 - **[A] Decide whether Preview should have its own database.** The build
   runs `prisma migrate deploy` on every deployment, Preview included. If
   Preview and Production share one `DATABASE_URL`, a Preview build of any
