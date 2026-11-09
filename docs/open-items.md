@@ -39,6 +39,17 @@ is first.
   signed by QUMO-APP (PTY) LTD and its registration number rather than by
   a product name. The notice is `web-v6` and the terms are `terms-v2`, so
   anyone already signed in re-affirms at their next sign-in.
+- **Settled: an inbound SMS gets a reply.** `/api/sms/inbound` answered in
+  plain text, which Twilio reads as an application error: it logs a schema
+  warning and sends the shopper nothing, so the channel looked like it
+  worked from our side and was silence from theirs. It answers in TwiML
+  now. Switching it on is two settings in Twilio and one in Vercel, and
+  `docs/deploying.md` has both.
+- **[A] Point the Twilio number at the inbound webhook.** Set
+  `SMS_WEBHOOK_SECRET` in Vercel, put the same string in the "A message
+  comes in" URL on the number, then text it `HELP`. Until then a shopper
+  who texts the number still gets nothing, because the route refuses
+  everything while the secret is unset.
 - **[A] Make `help@qumo.co.za` deliver** somewhere you actually read,
   before the first real shopper is shown it. It is published in the
   product now. An address that bounces is worse than the silence it

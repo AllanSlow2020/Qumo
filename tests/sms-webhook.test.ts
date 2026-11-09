@@ -140,17 +140,26 @@ describe("POST /api/sms/inbound", () => {
       const response = await POST(post({ status: "delivered", messageId: run }, { token: SECRET }));
 
       // 200 with nothing to say. A 4xx here would have the aggregator
-      // redeliver a message that has no sender, forever.
+      // redeliver a message that has no sender, forever. Empty TwiML
+      // rather than an empty body, because Twilio reads anything it
+      // cannot parse as an application error.
       expect(response.status).toBe(200);
-      expect(await response.text()).toBe("");
+      expect(await response.text()).toBe('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
     });
 
-    it("answers as plain text that is never cached", async () => {
+    it("answers as TwiML that is never cached", async () => {
+      // The reply used to go back as plain text, which Twilio cannot
+      // parse: it logs a schema warning and sends the shopper nothing, so
+      // the channel looked like it worked from our side and was silence
+      // from theirs.
       vi.stubEnv("SMS_WEBHOOK_SECRET", SECRET);
       const response = await POST(post({ from: SENDER, text: "HELP" }, { token: SECRET }));
+      const text = await response.text();
 
-      expect(response.headers.get("content-type")).toContain("text/plain");
+      expect(response.headers.get("content-type")).toContain("text/xml");
       expect(response.headers.get("cache-control")).toBe("no-store");
+      expect(text).toMatch(/^<\?xml version="1\.0" encoding="UTF-8"\?><Response><Message>/);
+      expect(text).toMatch(/<\/Message><\/Response>$/);
     });
   });
 });

@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { handleInboundSms } from "@/lib/sms/inbound";
+import { twimlReply, TWIML_CONTENT_TYPE } from "@/lib/sms/twiml";
 import { logger } from "@/lib/security/logger";
 
 /**
@@ -34,8 +35,10 @@ import { logger } from "@/lib/security/logger";
  * and reviewed before a commercial decision that is not ours to make.
  *
  * What is genuinely provider-specific is the *reply* envelope: Twilio wants
- * TwiML, Africa's Talking wants JSON, others take plain text. That is one
- * function, written when we know, and the rest of this does not move.
+ * TwiML, Africa's Talking wants JSON, others take plain text. That was one
+ * function, written when we knew, and it is now lib/sms/twiml.ts. The
+ * number is a Twilio number, so TwiML is what goes back. Nothing else in
+ * this file moved, which is what the split was for.
  */
 
 export const runtime = "nodejs";
@@ -117,7 +120,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // rather than 400: an aggregator that gets an error retries, and
     // retrying a message with no sender achieves nothing but load.
     logger.info("inbound sms with no sender, ignored", { keys: Object.keys(body) });
-    return new NextResponse("", { status: 200 });
+    // Empty TwiML rather than an empty body. Twilio reads anything it
+    // cannot parse as an application error and logs a schema warning for
+    // it, and a delivery receipt we meant to let pass in silence is not
+    // worth one of those.
+    return new NextResponse(twimlReply(""), {
+      status: 200,
+      headers: { "content-type": TWIML_CONTENT_TYPE, "cache-control": "no-store" },
+    });
   }
 
   const { command, reply } = await handleInboundSms({ from, text });
@@ -127,8 +137,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // place it would sit in plaintext outside the row that owns it.
   logger.info("inbound sms handled", { command, replied: reply.length > 0 });
 
-  return new NextResponse(reply, {
+  return new NextResponse(twimlReply(reply), {
     status: 200,
-    headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
+    headers: { "content-type": TWIML_CONTENT_TYPE, "cache-control": "no-store" },
   });
 }

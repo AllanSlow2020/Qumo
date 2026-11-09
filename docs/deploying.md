@@ -254,10 +254,33 @@ Then, and only once a real passcode has arrived on a real handset, clear
 `DEMO_LOGIN_PHONES` and `DEMO_LOGIN_CODE` in production. In that order.
 Clearing them first locks you out of the test you were about to run.
 
-Receiving is a separate job and is not finished. `SMS_WEBHOOK_SECRET` and a
-webhook pointed at `/api/sms/inbound?token=…` wire up the route, but it
-answers in plain text and Twilio expects TwiML, so a shopper who texts the
-number gets no reply until that envelope is written.
+Receiving works, and it needs two things done in Twilio that nothing here
+can do for you.
+
+The route answers in TwiML now (`lib/sms/twiml.ts`), which is what Twilio
+parses; it used to answer in plain text, which Twilio reads as an
+application error, logs as a 12200 schema warning, and replies to with
+nothing. The channel looked fine from our side and was silence from the
+shopper's.
+
+To switch it on: set `SMS_WEBHOOK_SECRET` to a long random string in
+Vercel, then in the Twilio console open the number, find "A message comes
+in", and set it to `https://app.qumo-app.com/api/sms/inbound?token=<that
+same string>`, method POST. The token goes in the URL because the Twilio
+console offers a URL field and no way to set a header.
+
+Then text the number `HELP` from a phone. A reply means every part of it
+is working. No reply, with a 200 in Twilio's debugger, means the token did
+not match: the route answers 401 to an unknown token and 401 to no token
+at all, and it answers 401 to everything while `SMS_WEBHOOK_SECRET` is
+unset, which is the state every deployment starts in.
+
+Not adopted, on purpose: Twilio can sign each webhook with
+`X-Twilio-Signature`, which is stronger than a secret in the URL. It signs
+with the account auth token, the credential production has just been moved
+off, and making it load-bearing again to protect an endpoint already behind
+a constant-time comparison is the wrong trade. Revisit if Twilio ever signs
+with a scoped key.
 
 The build runs `scripts/preflight.mjs` first and refuses to deploy if any of
 the four secrets is missing, if `ENCRYPTION_KEY` is the wrong length, or if
