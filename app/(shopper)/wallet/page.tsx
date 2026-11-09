@@ -12,6 +12,7 @@ import {
   type WalletEntry,
 } from "@/lib/consumer/wallet";
 import { cardStanding, getCardTarget, type CardTarget } from "@/lib/consumer/progress";
+import { listShopperCoupons, type ShopperCoupon, type ShopperCoupons } from "@/lib/consumer/coupons";
 import { getPendingSpend } from "@/lib/wallet/spend";
 import { REDEMPTION_AVAILABLE } from "@/lib/wallet/availability";
 import { getProgrammeState } from "@/lib/subscriptions/manage";
@@ -276,6 +277,88 @@ function Balances({
   );
 }
 
+/**
+ * The codes a shopper actually shows at a counter.
+ *
+ * This is the half of redemption that lives on the phone. Until it
+ * existed the code appeared once, on the page that announced the card was
+ * complete, and a shopper who closed that page had no way back to it - so
+ * the counter had nothing to check and the reward quietly stopped
+ * existing. Kept above Activity, because a reward waiting to be used
+ * outranks a record of what already happened.
+ */
+function closedLabel(coupon: ShopperCoupon, now: Date): string {
+  if (coupon.status === "REDEEMED") return "Used";
+  if (coupon.status === "CANCELLED") return "Cancelled";
+  if (coupon.status === "EXPIRED") return "Ran out";
+  // Still ISSUED on the row, but past its date: nothing sweeps for these,
+  // so the row only gets corrected when a counter tries it.
+  return coupon.expiresAt && coupon.expiresAt <= now ? "Ran out" : "Closed";
+}
+
+function longDate(at: Date): string {
+  return at.toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" });
+}
+
+function Rewards({ coupons, now }: { coupons: ShopperCoupons; now: Date }) {
+  if (coupons.open.length === 0 && coupons.closed.length === 0) return null;
+
+  return (
+    <section className="sc-card">
+      <h2 className="sc-h2">Rewards</h2>
+
+      {coupons.open.length === 0 ? (
+        <p className="sc-body">Nothing waiting right now. Finish a card and the code turns up here.</p>
+      ) : (
+        <>
+          {/* Said once, above the codes rather than on each one: a shopper
+              holding three of them does not need telling three times. */}
+          <p className="sc-body">
+            Show the code at the counter and they will type it in. Each one works once.
+          </p>
+          {coupons.open.map((coupon) => (
+            <div className="sc-tile sc-tile-pos" key={coupon.id}>
+              <p className="sc-label">Yours to use</p>
+              <p className="sc-h2">{coupon.rewardName}</p>
+              <p className="sc-code-sm sc-pos">{coupon.code}</p>
+              {coupon.expiresAt && <p className="sc-label">Use it before {longDate(coupon.expiresAt)}</p>}
+              {coupon.retailers.length > 0 && <p className="sc-label">At {coupon.retailers.join(", ")}</p>}
+              {coupon.terms && <p className="sc-label">{coupon.terms}</p>}
+            </div>
+          ))}
+        </>
+      )}
+
+      {/* Kept rather than hidden. "Where did my free coffee go" is a real
+          question, and the answer is better coming from here than from an
+          argument at a till. */}
+      {coupons.closed.length > 0 && (
+        <>
+          {/* Without this the used ones read as more rewards waiting, which
+              is the one misreading this section cannot afford. */}
+          <p className="sc-label" style={{ marginTop: 4 }}>
+            Past rewards
+          </p>
+          <div className="sc-rows">
+            {coupons.closed.map((coupon) => (
+              <div className="sc-row" key={coupon.id}>
+                <div className="sc-row-main">
+                  <span>{coupon.rewardName}</span>
+                  <span className="sc-label">
+                    {coupon.code}
+                    {coupon.settledAt ? ` · ${longDate(coupon.settledAt)}` : ""}
+                  </span>
+                </div>
+                <span className="sc-label">{closedLabel(coupon, now)}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
 export default async function WalletPage() {
   const personId = await getConsumerSession();
   if (!personId) {
@@ -288,11 +371,13 @@ export default async function WalletPage() {
   // brand's own site has any business answering.
   const brand = await requireBrand();
 
-  const [wallets, history, programme, cardTarget] = await Promise.all([
+  const now = new Date();
+  const [wallets, history, programme, cardTarget, coupons] = await Promise.all([
     getWallet(personId, brand.id),
     getWalletHistory(personId, 50, brand.id),
     getProgrammeState(brand.id),
     getCardTarget(brand.id),
+    listShopperCoupons(personId, brand.id, now),
   ]);
   // A shopper who signed in but has never scanned here has no membership at
   // this brand at all. An empty wallet stands in for one, so the page reads
@@ -365,6 +450,10 @@ export default async function WalletPage() {
           - a row of empty marks on a closed programme is an invitation to
           collect something that will never complete. */}
       {showCard && <StampCard target={cardTarget} have={cardHave} />}
+
+      {/* Above Activity: a code waiting to be used is worth more of the
+          screen than a list of what already happened. */}
+      <Rewards coupons={coupons} now={now} />
 
       {history.length > 0 && (
         <section className="sc-card">
