@@ -45,11 +45,35 @@ is first.
   worked from our side and was silence from theirs. It answers in TwiML
   now. Switching it on is two settings in Twilio and one in Vercel, and
   `docs/deploying.md` has both.
-- **[A] Point the Twilio number at the inbound webhook.** Set
-  `SMS_WEBHOOK_SECRET` in Vercel, put the same string in the "A message
-  comes in" URL on the number, then text it `HELP`. Until then a shopper
-  who texts the number still gets nothing, because the route refuses
-  everything while the secret is unset.
+- **Settled: the Twilio number answers.** `SMS_WEBHOOK_SECRET` is set in
+  Vercel and the number's "A message comes in" webhook points at
+  `/api/sms/inbound`. Proved on 9 November by texting `BALANCE` from a
+  real handset and getting a real answer back from production. That one
+  message exercises the whole chain: carrier, Twilio, Vercel, the secret
+  comparison, the handler, the TwiML envelope and the reply.
+- **[A/C] Twilio swallows some of our keywords.** Texting `HELP` returns
+  Twilio's own stock reply, "Reply STOP to unsubscribe. Msg&Data Rates
+  May Apply", and not ours: Twilio answers a reserved set of keywords
+  itself before the webhook is called. Observed for `HELP`. Our table in
+  `lib/sms/inbound.ts` overlaps that set in three rows: HELP (HELP,
+  INFO), STOP (STOP, END, CANCEL, UNSUBSCRIBE) and JOIN (**YES**).
+
+  The JOIN row is the one that matters, and it is not yet confirmed. An
+  affirmative reply is the consent record for an SMS joiner, so if Twilio
+  consumes `YES` the SMS join flow cannot record consent at all and
+  nobody would find out until a real shopper tried it. Test by texting
+  `YES` from a number that is already a member: `handleJoin` returns
+  early for an existing person without re-stamping consent, so the test
+  has no side effect.
+
+  STOP being handled by Twilio is half good: carrier-grade opt-out beats
+  ours. But `handleStop()` never runs, so our own record of who opted out
+  is never written.
+
+  The fix, if confirmed, is on Twilio's side rather than ours: attaching
+  the number to a Messaging Service allows the built-in keyword handling
+  to be configured. Renaming our keywords instead would mean telling
+  shoppers to reply with something other than YES, which is worse.
 - **[A] Make `help@qumo.co.za` deliver** somewhere you actually read,
   before the first real shopper is shown it. It is published in the
   product now. An address that bounces is worse than the silence it
