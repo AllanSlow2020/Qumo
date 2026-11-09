@@ -4,6 +4,7 @@ import { forBrand } from "@/lib/db/tenant";
 import { prisma } from "@/lib/db/client";
 import { record } from "@/lib/audit/record";
 import { requireRole } from "@/lib/auth/rbac";
+import { isSlipEarnable } from "./slip-earning";
 import type { Actor } from "@/lib/staff/actor";
 
 /**
@@ -142,7 +143,7 @@ export async function setCampaignStatusForSession(
   const scoped = forBrand(session.user.brandId);
   const campaign = await scoped.campaign.findFirst({
     where: { id: campaignId },
-    include: { earnRule: { select: { type: true, maxTotalAmount: true, completesAt: true } } },
+    include: { earnRule: { select: { type: true, amount: true, basisPoints: true, maxTotalAmount: true, completesAt: true } } },
   });
   if (!campaign) {
     throw new CampaignError("That promotion doesn't exist.");
@@ -180,14 +181,50 @@ export async function setCampaignStatusForSession(
       }
     }
 
-    if (campaign.earnRule.type === "PERCENT_OF_SPEND") {
-      const conflicting = await scoped.campaign.findFirst({
-        where: { status: "ACTIVE", id: { not: campaign.id }, earnRule: { type: "PERCENT_OF_SPEND" } },
-      });
-      if (conflicting) {
-        throw new CampaignError(
-          `"${conflicting.name}" is already running a spend-based promotion. Pause it first, so a till slip can only ever be worth one thing.`,
-        );
+    /**
+     * Two promotions a till slip could both satisfy is an ambiguity no
+     * code can resolve: a slip carries a store code and an amount, and
+     * nothing that says which promotion it is for. A pack code carries its
+     * own campaign id and has no such problem, which is why this is about
+     * slips and not about promotions in general.
+     *
+     * It used to cover only share-of-spend against share-of-spend, because
+     * that was the only kind a slip could earn from. Now that a flat rule
+     * can too, the rule has to cover the set it was always about.
+     *
+     * Two flat promotions are exempt while the brand has no till printing
+     * Qumo codes, deliberately. A pack code carries its own campaign id,
+     * so a packaged-goods brand running a stamp card on one line and a
+     * fixed award on another has no ambiguity to protect against, and
+     * refusing them would be enforcing a constraint that cannot bite.
+     *
+     * A share of spend is never exempt, with or without a store: it is
+     * earnable by slip and by nothing else, so two of them live at once is
+     * nonsense whatever the brand has set up, and a brand configuring one
+     * has declared an intention to use slips.
+     *
+     * What this leaves: two flat promotions live at a brand that then adds
+     * its first store. Nothing re-runs this check at that moment, so the
+     * slip resolves to the older of the two. That is stable rather than
+     * random, and the promotions screen says so, which is a better answer
+     * than refusing somebody a till.
+     */
+    if (isSlipEarnable(campaign.earnRule)) {
+      const slipOnly = campaign.earnRule.type === "PERCENT_OF_SPEND";
+      const hasSlipDoor =
+        slipOnly || (await scoped.store.findFirst({ where: { isActive: true }, select: { id: true } })) !== null;
+
+      if (hasSlipDoor) {
+        const others = await scoped.campaign.findMany({
+          where: { status: "ACTIVE", id: { not: campaign.id } },
+          include: { earnRule: true },
+        });
+        const conflicting = others.find((other) => isSlipEarnable(other.earnRule));
+        if (conflicting) {
+          throw new CampaignError(
+            `"${conflicting.name}" already earns from a till slip, and a slip cannot say which promotion it belongs to. Pause it first, so a till slip can only ever be worth one thing.`,
+          );
+        }
       }
     }
   }

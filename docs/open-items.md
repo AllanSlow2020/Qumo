@@ -126,12 +126,17 @@ instruction rather than four conversations.
   needed: every column was already in the schema. The remaining decision
   is a per-store staff role, so a barista's login cannot also change the
   earn rate. See `docs/seattle-coffee-review.md`.
-- **[C] A stamp card cannot be earned from a till slip.** The slip path
-  resolves campaigns through one filter, `type: "PERCENT_OF_SPEND"`, so
-  the only way to get stamps out of a slip is a share-of-spend rule in
-  stamps, which multiplies stamps by rands. At the form's own default that
-  is 500 stamps on a R100 basket. A flat-per-slip rule fixes it and
-  removes the reason anyone would configure the broken combination.
+- **Settled: a stamp card can be earned from a till slip.** The slip path
+  used to resolve campaigns through one filter, `type: "PERCENT_OF_SPEND"`,
+  so the only way to get stamps out of a slip was a share-of-spend rule in
+  stamps, which multiplies stamps by rands: 500 stamps on a R100 basket at
+  the form's own default. A flat rule has nothing to multiply, and
+  `lib/campaigns/slip-earning.ts` now decides what a slip can satisfy for
+  both the engine and the console. A coffee shop with a till and no printed
+  pack codes can run "buy ten, get one free", which it could not before.
+  Two promotions a slip could both satisfy are refused at activation, and
+  an overlap that predates the rule is named on the Overview rather than
+  resolved in silence.
 - **[C] Spending a rand balance at a till.** `REDEMPTION_AVAILABLE` is
   still false, and this is now the only half of redemption that is shut:
   `confirmWalletSpend` has an engine and a test suite and no caller, because

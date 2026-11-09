@@ -79,7 +79,14 @@ describe("promotion shapes", () => {
     for (const shape of PROMOTION_SHAPES) {
       expect(SHAPE_COPY[shape].door.trim().length).toBeGreaterThan(0);
     }
-    expect(SHAPE_COPY.STAMP_CARD.door).toMatch(/till slip cannot award a stamp/i);
+    // Every shape names a real door, and the stamp card names the till
+    // slip, because that stopped being a lie when the slip path learned to
+    // award a flat amount. See lib/campaigns/slip-earning.ts.
+    for (const shape of PROMOTION_SHAPES) {
+      expect(SHAPE_COPY[shape].door).toMatch(/till slip|pack|sticker/i);
+    }
+    expect(SHAPE_COPY.STAMP_CARD.door).toMatch(/till slip/i);
+    expect(SHAPE_COPY.STAMP_CARD.door).not.toMatch(/cannot award a stamp/i);
   });
 
   it("covers every shape in the copy and the defaults", () => {
