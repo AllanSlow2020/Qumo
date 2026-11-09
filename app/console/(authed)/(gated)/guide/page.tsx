@@ -242,8 +242,10 @@ export default function ConsoleGuidePage() {
               {!REDEMPTION_AVAILABLE && (
                 <>
                   {" "}
-                  Spending a balance at a counter is not built yet, so today a balance accumulates
-                  and a completed card issues a code they can show you.
+                  Spending a rand balance at a counter is not built yet, so today a balance
+                  accumulates. A completed card is different: it issues a code they can show you,
+                  and you take it on <Link href="/redeem">Redeem</Link>, which is what stops the
+                  same code working at the next counter.
                 </>
               )}
             </p>
