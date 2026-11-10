@@ -442,9 +442,10 @@ New scope, and the part with the least existing material.
 
 ### What exists
 
-**A sales deck house style**, in use for two decks, one 23 slides and one
-11. Dark ground `#0c0d10`, white ink, the same `#2563eb` accent, Arial for
-text and Consolas for anything tabular or code-like. Thin hairline rules,
+**A sales deck house style**, in use for one deck of 33 slides: a
+twelve-slide pitch and a three-part appendix behind it. Dark ground
+`#0c0d10`, white ink, the same `#2563eb` accent, Arial for text and
+Consolas for anything tabular or code-like. Thin hairline rules,
 small monospaced kickers in caps with letter-spacing, three-card layouts
 with a divider above a footer figure. Every slide carries a footer rule
 with "Qumo · indicative, for discussion" and a page number.
