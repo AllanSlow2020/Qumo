@@ -6,7 +6,7 @@ import { record } from "@/lib/audit/record";
 import { rateLimit } from "@/lib/security/rate-limit";
 import type { Actor } from "./actor";
 import { revokeAllStaffSessions } from "./session";
-import { generateTotpSecret, otpauthUrl, totpStep, verifyTotp } from "./totp";
+import { generateTotpSecret, otpauthQrSvg, otpauthUrl, totpStep, verifyTotp } from "./totp";
 import { verifyPassword } from "./password";
 
 /**
@@ -79,6 +79,12 @@ export type EnrolmentOffer = {
   /** Base32, for an app to scan or a person to type. Not yet in effect. */
   secret: string;
   otpauthUrl: string;
+  /**
+   * The same thing as an image a camera can read, which is how almost
+   * everybody will actually do this. The typed key stays, because a QR is
+   * no use to somebody enrolling on the device that is showing it.
+   */
+  otpauthQr: string;
 };
 
 /**
@@ -108,7 +114,11 @@ export async function beginEnrolment(actor: Actor, issuer: string): Promise<Enro
     data: { totpSecretEncrypted: encryptSecret(secret), totpLastStep: null },
   });
 
-  return { secret, otpauthUrl: otpauthUrl(secret, user.email, issuer) };
+  return {
+    secret,
+    otpauthUrl: otpauthUrl(secret, user.email, issuer),
+    otpauthQr: await otpauthQrSvg(secret, user.email, issuer),
+  };
 }
 
 /**

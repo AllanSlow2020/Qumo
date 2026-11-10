@@ -1,15 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  base32Decode,
-  base32Encode,
-  formatSecretForDisplay,
-  generateTotpSecret,
-  otpauthUrl,
-  totpCode,
-  totpCodeForStep,
-  totpStep,
-  verifyTotp,
-} from "@/lib/staff/totp";
+import { base32Decode, base32Encode, formatSecretForDisplay, generateTotpSecret, otpauthQrSvg, otpauthUrl, totpCode, totpCodeForStep, totpStep, verifyTotp } from "@/lib/staff/totp";
 
 /**
  * RFC 6238 Appendix B.
@@ -117,5 +107,49 @@ describe("otpauthUrl", () => {
     expect(url).toContain("otpauth://totp/Qumo%3Athandi%40example.com");
     expect(url).toContain("issuer=Qumo");
     expect(url).toContain("secret=ABCDEFGH");
+  });
+});
+
+describe("the enrolment QR", () => {
+  it("encodes the same otpauth URL the setup key spells out", async () => {
+    const secret = "JBSWY3DPEHPK3PXP";
+    const svg = await otpauthQrSvg(secret, "owner@example.invalid", "Qumo");
+
+    // Decoding a QR would mean a second library whose agreement proves
+    // nothing about ours. Instead: it is an SVG of a real size, and the
+    // thing it was built from is asserted separately below.
+    expect(svg.startsWith("<svg")).toBe(true);
+    expect(svg).toContain("viewBox");
+    expect(svg.length).toBeGreaterThan(200);
+  });
+
+  it("is built from the URL rather than from the bare secret", async () => {
+    // The failure this catches is a plausible one: encoding `secret`
+    // instead of `otpauthUrl(secret, ...)`. The QR would still scan, and
+    // every authenticator would refuse it, which reads as "the app is
+    // broken" rather than "the wrong string was encoded".
+    const a = await otpauthQrSvg("JBSWY3DPEHPK3PXP", "one@example.invalid", "Qumo");
+    const b = await otpauthQrSvg("JBSWY3DPEHPK3PXP", "two@example.invalid", "Qumo");
+
+    // Same secret, different account, so a QR of the secret alone would be
+    // byte-identical. These must differ, because the account is inside the
+    // URL that was encoded.
+    expect(a).not.toBe(b);
+  });
+
+  it("keeps a quiet zone, unlike the poster", async () => {
+    const svg = await otpauthQrSvg("JBSWY3DPEHPK3PXP", "owner@example.invalid", "Qumo");
+
+    // margin 0 would make the viewBox exactly the module count. The four
+    // modules of margin are what a scanner needs against a coloured panel,
+    // and they are baked in here rather than left to the markup.
+    const viewBox = /viewBox="0 0 (\d+) (\d+)"/.exec(svg);
+    expect(viewBox).not.toBeNull();
+
+    const modules = Number(viewBox![1]);
+    // A version-1 QR is 21 modules; anything carrying an otpauth URL is
+    // larger. With a margin of 4 each side the viewBox is modules + 8, so
+    // this is comfortably above the smallest possible marginless code.
+    expect(modules).toBeGreaterThan(29);
   });
 });

@@ -1,3 +1,4 @@
+import QRCode from "qrcode";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 /**
@@ -187,6 +188,38 @@ export function otpauthUrl(secretBase32: string, accountEmail: string, issuer: s
     period: String(STEP_SECONDS),
   });
   return `otpauth://totp/${label}?${params.toString()}`;
+}
+
+/**
+ * The same otpauth URL as a scannable SVG.
+ *
+ * ── Why a margin here, where the poster has none ─────────────────────────
+ *
+ * lib/brand/poster.ts asks for margin 0 deliberately, because a poster's
+ * quiet zone belongs to whoever lays it out. This one is laid out by this
+ * app, onto a surface whose colour the brand can change, and a QR with no
+ * quiet zone against a coloured panel is a QR a phone will not read. So
+ * the four modules are baked in and the markup does not have to remember.
+ *
+ * Error correction M rather than the poster's level: this is read from a
+ * screen a few centimetres away, in good light, with nothing printed or
+ * creased, so the redundancy that a printed label needs would only make
+ * the pattern denser.
+ *
+ * ── On what this image is ────────────────────────────────────────────────
+ *
+ * It encodes the shared secret. It is exactly as sensitive as the setup key
+ * printed beside it, and it is handled the same way: produced for one
+ * person's enrolment, never stored, never cached, never logged. It is worth
+ * knowing that it is a credential rather than a decoration, because a QR
+ * code looks like a decoration.
+ */
+export async function otpauthQrSvg(secretBase32: string, accountEmail: string, issuer: string): Promise<string> {
+  return QRCode.toString(otpauthUrl(secretBase32, accountEmail, issuer), {
+    type: "svg",
+    margin: 4,
+    errorCorrectionLevel: "M",
+  });
 }
 
 /** Grouped in fours, for someone typing it off a screen into a phone. */

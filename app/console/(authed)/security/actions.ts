@@ -37,7 +37,13 @@ async function actor() {
 export async function startEnrolment(): Promise<SecurityState> {
   try {
     const offer = await beginEnrolment(await actor(), PRODUCT_NAME);
-    return { step: "confirm", secret: offer.secret, otpauth: offer.otpauthUrl, error: null };
+    return {
+      step: "confirm",
+      secret: offer.secret,
+      otpauth: offer.otpauthUrl,
+      qr: offer.otpauthQr,
+      error: null,
+    };
   } catch (err) {
     return toState(err, IDLE);
   }
