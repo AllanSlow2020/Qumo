@@ -4,7 +4,7 @@ import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { Role } from "@prisma/client";
 import type { TeamMember } from "@/lib/staff/users";
-import { resetPassword, setActive, setRole } from "./actions";
+import { resetPassword, resetSecondFactor, setActive, setRole } from "./actions";
 import { IDLE, type TeamActionState } from "./state";
 import { TempPassword } from "./temp-password";
 
@@ -28,15 +28,17 @@ function MemberControls({ member, isSelf }: { member: TeamMember; isSelf: boolea
   const [roleState, roleAction, rolePending] = useActionState<TeamActionState, FormData>(setRole, IDLE);
   const [activeState, activeAction, activePending] = useActionState<TeamActionState, FormData>(setActive, IDLE);
   const [resetState, resetAction, resetPending] = useActionState<TeamActionState, FormData>(resetPassword, IDLE);
+  const [mfaState, mfaAction, mfaPending] = useActionState<TeamActionState, FormData>(resetSecondFactor, IDLE);
 
   useEffect(() => {
-    if (roleState.ok || activeState.ok || resetState.ok) router.refresh();
-  }, [roleState, activeState, resetState, router]);
+    if (roleState.ok || activeState.ok || resetState.ok || mfaState.ok) router.refresh();
+  }, [roleState, activeState, resetState, mfaState, router]);
 
   const error =
     (roleState.ok === false && roleState.error) ||
     (activeState.ok === false && activeState.error) ||
     (resetState.ok === false && resetState.error) ||
+    (mfaState.ok === false && mfaState.error) ||
     null;
 
   return (
@@ -87,6 +89,39 @@ function MemberControls({ member, isSelf }: { member: TeamMember; isSelf: boolea
           </form>
         )}
       </div>
+
+      {/* Only where there is something to clear, and never on your own row.
+          Hidden on your own because the engine refuses it there - that
+          refusal is what stops this becoming a way to turn your own second
+          factor off, which disableMfa does not allow - and a button whose
+          only outcome is an error is an invitation to read one.
+
+          The password is this owner's own, asked for the same reason
+          disableMfa asks: an open console on an unattended desk must not be
+          enough to strip a colleague's protection. */}
+      {!isSelf && member.hasSecondFactor && (
+        <form action={mfaAction} className="cn-actions" style={{ alignItems: "center", gap: 6 }}>
+          <input type="hidden" name="userId" value={member.id} />
+          <input
+            name="password"
+            type="password"
+            className="cn-input"
+            autoComplete="current-password"
+            placeholder="Your password"
+            required
+            style={{ fontSize: 13, padding: "6px 10px", width: 170 }}
+            disabled={mfaPending}
+          />
+          <button type="submit" className="cn-btn cn-btn-quiet" disabled={mfaPending}>
+            {mfaPending ? "…" : "Reset two-factor"}
+          </button>
+          <span className="cn-label">
+            {/* Says what happens next, because "reset" could be read as
+                "switch off" and it is not: they must enrol again. */}
+            They sign in with their password, then set it up again.
+          </span>
+        </form>
+      )}
 
       {error && (
         <p className="cn-err" role="alert">

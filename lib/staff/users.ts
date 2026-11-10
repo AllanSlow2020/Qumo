@@ -7,6 +7,8 @@ import { prisma } from "@/lib/db/client";
 import { record } from "@/lib/audit/record";
 import { hashPassword, verifyPassword } from "./password";
 import { revokeAllStaffSessions } from "./session";
+import { clearSecondFactor } from "./mfa";
+import { secondFactorRequired } from "./mfa-policy";
 import type { Actor } from "@/lib/staff/actor";
 
 /**
@@ -207,6 +209,90 @@ export async function resetPasswordForSession(session: SessionLike, userId: stri
 }
 
 /**
+ * An owner clearing a colleague's second factor, for the phone that went
+ * into the sea with the recovery codes still in a drawer.
+ *
+ * ── Why this exists, and what it costs ───────────────────────────────────
+ *
+ * Requiring a second factor of owners and admins creates a way to be
+ * permanently locked out: lose the phone and the ten codes, and the account
+ * cannot sign in and cannot turn the factor off either. On a brand with one
+ * owner that is the console gone for good.
+ *
+ * The cost of fixing it is real and worth stating rather than glossing: an
+ * owner whose account is compromised can now strip a colleague's second
+ * factor. That is why every rule below is here. The reset does not sign
+ * anybody in, does not set a password, and leaves the colleague with an
+ * account they must enrol again before they can use - so it is a way back
+ * in for them, not a way across for an attacker.
+ *
+ * ── The rules, and what each one stops ───────────────────────────────────
+ *
+ * 1. Owner only, like the rest of user management.
+ *
+ * 2. Never your own account. Without this the whole requirement unravels:
+ *    an owner resets themselves, enrols on a new device, and has done
+ *    exactly what disableMfa refuses to let them do. This is the rule that
+ *    matters most and the easiest one to leave out, because the screen
+ *    would never offer it.
+ *
+ * 3. The acting owner's own password, like disableMfa asks for. An open
+ *    console on an unattended desk must not be enough to strip a
+ *    colleague's protection.
+ *
+ * 4. Tenant-scoped through findUser, so a colleague means a colleague.
+ *
+ * 5. Every one of the target's sessions ends. If the phone was stolen
+ *    rather than lost, a live session on it is the thing the reset was
+ *    meant to take away.
+ */
+export async function resetSecondFactorForSession(
+  session: SessionLike,
+  userId: string,
+  password: string,
+): Promise<void> {
+  requireRole(session.user.role as Role, MANAGE_USER_ROLES);
+
+  if (userId === session.user.id) {
+    throw new UserError(
+      "You can't reset your own two-factor authentication. Ask another owner, or use a recovery code.",
+    );
+  }
+
+  const user = await findUser(session.user.brandId, userId);
+
+  const actingUser = await forBrand(session.user.brandId).user.findFirst({
+    where: { id: session.user.id },
+    select: { passwordHash: true },
+  });
+  if (!actingUser || !(await verifyPassword(password, actingUser.passwordHash))) {
+    throw new UserError("That password isn't right.");
+  }
+
+  await clearSecondFactor(user.id);
+  await revokeAllStaffSessions(user.id, "PASSWORD_CHANGED");
+
+  await record(prisma, session.user, {
+    action: "user.mfa_reset",
+    targetId: user.id,
+    targetLabel: user.email,
+  });
+}
+
+/**
+ * Whether clearing this person's factor leaves them able to use the console
+ * at all, which decides what the screen says afterwards rather than whether
+ * the reset is allowed.
+ *
+ * A reset is not a disable. Somebody on a role that requires a second
+ * factor is held at /security until they enrol again, which is the point:
+ * the owner is handing back a way in, not an exemption.
+ */
+export function mustReEnrolAfterReset(role: Role): boolean {
+  return secondFactorRequired(role);
+}
+
+/**
  * Somebody choosing their own password - the forced first one, and every
  * later one.
  *
@@ -261,10 +347,12 @@ export type TeamMember = {
   isActive: boolean;
   mustChangePassword: boolean;
   createdAt: Date;
+  /** Whether this person currently holds a second factor. */
+  hasSecondFactor: boolean;
 };
 
 export async function listTeam(brandId: string): Promise<TeamMember[]> {
-  return forBrand(brandId).user.findMany({
+  const rows = await forBrand(brandId).user.findMany({
     select: {
       id: true,
       name: true,
@@ -273,7 +361,16 @@ export async function listTeam(brandId: string): Promise<TeamMember[]> {
       isActive: true,
       mustChangePassword: true,
       createdAt: true,
+      // The timestamp itself never leaves this function. The screen needs
+      // to know whether there is a factor to reset, and nothing more; when
+      // somebody enrolled is not the team page's business.
+      totpConfirmedAt: true,
     },
     orderBy: [{ isActive: "desc" }, { createdAt: "asc" }],
   });
+
+  return rows.map(({ totpConfirmedAt, ...member }) => ({
+    ...member,
+    hasSecondFactor: totpConfirmedAt !== null,
+  }));
 }

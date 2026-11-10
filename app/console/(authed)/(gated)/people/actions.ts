@@ -7,6 +7,7 @@ import {
   UserError,
   inviteUserForSession,
   resetPasswordForSession,
+  resetSecondFactorForSession,
   setUserActiveForSession,
   setUserRoleForSession,
 } from "@/lib/staff/users";
@@ -49,6 +50,30 @@ export async function resetPassword(_prev: TeamActionState, formData: FormData):
       String(formData.get("userId") ?? ""),
     );
     return { ok: true, temporaryPassword, forEmail: String(formData.get("email") ?? "") };
+  } catch (err) {
+    return toState(err);
+  }
+}
+
+/**
+ * Clearing a colleague's second factor, for a lost phone.
+ *
+ * Takes the acting owner's own password from the form, which the engine
+ * verifies - see resetSecondFactorForSession for why, and for the rule
+ * that matters most here: it refuses your own account, so this cannot
+ * become the way around not being allowed to turn your own factor off.
+ */
+export async function resetSecondFactor(
+  _prev: TeamActionState,
+  formData: FormData,
+): Promise<TeamActionState> {
+  try {
+    await resetSecondFactorForSession(
+      await engineSession(),
+      String(formData.get("userId") ?? ""),
+      String(formData.get("password") ?? ""),
+    );
+    return { ok: true, temporaryPassword: null, forEmail: null };
   } catch (err) {
     return toState(err);
   }

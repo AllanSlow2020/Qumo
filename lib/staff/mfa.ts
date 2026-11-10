@@ -161,6 +161,33 @@ export async function confirmEnrolment(
 }
 
 /**
+ * Everything that makes an account's second factor exist, removed in one
+ * transaction.
+ *
+ * Shared by the two callers that remove one - somebody turning off their
+ * own, and an owner resetting a colleague's - so that "what a second factor
+ * consists of" is written down once. The failure this avoids is the quiet
+ * one: a second caller that clears the secret and forgets the recovery
+ * codes leaves ten working credentials behind on an account everybody
+ * believes has none.
+ *
+ * Exported for users.ts, which owns the owner-resets-a-colleague path, and
+ * carrying a warning with it: this function asks no questions. It does not
+ * check who is calling, whose account it is, or whether that account's role
+ * requires a factor at all. Every one of those rules lives at the call
+ * site, so a third caller must bring its own.
+ */
+export async function clearSecondFactor(userId: string): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: userId },
+      data: { totpSecretEncrypted: null, totpConfirmedAt: null, totpLastStep: null },
+    });
+    await tx.staffRecoveryCode.deleteMany({ where: { userId } });
+  });
+}
+
+/**
  * Turning it off, which requires the current password.
  *
  * Without that, an unattended open console is enough to strip the factor
@@ -202,13 +229,7 @@ export async function disableMfa(actor: Actor, password: string): Promise<void> 
     throw new MfaError("That password isn't right.");
   }
 
-  await prisma.$transaction(async (tx) => {
-    await tx.user.update({
-      where: { id: actor.user.id },
-      data: { totpSecretEncrypted: null, totpConfirmedAt: null, totpLastStep: null },
-    });
-    await tx.staffRecoveryCode.deleteMany({ where: { userId: actor.user.id } });
-  });
+  await clearSecondFactor(actor.user.id);
 
   await record(prisma, actor.user, { action: "user.mfa_disabled", targetId: actor.user.id });
 }
