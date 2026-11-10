@@ -368,7 +368,7 @@ the sales deck, and they carry **figures in the deck only**.
 |---|---|---|---|
 | Shape | One campaign, one door | Always-on, two doors | National, every door |
 | Doors | Scan | Scan and text | Scan, text and tap |
-| And | Console, analytics, pack codes | Campaigns and stores unlimited | Photographed slips accepted |
+| And | Console, analytics, pack codes | Campaigns and stores unlimited | Photographed slips, when switched on |
 | And | One brand, one campaign | Till slips and store attribution | Several brands on one account |
 | Site shows | A first product line | A programme that stays on | A national range |
 

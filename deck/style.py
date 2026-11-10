@@ -58,7 +58,11 @@ def start(deck_title, total):
     return prs
 
 
-def save(path):
+def save(path, deck):
+    """Check every figure against deck/sources.py, then write. Exits without
+    writing if a figure has no source, so a deck that fails is never left on disk."""
+    import sources
+    sources.enforce(prs, deck)
     prs.save(path)
     return _page["n"]
 
@@ -132,6 +136,11 @@ def footer(s):
     text(s, f"{_page['n']:02d} / {TOTAL}", RIGHT - Inches(2), RULE_Y + Inches(0.12),
          Inches(2), Inches(0.24), size=8, colour=FOOT, font=MONO,
          align=PP_ALIGN.RIGHT, spacing=1.0)
+
+
+def cite(s, txt, y, w=Inches(11.4)):
+    """The source line under a slide's evidence: small, quiet, always present."""
+    text(s, txt, M, y, w, Inches(0.26), size=8.5, colour=FOOT, font=MONO, spacing=1.1)
 
 
 def kicker(s, label, colour=ACCENT, y=Inches(1.00)):
