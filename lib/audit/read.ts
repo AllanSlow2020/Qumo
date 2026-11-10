@@ -73,8 +73,16 @@ const PHRASES: Record<string, string> = {
   "subscription.resumed": "Resumed the programme",
   "user.deactivated": "Switched off someone's access",
   "user.invited": "Invited someone to the team",
+  // These three were already being written by lib/staff/mfa.ts and had no
+  // phrase, so they rendered as their raw action name on the activity page.
+  // Added with the fourth rather than leaving three quarters of a feature
+  // unreadable in the one place it is meant to be reviewed.
+  "user.mfa_disabled": "Turned off their two-factor authentication",
+  "user.mfa_enabled": "Turned on their two-factor authentication",
+  "user.mfa_reset": "Reset someone's two-factor authentication",
   "user.password_reset": "Reset someone's password",
   "user.reactivated": "Restored someone's access",
+  "user.recovery_codes_regenerated": "Generated new recovery codes",
   "user.role_changed": "Changed someone's role",
 };
 
@@ -97,6 +105,11 @@ const NOTABLE = new Set([
   "subscription.cancelled",
   "user.deactivated",
   "user.invited",
+  // Both weaken how an account proves it is that account, which is what
+  // this list is for. Enrolling is not here: strengthening it is not what
+  // an auditor is scanning for.
+  "user.mfa_disabled",
+  "user.mfa_reset",
   "user.password_reset",
   "user.role_changed",
 ]);
