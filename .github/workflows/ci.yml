@@ -16,6 +16,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Its own job rather than a step inside `check`, so the two signals stay
+  # independent: a new advisory in a dependency should be impossible to miss
+  # without also hiding whether the branch's tests pass.
+  #
+  # Needs nothing but an install - no database, no Prisma client, no build.
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Fails on a high or critical advisory in anything the deployed app
+      # loads. The exceptions, and why each is not reachable, are written
+      # down in the script rather than passed as flags here.
+      - name: Audit production dependencies
+        run: pnpm audit:ci
+
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 15

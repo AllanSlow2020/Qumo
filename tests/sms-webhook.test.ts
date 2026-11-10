@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest } from "next/server";
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { prisma } from "@/lib/db/client";
 import { hashPhone } from "@/lib/security/crypto";
+import { signedPayload } from "@/lib/sms/twilio-signature";
+import { createHmac } from "node:crypto";
 
 /**
  * The endpoint an aggregator posts to, tested as the trust boundary it is.
@@ -42,6 +44,32 @@ function post(body: unknown, init: { token?: string; query?: string; form?: bool
   return new NextRequest(url, { method: "POST", headers, body: payload });
 }
 
+const AUTH_TOKEN = `twilio-auth-${randomUUID()}`;
+const WEBHOOK_URL = "https://qumo.test/api/sms/inbound";
+
+/**
+ * A form post carrying a real Twilio signature.
+ *
+ * The digest is computed here with the same algorithm rather than with a
+ * fixture, because a fixture would be a copy of the implementation's output
+ * and would therefore keep agreeing with it after the implementation went
+ * wrong. `signedPayload` is shared; the HMAC is done independently.
+ */
+function signedPost(params: Record<string, string>, token = AUTH_TOKEN): NextRequest {
+  const signature = createHmac("sha1", token).update(signedPayload(WEBHOOK_URL, params), "utf8").digest("base64");
+
+  const headers = new Headers({
+    "content-type": "application/x-www-form-urlencoded",
+    "x-twilio-signature": signature,
+  });
+
+  return new NextRequest(WEBHOOK_URL, {
+    method: "POST",
+    headers,
+    body: new URLSearchParams(params).toString(),
+  });
+}
+
 beforeAll(async () => {
   await prisma.person.create({
     data: {
@@ -63,6 +91,16 @@ afterAll(async () => {
 });
 
 describe("POST /api/sms/inbound", () => {
+  /*
+   * The bearer secret is only consulted when no auth token is configured
+   * (see authorised() in the route). Cleared before each test so these
+   * cases mean what they say whatever the developer's own .env holds; the
+   * signature block below sets it deliberately.
+   */
+  beforeEach(() => {
+    vi.stubEnv("TWILIO_AUTH_TOKEN", "");
+  });
+
   describe("before it will do anything at all", () => {
     it("refuses every request while no secret is configured", async () => {
       vi.stubEnv("SMS_WEBHOOK_SECRET", "");
@@ -106,12 +144,16 @@ describe("POST /api/sms/inbound", () => {
       expect(await response.text()).toContain("BALANCE");
     });
 
-    it("accepts the token in the query string, for consoles that offer only a URL", async () => {
+    it("refuses the token in the query string, which is where it used to be accepted", async () => {
       vi.stubEnv("SMS_WEBHOOK_SECRET", SECRET);
       const response = await POST(post({ from: SENDER, text: "HELP" }, { query: `?token=${SECRET}` }));
 
-      expect(response.status).toBe(200);
-      expect(await response.text()).toContain("BALANCE");
+      // Deliberately removed rather than deprecated. A secret in a URL is
+      // written into the provider's request inspector and the platform's
+      // logs, so it leaks by design; see lib/sms/twilio-signature.ts. This
+      // asserts the removal, because a path that is merely unused comes
+      // back the first time somebody needs a quick way in.
+      expect(response.status).toBe(401);
     });
 
     it("reads a form-encoded post, which is what most aggregators send", async () => {
@@ -160,6 +202,79 @@ describe("POST /api/sms/inbound", () => {
       expect(response.headers.get("cache-control")).toBe("no-store");
       expect(text).toMatch(/^<\?xml version="1\.0" encoding="UTF-8"\?><Response><Message>/);
       expect(text).toMatch(/<\/Message><\/Response>$/);
+    });
+  });
+
+  /**
+   * The signature path, which is the one that actually holds for Twilio.
+   *
+   * A shared secret proves who called. A signature proves what they said,
+   * and that is the difference that matters here: with a bearer token,
+   * anybody holding it can post any `From` they like, and an inbound
+   * message can read a balance, claim a pack code, opt a number out, or
+   * answer YES and write a consent record for a number that never
+   * consented. The last of those forges the evidence this product's lawful
+   * basis rests on.
+   */
+  describe("when an auth token is configured", () => {
+    beforeEach(() => {
+      vi.stubEnv("TWILIO_AUTH_TOKEN", AUTH_TOKEN);
+      vi.stubEnv("TWILIO_WEBHOOK_URL", WEBHOOK_URL);
+    });
+
+    it("accepts a correctly signed post", async () => {
+      const response = await POST(signedPost({ From: SENDER, Body: "HELP" }));
+
+      expect(response.status).toBe(200);
+      expect(await response.text()).toContain("BALANCE");
+    });
+
+    it("refuses a signed post whose sender was changed afterwards", async () => {
+      const signed = signedPost({ From: SENDER, Body: "HELP" });
+      const signature = signed.headers.get("x-twilio-signature") ?? "";
+
+      // The same signature, replayed over a different sender. This is the
+      // whole attack the bearer token could not stop, so it is the test
+      // that would have to fail before this endpoint regressed to it.
+      const tampered = new NextRequest(WEBHOOK_URL, {
+        method: "POST",
+        headers: new Headers({
+          "content-type": "application/x-www-form-urlencoded",
+          "x-twilio-signature": signature,
+        }),
+        body: new URLSearchParams({ From: "+27829999999", Body: "HELP" }).toString(),
+      });
+
+      expect((await POST(tampered)).status).toBe(401);
+    });
+
+    it("refuses a post signed with the wrong token", async () => {
+      const response = await POST(signedPost({ From: SENDER, Body: "HELP" }, `${AUTH_TOKEN}x`));
+      expect(response.status).toBe(401);
+    });
+
+    it("refuses a post with no signature at all", async () => {
+      const response = await POST(post({ From: SENDER, Body: "HELP" }, { form: true }));
+      expect(response.status).toBe(401);
+    });
+
+    it("does not fall back to the bearer secret", async () => {
+      vi.stubEnv("SMS_WEBHOOK_SECRET", SECRET);
+
+      // A valid bearer token, which would have been accepted a moment ago.
+      // Accepting both would mean the weaker mechanism decides what an
+      // attacker has to defeat, which is the same as not having added the
+      // stronger one.
+      const response = await POST(post({ From: SENDER, Body: "HELP" }, { token: SECRET, form: true }));
+
+      expect(response.status).toBe(401);
+    });
+
+    it("refuses a JSON body, which cannot carry a signature this scheme covers", async () => {
+      vi.stubEnv("SMS_WEBHOOK_SECRET", SECRET);
+      const response = await POST(post({ from: SENDER, text: "HELP" }, { token: SECRET }));
+
+      expect(response.status).toBe(401);
     });
   });
 });

@@ -1,0 +1,60 @@
+# Dependency updates, so the next advisory arrives as a pull request rather
+# than as something found during an audit months later.
+#
+# This file is the other half of scripts/audit.mjs. The gate says a branch
+# may not merge with a known high or critical advisory in anything the
+# deployed app loads; this is what makes that something a person can act on
+# instead of a wall. A gate with no supply of fixes is a gate that gets
+# switched off.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      # Monday morning, so a week's updates are waiting at the start of a
+      # week rather than arriving on a Friday afternoon.
+      day: monday
+      time: "07:00"
+      timezone: Africa/Johannesburg
+
+    # Enough to cover a week of upstream releases without the queue
+    # becoming the reason nobody looks at it.
+    open-pull-requests-limit: 5
+
+    # Grouped, because the alternative is eight pull requests that each
+    # change one line of the lockfile and each need a full CI run. Security
+    # updates stay out of the groups below and come on their own, which is
+    # the one case where a single-purpose pull request is worth the noise.
+    groups:
+      # The framework and the renderer move together: a Next minor often
+      # expects a particular React, and splitting them produces a pull
+      # request that cannot pass on its own.
+      next:
+        patterns:
+          - "next"
+          - "eslint-config-next"
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+
+      # Likewise the client and the CLI, which Prisma versions in lockstep
+      # and which fail with a schema-engine mismatch if they drift.
+      prisma:
+        patterns:
+          - "prisma"
+          - "@prisma/*"
+
+      # Everything that only runs in development or CI. A failure here
+      # cannot reach a shopper, so these are the safest to take in a batch.
+      dev:
+        dependency-type: development
+
+    labels:
+      - dependencies
+
+    commit-message:
+      prefix: "deps"
+      include: scope
