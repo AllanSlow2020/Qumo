@@ -5,7 +5,7 @@ import { UserError, changeOwnPassword } from "@/lib/staff/users";
 import type { PasswordState } from "./state";
 
 export async function changePassword(_prev: PasswordState, formData: FormData): Promise<PasswordState> {
-  const staff = await requireStaff();
+  const staff = await requireStaff({ allowPendingSecondFactor: true });
 
   const current = String(formData.get("current") ?? "");
   const next = String(formData.get("next") ?? "");

@@ -8,9 +8,16 @@ import { IDLE, type SecurityState } from "./state";
 export function SecurityForm({
   enabled,
   recoveryCodesLeft,
+  /**
+   * Whether this account's role may not sign in on a password alone. Drives
+   * presentation only: the server refuses the same thing in disableMfa, and
+   * a button that is not rendered is not a check.
+   */
+  required,
 }: {
   enabled: boolean;
   recoveryCodesLeft: number;
+  required: boolean;
 }) {
   const [state, setState] = useState<SecurityState>(IDLE);
   const [starting, setStarting] = useState(false);
@@ -24,7 +31,7 @@ export function SecurityForm({
   }
 
   if (enabled && state.step !== "done") {
-    return <TurnOff recoveryCodesLeft={recoveryCodesLeft} onState={setState} />;
+    return <TurnOff recoveryCodesLeft={recoveryCodesLeft} required={required} onState={setState} />;
   }
 
   return (
@@ -145,9 +152,11 @@ function RecoveryCodes({ codes }: { codes: string[] }) {
 
 function TurnOff({
   recoveryCodesLeft,
+  required,
   onState,
 }: {
   recoveryCodesLeft: number;
+  required: boolean;
   onState: (next: SecurityState) => void;
 }) {
   const [offState, offAction, offPending] = useActionState(turnOff, IDLE);
@@ -193,31 +202,47 @@ function TurnOff({
         </button>
       </form>
 
-      <form action={offAction} className="cn-form">
-        <div className="cn-field">
-          <label htmlFor="off-password">Your password, to turn two-factor off</label>
-          <input
-            id="off-password"
-            name="password"
-            className="cn-input"
-            type="password"
-            autoComplete="current-password"
-            required
-          />
-          <p className="cn-label" style={{ marginTop: 6 }}>
-            {/* Says why we ask, rather than just asking. */}
-            Asked for so an open console left on a desk can&apos;t be used to strip the second factor off your account.
-          </p>
-        </div>
-        {offState.error && (
-          <p className="cn-err" role="alert">
-            {offState.error}
-          </p>
-        )}
-        <button type="submit" className="cn-btn cn-btn-quiet" disabled={offPending}>
-          {offPending ? "Turning off…" : "Turn off two-factor authentication"}
-        </button>
-      </form>
+      {required ? (
+        /*
+         * No form at all, rather than a disabled button: a control that
+         * cannot work is a question about why, and this says why instead.
+         * The server refuses it regardless - see disableMfa - so this is
+         * about not offering a dead end, not about enforcement.
+         */
+        <p className="cn-body">
+          Two-factor authentication stays on for owner and admin accounts. Your account can add and remove
+          staff, change what a colleague is allowed to do, and rotate the secret that decides whether a till
+          slip is trusted, so a stolen password must not be enough on its own. To turn it off, someone would
+          have to change your role first.
+        </p>
+      ) : (
+        <form action={offAction} className="cn-form">
+          <div className="cn-field">
+            <label htmlFor="off-password">Your password, to turn two-factor off</label>
+            <input
+              id="off-password"
+              name="password"
+              className="cn-input"
+              type="password"
+              autoComplete="current-password"
+              required
+            />
+            <p className="cn-label" style={{ marginTop: 6 }}>
+              {/* Says why we ask, rather than just asking. */}
+              Asked for so an open console left on a desk can&apos;t be used to strip the second factor off your
+              account.
+            </p>
+          </div>
+          {offState.error && (
+            <p className="cn-err" role="alert">
+              {offState.error}
+            </p>
+          )}
+          <button type="submit" className="cn-btn cn-btn-quiet" disabled={offPending}>
+            {offPending ? "Turning off…" : "Turn off two-factor authentication"}
+          </button>
+        </form>
+      )}
     </div>
   );
 }
