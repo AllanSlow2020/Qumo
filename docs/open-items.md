@@ -105,28 +105,24 @@ is first.
   Invalid Configuration since they were added, because the DNS points at
   Lovable and Vercel was never going to validate them. Every
   `qumo-app.com` entry was confirmed untouched and still Valid afterwards.
-- **[A] Remove the demo brand that carries a real chain's name.** One
-  brand in the production database was named after a well known South
-  African chain, from which the original product idea came. The name is to
-  be cleared from everywhere, and the repository is already clean.
+- **Settled: the demo brands named after real companies are gone.** Two
+  of them, not one. The early demo data used real names and the habit was
+  corrected later, so the invented ones (Copper Kettle, Amber Oak, Harbour
+  Bakery) sat beside two that were not. Both are deleted from production,
+  by id, after a snapshot. Each had nothing attached worth keeping: one
+  had a single membership and no ledger rows, the other was empty on every
+  count. Copper Kettle was untouched and `Person` was unchanged before and
+  after, which is the architecture working, since `Person` carries no
+  `brandId` and is shared across brands.
 
-  The `.vercel.app` domain carrying the same slug was removed on 10
-  November. It was the harmless half anyway: it matched no brand, so it
-  served the "this link needs a brand" page. Removing it needed one extra
-  step, because the project's other `.vercel.app` domain redirected to it
-  and Vercel would only delete the pair together; pointing that one at
-  Production first broke the coupling.
+  The name is clear everywhere now: the repository, the git history, the
+  branches, Vercel and the database. Those slugs resolve to nothing and
+  serve the "this link needs a brand" page.
 
-  What remains is the brand row, and it is the half with teeth. The slug
-  is what matters, because `<slug>.qumo-app.com` resolves through the
-  wildcard and would serve a page wearing the name.
-
-  **The console cannot do this.** `setBrandIdentityForSession` changes the
-  display name, tagline, logo, colours and support address, and never
-  `name` or `slug`. So it is a database change or a delete. Deleting the
-  brand row cascades through nineteen relations and takes its memberships,
-  campaigns and ledger with it, which is the right outcome if nothing real
-  is attached to it. Check first, then delete.
+  **The lesson worth keeping is the one about demo data.** A realistic
+  demo name is a trade mark somebody else owns, and the slug is what
+  carries the risk, because `<slug>.qumo-app.com` resolves through the
+  wildcard. Invent them.
 - **[A/L] Write down the breach process** (section 22). Who decides, how
   fast, who signs the notification.
 - **[L] Review the brand agreement.** Drafted, not reviewed:
