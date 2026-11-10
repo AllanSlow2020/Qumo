@@ -302,6 +302,32 @@ if (!smsCanSend) {
   );
 }
 
+// How the inbound webhook authenticates, which is a separate question from
+// how sending authenticates and has its own failure that looks like nothing.
+//
+// A misconfigured inbound webhook does not error anywhere we would see. The
+// route answers 401, Twilio records a failed delivery in its own console,
+// and from inside the application a shopper texting BALANCE is
+// indistinguishable from a shopper who never texted at all.
+const smsWebhookSecret = value("SMS_WEBHOOK_SECRET");
+
+if (!smsAuthToken && !smsWebhookSecret) {
+  warn(
+    "Nothing authenticates the inbound SMS webhook, so /api/sms/inbound refuses every message.",
+    "Set TWILIO_AUTH_TOKEN to verify Twilio's X-Twilio-Signature (the signature covers the sender, so a forged number is refused). SMS_WEBHOOK_SECRET is the bearer fallback for a provider that cannot sign.",
+  );
+} else if (!smsAuthToken && smsWebhookSecret && smsFrom) {
+  // The specific trap. A Twilio number plus bearer-only auth is a webhook
+  // that can never succeed, because Twilio's messaging configuration has
+  // nowhere to put a header and the query-string form was removed - a
+  // secret in a URL is written into Twilio's request inspector and the
+  // platform's logs, so it leaked by design.
+  warn(
+    "Inbound SMS is set to the bearer fallback, which Twilio cannot use: it has nowhere to send a header.",
+    "Every inbound message will be refused with a 401. Set TWILIO_AUTH_TOKEN so the signature is checked instead. The API key keeps doing the sending; the auth token is read for a local HMAC and is never transmitted.",
+  );
+}
+
 // Not a mistake - it is a thing somebody switched on - but it is the one
 // setting here that makes the front door wider, so it says so on every
 // single build until it goes.
