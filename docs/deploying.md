@@ -99,6 +99,19 @@ one for no visible reason. The application keeps the pooled URL, which is
 what it wants; only the CLI needs the direct one. `scripts/preflight.mjs`
 refuses to build with a pooled `DATABASE_URL` and no `DIRECT_DATABASE_URL`.
 
+**On what you can undo.** The free plan keeps six hours of
+point-in-time restore, and allows one manual snapshot. That snapshot was
+taken on 10 November before two brand rows were deleted, and it never
+expires, which also means the allowance is now spent: a second one needs
+either an upgrade or deleting the first.
+
+So the honest posture before anything destructive is six hours, not
+forever. A delete on `Brand` cascades through fifteen tables, every one of
+them `ON DELETE CASCADE`, confirmed against `information_schema` rather
+than against the Prisma schema. Check the real constraints, not the ones
+the schema file intends: a migration that drifted turns a clean delete
+into a half-deleted brand.
+
 **On the region:** what matters is that the database and the app end up in
 the same one, not which one. A page makes several queries, and each of them
 crossing an ocean costs more than the whole render. The region is in the
