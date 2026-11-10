@@ -261,7 +261,7 @@ def p10():
          "foot_label": "Per month, indicative", "foot": "R25,000"},
         {"tag": "Tier 03", "title": "PLATFORM", "sub": "National, every door",
          "points": ["Scan, text and tap", "500,000+ scans a month",
-                    "Photographed slips accepted", "Several brands on one account"],
+                    "Photographed slips, when switched on", "Several brands on one account"],
          "foot_label": "Per month, indicative", "foot": "R60,000",
          "foot_note": "CRM and API are on the roadmap"},
     ], Inches(3.38), hgt=Inches(3.38))

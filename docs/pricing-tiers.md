@@ -42,7 +42,7 @@ the plan is for.
 | **Shape** | One campaign, one door | Always-on, two doors | National, every door |
 | **Doors** | Scan | Scan and text | Scan, text and tap |
 | **Volume** | Up to 10,000 scans a month | Up to 100,000 scans a month | 500,000+ scans a month |
-| **And** | Console, analytics, pack codes | Campaigns and stores unlimited | Photographed slips accepted |
+| **And** | Console, analytics, pack codes | Campaigns and stores unlimited | Photographed slips, when switched on |
 | **And** | One brand, one campaign | Till slips and store attribution | Several brands on one account |
 | **Deck footer** | R7,500 a month, indicative | R25,000 a month, indicative | R60,000 a month, indicative |
 | **Site footer** | A first product line | A programme that stays on | A national range |
@@ -142,7 +142,7 @@ Under a divider, label `Best for`, value `A programme that stays on`.
 door`. Bullets:
 
 - Scan, text and tap
-- Photographed slips accepted
+- Photographed slips, when switched on
 - Several brands on one account
 
 Under a divider, label `Best for`, value `A national range`.
