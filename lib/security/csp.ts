@@ -12,12 +12,28 @@
  * 'unsafe-inline' is a blanket permission for exactly that. It is the usual
  * compromise because most apps have inline scripts they cannot remove.
  *
- * This one does not have any. There is no <script> tag and no
- * dangerouslySetInnerHTML anywhere in app/, and next/font self-hosts the
- * one typeface at build time rather than fetching it, so nothing is loaded
- * from a font CDN either. That means the strict policy is available for the
- * cost of writing it down, and taking the weaker one would be a choice
- * rather than a constraint.
+ * This one does not have any. There is no <script> tag anywhere in app/,
+ * and next/font self-hosts the one typeface at build time rather than
+ * fetching it, so nothing is loaded from a font CDN either. That means the
+ * strict policy is available for the cost of writing it down, and taking
+ * the weaker one would be a choice rather than a constraint.
+ *
+ * ── What does inject markup, and why it is not a hole ────────────────────
+ *
+ * This comment used to claim there was no dangerouslySetInnerHTML in app/
+ * either. There are four, and the claim had simply gone stale: the poster
+ * QR on the promotions page, the label QR on a batch sheet, and two on the
+ * development till. All four inject an SVG that `qrcode` generated from a
+ * URL, which is path geometry rather than interpolated text, so there is
+ * no point at which a value anybody supplied becomes markup.
+ *
+ * Worth correcting rather than leaving, because this is the file somebody
+ * reads when deciding whether the strict policy can stay, and a comment
+ * that is wrong about the thing it is reasoning from is worse than no
+ * comment. It is also the reason the policy keeps earning its place: if
+ * one of those four ever renders something a person typed, the nonce is
+ * what stands between that and script execution, since an injected
+ * <script> carries no nonce and inline handlers are refused outright.
  *
  * Next.js reads the nonce out of the Content-Security-Policy header on the
  * *request* and stamps it onto the framework's own script tags, which is
