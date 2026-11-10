@@ -359,12 +359,12 @@ are separate on purpose and neither redirects to the other.
 | `qumo-app.com` and `*.qumo-app.com` | the product: every brand's shopper site, and the console at `app.` | Vercel |
 | `qumo.co.za` and `www.qumo.co.za` | the marketing site | Lovable, at A record `185.158.133.1` |
 
-**The three `qumo.co.za` entries in the Vercel project are leftovers of
-the old plan and should be deleted.** They have sat at Invalid
-Configuration since they were added, and now there is an explanation
-rather than a mystery: the DNS points at Lovable, so Vercel was never
-going to be able to validate them. They are not broken, they are
-describing a decision that was reversed.
+The three `qumo.co.za` entries in the Vercel project were leftovers of
+the old plan and were deleted on 10 November. They had sat at Invalid
+Configuration since they were added, for a reason that was a mystery
+until the DNS was read: the domain points at Lovable, so Vercel was never
+going to be able to validate them. They were not broken, they were
+describing a decision that had been reversed.
 
 Nothing is lost by the reversal. The reason for wanting one root was that
 two live roots serving the *same* thing split cookies and origins. These

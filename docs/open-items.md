@@ -93,11 +93,36 @@ is first.
   sending from an unrelated account and watching the messages arrive. The
   address was published before it worked, which is the sequence to avoid
   rather than repeat. See `docs/deploying.md`.
-- **[A] Turn the domain lock on** for `qumo.co.za` and check
-  `qumo-app.com` too. It is currently off. These two carry a registered
-  company's name, its marketing site, its product and now its support
-  address, and an unlocked domain is meaningfully easier to have
-  transferred away by somebody who talks their way past a registrar.
+- **Settled: both domains are locked.** `qumo.co.za` was off and is now
+  on; `qumo-app.com` was already on and was left alone. An unlocked domain
+  is meaningfully easier to have transferred away by somebody who talks
+  their way past a registrar, and these two carry a registered company's
+  name, its marketing site, its product and its support address. Transfers
+  out are possible from 14 November for `qumo.co.za` and 25 December for
+  `qumo-app.com`; unlocking first is the deliberate extra step.
+- **Settled: the dead `qumo.co.za` entries are off the Vercel project.**
+  All three, `qumo.co.za`, `www.qumo.co.za` and `*.qumo.co.za`, had sat at
+  Invalid Configuration since they were added, because the DNS points at
+  Lovable and Vercel was never going to validate them. Every
+  `qumo-app.com` entry was confirmed untouched and still Valid afterwards.
+- **[A] Remove the demo brand that carries a real chain's name.** One
+  brand in the production database was named after a well known South
+  African chain, from which the original product idea came. The name is to
+  be cleared from everywhere, and the repository is already clean.
+
+  What remains is the brand row itself and a `.vercel.app` domain on the
+  project carrying the same slug. The bare `.vercel.app` hostname is
+  harmless: it matches no brand, so it serves the "this link needs a
+  brand" page. The slug is the part that matters, because
+  `<slug>.qumo-app.com` resolves through the wildcard and would serve a
+  page wearing the name.
+
+  **The console cannot do this.** `setBrandIdentityForSession` changes the
+  display name, tagline, logo, colours and support address, and never
+  `name` or `slug`. So it is a database change or a delete. Deleting the
+  brand row cascades through nineteen relations and takes its memberships,
+  campaigns and ledger with it, which is the right outcome if nothing real
+  is attached to it. Check first, then delete.
 - **[A/L] Write down the breach process** (section 22). Who decides, how
   fast, who signs the notification.
 - **[L] Review the brand agreement.** Drafted, not reviewed:
