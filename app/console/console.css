@@ -2436,6 +2436,19 @@ a.cn-btn { text-decoration: none; display: inline-block; }
    scans from, allowing for a phone camera at arm's length and a label that
    has been round a distribution centre. Below that the modules get smaller
    than the print process can hold. */
+/* The enrolment QR. Sized so a phone reads it from a comfortable arm's
+   length without the panel it sits in growing a scrollbar, and on a white
+   plate regardless of theme: a QR inverted by dark mode is one most
+   scanners refuse, and the quiet zone is baked into the SVG. */
+.cn-totp-qr {
+  width: 180px;
+  height: 180px;
+  background: #fff;
+  border-radius: var(--cn-radius-card);
+  padding: 8px;
+}
+.cn-totp-qr svg { width: 100%; height: 100%; display: block; }
+
 .cn-label-qr { width: 28mm; height: 28mm; }
 .cn-label-qr svg { width: 100%; height: 100%; display: block; }
 

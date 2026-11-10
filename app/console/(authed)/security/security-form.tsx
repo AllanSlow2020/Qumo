@@ -81,18 +81,39 @@ function Confirm({
   return (
     <form action={action} className="cn-form">
       <p className="cn-body">
-        Add this to your authenticator app (1Password, Google Authenticator, Authy, whichever you already use), then
-        type the six digits it shows.
+        Scan this with your authenticator app (1Password, Google Authenticator, Authy, whichever you already use),
+        then type the six digits it shows.
       </p>
 
       <div className="cn-field">
-        <span className="cn-label">Setup key</span>
+        {/* The SVG comes from `qrcode`, which draws the otpauth URL as path
+            geometry. Nothing a person typed reaches it, so there is no
+            value here that could become markup. */}
+        <div className="cn-totp-qr" dangerouslySetInnerHTML={{ __html: state.qr }} />
+      </div>
+
+      <div className="cn-field">
+        {/* Kept, and deliberately. A QR is no use to somebody enrolling on
+            the same device that is showing it - a password manager on this
+            laptop cannot photograph this screen - and it is the only way
+            back when a camera will not focus. */}
+        <span className="cn-label">Or type this key instead</span>
         <p className="cn-secret-value" style={{ userSelect: "all" }}>
           {formatSecretForDisplay(state.secret)}
         </p>
-        <p className="cn-label" style={{ marginTop: 6 }}>
-          Most apps also accept this as a link: <span className="cn-mono">{state.otpauth}</span>
-        </p>
+        {/* Behind a disclosure, not removed. Pasting the otpauth link into
+            a desktop password manager is the fastest route when there is
+            no camera, and it carries the account name and issuer that the
+            setup key on its own does not. But it spells the secret out a
+            third time in a wall of text, and three copies of one
+            credential on one screen is three chances to be read over a
+            shoulder. Shown on request instead. */}
+        <details className="cn-setup-more" style={{ marginTop: 8 }}>
+          <summary className="cn-label">Add it as a link instead</summary>
+          <p className="cn-label cn-mono" style={{ marginTop: 6, wordBreak: "break-all", userSelect: "all" }}>
+            {state.otpauth}
+          </p>
+        </details>
       </div>
 
       <div className="cn-field">

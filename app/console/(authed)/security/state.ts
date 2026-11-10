@@ -7,7 +7,7 @@
 export type SecurityState =
   | { step: "idle"; error: string | null }
   /** A secret has been minted and is waiting for a code to prove it works. */
-  | { step: "confirm"; secret: string; otpauth: string; error: string | null }
+  | { step: "confirm"; secret: string; otpauth: string; qr: string; error: string | null }
   /** Shown exactly once. Reloading the page will not bring them back. */
   | { step: "codes"; codes: string[]; error: string | null }
   | { step: "done"; error: string | null };

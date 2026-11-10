@@ -21,11 +21,14 @@
  * ── What does inject markup, and why it is not a hole ────────────────────
  *
  * This comment used to claim there was no dangerouslySetInnerHTML in app/
- * either. There are four, and the claim had simply gone stale: the poster
- * QR on the promotions page, the label QR on a batch sheet, and two on the
- * development till. All four inject an SVG that `qrcode` generated from a
- * URL, which is path geometry rather than interpolated text, so there is
- * no point at which a value anybody supplied becomes markup.
+ * either, and then that there were four of them. Both went stale, the
+ * second within a day, so it no longer carries a count: every use in app/
+ * injects an SVG that `qrcode` generated from a URL, which is path
+ * geometry rather than interpolated text, so there is no point at which a
+ * value anybody supplied becomes markup. They are the poster QR, the batch
+ * label QR, the two on the development till, and the one on the
+ * second-factor enrolment screen - a list that will be wrong again, which
+ * is why the property above is the thing to check rather than the number.
  *
  * Worth correcting rather than leaving, because this is the file somebody
  * reads when deciding whether the strict policy can stay, and a comment
