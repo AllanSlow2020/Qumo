@@ -110,12 +110,16 @@ is first.
   African chain, from which the original product idea came. The name is to
   be cleared from everywhere, and the repository is already clean.
 
-  What remains is the brand row itself and a `.vercel.app` domain on the
-  project carrying the same slug. The bare `.vercel.app` hostname is
-  harmless: it matches no brand, so it serves the "this link needs a
-  brand" page. The slug is the part that matters, because
-  `<slug>.qumo-app.com` resolves through the wildcard and would serve a
-  page wearing the name.
+  The `.vercel.app` domain carrying the same slug was removed on 10
+  November. It was the harmless half anyway: it matched no brand, so it
+  served the "this link needs a brand" page. Removing it needed one extra
+  step, because the project's other `.vercel.app` domain redirected to it
+  and Vercel would only delete the pair together; pointing that one at
+  Production first broke the coupling.
+
+  What remains is the brand row, and it is the half with teeth. The slug
+  is what matters, because `<slug>.qumo-app.com` resolves through the
+  wildcard and would serve a page wearing the name.
 
   **The console cannot do this.** `setBrandIdentityForSession` changes the
   display name, tagline, logo, colours and support address, and never
