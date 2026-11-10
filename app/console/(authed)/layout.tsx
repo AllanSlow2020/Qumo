@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { PRODUCT_NAME } from "@/lib/product";
 import { prisma } from "@/lib/db/client";
 import { getStaffSession } from "@/lib/staff/session";
+import { secondFactorOutstanding } from "@/lib/staff/current";
 import { getTheme } from "@/lib/theme";
 import { toggleTheme } from "@/app/theme-actions";
 import { signOut } from "./actions";
@@ -45,8 +46,14 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
    * offering nine dead ends, and it makes a one-step setup look like a
    * console somebody is locked out of. The nav appears when it leads
    * somewhere.
+   *
+   * An account that still owes a second factor is held the same way, on
+   * /security, so it is held to the same rule. Found by screenshotting the
+   * gate: the page explained itself perfectly and then offered eleven links
+   * that all came back to it.
    */
-  const setUp = brand?.accentColor != null;
+  const held = await secondFactorOutstanding(session);
+  const setUp = brand?.accentColor != null && !held;
 
   // The console is dark unless somebody has said otherwise, so an unset
   // cookie is dark and the button offers the other one. The same cookie and

@@ -3,7 +3,7 @@ import { requireStaff } from "@/lib/staff/current";
 import { PasswordForm } from "./password-form";
 
 export default async function ChangePasswordPage() {
-  const staff = await requireStaff();
+  const staff = await requireStaff({ allowPendingSecondFactor: true });
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: staff.userId },
     select: { mustChangePassword: true },

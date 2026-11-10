@@ -22,9 +22,22 @@ const PASSWORD = "a-long-enough-staff-password";
 
 let brand: { id: string };
 let user: { id: string; email: string };
+/**
+ * A second account on a role that may sign in without a second factor.
+ *
+ * Needed because the tests below that exercise *turning it off* cannot run
+ * as the owner any more: lib/staff/mfa-policy.ts refuses that for OWNER and
+ * ADMIN, which is the point of it. Separating them keeps each test about
+ * one thing - the mechanism here, the policy in its own block.
+ */
+let optional: { id: string; email: string };
 
 const actor = () => ({
   user: { id: user.id, brandId: brand.id, role: "OWNER", name: "Thandi", email: user.email },
+});
+
+const optionalActor = () => ({
+  user: { id: optional.id, brandId: brand.id, role: "QUALITY", name: "Sipho", email: optional.email },
 });
 
 /** The secret as the app would hold it, read back the way login does. */
@@ -43,6 +56,18 @@ async function enrol(now = new Date()): Promise<{ secret: string; recoveryCodes:
   return { secret, recoveryCodes };
 }
 
+/** The same, for the account whose role may turn it off again. */
+async function enrolOptional(now = new Date()): Promise<string> {
+  await beginEnrolment(optionalActor(), "Qumo");
+  const row = await prisma.user.findUniqueOrThrow({
+    where: { id: optional.id },
+    select: { totpSecretEncrypted: true },
+  });
+  const secret = decryptSecret(row.totpSecretEncrypted!);
+  await confirmEnrolment(optionalActor(), totpCode(secret, now), now);
+  return secret;
+}
+
 beforeAll(async () => {
   brand = await prisma.brand.create({ data: { name: `MFA ${run}`, slug: `mfa-${run}` } });
   user = await prisma.user.create({
@@ -51,6 +76,16 @@ beforeAll(async () => {
       email: `owner-${run}@example.invalid`,
       name: "Thandi",
       role: "OWNER",
+      passwordHash: await hashPassword(PASSWORD),
+    },
+    select: { id: true, email: true },
+  });
+  optional = await prisma.user.create({
+    data: {
+      brandId: brand.id,
+      email: `quality-${run}@example.invalid`,
+      name: "Sipho",
+      role: "QUALITY",
       passwordHash: await hashPassword(PASSWORD),
     },
     select: { id: true, email: true },
@@ -69,13 +104,23 @@ beforeEach(async () => {
     where: { id: user.id },
     data: { totpSecretEncrypted: null, totpConfirmedAt: null, totpLastStep: null },
   });
+
+  await prisma.staffRecoveryCode.deleteMany({ where: { userId: optional.id } });
+  await prisma.staffSession.deleteMany({ where: { userId: optional.id } });
+  await prisma.user.update({
+    where: { id: optional.id },
+    data: { totpSecretEncrypted: null, totpConfirmedAt: null, totpLastStep: null },
+  });
 });
 
 afterAll(async () => {
   await prisma.auditEvent.deleteMany({ where: { brandId: brand.id } });
   await prisma.staffRecoveryCode.deleteMany({ where: { userId: user.id } });
   await prisma.staffSession.deleteMany({ where: { userId: user.id } });
+  await prisma.staffRecoveryCode.deleteMany({ where: { userId: optional.id } });
+  await prisma.staffSession.deleteMany({ where: { userId: optional.id } });
   await prisma.user.delete({ where: { id: user.id } });
+  await prisma.user.delete({ where: { id: optional.id } });
   await prisma.brand.delete({ where: { id: brand.id } });
 });
 
@@ -237,33 +282,97 @@ describe("recovery codes", () => {
 });
 
 describe("turning it off", () => {
+  /*
+   * As the QUALITY account throughout, because OWNER may not turn it off at
+   * all any more. Run as the owner, "needs the current password" would
+   * still pass while testing nothing: the policy refuses before the
+   * password is looked at, so the assertion would be satisfied by the wrong
+   * rejection. A test that passes for the wrong reason is worse than one
+   * that fails.
+   */
   it("needs the current password", async () => {
-    await enrol();
-    await expect(disableMfa(actor(), "wrong")).rejects.toThrow(MfaError);
-    expect((await getSecondFactorState(user.id)).enabled).toBe(true);
+    await enrolOptional();
+    await expect(disableMfa(optionalActor(), "wrong")).rejects.toThrow(MfaError);
+    expect((await getSecondFactorState(optional.id)).enabled).toBe(true);
   });
 
   it("removes the secret and every recovery code", async () => {
-    await enrol();
-    await disableMfa(actor(), PASSWORD);
+    await enrolOptional();
+    await disableMfa(optionalActor(), PASSWORD);
 
-    const state = await getSecondFactorState(user.id);
+    const state = await getSecondFactorState(optional.id);
     expect(state.enabled).toBe(false);
     expect(state.recoveryCodesLeft).toBe(0);
 
     const row = await prisma.user.findUniqueOrThrow({
-      where: { id: user.id },
+      where: { id: optional.id },
       select: { totpSecretEncrypted: true },
     });
     expect(row.totpSecretEncrypted).toBeNull();
-    expect((await signInStaff(user.email, PASSWORD)).ok).toBe(true);
+    expect((await signInStaff(optional.email, PASSWORD)).ok).toBe(true);
+  });
+});
+
+/**
+ * The policy itself: which roles may not sign in on a password alone.
+ *
+ * Separate from the mechanism above because they fail for different
+ * reasons and want different fixtures, and because this is the block that
+ * should be read when somebody asks why an owner cannot turn it off.
+ */
+describe("who may turn it off", () => {
+  it("refuses an owner, whatever the password", async () => {
+    await enrol();
+    await expect(disableMfa(actor(), PASSWORD)).rejects.toThrow(MfaError);
+
+    // Still on, which is the part that matters: a refusal that left the
+    // factor half-removed would be worse than no refusal.
+    expect((await getSecondFactorState(user.id)).enabled).toBe(true);
+  });
+
+  it("refuses before it looks at the password", async () => {
+    await enrol();
+
+    const right = await disableMfa(actor(), PASSWORD).catch((e: Error) => e.message);
+    const wrong = await disableMfa(actor(), "not-the-password").catch((e: Error) => e.message);
+
+    // The same message either way. A refusal that is nothing to do with the
+    // password must not become an oracle for guessing one.
+    expect(right).toBe(wrong);
+    expect(right).toMatch(/owner or admin/i);
+  });
+
+  it("refuses an admin too", async () => {
+    await enrol();
+    const asAdmin = { user: { ...actor().user, role: "ADMIN" } };
+
+    // The role is read from the row rather than from the actor, so this
+    // refuses on the stored OWNER regardless of what was handed in. The
+    // case that matters is the opposite one, below.
+    await expect(disableMfa(asAdmin, PASSWORD)).rejects.toThrow(MfaError);
+  });
+
+  it("does not take the caller's word for the role", async () => {
+    await enrolOptional();
+
+    // A QUALITY account claiming to be an owner is still allowed to turn it
+    // off, because the decision comes from the database row. Stated as a
+    // test because the inverse - a required role claiming to be an optional
+    // one - is exactly how this check would be defeated if it trusted its
+    // argument.
+    const lying = { user: { ...optionalActor().user, role: "OWNER" } };
+    await disableMfa(lying, PASSWORD);
+
+    expect((await getSecondFactorState(optional.id)).enabled).toBe(false);
   });
 });
 
 describe("what the log says", () => {
   it("records turning it on and off, and never the secret", async () => {
-    const { secret } = await enrol();
-    await disableMfa(actor(), PASSWORD);
+    // The QUALITY account, for the same reason as the block above: an owner
+    // cannot turn it off, so an owner cannot produce the disabled event.
+    const secret = await enrolOptional();
+    await disableMfa(optionalActor(), PASSWORD);
 
     const events = await prisma.auditEvent.findMany({
       where: { brandId: brand.id },

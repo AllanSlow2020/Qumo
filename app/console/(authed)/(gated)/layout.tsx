@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db/client";
-import { requireStaff } from "@/lib/staff/current";
+import { requireStaff, secondFactorOutstanding } from "@/lib/staff/current";
 
 /**
  * Everything an account gets to see only once it owns its own password.
@@ -18,7 +18,15 @@ import { requireStaff } from "@/lib/staff/current";
  * moment it is satisfied.
  */
 export default async function GatedConsoleLayout({ children }: { children: React.ReactNode }) {
-  const staff = await requireStaff();
+  /*
+   * The one caller that asks requireStaff() not to enforce the second
+   * factor, because it is the caller that decides what order the three
+   * conditions are met in. Left to enforce, this would send an owner with a
+   * temporary password to /security before /change-password, which is the
+   * wrong way round: a second factor on an account whose password is still
+   * the one that was handed out protects the wrong thing.
+   */
+  const staff = await requireStaff({ allowPendingSecondFactor: true });
   const user = await prisma.user.findUnique({
     where: { id: staff.userId },
     select: { mustChangePassword: true },
@@ -28,9 +36,17 @@ export default async function GatedConsoleLayout({ children }: { children: React
     redirect("/change-password");
   }
 
-  // Then the brand's own appearance, in that order: a password is about this
-  // person's account and has to be settled before anything is done as them,
-  // and the colour is about what their customers will see.
+  // Then the second factor, before anything the console can do as them.
+  // Server actions are covered by requireStaff() itself, which is the check
+  // that actually holds; this one is here so a browser is sent somewhere
+  // useful rather than refused.
+  if (await secondFactorOutstanding(staff)) {
+    redirect("/security");
+  }
+
+  // Then the brand's own appearance, last of the three: the first two are
+  // about this person's account and have to be settled before anything is
+  // done as them, and the colour is about what their customers will see.
   //
   // Also per request, and also lifting the moment it is satisfied. The cost
   // is one indexed read on a row this console loads on nearly every screen

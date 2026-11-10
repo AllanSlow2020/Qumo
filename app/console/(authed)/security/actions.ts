@@ -22,7 +22,7 @@ function toState(err: unknown, previous: SecurityState): SecurityState {
 }
 
 async function actor() {
-  const staff = await requireStaff();
+  const staff = await requireStaff({ allowPendingSecondFactor: true });
   return {
     user: {
       id: staff.userId,

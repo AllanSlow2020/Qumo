@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db/client";
+import { secondFactorRequired } from "./mfa-policy";
 import { decryptSecret, encryptSecret } from "@/lib/security/crypto";
 import { record } from "@/lib/audit/record";
 import { rateLimit } from "@/lib/security/rate-limit";
@@ -167,10 +168,33 @@ export async function confirmEnrolment(
  * reasoning that makes changeOwnPassword ask for the current one.
  */
 export async function disableMfa(actor: Actor, password: string): Promise<void> {
+  /*
+   * Refused outright for a role that may not sign in on a password alone.
+   *
+   * Without this the requirement is a formality: enrol, pass the gate,
+   * disable, and the account is back to a password. The screen does not
+   * offer the control to such a role, but the screen is not the boundary -
+   * this is a server action, and anyone who can sign in can post one.
+   *
+   * Checked before the password is verified, deliberately. A refusal that
+   * is nothing to do with the password should not depend on it, and should
+   * not tell an attacker holding a stolen one whether it was right.
+   */
   const user = await prisma.user.findUnique({
     where: { id: actor.user.id },
-    select: { passwordHash: true, totpConfirmedAt: true },
+    // role from the row, not from the actor the caller handed in. An
+    // authorisation decision read off its own argument is one an argument
+    // can decide, and Actor carries a widened `Role | string` for the sake
+    // of directly-constructed test actors.
+    select: { passwordHash: true, totpConfirmedAt: true, role: true },
   });
+
+  if (user && secondFactorRequired(user.role)) {
+    throw new MfaError(
+      "Two-factor authentication can't be turned off for an owner or admin account. Change the role first, or ask another owner to.",
+    );
+  }
+
   if (!user?.totpConfirmedAt) {
     throw new MfaError("Two-factor authentication isn't on for this account.");
   }
@@ -305,11 +329,3 @@ export async function consumeSecondFactor(
   return true;
 }
 
-/** Whether an account will be asked for a second factor at all. */
-export async function requiresSecondFactor(userId: string): Promise<boolean> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { totpConfirmedAt: true },
-  });
-  return Boolean(user?.totpConfirmedAt);
-}
