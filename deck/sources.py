@@ -185,8 +185,17 @@ FIGURES = [
     {"id": "tests", "figure": "800+", "decks": ["qumo"], "kind": "product",
      "where": "tests passing", "source": "qumo-code",
      "claim": "Automated tests passing",
-     "evidence": "pnpm test against a local Postgres on 2026-11-09: 811 tests in 71 files, "
-                 "all passing. Re-run before quoting a more exact figure."},
+     "evidence": "pnpm test against a local Postgres on 2026-11-11: 863 tests in 76 files, "
+                 "all passing (811 in 71 on 2026-11-09). Re-run before quoting a more exact "
+                 "figure."},
+    {"id": "audit-accepted", "figure": "8", "decks": ["qumo"], "kind": "product",
+     "where": "8 are accepted", "source": "qumo-code",
+     "claim": "High advisories accepted by the audit gate, each with a written reason",
+     "evidence": "pnpm audit:ci on 2026-11-11: 'Nothing blocking. 8 accepted, 0 stale.' The "
+                 "exceptions and their reasons are in scripts/audit.mjs, which CI runs as its "
+                 "own job (.github/workflows/ci.yml). pnpm audit --prod the same day: 22 "
+                 "advisories, 0 critical, 8 high.",
+     "caution": "Changes as advisories are published and fixed. Re-run before quoting it."},
     {"id": "screens", "figure": "17", "decks": ["qumo"], "kind": "product",
      "where": "screens, all real", "source": "qumo-code",
      "claim": "Screens in the decks, each a capture of the running product",
@@ -228,6 +237,71 @@ FIGURES = [
     {"id": "tier-launch-year", "figure": "R90,000", "decks": ["qumo"], "kind": "derived",
      "from": ["tier-launch"], "how": "R7,500 a month for twelve months",
      "claim": "Launch tier for a year"},
+]
+
+# ---------------------------------------------------------------- statements
+
+# Statements on slides that carry no figure, so the figure check cannot see them.
+# Each names the files that show it; the build fails if one of those files is gone,
+# which catches a rename that would leave a claim pointing at nothing.
+CLAIMS = [
+    {"id": "mfa-required", "slide": "Enforced in the code",
+     "claim": "Two-factor sign-in is required for owner and admin accounts.",
+     "files": ["lib/staff/mfa-policy.ts", "lib/staff/login.ts"],
+     "evidence": "ROLES_REQUIRING_SECOND_FACTOR = ['OWNER', 'ADMIN']; sign-in asks for the code "
+                 "once one is enrolled."},
+    {"id": "mfa-actions", "slide": "Enforced in the code",
+     "claim": "It is checked on every server action as well as every page.",
+     "files": ["lib/staff/current.ts"],
+     "evidence": "requireStaff() redirects an account that owes a second factor; every console "
+                 "server action starts by calling it."},
+    {"id": "mfa-no-self-off", "slide": "Enforced in the code",
+     "claim": "An owner cannot switch their own off.",
+     "files": ["lib/staff/mfa.ts"],
+     "evidence": "disableMfa() refuses outright for a role that requires a second factor."},
+    {"id": "mfa-reset", "slide": "Enforced in the code",
+     "claim": "Nobody can reset their own; another owner resets a lost phone.",
+     "files": ["lib/staff/users.ts"],
+     "evidence": "resetSecondFactorForSession(): MANAGE_USER_ROLES is OWNER only, and a reset "
+                 "of one's own account is refused."},
+    {"id": "sms-signature", "slide": "Enforced in the code",
+     "claim": "Inbound text messages are checked against Twilio's request signature, which "
+              "covers the sender, so a forged number is refused.",
+     "files": ["lib/sms/twilio-signature.ts", "app/api/sms/inbound/route.ts"],
+     "evidence": "twilioSignatureValid() is called by the inbound route; the signed payload "
+                 "includes From."},
+    {"id": "audit-gate", "slide": "Enforced in the code",
+     "claim": "A known high or critical advisory in a production dependency fails the build.",
+     "files": ["scripts/audit.mjs", ".github/workflows/ci.yml", "package.json"],
+     "evidence": "pnpm audit:ci runs scripts/audit.mjs as its own CI job, with documented "
+                 "exceptions and a stale-exception warning."},
+    {"id": "dependabot", "slide": "Enforced in the code",
+     "claim": "Dependabot checks weekly.",
+     "files": [".github/dependabot.yml"],
+     "evidence": "package-ecosystem npm, interval weekly."},
+    {"id": "no-pentest", "slide": "Enforced in the code",
+     "claim": "No penetration test has been done; what was done is a source-code review.",
+     "files": [],
+     "evidence": "Stated by the owner on 2026-11-11. The security work in PRs 37 to 41 was a "
+                 "review of the source, not an exercise against a running system."},
+]
+
+# Not to be claimed anywhere in the deck until established, with the reason.
+NOT_CLAIMED = [
+    ("That the product is secure, hardened or penetration tested",
+     "It has had a source-code review only."),
+    ("Durability or disaster recovery",
+     "Restore capacity is six hours of point-in-time restore on Neon's free plan, with the one "
+     "manual snapshot already used."),
+    ("Correct security response headers in production",
+     "Correct in configuration, not yet confirmed on the live site."),
+]
+
+# Words the deck may not use, because what they claim has not been established.
+FORBIDDEN = [
+    (r"\bsecure\b|\bhardened\b", "Not established: it has had a source-code review only."),
+    (r"penetration[- ]tested|\bpen[- ]?tested\b", "No penetration test has been done."),
+    (r"disaster recovery|\bbackups?\b|backed up|\bdurab","Restore capacity does not support it."),
 ]
 
 # What a slide must say for a figure of this kind to appear on it.
@@ -291,6 +365,12 @@ def _well_formed():
             got = str(e["verify"]())
             if got not in _figs(e):
                 out.append(f"{e['id']}: says {_figs(e)[0]}, but counting gives {got}")
+    for c in CLAIMS:
+        if not c.get("evidence"):
+            out.append(f"{c['id']}: a claim needs 'evidence'")
+        for f in c["files"]:
+            if not os.path.exists(os.path.join(ROOT, f)):
+                out.append(f"{c['id']}: cites {f}, which does not exist")
     return out
 
 
@@ -316,6 +396,16 @@ def check(prs, deck):
             if strength(e) == "unsourced":
                 msg = f"slide {n}: '{fig}' is unsourced ({e['id']})"
                 (errors if STRICT else warnings).append(msg)
+    for n, chunks in _slides(prs):
+        lower = " ".join(chunks).replace("\n", " ").lower()
+        for pat, why in FORBIDDEN:
+            if re.search(pat, lower):
+                errors.append(f"slide {n}: says '{re.search(pat, lower).group(0)}'. {why}")
+    whole = " ".join(" ".join(c) for _, c in _slides(prs)).lower()
+    for c in CLAIMS:
+        if c["slide"].lower() not in whole:
+            warnings.append(f"claim {c['id']} is registered for a slide headed "
+                            f"'{c['slide']}', which is not in the deck")
     for e in FIGURES:
         if deck in e["decks"] and e["id"] not in used:
             warnings.append(f"{e['id']} is registered for '{deck}' but no slide uses it")
@@ -382,7 +472,20 @@ def markdown():
                 c = f" *Caution: {e['caution']}*" if e.get("caution") else ""
                 out.append(f"| {', '.join(_figs(e))} | {_q(e['claim'])} | {_q(ev)}{_q(c)} |")
         out.append("")
-    out += ["## The sources", ""]
+    out += ["## Statements without figures", "",
+            "Claims on slides that carry no number, so the figure check cannot see them. The "
+            "build fails if a file cited here no longer exists.", "",
+            "| Claim | Shown by | How |", "|---|---|---|"]
+    for c in CLAIMS:
+        files = ", ".join(f"`{f}`" for f in c["files"]) or "-"
+        out.append(f"| {_q(c['claim'])} | {files} | {_q(c['evidence'])} |")
+    out += ["", "## Not to be claimed", "",
+            "The build refuses the words for the first two (see FORBIDDEN in "
+            "`deck/sources.py`). The third has no single word to catch, so it rests on this list.",
+            ""]
+    for what, why in NOT_CLAIMED:
+        out.append(f"- **{what}.** {why}")
+    out += ["", "## The sources", ""]
     for key, s in SOURCES.items():
         out.append(f"- **{key}**: {s['title']}. {s['publisher']}"
                    + (f", {s['published']}" if s.get("published") else "")

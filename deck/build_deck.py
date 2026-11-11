@@ -344,8 +344,9 @@ def a_customer():
 
 def a_questions():
     part("Appendix · Part three", "The questions that come next",
-         "What stops a code paying twice, how somebody without data takes part, why there is no "
-         "card, where a draw fits, and what a pilot involves week by week.")
+         "What stops a code paying twice, how shoppers' data is protected, how somebody without "
+         "data takes part, why there is no card, where a draw fits, and what a pilot involves "
+         "week by week.")
 
 
 def a03():
@@ -543,6 +544,30 @@ def a19():
     footer(s)
 
 
+def a_security():
+    # Every statement here is registered, with the file that shows it, in CLAIMS in
+    # deck/sources.py. Deliberately absent: any word like secure or hardened, restore
+    # capacity, and response headers. None of those is established. See the CLAIMS note.
+    s = slide(); masthead(s); kicker(s, "If procurement asks how shoppers' data is protected")
+    h1(s, "Enforced in the code, not left to convention")
+    text(s, "What has been done is a review of the source code, not yet a test against the "
+            "running system.",
+         M, Inches(2.42), Inches(11.2), Inches(0.7), size=12.5, colour=BODY, spacing=1.55)
+    rows(s, [
+        ("Two-factor sign-in", "Required for owner and admin accounts, and checked on every "
+         "server action as well as every page. An owner cannot switch their own off, and nobody "
+         "can reset their own: another owner resets a lost phone."),
+        ("Inbound text messages", "Each one is checked against Twilio's request signature, which "
+         "covers the sender, so a message with a forged number is refused."),
+        ("Dependencies", "A known high or critical advisory in a production dependency fails the "
+         "build. 8 are accepted with written reasons, all in tooling the deployed app does not "
+         "load. Dependabot checks weekly."),
+        ("Not done yet", "An independent penetration test against the running system, before a "
+         "national brand signs. It finds different things from a code review."),
+    ], Inches(3.05), gap=Inches(0.88))
+    footer(s)
+
+
 def a21():
     s = slide(); masthead(s); kicker(s, "The participation model")
     h1(s, "Three doors into the same programme")
@@ -605,7 +630,7 @@ def a22():
 PITCH = [p01, p02, p03, p04, p05, p05b, p06, p07, p08, p09, p10, p11]
 APPENDIX = [a_brand, a05, a06, a07, a08, a09, a10, a12, a13,
             a_customer, a15, a16, a17, a18,
-            a_questions, a03, a19, a21, p13, p12, a22]
+            a_questions, a03, a19, a_security, a21, p13, p12, a22]
 
 style.start("For brands", len(PITCH) + len(APPENDIX))
 for fn in PITCH + APPENDIX:

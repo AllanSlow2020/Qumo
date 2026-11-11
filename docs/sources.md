@@ -32,7 +32,8 @@ Generated from `deck/sources.py` by `python3 deck/sources.py`. Edit that file, n
 | 0 | Apps a shopper must install | The shopper surface is a web page under app/; there is no native app. |
 | 1 | Scans needed to earn | One scan of a code awards it; each code earns once (lib/packs/code.ts). |
 | 6 | Length of the texted sign-in code | lib/consumer/otp.ts: const CODE_DIGITS = 6 |
-| 800+ | Automated tests passing | pnpm test against a local Postgres on 2026-11-09: 811 tests in 71 files, all passing. Re-run before quoting a more exact figure. |
+| 800+ | Automated tests passing | pnpm test against a local Postgres on 2026-11-11: 863 tests in 76 files, all passing (811 in 71 on 2026-11-09). Re-run before quoting a more exact figure. |
+| 8 | High advisories accepted by the audit gate, each with a written reason | pnpm audit:ci on 2026-11-11: 'Nothing blocking. 8 accepted, 0 stale.' The exceptions and their reasons are in scripts/audit.mjs, which CI runs as its own job (.github/workflows/ci.yml). pnpm audit --prod the same day: 22 advisories, 0 critical, 8 high. *Caution: Changes as advisories are published and fixed. Re-run before quoting it.* |
 | 17 | Screens in the decks, each a capture of the running product | deck/shots/ holds 17 captures, written by deck/capture.mjs; every one appears in the deck. |
 | 2 | Ways a purchase is proved: a code under the pack, or a till slip | lib/packs/ (pack codes) and lib/stores/receipt.ts (till slips). *Caution: docs/brand-context.md section 8 says 'three ways to earn' for the site, meaning the three promotion shapes. Different axis; do not mix them.* |
 | 0 | Nothing in the deck is a mock-up | Every screen is a capture of a running build (deck/capture.mjs). |
@@ -66,6 +67,29 @@ Generated from `deck/sources.py` by `python3 deck/sources.py`. Edit that file, n
 | Figure | Claim | What would close it |
 |---|---|---|
 | R40,000 | What a managed on-pack promotion costs a brand in South Africa | Written quotes from two or three promotions agencies, or a real invoice with the names removed. Being gathered from agency conversations. |
+
+## Statements without figures
+
+Claims on slides that carry no number, so the figure check cannot see them. The build fails if a file cited here no longer exists.
+
+| Claim | Shown by | How |
+|---|---|---|
+| Two-factor sign-in is required for owner and admin accounts. | `lib/staff/mfa-policy.ts`, `lib/staff/login.ts` | ROLES_REQUIRING_SECOND_FACTOR = ['OWNER', 'ADMIN']; sign-in asks for the code once one is enrolled. |
+| It is checked on every server action as well as every page. | `lib/staff/current.ts` | requireStaff() redirects an account that owes a second factor; every console server action starts by calling it. |
+| An owner cannot switch their own off. | `lib/staff/mfa.ts` | disableMfa() refuses outright for a role that requires a second factor. |
+| Nobody can reset their own; another owner resets a lost phone. | `lib/staff/users.ts` | resetSecondFactorForSession(): MANAGE_USER_ROLES is OWNER only, and a reset of one's own account is refused. |
+| Inbound text messages are checked against Twilio's request signature, which covers the sender, so a forged number is refused. | `lib/sms/twilio-signature.ts`, `app/api/sms/inbound/route.ts` | twilioSignatureValid() is called by the inbound route; the signed payload includes From. |
+| A known high or critical advisory in a production dependency fails the build. | `scripts/audit.mjs`, `.github/workflows/ci.yml`, `package.json` | pnpm audit:ci runs scripts/audit.mjs as its own CI job, with documented exceptions and a stale-exception warning. |
+| Dependabot checks weekly. | `.github/dependabot.yml` | package-ecosystem npm, interval weekly. |
+| No penetration test has been done; what was done is a source-code review. | - | Stated by the owner on 2026-11-11. The security work in PRs 37 to 41 was a review of the source, not an exercise against a running system. |
+
+## Not to be claimed
+
+The build refuses the words for the first two (see FORBIDDEN in `deck/sources.py`). The third has no single word to catch, so it rests on this list.
+
+- **That the product is secure, hardened or penetration tested.** It has had a source-code review only.
+- **Durability or disaster recovery.** Restore capacity is six hours of point-in-time restore on Neon's free plan, with the one manual snapshot already used.
+- **Correct security response headers in production.** Correct in configuration, not yet confirmed on the live site.
 
 ## The sources
 

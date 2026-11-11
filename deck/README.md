@@ -6,7 +6,7 @@ One presentation, generated rather than drawn: `build_deck.py` writes
 | Slides | Part | What it is for |
 |---|---|---|
 | 1-12 | The pitch | Presented. Why a brand should care, and the ask, in fifteen minutes |
-| 13-33 | Appendix | Not presented. What the brand sees, what the customer sees, and the questions that come next: turned to when somebody asks, and left behind afterwards |
+| 13-34 | Appendix | Not presented. What the brand sees, what the customer sees, and the questions that come next: turned to when somebody asks, and left behind afterwards |
 
 There used to be a separate product overview. It was folded in as the
 appendix because the two kept drifting apart: the same mechanic, pricing
