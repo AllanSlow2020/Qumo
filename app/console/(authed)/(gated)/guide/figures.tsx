@@ -36,7 +36,7 @@ function CodeGlyph() {
   );
 }
 
-function Poster() {
+export function Poster() {
   return (
     <svg viewBox="0 0 48 40" className="cn-fig-art" aria-hidden="true">
       <rect x="11" y="2" width="26" height="33" rx="2" {...stroke} />
@@ -48,7 +48,7 @@ function Poster() {
   );
 }
 
-function Pack() {
+export function Pack() {
   return (
     <svg viewBox="0 0 48 40" className="cn-fig-art" aria-hidden="true">
       {/* A box with the code under the flap: the whole idea is that reaching
@@ -62,7 +62,7 @@ function Pack() {
   );
 }
 
-function Slip() {
+export function Slip() {
   return (
     <svg viewBox="0 0 48 40" className="cn-fig-art" aria-hidden="true">
       {/* A receipt, torn at the bottom, with a total above the code - the
@@ -73,68 +73,6 @@ function Slip() {
         <CodeGlyph />
       </g>
     </svg>
-  );
-}
-
-type Kind = { name: string; who: string; proves: string; awards: string; art: React.ReactNode; pays: boolean };
-
-const KINDS: Kind[] = [
-  {
-    name: "A poster code",
-    who: "Anybody walking past, and anybody they send a photo to",
-    proves: "Nothing",
-    awards: "Never awards. Explains what is running and takes a sign-up.",
-    art: <Poster />,
-    pays: false,
-  },
-  {
-    name: "A pack code",
-    who: "Whoever has the item in their hands",
-    proves: "That it was bought",
-    awards: "A fixed amount, once. Needs nothing from your till.",
-    art: <Pack />,
-    pays: true,
-  },
-  {
-    name: "A till slip code",
-    who: "Whoever took the receipt",
-    proves: "That it was bought, and what it came to",
-    awards: "A share of the basket, or a fixed amount. Needs a till that signs.",
-    art: <Slip />,
-    pays: true,
-  },
-];
-
-/**
- * The three codes side by side.
- *
- * Laid out as three columns of the same four rows, because the comparison is
- * the content: a reader is meant to run their eye along "proves" and see
- * that one of them says Nothing.
- */
-export function CodeKinds() {
-  return (
-    <figure className="cn-fig">
-      <div className="cn-fig-kinds">
-        {KINDS.map((k) => (
-          <div key={k.name} className={`cn-fig-kind${k.pays ? "" : " cn-fig-kind-off"}`}>
-            {k.art}
-            <p className="cn-fig-name">{k.name}</p>
-            <dl className="cn-fig-dl">
-              <dt>Who can scan it</dt>
-              <dd>{k.who}</dd>
-              <dt>What it proves</dt>
-              <dd>{k.proves}</dd>
-              <dt>What it can award</dt>
-              <dd>{k.awards}</dd>
-            </dl>
-          </div>
-        ))}
-      </div>
-      <figcaption className="cn-fig-cap">
-        The middle column is where most brands start: it proves a purchase and asks nothing of your point of sale.
-      </figcaption>
-    </figure>
   );
 }
 
@@ -322,38 +260,6 @@ export function AwardShapes() {
         ))}
       </div>
       <figcaption className="cn-fig-cap">A promotion is one of these, not a mix.</figcaption>
-    </figure>
-  );
-}
-
-/**
- * The ceiling, and what happens either side of it.
- *
- * A bar rather than a sentence because the question it answers is "how
- * close am I", and that is a proportion.
- */
-export function Ceiling() {
-  return (
-    <figure className="cn-fig">
-      <div className="cn-fig-ceiling">
-        <div className="cn-fig-ceiling-bar" aria-hidden="true">
-          <span className="cn-fig-ceiling-fill" style={{ width: "72%" }} />
-          <span className="cn-fig-ceiling-cap" />
-        </div>
-        <div className="cn-fig-ceiling-keys">
-          <p className="cn-fig-body">
-            <span className="cn-fig-key cn-fig-key-fill" aria-hidden="true" /> Issued so far. The Overview tells you
-            when this passes 80%.
-          </p>
-          <p className="cn-fig-body">
-            <span className="cn-fig-key cn-fig-key-cap" aria-hidden="true" /> The ceiling. Past it the promotion
-            stops awarding, and a customer scanning is told it is not running - not that it ran out.
-          </p>
-        </div>
-      </div>
-      <figcaption className="cn-fig-cap">
-        Set it to a number you would be comfortable seeing on an invoice. Nothing else in the engine bounds it.
-      </figcaption>
     </figure>
   );
 }

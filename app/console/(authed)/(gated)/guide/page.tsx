@@ -1,16 +1,12 @@
 import Link from "next/link";
+import { BUDGET_NEAR } from "@/lib/console/observations";
 import { HONOUR_WINDOW_DAYS } from "@/lib/subscriptions/state";
 import { REDEMPTION_AVAILABLE } from "@/lib/wallet/availability";
 import { PRODUCT_NAME } from "@/lib/product";
-import {
-  AwardShapes,
-  CardCarry,
-  Ceiling,
-  CodeKinds,
-  HonourWindow,
-  ScanJourney,
-  TheLoop,
-} from "./figures";
+import { AwardShapes, CardCarry, HonourWindow, ScanJourney, TheLoop } from "./figures";
+import { CodeLadder } from "./code-ladder";
+import { CostCalculator } from "./cost-calculator";
+import { StartHere } from "./start-here";
 
 /**
  * How the thing works, in one place you can go to rather than on every page
@@ -80,6 +76,8 @@ export default function ConsoleGuidePage() {
         is the page to read before you decide.
       </p>
 
+      <StartHere />
+
       {/* The same grid the promotions page uses, so the rail is sticky and
           capped to the window without any layout written twice. Below the
           breakpoint it stacks, and the contents land under the reading
@@ -113,7 +111,7 @@ export default function ConsoleGuidePage() {
               it.
             </p>
 
-            <CodeKinds />
+            <CodeLadder />
 
             <h3 className="cn-h2">A poster code</h3>
             <p>
@@ -220,7 +218,7 @@ export default function ConsoleGuidePage() {
               the campaign. It is the difference between someone finding a loophole and someone
               finding a loophole worth their afternoon.
             </p>
-            <Ceiling />
+            <CostCalculator budgetNear={BUDGET_NEAR} />
 
             <p>
               <strong>A till that cannot sign its slips</strong> is the hole both are protecting.
