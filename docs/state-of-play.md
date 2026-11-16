@@ -19,8 +19,40 @@ update it or delete it. A handover nobody trusts is worse than none.
 
 | Chat | Owns | Has pushed |
 |---|---|---|
-| **Build** | the product, the repository, deployments | PRs 26 to 42. All merged except 42, which is open |
-| **Deck and research** | the pitch deck, market research, sourcing | PR 31, merged 10 November |
+| **Build** | the product, the repository, deployments | PRs 26 to 48, all merged |
+| **Deck and research** | the pitch deck, market research, sourcing | PR 31, merged 10 November, and **unmerged work still on `claude/confident-cray-3eloht`** |
+
+### Read this before touching `claude/confident-cray-3eloht`
+
+It looks like a stale branch from a merged pull request. It is not, and
+deleting it would destroy work that exists nowhere else.
+
+**It is ahead.** It carries `a_security()` in `deck/build_deck.py` and a
+large addition to `deck/sources.py`, which is the deck chat answering
+procurement's data question and registering what the answer rests on. There
+is no pull request for it, so GitHub offers no Restore button. It was nearly
+deleted on 16 November during a branch tidy-up and survived because the
+compare looked wrong.
+
+**It is also well behind, and that is the dangerous half.** Its base predates
+PRs 38 to 48, so merging it into `main` as it stands would revert this
+week's security work. Checked file by file rather than inferred:
+
+| On `main` | On that branch |
+|---|---|
+| `router.refresh()` in the security form | absent, so the navigation bug returns |
+| `scripts/check-nav-after-enrolment.ts` | absent |
+| `scripts/open-items-xlsx.py` | absent, so the spreadsheet generator goes back to a clearable scratchpad |
+| `scripts/check-dialog-portal.ts`, repaired | absent, still the broken `.mjs` |
+| this file, current | the version from before the sprint |
+
+GitHub's compare page reads "161 additions, 9 deletions". The two-way diff
+is 286 insertions and **994 deletions**, because most of what it would
+"change" is this week's work being taken away.
+
+**So: `main` goes into that branch first, never the other way round.** Once
+it has, the diff is only the deck files and merging it is a one-line
+decision. Until then it is not clutter, it is unlanded work on a stale base.
 
 They share one repository, one `main`, and one Vercel project. Either can
 push and either can merge. Neither can see the other's conversation.
@@ -37,6 +69,11 @@ at what the other has in flight. Conflicts so far have been avoided by
 accident rather than design: the build chat touches `app/`, `lib/`, `tests/`
 and `docs/open-items.*`, the deck chat touches `deck/` and the
 research documents.
+
+That accident has now run out. Both chats have edited this file, and the
+deck branch has drifted far enough that its diff against `main` is mostly
+deletions. The rule that prevents the next one: **a branch that has been
+open across somebody else's merges takes `main` in before it goes out.**
 
 ---
 
