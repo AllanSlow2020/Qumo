@@ -11,7 +11,11 @@ to write notes. It is the one to track work in. This file stays the
 narrative version, with the reasoning in prose, and it is the one to hand
 to a lawyer.
 
-Last updated 3 November 2026.
+Last updated 16 November 2026. On that date the security-review items that
+had only ever been written in `docs/state-of-play.md` were moved in here, and
+two entries about Twilio that the signature work had made wrong were
+corrected: see "Settled: the Twilio number answers" and the entry about
+`TWILIO_AUTH_TOKEN`.
 
 ---
 
@@ -45,12 +49,15 @@ is first.
   worked from our side and was silence from theirs. It answers in TwiML
   now. Switching it on is two settings in Twilio and one in Vercel, and
   `docs/deploying.md` has both.
-- **Settled: the Twilio number answers.** `SMS_WEBHOOK_SECRET` is set in
-  Vercel and the number's "A message comes in" webhook points at
-  `/api/sms/inbound`. Proved on 9 November by texting `BALANCE` from a
-  real handset and getting a real answer back from production. That one
-  message exercises the whole chain: carrier, Twilio, Vercel, the secret
-  comparison, the handler, the TwiML envelope and the reply.
+- **Settled: the Twilio number answers.** The number's "A message comes
+  in" webhook points at `/api/sms/inbound`, and the route authenticates
+  each request by Twilio's `X-Twilio-Signature`. First proved on 9
+  November by texting `BALANCE` from a real handset and getting a real
+  answer back from production. That was under a shared secret in the
+  webhook URL; the secret, `SMS_WEBHOOK_SECRET`, is now **deleted** from
+  Production, Preview and Development, and the `?token=` query string is
+  gone from the number's webhook URL. A `BALANCE` text was answered again
+  after the change, so the signature path is the one proved working.
 - **[A/C] Twilio answers `HELP` instead of us, and owns `STOP`.** Twilio
   handles a reserved set of keywords itself, before the webhook is
   called. Our table in `lib/sms/inbound.ts` overlaps that set in three
@@ -202,6 +209,18 @@ instruction rather than four conversations.
   question, not a backlog item. See `docs/competitive-position.md`.
 - **[A] Language.** English only today. Mass-market reach here is
   language-dependent.
+- **[A] Whether an owner should be able to reset another owner's second
+  factor at all.** They can today, and it is what makes a lost phone
+  survivable. The cost is that a compromised owner can strip a colleague's
+  protection. An owner can never reset their own, because that would
+  unravel the requirement. Revisit it the first time a brand has staff in
+  the console who are not Allan. See `docs/state-of-play.md`.
+- **[A] Whether MARKETING should need a second factor.** It is out of the
+  required set today and it is a close call, because that role can redeem a
+  coupon, which is money. The line drawn was between who can change the
+  rules and who acts within them. Worth revisiting at the volume where a
+  marketing account is worth stealing. It is one entry in
+  `ROLES_REQUIRING_SECOND_FACTOR`.
 
 ## 4. Product gaps
 
@@ -274,11 +293,19 @@ instruction rather than four conversations.
   the confirmation that the scoped key is the one in use. The fix was
   copying the key SID and its secret off a single Twilio creation screen
   in one action. See `docs/deploying.md`.
-- **[A] Delete `TWILIO_AUTH_TOKEN` from Vercel** and redeploy. It is
-  dormant now, because `resolveTwilioCredentials` prefers the key pair,
-  but it is still the master credential for the whole account: it can buy
-  numbers, spend money and read every message ever sent, and it cannot be
-  scoped or rotated on its own.
+- **Settled, and reversed: do not delete `TWILIO_AUTH_TOKEN`.** This item
+  used to say to delete it. It no longer applies, and acting on the old
+  wording would break inbound SMS. Twilio signs every inbound webhook with
+  the account auth token, and an API key cannot validate that signature, so
+  the token is the only thing that authenticates inbound SMS. It is read
+  for a local HMAC and never transmitted. Sending still runs on the scoped
+  key `qumo-live`, which takes precedence, so the master-credential warning
+  in the build log stays away. Unset it and inbound SMS refuses every
+  message. The cost accepted: the master credential for the whole account
+  stays in the environment, where it can buy numbers, spend money and read
+  every message ever sent, and it cannot be scoped or rotated on its own.
+  Preview has no token, so preview builds print a harmless preflight
+  warning.
 - **[A] Delete the surplus Twilio API keys.** Six exist for one
   integration. Keep `qumo-live` and delete the rest. That surplus is most
   of why the afternoon of 3 November went the way it did.
@@ -293,6 +320,32 @@ instruction rather than four conversations.
 - **[A] Attach a reward** to Copper Kettle's live `Rounds card` in
   production. It completes at 10 and names nothing, so shoppers would
   collect forever and be handed nothing.
+- **[A] Save the production recovery codes**, if that has not been done.
+  Allan is enrolled in two-factor on production and is the only OWNER, and
+  an owner cannot turn their own second factor off, so the codes are the
+  only way back into the account if the authenticator is lost. This is the
+  fragile one: without them it cannot be fixed from the console, only from
+  the database.
+- **[A] Create the break-glass second owner.** Decided: an account Allan
+  holds, with its authenticator on a device that is not his everyday phone,
+  and its codes stored apart from his own. Enrol first, or the Team screen
+  is unreachable; then invite with the role set to **Owner**. An admin
+  cannot reset anybody, so an admin account would look like a recovery
+  route without being one. See `docs/state-of-play.md`.
+- **[A] A restore drill on a paid Neon plan.** Six hours of point-in-time
+  restore, with the one manual snapshot already spent. This is the weakest
+  link in the whole security picture and it is not a code problem: a
+  compromise found on a Monday morning may be older than six hours.
+- **[A] Decide who reads the CSP reports and the fraud events.** Both are
+  being written to and nobody looks at either. Detection nobody reads is
+  not detection. Related to the `ERROR_WEBHOOK_URL` item above: with it
+  unset, nothing here alerts anyone either.
+- **[A] Confirm the response headers are live.** The configuration is right
+  and it has only ever been checked in source, because the sandbox cannot
+  reach the production host. Thirty seconds in devtools on the console
+  login page.
+- **[A] A penetration test before a national brand signs.** It is also the
+  thing that answers a procurement questionnaire.
 
 ## 6. Brand and acquisition
 
@@ -303,6 +356,13 @@ instruction rather than four conversations.
   cannot affect anything running.
 - **[A/C] The call to action** depends on the signup decision above.
   Until then it is "request access".
+- **[A] Source the managed-promotion price on the deck.** The R40,000 per
+  managed promotion on slide 3, and the R80,000 derived from it on slides 3
+  and 11, are still unsourced. A normal deck build warns; `--strict`
+  refuses, and `--strict` is the one to use for any copy that goes to a
+  brand or an investor. Written quotes from two or three promotions
+  agencies, or a real invoice with the names removed, close it, and they
+  are being gathered from agency conversations. See `docs/sources.md`.
 
 ## 7. Housekeeping
 
