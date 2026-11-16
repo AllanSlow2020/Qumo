@@ -248,10 +248,34 @@ see it.
   the server received. It was run against 10.0.8 and fails on exactly those
   four cases, so it does guard the fix. Provenance is intact on every version.
 
-  **Dependabot's "Next group" (43) does not contain Next.** It is React and
-  react-dom 19.2 to 19.3 plus their types, which is a framework minor on the
-  runtime every page renders through and deserves its own look. It is
-  untouched.
+  **Dependabot's "Next group" (43) did not contain Next, and was taken by
+  hand at React 19.3.1** after Dependabot closed it. It is React and react-dom
+  19.2 to 19.3 plus `@types/react` and `@types/react-dom` 19.3. It looks like a
+  framework minor on the runtime every page renders through. **It is not,
+  because the `react` in `package.json` is not the React that runs.**
+
+  - **Next vendors its own React for the App Router and aliases `react` to
+    it** (`next/dist/build/create-compiler-aliases.js`). Next 16.4.6 ships
+    `19.3.0-canary-278794d7-20261002`, so production was already on React 19.3
+    before this bump. Checked on a real build: that version string is in the
+    output, and neither `19.2.8` (before) nor `19.3.1` (after) appears in any
+    file. If the installed package were bundled anywhere, its version would.
+  - So the installed `react` and `react-dom` only satisfy Next's peer range
+    and serve Prisma Studio, which is not run here. Nothing in `lib`, `app`,
+    `tests` or `scripts` runs React in plain Node. What the bump really
+    changes is the **type-checking**: `tsc` ran clean against the 19.3 types.
+  - **What the React version that ships is decided by is the Next version**,
+    not this line. To change the runtime, take a Next bump.
+  - Whole-output hashing cannot prove two builds equal: **the build is not
+    deterministic**. The same code built twice differed in 19 of 41 client
+    files. If a future check wants "the bundle did not change", it needs a
+    normalised comparison or a version-string check like the one above.
+  - **Changing React moves `@prisma/client` to a new directory**, because
+    pnpm names it after its peer dependencies and `@types/react-dom` is one.
+    Locally that leaves the generated client behind: `tsc` reports "no
+    exported member 'Brand'" and 54 test files fail at import while 210 tests
+    pass. Run `pnpm exec prisma generate`. CI and Vercel generate after
+    install, so only a local checkout is caught.
 
   **pg (45) was taken at 8.23.1.** `pg` is reached two ways: Prisma's adapter
   uses it for every runtime query, and `scripts/preflight.mjs` opens a real
