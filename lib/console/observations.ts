@@ -31,8 +31,14 @@ import type { LedgerUnit } from "@prisma/client";
  * two screens the source of one number.
  */
 
-/** Below this share of its budget, a promotion is not worth mentioning. */
-const BUDGET_NEAR = 0.8;
+/**
+ * Below this share of its budget, a promotion is not worth mentioning.
+ *
+ * Exported because the console's How it works page tells a brand the Overview
+ * will say so at this point, and that sentence is only true while it matches
+ * this number. The guide imports it rather than repeating it.
+ */
+export const BUDGET_NEAR = 0.8;
 /** Same, for a printed run of pack codes. */
 const BATCH_NEAR = 0.8;
 /**

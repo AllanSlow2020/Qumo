@@ -1508,76 +1508,6 @@ html[data-theme="dark"]:has(.cn) body {
   max-width: 62ch;
 }
 
-/* ---- the three kinds of code ---- */
-
-/* Eight rows, shared by every column.
- *
- * The comparison is the content here - a reader is meant to run their eye
- * along "What it proves" and see that one of them says Nothing. Three
- * independent columns put that row at three different heights, because the
- * line above it wraps to one line in one column and three in another, and
- * the eye has to hunt for each label instead of scanning across. Subgrid
- * makes the columns share the parent's rows, so every label sits on the
- * same line as its siblings whatever the text above it did.
- *
- * Where subgrid is not understood the declaration is dropped and the cards
- * lay out exactly as they did before: readable, just not aligned. */
-.cn-fig-kinds {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  grid-template-rows: auto auto repeat(6, auto);
-  gap: 10px;
-}
-
-.cn-fig-kind {
-  display: grid;
-  grid-row: span 8;
-  grid-template-rows: subgrid;
-  gap: 8px;
-  padding: 14px;
-  border: 1px solid var(--cn-line);
-  border-radius: var(--cn-radius-inner);
-  background: var(--cn-raised);
-}
-
-/* The one that never pays, drawn as the one that never pays. A reader
-   running their eye along the row should be able to see which column is
-   different before reading a word of it. */
-.cn-fig-kind-off {
-  background: transparent;
-  border-style: dashed;
-}
-
-.cn-fig-kind-off .cn-fig-art,
-.cn-fig-kind-off .cn-fig-name { color: var(--cn-ink-3); }
-
-/* The six label-and-value rows, handed straight back to the parent grid so
-   they line up across the columns rather than within one. */
-.cn-fig-dl {
-  margin: 0;
-  display: grid;
-  grid-row: span 6;
-  grid-template-rows: subgrid;
-  gap: 0;
-}
-
-.cn-fig-dl dt {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--cn-ink-3);
-}
-
-.cn-fig-dl dd {
-  margin: 0 0 6px;
-  font-size: 12.5px;
-  line-height: 1.45;
-  color: var(--cn-ink-2);
-}
-
-.cn-fig-dl dd:last-of-type { margin-bottom: 0; }
-
 /* ---- the journey ---- */
 
 .cn-fig-steps {
@@ -1729,17 +1659,7 @@ html[data-theme="dark"]:has(.cn) body {
   color: var(--cn-ink-3);
 }
 
-/* ---- the ceiling ---- */
-
-.cn-fig-ceiling {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid var(--cn-line);
-  border-radius: var(--cn-radius-inner);
-  background: var(--cn-raised);
-}
+/* ---- the ceiling bar (used by the cost calculator) ---- */
 
 .cn-fig-ceiling-bar {
   position: relative;
@@ -1767,20 +1687,6 @@ html[data-theme="dark"]:has(.cn) body {
   border-radius: 2px;
   background: var(--cn-warn);
 }
-
-.cn-fig-ceiling-keys { display: flex; flex-direction: column; gap: 6px; }
-
-.cn-fig-key {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-  margin-right: 6px;
-  vertical-align: baseline;
-}
-
-.cn-fig-key-fill { background: var(--cn-accent); }
-.cn-fig-key-cap { background: var(--cn-warn); }
 
 /* ---- the honour window ---- */
 
@@ -3073,4 +2979,389 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   letter-spacing: 0.08em;
   text-transform: uppercase;
   max-width: 340px;
+}
+
+/* ---------- guide: where to start, the ladder of proof, the cost calculator ----------
+   Three things on the How it works page that a brand can use rather than only
+   read. They share the page's rule about colour: the accent is the one filled
+   control on a screen, so everything here that can be chosen is neutral and a
+   selected choice is an ink ring, never a blue one. The accent shows up
+   twice: the "Start here" badge, because it is the one recommendation, and
+   the primary "Scan it" button. */
+
+/* ---- where to start ---- */
+
+.cn-start-lead { max-width: 62ch; }
+
+.cn-start-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.cn-start-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+  transition:
+    transform 240ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 240ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    border-color 160ms;
+}
+
+/* The same lift as every other card that responds: one physical system. */
+.cn-start-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--cn-line-strong);
+  box-shadow: var(--cn-shadow-hover);
+}
+
+/* The recommended one is picked out by weight, not by colour. */
+.cn-start-card-first {
+  border-color: var(--cn-ink);
+  box-shadow: 0 0 0 1px var(--cn-ink);
+  background: var(--cn-surface);
+}
+
+.cn-start-card-first:hover { border-color: var(--cn-ink); }
+
+.cn-start-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.cn-start-badge {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 10px;
+  border-radius: var(--cn-radius-badge);
+  background: var(--cn-accent);
+  color: var(--cn-accent-ink);
+  white-space: nowrap;
+}
+
+.cn-start-name { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.cn-start-body { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--cn-ink-2); }
+
+.cn-start-effort {
+  margin: auto 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--cn-line);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cn-start-effort dt { font-size: 12px; color: var(--cn-ink-3); }
+.cn-start-effort dd { margin: 0; font-size: 14px; font-weight: 500; color: var(--cn-ink); }
+
+/* The hit area is the whole card; the focus ring is drawn on the card too. */
+.cn-start-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cn-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--cn-line-strong);
+  text-underline-offset: 3px;
+}
+
+.cn-start-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.cn-start-link:focus-visible { outline: none; }
+.cn-start-link:focus-visible::after { outline: 2px solid var(--cn-ink); outline-offset: 2px; }
+
+/* ---- the ladder of proof ---- */
+
+.cn-ladder { gap: 14px; }
+
+.cn-ladder-rungs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* The rungs rise left to right. Stretched in a grid, a card with a larger top
+   margin is shorter at the top and level at the bottom, so the tops step up
+   and the bottoms line up, which is a staircase without any positioning. Only
+   where the three sit in one row; stacked, there is nothing to climb. */
+@media (min-width: 760px) {
+  .cn-ladder-rungs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cn-rung[data-level="0"] { margin-top: 34px; }
+  .cn-rung[data-level="1"] { margin-top: 17px; }
+}
+
+.cn-rung {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+  transition: border-color 160ms, box-shadow 160ms, background-color 160ms;
+}
+
+/* The one that never pays, drawn as the one that never pays. */
+.cn-rung[data-level="0"] { border-style: dashed; background: transparent; }
+
+.cn-rung:hover { border-color: var(--cn-line-strong); }
+
+.cn-rung[data-selected="true"] {
+  border-color: var(--cn-ink);
+  box-shadow: 0 0 0 1px var(--cn-ink);
+  background: var(--cn-surface);
+}
+
+.cn-rung-input { position: absolute; opacity: 0; pointer-events: none; }
+
+.cn-rung-top { display: flex; flex-direction: column; gap: 8px; }
+
+.cn-rung-name { font-size: 14px; font-weight: 600; color: var(--cn-ink); cursor: pointer; }
+
+/* The label's hit area is the whole rung. */
+.cn-rung-name::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.cn-rung-input:focus-visible + .cn-rung-top .cn-rung-name::after {
+  outline: 2px solid var(--cn-ink);
+  outline-offset: 2px;
+}
+
+.cn-rung-body { display: flex; flex-direction: column; gap: 12px; }
+.cn-rung-row { display: flex; flex-direction: column; gap: 4px; }
+
+.cn-rung-k {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--cn-ink-3);
+}
+
+.cn-rung-v {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--cn-ink);
+}
+
+.cn-meter { display: inline-flex; gap: 3px; flex: none; }
+.cn-meter > span { width: 18px; height: 6px; border-radius: 3px; background: var(--cn-line-strong); }
+.cn-meter > .cn-meter-on { background: var(--cn-ink); }
+
+.cn-rung-awards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cn-rung-awards li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--cn-ink);
+}
+
+.cn-rung-awards li[data-yes="false"] { color: var(--cn-ink-3); }
+.cn-rung-tick,
+.cn-rung-dash { flex: none; margin-top: 2px; }
+.cn-rung-tick { color: var(--cn-pos); }
+.cn-rung-dash { color: var(--cn-ink-3); }
+
+.cn-ladder-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+}
+
+.cn-ladder-stage-head { display: flex; flex-direction: column; gap: 2px; }
+.cn-ladder-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.cn-ladder-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cn-ladder-empty { font-size: 13px; color: var(--cn-ink-3); padding: 6px 0 2px; }
+
+.cn-ladder-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-surface);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--cn-ink-2);
+}
+
+.cn-ladder-entry strong { color: var(--cn-ink); font-weight: 600; }
+.cn-ladder-entry .cn-pill { flex: none; margin-top: 1px; }
+.cn-ladder-entry-text { min-width: 0; }
+
+/* ---- the cost calculator ---- */
+
+.cn-calc { gap: 14px; }
+
+.cn-calc-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+@media (min-width: 820px) {
+  .cn-calc-grid { grid-template-columns: minmax(250px, 330px) minmax(0, 1fr); }
+}
+
+.cn-calc-controls,
+.cn-calc-results { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+.cn-calc-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+}
+
+.cn-calc-field {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cn-calc-legend { font-size: 12px; font-weight: 500; color: var(--cn-ink-2); padding: 0; }
+.cn-calc-choices { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* A native radio under a pill. The input is the element a keyboard and a
+   screen reader get; the span is only what it looks like. */
+.cn-choice { position: relative; display: inline-flex; }
+
+.cn-choice input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.cn-choice span {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: var(--cn-radius);
+  border: 1px solid var(--cn-line);
+  background: var(--cn-surface);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cn-ink);
+  transition: border-color 160ms, background-color 160ms;
+}
+
+.cn-choice:hover span { border-color: var(--cn-line-strong); background: var(--cn-quiet); }
+.cn-choice input:checked + span { border-color: var(--cn-ink); box-shadow: 0 0 0 1px var(--cn-ink); }
+.cn-choice input:focus-visible + span { outline: 2px solid var(--cn-ink); outline-offset: 2px; }
+
+/* A finger needs a bigger target than a pointer does. */
+@media (pointer: coarse) {
+  .cn-choice span { padding: 11px 16px; min-height: 44px; }
+}
+
+.cn-calc-slider-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+
+.cn-calc-out {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--cn-ink);
+}
+
+/* Ink, not accent: a slider is a control, and the accent is spoken for. */
+.cn-range { width: 100%; margin: 0; height: 24px; accent-color: var(--cn-ink); cursor: pointer; }
+.cn-range:focus-visible { outline: 2px solid var(--cn-ink); outline-offset: 3px; border-radius: 4px; }
+
+.cn-calc-hint { margin: 0; font-size: 12px; line-height: 1.45; color: var(--cn-ink-3); }
+
+.cn-calc-metrics { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+
+/* .cn-metric-hero steps down to one column from 900px, which suits the
+   overview and not a results panel that is already the narrower half. */
+.cn-calc-metrics .cn-metric-hero { grid-column: 1 / -1; }
+.cn-calc-metrics .cn-metric-hero .cn-metric-v { font-size: 38px; }
+
+.cn-calc-person {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+}
+
+.cn-calc-person .cn-fig-ceiling-fill { transition: width 200ms ease-out; }
+
+/* The fill turns to the warning colour as one person's month approaches the
+   budget. Always with the sentence under it, never colour alone. */
+.cn-calc-person[data-exposure="high"] .cn-fig-ceiling-fill,
+.cn-calc-person[data-exposure="all"] .cn-fig-ceiling-fill { background: var(--cn-warn); }
+
+.cn-calc-person-line { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--cn-ink-2); }
+.cn-calc-person-line strong { color: var(--cn-ink); font-weight: 600; }
+.cn-calc-verdict { margin: 0; font-size: 14px; line-height: 1.45; font-weight: 500; color: var(--cn-ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-start-card,
+  .cn-rung,
+  .cn-choice span,
+  .cn-calc-person .cn-fig-ceiling-fill { transition: none; }
+  .cn-start-card:hover { transform: none; }
 }
