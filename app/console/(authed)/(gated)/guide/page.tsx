@@ -3,9 +3,10 @@ import { BUDGET_NEAR } from "@/lib/console/observations";
 import { HONOUR_WINDOW_DAYS } from "@/lib/subscriptions/state";
 import { REDEMPTION_AVAILABLE } from "@/lib/wallet/availability";
 import { PRODUCT_NAME } from "@/lib/product";
-import { AwardShapes, CardCarry, HonourWindow, ScanJourney, TheLoop } from "./figures";
+import { AwardShapes, HonourWindow, ScanJourney, TheLoop } from "./figures";
 import { CodeLadder } from "./code-ladder";
 import { CostCalculator } from "./cost-calculator";
+import { StampCardPlayground } from "./stamp-card";
 import { StartHere } from "./start-here";
 
 /**
@@ -184,6 +185,9 @@ export default function ConsoleGuidePage() {
               year, and they will forget it exists. If stamps are going out and nothing is
               completing, the Overview will say so.
             </p>
+
+            <StampCardPlayground />
+
             <p>
               Completion is recorded as a deduction, not a reset - a card&apos;s worth of stamps is
               taken off and anything over the line carries to the next card, so the eleventh
@@ -197,8 +201,6 @@ export default function ConsoleGuidePage() {
               receipt worth two different things. The console refuses the second rather than
               picking one.
             </p>
-
-            <CardCarry />
           </Section>
 
           <Section id="cost" title="What it can cost you, and what bounds it">
