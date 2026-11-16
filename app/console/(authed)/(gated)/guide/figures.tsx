@@ -142,52 +142,6 @@ export function ScanJourney() {
 }
 
 /**
- * Why a twelfth stamp is not wasted.
- *
- * The carry-over is the part of the mechanic that prose struggles with and a
- * picture settles: a card's worth is deducted, the remainder stays.
- */
-export function CardCarry() {
-  return (
-    <figure className="cn-fig">
-      <div className="cn-fig-carry">
-        <div className="cn-fig-carry-row">
-          <span className="cn-fig-carry-label">They collect 12</span>
-          <span className="cn-fig-marks" aria-hidden="true">
-            {Array.from({ length: 12 }, (_, i) => (
-              <i key={i} className="cn-fig-mark cn-fig-mark-on" />
-            ))}
-          </span>
-        </div>
-        <div className="cn-fig-carry-row">
-          <span className="cn-fig-carry-label">A card takes 10</span>
-          <span className="cn-fig-marks" aria-hidden="true">
-            {Array.from({ length: 12 }, (_, i) => (
-              <i key={i} className={`cn-fig-mark${i < 10 ? " cn-fig-mark-spent" : " cn-fig-mark-on"}`} />
-            ))}
-          </span>
-        </div>
-        <div className="cn-fig-carry-row">
-          <span className="cn-fig-carry-label">2 carry over</span>
-          <span className="cn-fig-marks" aria-hidden="true">
-            {Array.from({ length: 2 }, (_, i) => (
-              <i key={i} className="cn-fig-mark cn-fig-mark-on" />
-            ))}
-            {Array.from({ length: 8 }, (_, i) => (
-              <i key={`e${i}`} className="cn-fig-mark" />
-            ))}
-          </span>
-        </div>
-      </div>
-      <figcaption className="cn-fig-cap">
-        Ten are deducted and the reward is issued. The eleventh and twelfth start the next card, so a customer who
-        keeps going is never collecting into nothing.
-      </figcaption>
-    </figure>
-  );
-}
-
-/**
  * The loop, which is the business case in one picture.
  *
  * Drawn as a cycle rather than the four-step strip further down, because

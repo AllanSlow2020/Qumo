@@ -1544,40 +1544,6 @@ html[data-theme="dark"]:has(.cn) body {
   font-variant-numeric: tabular-nums;
 }
 
-/* ---- the stamp carry-over ---- */
-
-.cn-fig-carry {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  border: 1px solid var(--cn-line);
-  border-radius: var(--cn-radius-inner);
-  background: var(--cn-raised);
-}
-
-.cn-fig-carry-row { display: flex; flex-direction: column; gap: 7px; }
-
-.cn-fig-carry-label { font-size: 12px; color: var(--cn-ink-2); }
-
-.cn-fig-marks { display: flex; gap: 6px; flex-wrap: wrap; }
-
-.cn-fig-mark {
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  border: 1.5px dashed var(--cn-line-strong);
-}
-
-.cn-fig-mark-on { border: 1.5px solid var(--cn-accent); background: var(--cn-accent); }
-
-/* Spent, not empty. These ten were collected and then deducted, and drawing
-   them as gaps would say the customer lost them. */
-.cn-fig-mark-spent {
-  border: 1.5px solid var(--cn-line-strong);
-  background: var(--cn-line);
-}
-
 /* ---- the loop ---- */
 
 /* Four stages that come back round. The return is drawn, because it is the
@@ -3015,11 +2981,16 @@ a.cn-btn { text-decoration: none; display: inline-block; }
     border-color 160ms;
 }
 
-/* The same lift as every other card that responds: one physical system. */
-.cn-start-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--cn-line-strong);
-  box-shadow: var(--cn-shadow-hover);
+/* The same lift as every other card that responds: one physical system.
+   Only where there is a pointer to hover with. On a touch screen :hover sticks
+   to whatever was last tapped, and a card left floating after the tap that
+   scrolled to the ladder reads as a bug. */
+@media (hover: hover) {
+  .cn-start-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--cn-line-strong);
+    box-shadow: var(--cn-shadow-hover);
+  }
 }
 
 /* The recommended one is picked out by weight, not by colour. */
@@ -3029,7 +3000,9 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   background: var(--cn-surface);
 }
 
-.cn-start-card-first:hover { border-color: var(--cn-ink); }
+@media (hover: hover) {
+  .cn-start-card-first:hover { border-color: var(--cn-ink); }
+}
 
 .cn-start-top {
   display: flex;
@@ -3087,6 +3060,14 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 
 /* ---- the ladder of proof ---- */
 
+/* The three interactive figures answer to their own width, not the window's.
+   They sit beside a sidebar and, on a wide screen, a contents rail, so a
+   window that is 1024px across leaves one of them roughly 450px. A viewport
+   breakpoint would call that desktop and lay three columns into it. */
+.cn-ladder,
+.cn-calc,
+.cn-card { container-type: inline-size; }
+
 .cn-ladder { gap: 14px; }
 
 .cn-ladder-rungs {
@@ -3100,7 +3081,7 @@ a.cn-btn { text-decoration: none; display: inline-block; }
    margin is shorter at the top and level at the bottom, so the tops step up
    and the bottoms line up, which is a staircase without any positioning. Only
    where the three sit in one row; stacked, there is nothing to climb. */
-@media (min-width: 760px) {
+@container (min-width: 640px) {
   .cn-ladder-rungs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .cn-rung[data-level="0"] { margin-top: 34px; }
   .cn-rung[data-level="1"] { margin-top: 17px; }
@@ -3170,7 +3151,7 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 }
 
 .cn-meter { display: inline-flex; gap: 3px; flex: none; }
-.cn-meter > span { width: 18px; height: 6px; border-radius: 3px; background: var(--cn-line-strong); }
+.cn-meter > span { width: 18px; height: 6px; border-radius: 3px; background: var(--cn-line-strong); transition: background-color 240ms; }
 .cn-meter > .cn-meter-on { background: var(--cn-ink); }
 
 .cn-rung-awards {
@@ -3234,6 +3215,10 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   color: var(--cn-ink-2);
 }
 
+/* Only the newest is new: entries are keyed, so the ones already on screen
+   keep their element and stay still while the next one slides in above them. */
+.cn-ladder-entry { animation: cn-rise 260ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+
 .cn-ladder-entry strong { color: var(--cn-ink); font-weight: 600; }
 .cn-ladder-entry .cn-pill { flex: none; margin-top: 1px; }
 .cn-ladder-entry-text { min-width: 0; }
@@ -3249,7 +3234,7 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   align-items: start;
 }
 
-@media (min-width: 820px) {
+@container (min-width: 700px) {
   .cn-calc-grid { grid-template-columns: minmax(250px, 330px) minmax(0, 1fr); }
 }
 
@@ -3330,7 +3315,15 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 
 .cn-calc-hint { margin: 0; font-size: 12px; line-height: 1.45; color: var(--cn-ink-3); }
 
-.cn-calc-metrics { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+/* One column in a narrow results column, two when there is room. Sized by the
+   column it sits in, not the window: auto-fit left two cards at their minimum
+   width with a gap beside them whenever the hero spanned a wider grid. */
+.cn-calc-results { container-type: inline-size; }
+.cn-calc-metrics { grid-template-columns: minmax(0, 1fr); }
+
+@container (min-width: 380px) {
+  .cn-calc-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 /* .cn-metric-hero steps down to one column from 900px, which suits the
    overview and not a results panel that is already the narrower half. */
@@ -3347,7 +3340,7 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   background: var(--cn-raised);
 }
 
-.cn-calc-person .cn-fig-ceiling-fill { transition: width 200ms ease-out; }
+.cn-calc-person .cn-fig-ceiling-fill { transition: width 260ms cubic-bezier(0.2, 0.7, 0.2, 1), background-color 200ms; }
 
 /* The fill turns to the warning colour as one person's month approaches the
    budget. Always with the sentence under it, never colour alone. */
@@ -3361,7 +3354,161 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 @media (prefers-reduced-motion: reduce) {
   .cn-start-card,
   .cn-rung,
+  .cn-meter > span,
   .cn-choice span,
   .cn-calc-person .cn-fig-ceiling-fill { transition: none; }
   .cn-start-card:hover { transform: none; }
+  .cn-ladder-entry { animation: none; }
+}
+
+/* ---- the stamp card playground ---- */
+
+.cn-card { gap: 14px; }
+
+.cn-card-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+@container (min-width: 700px) {
+  .cn-card-grid { grid-template-columns: minmax(230px, 290px) minmax(0, 1fr); }
+}
+
+.cn-card-result,
+.cn-card-try {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+  min-width: 0;
+}
+
+.cn-card-result-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+
+.cn-card-time { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cn-card-time-k { font-size: 12px; color: var(--cn-ink-3); }
+
+.cn-card-time-v {
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--cn-ink);
+}
+
+@container (min-width: 480px) {
+  .cn-card-time-v { font-size: 34px; }
+}
+
+.cn-card-verdict-pill { gap: 7px; transition: color 200ms, border-color 200ms, background-color 200ms; }
+.cn-card-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.cn-card-pill-ok { color: var(--cn-pos); border-color: color-mix(in srgb, var(--cn-pos) 40%, transparent); }
+.cn-card-pill-warn { color: var(--cn-warn); border-color: color-mix(in srgb, var(--cn-warn) 45%, transparent); background: var(--cn-warn-bg); }
+.cn-card-pill-bad { color: var(--cn-neg); border-color: color-mix(in srgb, var(--cn-neg) 45%, transparent); }
+
+.cn-card-verdict { margin: 0; font-size: 14px; line-height: 1.5; color: var(--cn-ink-2); }
+
+.cn-card-bar-wrap { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
+
+.cn-card-bar { position: relative; display: flex; height: 10px; }
+
+.cn-card-seg { display: block; height: 100%; }
+.cn-card-seg-ok { background: var(--cn-pos); border-radius: 5px 0 0 5px; }
+.cn-card-seg-warn { background: var(--cn-warn); }
+.cn-card-seg-bad { flex: 1; background: var(--cn-neg); border-radius: 0 5px 5px 0; }
+
+/* A tick that overshoots the bar by a few pixels either side, so it reads as
+   a pointer into it and not as one more segment. It slides, because moving
+   from one length to another is the thing being shown. */
+.cn-card-marker {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--cn-ink);
+  box-shadow: 0 0 0 2px var(--cn-raised);
+  transition: left 320ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.cn-card-bar-keys { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--cn-ink-3); }
+
+.cn-card-try-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+
+.cn-stampcards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.cn-stampcard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-surface);
+  min-width: 0;
+  transition: border-color 200ms, box-shadow 200ms;
+}
+
+.cn-stampcard[data-complete="true"] { border-color: var(--cn-ink); box-shadow: 0 0 0 1px var(--cn-ink); }
+
+/* The badge arrives into a row that is already tall enough for it, so a card
+   finishing does not push the card or anything under it down. */
+.cn-stampcard-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 26px; }
+.cn-stampcard-n { font-size: 12px; font-weight: 500; color: var(--cn-ink-3); }
+.cn-stampcard-badge { animation: cn-pop 320ms cubic-bezier(0.34, 1.4, 0.64, 1) backwards; }
+
+.cn-stampcard-grid { display: grid; gap: 8px; justify-items: start; }
+
+.cn-stamp {
+  display: block;
+  width: 100%;
+  max-width: 34px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1.5px solid var(--cn-line-strong);
+  background: transparent;
+  transition: background-color 160ms, border-color 160ms;
+}
+
+/* The pop starts when the attribute starts matching, so only a stamp that
+   has just landed does it. One that was already there, on first paint or
+   after the card length changed, is simply drawn. */
+.cn-stamp[data-on="true"] {
+  border-color: var(--cn-ink);
+  background: var(--cn-ink);
+  animation: cn-pop 320ms cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.cn-card-line { margin: 0; font-size: 14px; line-height: 1.5; color: var(--cn-ink-2); min-height: 42px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-card-verdict-pill,
+  .cn-card-marker,
+  .cn-stampcard,
+  .cn-stamp { transition: none; }
+  .cn-stampcard-badge,
+  .cn-stamp[data-on="true"] { animation: none; }
 }
