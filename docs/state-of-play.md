@@ -201,7 +201,38 @@ see it.
   a comment naming the blocker, or leave the PR open and red as a reminder.
   Decide deliberately; do not click through it.
 
-  The Next group, the Prisma group, nodemailer and pg are untouched.
+  **The Prisma group (44) was done by hand and Dependabot closed its own PR**
+  ("no longer updatable") once the dev group landed, so there is nothing to
+  merge there. `@prisma/client`, `@prisma/adapter-pg` and `prisma` are now
+  7.10.1. It was a patch-level bump that broke two tests, and the reason is
+  worth keeping:
+
+  - **Where the pg adapter puts a violated unique constraint changed in a
+    patch release.** 7.9 nested the column names at
+    `meta.driverAdapterError.cause.constraint.fields`; 7.10 sends only the
+    constraint's name, `constraint.index` (`"Brand_slug_key"`). The code in
+    `lib/brand/provision.ts` that told "address taken" from "email taken"
+    read the old shape, got nothing, and fell through to the generic "Something
+    went wrong". Nothing threw. Two tests caught it and nothing else would
+    have: an operator would have seen a vague error on a duplicate.
+  - It now asks the database which value exists instead of reading the
+    error, so it holds whatever shape Prisma sends next. No other code reads
+    the error's `meta`; the rest only check `code === "P2002"`.
+  - **Seven of the eight accepted audit exceptions went away** because
+    Prisma 7.10.1 updated its own `fast-uri`, `mysql2` and `deepmerge-ts`. One
+    remains (`source-map-js`, PostCSS under Next). The gate reported the seven
+    as stale, which is the reason it reports them.
+  - **`prisma` 7.10.0 and 7.10.1 have no npm provenance attestation**; 7.9.1
+    and earlier did, and `@prisma/client` and `@prisma/adapter-pg` still do.
+    The publisher is unchanged (`prismabot`), the registry signature is valid,
+    and an npm dist-tag named `7.10.0-integration-fix-prisma-publish-token.1`
+    points to a change in their publishing pipeline. That is an explanation,
+    not proof. It matters more than for most dev dependencies because the
+    build runs `prisma migrate deploy` with production database access.
+  - `latest` on npm for `prisma` is now `8.0.0-rc.33`. Our `^7.10.1` range
+    does not follow it, but a bare `pnpm up prisma --latest` would.
+
+  The Next group (43), nodemailer (46) and pg (45) are untouched.
 
 ### The navigation bug, fixed in PR 42
 
