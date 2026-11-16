@@ -140,17 +140,43 @@ see it.
   the Team screen is unreachable, then invite with the role set to **Owner**,
   because an admin cannot reset anybody and would look like a recovery route
   without being one.
-- **PR 42 is open and unmerged**, so the navigation bug below is still live.
+- **Five Dependabot pull requests are open**, 43 to 47, all raised on the
+  morning of 16 November: the Next group of 4, the Prisma group of 3, the
+  dev group of 8, and nodemailer and pg on their own. The grouping behaved
+  as configured. Nobody has reviewed them. Take the dev group first, since a
+  failure there cannot reach a shopper, and the Next group last, since that
+  is the one that moves the framework.
 
-### The navigation bug, which is live
+### The navigation bug, fixed in PR 42
 
 Hiding the nav while a second factor is outstanding is right: every link
 would bounce back to the enrolment screen. Giving it back afterwards was
 missed, so the first person to enrol landed on an Overview with no way to
-leave it. Nothing is broken and a reload fixes it. The fix is
-`router.refresh()` in the security form, on the branch, in PR 42.
+leave it. `router.refresh()` in the security form is the fix, and
+`scripts/check-nav-after-enrolment.ts` holds it.
 
-It was found by looking at a screenshot of a screen that every test passed.
+It was found by looking at a screenshot of a screen that every test passed,
+which is the argument for that habit in one sentence.
+
+### The second-factor gate breaks scripts that sign in
+
+Worth its own heading, because it has now happened twice and the second
+time it was silent.
+
+`scripts/check-dialog-portal` signed in with a password and asked for
+`/promotions`. Once OWNER required a second factor, the gate sent it to
+`/security` instead, where `.cn-promo-grid` never appears, so the check
+died as a 20 second selector timeout. That reads as a product bug and is
+not one. It went unnoticed from 10 to 16 November.
+
+It is now a `.ts` that mints a session with `createStaffSession`, lends the
+seeded owner a factor for the duration, and puts both back. It also says
+which path it landed on rather than timing out, so the next person reads
+the cause instead of guessing it.
+
+**Any new script that drives the console should mint a session rather than
+drive the login form.** `scripts/shot-mfa-reset.ts` and
+`scripts/check-dialog-portal.ts` both show the pattern.
 
 ---
 
@@ -248,7 +274,7 @@ see and nothing runs them automatically:
 |---|---|
 | `scripts/audit.mjs` | high and critical advisories in production dependencies. Wired into CI as `pnpm audit:ci` |
 | `scripts/check-nav-after-enrolment.ts` | the nav returns on enrolment, and the recovery codes survive the refresh |
-| `scripts/check-dialog-portal.mjs` | dialogs and drawers render as modals with the console's tokens |
+| `scripts/check-dialog-portal.ts` | dialogs and drawers render as modals with the console's tokens |
 | `scripts/open-items-xlsx.py` | regenerates the tracked spreadsheet |
 
 ---
