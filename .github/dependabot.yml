@@ -52,6 +52,27 @@ updates:
       dev:
         dependency-type: development
 
+    # TypeScript stays on 6 until two independent blockers are gone. This is
+    # an ignore on the major version only: 6.x minors and patches still arrive.
+    #
+    #   1. typescript-eslint refuses to run on it. Its peer range is
+    #      "typescript >=4.8.4 <6.1.0" as of 8.72.2, checked 16 November 2026,
+    #      so this fails CI on the lint step, not on anything in our code.
+    #   2. tsc itself fails: 273 errors in 85 files on 7.0, 164 of them
+    #      @prisma/client model types (Brand, Role and so on) that stop
+    #      resolving. That is a migration, not a bump.
+    #
+    # Without this, every weekly run proposes TypeScript 7 again inside the
+    # "dev" group, and each such pull request fails for the same reason and
+    # hides the bumps in the group that are fine.
+    #
+    # To lift it: delete the entry when typescript-eslint's peer range admits
+    # 7, then try the bump on a branch, and expect to fix the Prisma types.
+    # Detail and the measurements are in docs/state-of-play.md.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+
     labels:
       - dependencies
 

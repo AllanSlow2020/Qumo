@@ -195,11 +195,27 @@ see it.
   | `eslint` 9 to 10 | taken **with a caveat**: `eslint-plugin-import`, `jsx-a11y` and `react` declare support only up to eslint 9, so pnpm prints unmet-peer warnings on every install. A differential probe, one file violating rules from all five plugins, gave identical results under 9 and 10. It is its own commit if it needs to come out |
   | `typescript` 6 to 7 | **not taken, and not close.** It fails two independent ways: `typescript-eslint` refuses to run on TS 7.0 (issue 10940 tracks support from 7.1), and `tsc` itself fails with 273 errors in 85 files. 164 are the same cause: `@prisma/client` model types such as `Brand` and `Role` stop resolving. That is a migration, not a bump |
 
-  **Dependabot will keep proposing TypeScript 7.** Closing 47 will not stop
-  it, and each new group PR will fail CI for the same reason. Either add an
-  `ignore` for `typescript` major versions to `.github/dependabot.yml`, with
-  a comment naming the blocker, or leave the PR open and red as a reminder.
-  Decide deliberately; do not click through it.
+  **Dependabot is told to leave TypeScript 7 alone.** Closing 47 would not
+  have stopped it proposing the bump again every week, each time inside the
+  dev group and failing CI for the same reason, so `.github/dependabot.yml`
+  now carries an `ignore` for `typescript` **major** versions, with a comment
+  naming both blockers. Minors and patches of 6.x still arrive. The decision
+  is made; what is left is knowing when to undo it.
+
+  - **The blocker is wider than first written.** Checked 16 November 2026:
+    `typescript-eslint` 8.72.2, the latest, declares `typescript >=4.8.4
+    <6.1.0`, so it does not support TypeScript 7 at all yet, not only 7.0.
+    TypeScript's own `latest` is 7.0.2, with 7.1 in beta. The earlier note
+    that support would arrive "from 7.1" is not what the published peer
+    range says.
+  - **To lift it:** delete the `ignore` entry when `typescript-eslint`'s peer
+    range admits 7, then try the bump on a branch. Expect the second blocker
+    to still be there: `tsc` failed with 273 errors on 7.0, 164 of them
+    `@prisma/client` model types. That was measured once, on 7.0, and has not
+    been re-measured on 7.0.2.
+  - **What this does not do.** It stops proposals; it does not stop anyone
+    installing TypeScript 7 by hand, and `package.json` allows `^6.0.3`, which
+    cannot resolve to 7 on its own. The `ignore` is only about the weekly PR.
 
   **The Prisma group (44) was done by hand and Dependabot closed its own PR**
   ("no longer updatable") once the dev group landed, so there is nothing to
