@@ -105,6 +105,10 @@ ROWS = [
  "The competitor sells it hard to feature-phone and data-off shoppers and we are simply absent from that market. A strategy question, not a backlog item.",""),
 ("3. Decisions only you can take","3.6","Language",A,"No","Not started","",
  "English only today. Mass-market reach here is language-dependent.",""),
+("3. Decisions only you can take","3.7","Whether an owner should be able to reset another owner's second factor at all",A,"No","Not started","docs/state-of-play.md",
+ "They can today, and it is what makes a lost phone survivable. The cost is that a compromised owner can strip a colleague's protection. An owner can never reset their own, because that would unravel the requirement. Revisit it the first time a brand has staff in the console who are not Allan.",""),
+("3. Decisions only you can take","3.8","Whether MARKETING should need a second factor",A,"No","Not started","docs/state-of-play.md",
+ "It is out of the required set today and it is a close call, because that role can redeem a coupon, which is money. The line drawn was between who can change the rules and who acts within them. Worth revisiting at the volume where a marketing account is worth stealing. It is one entry in ROLES_REQUIRING_SECOND_FACTOR.",""),
 
 ("4. Product gaps","4.1","A coupon can be redeemed, once",C,"No","Done","docs/seattle-coffee-review.md",
  "lib/coupons/manage.ts moves a coupon out of ISSUED, a console screen under Redeem takes the code at the counter, and the shopper wallet now lists their codes so there is something to show. A conditional update on status settles two counters trying the same coupon in the same second, and every refusal writes a CouponFraudEvent, mistyped codes included. No migration: every column was already in the schema.",
@@ -135,15 +139,15 @@ ROWS = [
  "Nothing has been harmed yet only because no branch in flight carries a migration."),
 ("5. Operations","5.2","Twilio sends, on a scoped API key",A,"No","Done","docs/deploying.md",
  "On 3 November a real passcode reached a real handset and a shopper signed in, the first time that has happened. DEMO_LOGIN_PHONES and DEMO_LOGIN_CODE are deleted. Production authenticates with the Standard key qumo-live, and the preflight's auth-token warning is gone from the build log, which is the confirmation that the scoped key is the one in use. The fix was copying the key SID and its secret off a single Twilio creation screen in one action.",""),
-("5. Operations","5.2a","Delete TWILIO_AUTH_TOKEN from Vercel",A,"No","Not started","docs/deploying.md",
- "Dormant now, because resolveTwilioCredentials prefers the key pair when both halves are present. Delete it and redeploy.",
- "Until it is deleted, the master credential for the whole Twilio account sits in the environment: it can buy numbers, spend money and read every message ever sent, and it cannot be scoped or rotated on its own."),
+("5. Operations","5.2a","Do not delete TWILIO_AUTH_TOKEN: it now validates inbound SMS",A,"No","Done","docs/state-of-play.md",
+ "This item used to say to delete the token. That is reversed. Twilio signs every inbound webhook with the account auth token, and an API key cannot validate that signature, so the token is the only thing that authenticates inbound SMS. It is read for a local HMAC and never transmitted. Sending still runs on the scoped key qumo-live, which takes precedence, so the master-credential warning in the build log stays away. Unset it and inbound SMS refuses every message.",
+ "Do not delete TWILIO_AUTH_TOKEN from Production. The cost accepted: the master credential for the whole Twilio account stays in the environment, where it can buy numbers, spend money and read every message ever sent, and it cannot be scoped or rotated on its own. Preview has no token, so preview builds print a harmless preflight warning."),
 ("5. Operations","5.2b","Delete the surplus Twilio API keys",A,"No","Not started","",
  "Six exist for one integration. Keep qumo-live and delete the rest. That surplus is most of why the afternoon of 3 November went the way it did.",""),
 ("5. Operations","5.2c","An inbound SMS gets a reply",C,"No","Done","docs/deploying.md",
  "/api/sms/inbound answered in plain text, which Twilio reads as an application error: it logs a schema warning and sends the shopper nothing, so the channel looked like it worked from our side and was silence from theirs. It answers in TwiML now.",""),
 ("5. Operations","5.2d","The Twilio number answers",A,"No","Done","docs/deploying.md",
- "SMS_WEBHOOK_SECRET is set in Vercel and the number's A message comes in webhook points at /api/sms/inbound. Proved on 9 November by texting BALANCE from a real handset and getting a real answer back from production, which exercises the whole chain: carrier, Twilio, Vercel, the secret comparison, the handler, the TwiML envelope and the reply.",""),
+ "The number's A message comes in webhook points at /api/sms/inbound, and the route authenticates each request by Twilio's X-Twilio-Signature. First proved on 9 November by texting BALANCE from a real handset and getting a real answer back from production. That was under a shared secret in the webhook URL; the secret, SMS_WEBHOOK_SECRET, is now deleted from Production, Preview and Development, and the ?token= query string is gone from the number's webhook URL. A BALANCE text was answered again after the change, so the signature path is the one proved working.",""),
 ("5. Operations","5.2e","Twilio answers HELP instead of us, and owns STOP",A,"No","Not started","",
  "JOIN is fine: YES reached handleJoin on 9 November and got our reply, so the SMS join flow can record consent. HELP never reaches us, so the one message whose job is to explain the service does not. STOP is Twilio's, which is mostly good because carrier-grade opt-out beats ours, except that handleStop never runs so our own record of who opted out is never written. The fix for all three is a Messaging Service, which allows the built-in keyword handling to be configured.",
  "Untested edge: a shopper who texts STOP is blocked at Twilio, and a later YES is likely consumed by Twilio as its own opt-in keyword, unblocking them without ever rejoining them at Qumo."),
@@ -153,8 +157,22 @@ ROWS = [
  "The database is in us-east-2. Relevant to the POPIA section 72 question in item 2.4.",""),
 ("5. Operations","5.5","ERROR_WEBHOOK_URL is unset",A,"No","Not started","",
  "Nothing is alerting anywhere. This stopped being theoretical on 3 November: every failed passcode wrote sms send rejected with Twilio's own error code from 16:18 onwards, and nothing said so, which cost an afternoon.",""),
-("5. Operations","5.6","Attach a reward to Copper Kettle's live Rounds card",A,"No","Not started","",
+("5. Operations","5.15","Attach a reward to Copper Kettle's live Rounds card",A,"No","Not started","",
  "It completes at 10 and names nothing, so shoppers would collect forever and be handed nothing.",""),
+("5. Operations","5.9","Save the production recovery codes",A,"No","Not started","docs/state-of-play.md",
+ "Allan is enrolled in two-factor on production and is the only OWNER, and an owner cannot turn their own second factor off. The recovery codes are therefore the only way back into the account if the authenticator is lost. Do this if it has not been done already.",
+ "The fragile one. A lost authenticator with no saved codes cannot be fixed from the console, only from the database."),
+("5. Operations","5.10","Create the break-glass second owner",A,"No","Not started","docs/state-of-play.md",
+ "Decided: an account Allan holds, with its authenticator on a device that is not his everyday phone, and its codes stored apart from his own. Enrol first, or the Team screen is unreachable; then invite with the role set to Owner. An admin cannot reset anybody, so an admin account would look like a recovery route without being one.",""),
+("5. Operations","5.11","A restore drill on a paid Neon plan",A,"No","Not started","",
+ "Six hours of point-in-time restore, with the one manual snapshot already spent. This is the weakest link in the whole security picture and it is not a code problem.",
+ "A compromise found on a Monday morning may be older than six hours."),
+("5. Operations","5.12","Decide who reads the CSP reports and the fraud events",A,"No","Not started","",
+ "Both are being written to and nobody looks at either. Detection nobody reads is not detection. Related to 5.5: with ERROR_WEBHOOK_URL unset, nothing here alerts anyone either.",""),
+("5. Operations","5.13","Confirm the response headers are live",A,"No","Not started","",
+ "The configuration is right and it has only ever been checked in source, because the sandbox cannot reach the production host. Thirty seconds in devtools on the console login page.",""),
+("5. Operations","5.14","A penetration test before a national brand signs",A,"No","Not started","",
+ "It is also the thing that answers a procurement questionnaire.",""),
 
 ("6. Brand and acquisition","6.1","Brand guide",A,"No","In progress","docs/brand-context.md",
  "Context file written and handed over for the brand guide.",""),
@@ -164,6 +182,8 @@ ROWS = [
  "Settled: site on qumo.co.za, product stays on qumo-app.com, the old apex redirects to the site. No migration, and standing the site up cannot affect anything running.",""),
 ("6. Brand and acquisition","6.4","The call to action",AC,"No","Waiting on someone","",
  "Depends on the signup decision in item 3.1. Until then it is \"request access\".",""),
+("6. Brand and acquisition","6.5","Source the managed-promotion price on the deck",A,"No","Waiting on someone","docs/sources.md",
+ "The R40,000 per managed promotion on slide 3, and the R80,000 derived from it on slides 3 and 11, are still unsourced. A normal deck build warns; --strict refuses, and --strict is the one to use for any copy that goes to a brand or an investor. Written quotes from two or three promotions agencies, or a real invoice with the names removed, close it, and they are being gathered from agency conversations.",""),
 
 ("7. Housekeeping","7.1","Delete ?ui=stacked and the stacked branch with it",C,"No","Not started","",
  "Once the drawer has survived a real brand. Carrying two layouts is how one of them rots.",""),
@@ -198,8 +218,8 @@ ws.title = "Open items"
 ws["A1"] = "Qumo: what is still open"
 ws["A1"].font = Font(name=ARIAL, size=16, bold=True, color=INK)
 ws["A2"] = ("Status, Target date and Your notes are yours to edit. Everything else is generated from "
-            "docs/open-items.md, so a change there is not a change here. Two red warnings below are "
-            "load-bearing: read them before acting on items 3.2 and 3.3.")
+            "docs/open-items.md, so a change there is not a change here. The red cells in the Warning "
+            "column are load-bearing: read the one beside an item before acting on it.")
 ws["A2"].font = Font(name=ARIAL, size=10, italic=True, color="5A6472")
 ws.merge_cells("A2:K2")
 ws["A2"].alignment = Alignment(wrap_text=True, vertical="top")

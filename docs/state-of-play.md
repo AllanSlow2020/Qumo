@@ -489,36 +489,27 @@ build the wrong thing.
 
 ## 8. What is open, and what is only waiting on somebody
 
-`docs/open-items.md` is the list, and the rule at the top of this file says
-this one should not keep a second copy.
+`docs/open-items.md` is the list, and `docs/open-items.xlsx` beside it is the
+one to track work in. Nothing is kept here, which is what the rule at the top
+of this file asks for.
 
-These are here anyway, and the reason is worth stating rather than hiding:
-they came out of the security review on 10 November and have **not** been
-added to `docs/open-items.md` yet. So this is the only record of them.
-Moving them across, and regenerating the spreadsheet with
-`scripts/open-items-xlsx.py`, is itself a small job somebody should do, at
-which point this section should shrink to a pointer.
+Until 16 November this section was the only record of the items that came out
+of the security review, because they had not been added to the list. They
+have been. The operational ones are in section 5 of `docs/open-items.md` (the
+recovery codes, the break-glass second owner, the restore drill, who reads the
+CSP reports and fraud events, the live response headers, the penetration
+test), the two open security decisions are in section 3, and the unsourced
+deck prices are in section 6.
 
-**Operational, none of it code:**
+Two entries there were **wrong** and are corrected, and a session that
+remembers the old wording should not trust it: the list used to say to delete
+`TWILIO_AUTH_TOKEN` from Vercel, which would now break inbound SMS, and that
+the inbound webhook rests on `SMS_WEBHOOK_SECRET`, which is deleted. Section 3
+of this file has the true state.
 
-1. **Save the production recovery codes**, if that has not been done. Single
-   owner, enrolled, cannot self-disable. This is the fragile one.
-2. **Create the break-glass second owner.** Decided: an account Allan holds,
-   with its authenticator on a device that is not his everyday phone, and its
-   codes stored apart from his own.
-3. **A restore drill on a paid Neon plan.** Six hours of point-in-time
-   restore with the one manual snapshot already spent. This is the weakest
-   link in the whole picture and it is not a code problem: a compromise found
-   on a Monday morning may be older than six hours.
-4. **Decide who reads the CSP reports and the fraud events.** Both are being
-   written to and nobody looks at either. Detection nobody reads is not
-   detection.
-5. **Confirm the response headers are live.** The configuration is right and
-   it has only ever been checked in source, because this sandbox cannot reach
-   the production host. Thirty seconds in devtools on the console login page.
-6. **A penetration test before a national brand signs.** It is also the thing
-   that answers a procurement questionnaire.
-
-**On the deck:** the R40,000 per managed promotion on slide 3, and the
-R80,000 derived from it on slides 3 and 11, are still unsourced. A normal
-build warns; `--strict` refuses. Agency quotes close it.
+**Not yet corrected: `docs/deploying.md`** still describes the old
+shared-secret setup (`SMS_WEBHOOK_SECRET`, `?token=` in the webhook URL) and
+says validating `X-Twilio-Signature` was "not adopted, on purpose". That is
+the opposite of what is now live. Anyone setting up a second environment from
+that page would build the weaker arrangement and then find it refuses every
+message. It needs rewriting against `app/api/sms/inbound/route.ts`.
