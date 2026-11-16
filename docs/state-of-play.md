@@ -250,9 +250,35 @@ see it.
 
   **Dependabot's "Next group" (43) does not contain Next.** It is React and
   react-dom 19.2 to 19.3 plus their types, which is a framework minor on the
-  runtime every page renders through and deserves its own look. pg (45) is a
-  patch with one fix worth knowing: it now validates the server certificate
-  against the host when connecting to an IP address. Both are untouched.
+  runtime every page renders through and deserves its own look. It is
+  untouched.
+
+  **pg (45) was taken at 8.23.1.** `pg` is reached two ways: Prisma's adapter
+  uses it for every runtime query, and `scripts/preflight.mjs` opens a real
+  connection with it during the build. The one behaviour change worth
+  knowing was measured against a local server with TLS on, 8.23.0 and 8.23.1
+  side by side, across every `sslmode`:
+
+  - **To a hostname, they behave identically.** Production is a Neon hostname
+    with `sslmode=require` (`docs/deploying.md`), so it is unaffected.
+  - **To an IP address, 8.23.0 never checked the certificate.** Even
+    `sslmode=verify-full` connected to `127.0.0.1` against a certificate that
+    did not match. 8.23.1 refuses with "Hostname/IP does not match
+    certificate". So anything pointed at a bare IP with a `sslmode` set now
+    fails, which is the correct behaviour arriving as a breakage. Nothing in
+    this repo does that (CI uses `localhost` with no `sslmode`), but the
+    preflight's hint, "Append ?sslmode=require", would send somebody with an
+    IP-address database host straight into it.
+  - **pg 9 will weaken `sslmode=require`.** Both versions print the warning:
+    in pg 9 and pg-connection-string 3, `prefer`, `require` and `verify-ca`
+    adopt libpq semantics, which encrypt without verifying the certificate.
+    Today `require` is strict. When a Dependabot PR for pg 9 or a Prisma adapter
+    that pulls it in arrives, set `sslmode=verify-full` explicitly in
+    production's `DATABASE_URL` first, or the connection quietly gets less
+    secure with nothing failing.
+  - The `pg` family has never carried an npm provenance attestation, old
+    versions included, so unlike Prisma's CLI nothing changed there. Same
+    maintainer throughout.
 
 ### The navigation bug, fixed in PR 42
 
