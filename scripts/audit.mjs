@@ -4,11 +4,14 @@
  *
  * ── Why this is a script and not one line of YAML ────────────────────────
  *
- * `pnpm audit --prod --audit-level=high` is that one line, and it fails
- * today, on six advisories nothing in this repository can fix: they are in
- * the Prisma CLI and in PostCSS, which arrive as transitive dependencies of
- * `@prisma/client` and `next` and are not loaded by the deployed app at
- * all. `mysql2` is a MySQL driver in a Postgres application.
+ * `pnpm audit --prod --audit-level=high` is that one line, and when this was
+ * written it failed on eight advisories nothing in this repository could
+ * fix: they were in the Prisma CLI and in PostCSS, which arrive as transitive
+ * dependencies of `@prisma/client` and `next` and are not loaded by the
+ * deployed app at all. (`mysql2` is a MySQL driver in a Postgres
+ * application.) Seven of the eight went away when Prisma 7.10.1 updated its
+ * own dependencies, which is the stale-entry report below doing its job; one
+ * remains, in PostCSS under Next.
  *
  * A gate that is red on arrival gets switched off in a week, so the choice
  * is between lowering it to critical-only and writing the exceptions down.
@@ -39,40 +42,11 @@ import { execFileSync } from "node:child_process";
  * CLI, since that is what put most of these here.
  */
 const ACCEPTED = {
-  "GHSA-ggr8-5vv4-36mx": {
-    package: "deepmerge-ts",
-    reason:
-      "Reached only through prisma > @prisma/config, the CLI's config loader. Runs at migrate and generate time, never in a request.",
-  },
-  "GHSA-3f6p-5ww8-9rcr": {
-    package: "mysql2",
-    reason:
-      "Prisma's CLI depends on every database driver it supports. This application is Postgres, so the MySQL driver is never loaded, let alone handed a connection.",
-  },
   "GHSA-68fv-2mgg-jv7q": {
     package: "source-map-js",
     reason: "next > postcss, which runs at build. No request path reaches a CSS source map.",
   },
 };
-
-/**
- * fast-uri arrives under @prisma/dev, the local development server, through
- * ajv's schema validation. Several advisories, all the same reasoning, so
- * they are generated rather than copied five times.
- */
-for (const id of [
-  "GHSA-5jgf-p345-68v8",
-  "GHSA-f65p-4m7j-42xc",
-  "GHSA-fph4-wmhf-6fwf",
-  "GHSA-jqff-g426-hqxp",
-  "GHSA-qw65-cvwx-89v3",
-]) {
-  ACCEPTED[id] = {
-    package: "fast-uri",
-    reason:
-      "Reached only through @prisma/dev > @prisma/streams-local > ajv, the local development server. Not installed in the deployed runtime.",
-  };
-}
 
 const BLOCKING = new Set(["high", "critical"]);
 
