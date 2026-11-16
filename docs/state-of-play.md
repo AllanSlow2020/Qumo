@@ -507,9 +507,20 @@ remembers the old wording should not trust it: the list used to say to delete
 the inbound webhook rests on `SMS_WEBHOOK_SECRET`, which is deleted. Section 3
 of this file has the true state.
 
-**Not yet corrected: `docs/deploying.md`** still describes the old
-shared-secret setup (`SMS_WEBHOOK_SECRET`, `?token=` in the webhook URL) and
-says validating `X-Twilio-Signature` was "not adopted, on purpose". That is
-the opposite of what is now live. Anyone setting up a second environment from
-that page would build the weaker arrangement and then find it refuses every
-message. It needs rewriting against `app/api/sms/inbound/route.ts`.
+**`docs/deploying.md` has been corrected too.** It described the same old
+shared-secret setup (`SMS_WEBHOOK_SECRET`, `?token=` in the webhook URL),
+said validating `X-Twilio-Signature` was "not adopted, on purpose", and told a
+reader to delete `TWILIO_AUTH_TOKEN`. Its SMS section is rewritten against
+`app/api/sms/inbound/route.ts`, and keeps a short paragraph on why it changed
+its mind, because a session that remembers the old page should find out that
+it is the one that is wrong.
+
+Two things from that rewrite are worth knowing without opening it:
+
+- **Test inbound SMS with `BALANCE`, never `HELP`.** Twilio reserves `HELP`
+  and answers it itself before our webhook is called, so a reply to it says
+  nothing about whether the route works. The old runbook told people to use it.
+- **A refused webhook is quiet.** The route answers 401 without writing a log
+  line, so nothing shows in Vercel's runtime logs; the failure is visible only
+  in Twilio's own debugger. A `curl` POST with no signature, run against
+  production, should answer 401 and is the check that the gate is shut.
