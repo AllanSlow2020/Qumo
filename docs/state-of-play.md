@@ -232,7 +232,27 @@ see it.
   - `latest` on npm for `prisma` is now `8.0.0-rc.33`. Our `^7.10.1` range
     does not follow it, but a bare `pnpm up prisma --latest` would.
 
-  The Next group (43), nodemailer (46) and pg (45) are untouched.
+  **nodemailer (46) was taken at 10.6.0**, newer than the 10.5.0 Dependabot
+  proposed. It is the one security-flavoured bump of the three, and its real
+  exposure is small: the only caller is the staff password reset, which sends
+  to an address that already exists as a staff account. Two cases the 10.4.1
+  release fixed were reproduced against 10.0.8 before relying on that:
+
+  - a domain with whitespace or a comment around a dot (`owner@example .com`)
+    was **truncated to `owner@example`**, a different host;
+  - a capital sharp S in the domain was mapped to a different domain from the
+    one `url.domainToASCII` computes, which is what most validators use.
+
+  Nothing tested this path before; `tests/email-smtp.test.ts` now runs
+  `SmtpEmailClient` against a real SMTP conversation and reads the `RCPT TO`
+  the server received. It was run against 10.0.8 and fails on exactly those
+  four cases, so it does guard the fix. Provenance is intact on every version.
+
+  **Dependabot's "Next group" (43) does not contain Next.** It is React and
+  react-dom 19.2 to 19.3 plus their types, which is a framework minor on the
+  runtime every page renders through and deserves its own look. pg (45) is a
+  patch with one fix worth knowing: it now validates the server certificate
+  against the host when connecting to an IP address. Both are untouched.
 
 ### The navigation bug, fixed in PR 42
 
