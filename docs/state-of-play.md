@@ -177,12 +177,31 @@ see it.
   the Team screen is unreachable, then invite with the role set to **Owner**,
   because an admin cannot reset anybody and would look like a recovery route
   without being one.
-- **Five Dependabot pull requests are open**, 43 to 47, all raised on the
-  morning of 16 November: the Next group of 4, the Prisma group of 3, the
-  dev group of 8, and nodemailer and pg on their own. The grouping behaved
-  as configured. Nobody has reviewed them. Take the dev group first, since a
-  failure there cannot reach a shopper, and the Next group last, since that
-  is the one that moves the framework.
+- **Five Dependabot pull requests were raised on 16 November**, 43 to 47: the
+  Next group of 4, the Prisma group of 3, the dev group of 8, and nodemailer
+  and pg on their own. The grouping behaved as configured.
+
+  **The dev group (47) cannot merge as written, and "dev" does not mean
+  "low risk".** Four of its eight are major version bumps, and it fails
+  `pnpm lint` in CI. The grouping bundled the safe ones with the unsafe ones.
+  It was taken apart on a branch instead, one package at a time, each checked
+  alone:
+
+  | Bump | Result |
+  |---|---|
+  | `@types/node`, `playwright`, `prettier`, `tsx` (minor and patch) | taken |
+  | `dotenv` 17 to 18 | taken. Checked with the shell's `DATABASE_URL` and secrets unset, so the only way they could arrive is dotenv reading `.env` |
+  | `vitest` 4 to 5 | taken. Confirmed the suite is **still serial**: `fileParallelism: false` is a deliberate flake fix, and an ignored option would not raise an error, it would just make CI flaky. Wall clock was the evidence |
+  | `eslint` 9 to 10 | taken **with a caveat**: `eslint-plugin-import`, `jsx-a11y` and `react` declare support only up to eslint 9, so pnpm prints unmet-peer warnings on every install. A differential probe, one file violating rules from all five plugins, gave identical results under 9 and 10. It is its own commit if it needs to come out |
+  | `typescript` 6 to 7 | **not taken, and not close.** It fails two independent ways: `typescript-eslint` refuses to run on TS 7.0 (issue 10940 tracks support from 7.1), and `tsc` itself fails with 273 errors in 85 files. 164 are the same cause: `@prisma/client` model types such as `Brand` and `Role` stop resolving. That is a migration, not a bump |
+
+  **Dependabot will keep proposing TypeScript 7.** Closing 47 will not stop
+  it, and each new group PR will fail CI for the same reason. Either add an
+  `ignore` for `typescript` major versions to `.github/dependabot.yml`, with
+  a comment naming the blocker, or leave the PR open and red as a reminder.
+  Decide deliberately; do not click through it.
+
+  The Next group, the Prisma group, nodemailer and pg are untouched.
 
 ### The navigation bug, fixed in PR 42
 
@@ -233,9 +252,11 @@ will not infer them.
   and look at it. Verifying geometry is not verifying rendering.
 - **Do not open a pull request unless asked.** Push the branch and say it is
   there.
-- **Commit trailers:** `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`
-  and the `Claude-Session:` line. No model identifier anywhere else in a
-  commit, a pull request or a code comment.
+- **Commit trailers:** the `Co-Authored-By:` line naming the model that is
+  actually writing, exactly as the session's attribution instruction gives it,
+  and the `Claude-Session:` line. History carries Opus 5 up to 16 November and
+  Sonnet 5.5 after it, so a mixed log is correct. No model identifier anywhere
+  else in a commit, a pull request or a code comment.
 - **A test that cannot fail proves nothing.** Several things in this project
   looked finished and were not: the inbound SMS route answered 200 with a
   body Twilio could not parse, and the published support address pointed at a
