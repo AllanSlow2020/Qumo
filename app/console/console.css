@@ -1515,51 +1515,6 @@ html[data-theme="dark"]:has(.cn) body {
   max-width: 62ch;
 }
 
-/* ---- the loop ---- */
-
-/* Four stages that come back round. The return is drawn, because it is the
-   claim: a line of boxes would end at "they earned something" and stop
-   making the argument the section is there to make. */
-.cn-fig-loop {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
-}
-
-.cn-fig-loop-step {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 14px 14px 14px 16px;
-  border: 1px solid var(--cn-line);
-  border-radius: var(--cn-radius-inner);
-  background: var(--cn-raised);
-}
-
-.cn-fig-loop-dot {
-  position: absolute;
-  left: 0;
-  top: 14px;
-  bottom: 14px;
-  width: 2px;
-  border-radius: 2px;
-  background: var(--cn-accent);
-}
-
-.cn-fig-loop-back {
-  position: absolute;
-  right: 12px;
-  bottom: 10px;
-  width: 24px;
-  color: var(--cn-accent);
-}
-
-.cn-fig-loop-back svg { width: 100%; height: auto; display: block; }
-
 /* ---- the award shapes ---- */
 
 .cn-fig-shapes {
@@ -3758,4 +3713,292 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   .ph .ph-stamp-on { transition: none; }
   .ph .ph-body-wrap,
   .ph .ph-stamp-on { animation: none; }
+}
+
+/* ---------- guide: sections that fold ----------
+   Every section leads with its point and folds its detail. The header is the
+   whole button, because a small chevron at the far end of a wide row is a
+   target nobody finds. */
+
+.cn-fold { padding: 0; overflow: visible; }
+.cn-fold details { display: block; }
+
+.cn-fold-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  cursor: pointer;
+  list-style: none;
+  border-radius: var(--cn-radius);
+  transition: background-color 160ms;
+}
+
+.cn-fold-head::-webkit-details-marker { display: none; }
+.cn-fold-head::marker { content: ""; }
+.cn-fold-head:hover { background: var(--cn-quiet); }
+.cn-fold-head:focus-visible { outline: 2px solid var(--cn-ink); outline-offset: -2px; }
+
+.cn-fold-n {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--cn-quiet);
+  color: var(--cn-ink-2);
+  font-variant-numeric: tabular-nums;
+  transition: background-color 160ms, color 160ms;
+}
+
+/* The section being read takes the ink, the same way the tour's steps do. */
+.cn-fold[data-current="true"] .cn-fold-n { background: var(--cn-ink); color: var(--cn-surface); }
+
+.cn-fold-titles { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.cn-fold-k { margin: 0; font-size: 12px; font-weight: 500; color: var(--cn-ink-3); }
+
+.cn-fold-point {
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--cn-ink);
+  text-wrap: balance;
+}
+
+.cn-fold-act {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--cn-ink-3);
+  white-space: nowrap;
+}
+
+.cn-fold-label { color: var(--cn-ink-2); font-weight: 500; }
+.cn-fold-chev { color: var(--cn-ink-2); transition: transform 240ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.cn-fold details[open] .cn-fold-chev { transform: rotate(180deg); }
+
+/* On a phone the time and the verb are the first things to go: the chevron
+   alone says what the row does, and the point gets the width. */
+@media (max-width: 560px) {
+  .cn-fold-mins,
+  .cn-fold-label { display: none; }
+  .cn-fold-head { padding: 14px; gap: 12px; }
+}
+
+.cn-fold-body { border-top: 1px solid var(--cn-line-soft); }
+
+/* Opening and closing, where the browser can animate the height of a details
+   body (Chrome and Edge today). Anywhere else these rules are dropped whole and
+   it simply opens, which is the right fallback. The padding the body keeps is
+   what stops the clip trimming a card's shadow at the edge. */
+.cn-fold details { interpolate-size: allow-keywords; }
+
+.cn-fold details::details-content {
+  block-size: 0;
+  overflow-y: clip;
+  transition:
+    block-size 300ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    content-visibility 300ms allow-discrete;
+}
+
+.cn-fold details[open]::details-content { block-size: auto; }
+
+/* A jump from the rail or a link opens its section at once; see go() in
+   guide-state.tsx for why the page cannot wait for the animation. */
+.cn-fold[data-jumping] details::details-content { transition: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-fold-head,
+  .cn-fold-n,
+  .cn-fold-chev { transition: none; }
+  .cn-fold details::details-content { transition: none; }
+}
+
+/* ---------- guide: the reading rail ---------- */
+
+.cn-rail-total { font-size: 12px; color: var(--cn-ink-3); }
+
+.cn-rail a { align-items: center; }
+.cn-rail a[aria-current="location"] { background: var(--cn-quiet); color: var(--cn-ink); font-weight: 500; }
+.cn-rail a[aria-current="location"] .cn-toc-n { color: var(--cn-ink); }
+
+.cn-rail-t { flex: 1; min-width: 0; }
+.cn-rail-m { flex: none; font-size: 11px; color: var(--cn-ink-3); font-variant-numeric: tabular-nums; }
+
+.cn-rail-foot { padding: 12px 16px 14px; border-top: 1px solid var(--cn-line-soft); display: flex; flex-direction: column; gap: 8px; }
+
+.cn-rail-bar { height: 4px; border-radius: 2px; background: var(--cn-quiet); overflow: hidden; }
+.cn-rail-bar > span { display: block; height: 100%; background: var(--cn-ink); border-radius: 2px; transition: width 300ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+
+.cn-rail-foot-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--cn-ink-3); }
+
+.cn-rail-all {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  padding: 2px 6px;
+  margin: -2px -6px;
+  border-radius: var(--cn-radius-inner);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cn-ink-2);
+  text-decoration: underline;
+  text-decoration-color: var(--cn-line-strong);
+  text-underline-offset: 3px;
+}
+
+.cn-rail-all:hover { color: var(--cn-ink); }
+.cn-rail-all:focus-visible { outline: 2px solid var(--cn-ink); outline-offset: 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-rail-bar > span { transition: none; }
+}
+
+/* ---------- guide: the loop ----------
+   Drawn in the brand's colour (--cn-brand, set by the layout) and ink where
+   there is none. The colour is the circles and the line and nothing else; every
+   word is ink, so a pale or a clashing brand colour cannot make the text hard
+   to read. */
+
+.cn-loop { container-type: inline-size; gap: 12px; --loop: var(--cn-brand, var(--cn-ink)); }
+
+.cn-loop-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  position: relative;
+}
+
+.cn-loop-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  grid-template-areas: "dot k" "dot n" "dot t";
+  column-gap: 14px;
+  row-gap: 2px;
+  align-items: start;
+  animation: cn-rise 320ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+  animation-delay: calc(var(--i) * 140ms + 120ms);
+}
+
+.cn-loop-dot {
+  grid-area: dot;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 2px solid var(--loop);
+  color: var(--loop);
+  background: color-mix(in srgb, var(--loop) 12%, var(--cn-surface));
+  position: relative;
+  z-index: 1;
+  animation: cn-pop 360ms cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+  animation-delay: calc(var(--i) * 140ms + 120ms);
+}
+
+.cn-loop-k {
+  grid-area: k;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cn-ink-3);
+  padding-top: 6px;
+}
+
+.cn-loop-step .cn-fig-name { grid-area: n; }
+.cn-loop-step .cn-fig-body { grid-area: t; }
+
+/* Stacked: a line down the left behind the circles, joining each to the next. */
+.cn-loop-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 31px;
+  top: 64px;
+  bottom: -18px;
+  width: 2px;
+  background: color-mix(in srgb, var(--loop) 45%, transparent);
+  transform-origin: top;
+  animation: cn-line-down 320ms ease-out backwards;
+  animation-delay: calc(var(--i) * 140ms + 300ms);
+}
+
+@keyframes cn-line-down { from { transform: scaleY(0); } to { transform: none; } }
+@keyframes cn-line-across { from { transform: scaleX(0); } to { transform: none; } }
+
+.cn-loop-back { display: none; }
+
+/* Wide: four across, a line through the circles, and the way back underneath. */
+@container (min-width: 520px) {
+  .cn-loop-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; }
+
+  .cn-loop-step {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "dot" "k" "n" "t";
+    justify-items: center;
+    text-align: center;
+    row-gap: 6px;
+    padding: 0 10px;
+  }
+
+  .cn-loop-k { padding-top: 8px; }
+
+  /* Circle centre to circle centre: each step draws the line to the next one. */
+  .cn-loop-step:not(:last-child)::after {
+    left: 50%;
+    right: -50%;
+    top: 31px;
+    bottom: auto;
+    width: auto;
+    height: 2px;
+    transform-origin: left;
+    animation-name: cn-line-across;
+  }
+
+  .cn-loop-back {
+    display: block;
+    position: relative;
+    height: 34px;
+    margin: -4px 0 0;
+    color: color-mix(in srgb, var(--loop) 60%, transparent);
+    animation: cn-fade-in 400ms ease-out 700ms backwards;
+  }
+
+  /* From under the fourth circle back to under the first: the middle half of
+     the width, between the centres of the outer two columns. */
+  .cn-loop-back svg { position: absolute; left: 12.5%; width: 75%; height: 100%; overflow: visible; }
+
+  .cn-loop-back-t {
+    position: absolute;
+    left: 50%;
+    top: 14px;
+    transform: translateX(-50%);
+    padding: 0 10px;
+    background: var(--cn-surface);
+    font-size: 12px;
+    color: var(--cn-ink-3);
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-loop-step,
+  .cn-loop-dot,
+  .cn-loop-step::after,
+  .cn-loop-back { animation: none; }
 }

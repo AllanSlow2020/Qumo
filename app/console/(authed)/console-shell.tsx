@@ -25,10 +25,13 @@ import { NavPendingContext } from "./nav-pending";
  * till, on whatever phone they have - has no drawer anywhere in it.
  */
 export function ConsoleShell({
+  brandColour,
   side,
   controls,
   children,
 }: {
+  /** A validated #rrggbb, or null. Set as --cn-brand for the few places that use it. */
+  brandColour?: string | null;
   side: React.ReactNode;
   controls: React.ReactNode;
   children: React.ReactNode;
@@ -102,7 +105,12 @@ export function ConsoleShell({
 
   return (
     <NavPendingContext.Provider value={pending}>
-    <div className="cn-shell" data-open={open ? "" : undefined} onClickCapture={onClickCapture}>
+    <div
+      className="cn-shell"
+      data-open={open ? "" : undefined}
+      onClickCapture={onClickCapture}
+      style={brandColour ? ({ "--cn-brand": brandColour } as React.CSSProperties) : undefined}
+    >
       {/* Hidden from assistive tech on purpose: it repeats what the
           navigation itself announces, and the page announces when it lands.
           Keyed by destination so a second click restarts it. */}

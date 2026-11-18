@@ -76,54 +76,6 @@ export function Slip() {
   );
 }
 
-/**
- * The loop, which is the business case in one picture.
- *
- * Drawn as a cycle rather than the four-step strip further down, because
- * these are different claims. The strip is one customer's path through one
- * scan; this is why a brand would want any of it - the fourth arrow is the
- * whole product, and a line of boxes would end at "they earned something"
- * and stop making the argument.
- */
-export function TheLoop() {
-  const stages = [
-    { n: "They buy something", d: "Which they were going to do anyway." },
-    { n: "A code proves it", d: "Under the label, or on the receipt." },
-    { n: "They earn with you", d: "Not with a scheme, not with a bank." },
-    { n: "They come back", d: "Because the thing they earned is only good here." },
-  ];
-  return (
-    <figure className="cn-fig">
-      <ol className="cn-fig-loop">
-        {stages.map((s, i) => (
-          <li key={s.n} className="cn-fig-loop-step">
-            <span className="cn-fig-loop-dot" aria-hidden="true" />
-            <p className="cn-fig-name">{s.n}</p>
-            <p className="cn-fig-body">{s.d}</p>
-            {i === stages.length - 1 && (
-              <span className="cn-fig-loop-back" aria-hidden="true">
-                <svg viewBox="0 0 24 12" {...{ fill: "none" }}>
-                  <path
-                    d="M22 2v4a4 4 0 0 1-4 4H2m0 0 3-3M2 10l3 3"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-            )}
-          </li>
-        ))}
-      </ol>
-      <figcaption className="cn-fig-cap">
-        Closed-loop on purpose: what they earn is only good with you, which is the difference between a rewards
-        programme and a discount.
-      </figcaption>
-    </figure>
-  );
-}
-
 /** The three award shapes, and the one thing each needs. */
 export function AwardShapes() {
   const shapes = [

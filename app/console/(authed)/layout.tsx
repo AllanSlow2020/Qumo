@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/client";
 import { getStaffSession } from "@/lib/staff/session";
 import { secondFactorOutstanding } from "@/lib/staff/current";
 import { getTheme } from "@/lib/theme";
+import { safeColor } from "@/lib/brand/theme";
 import { signOut } from "./actions";
 import { ConsoleNav } from "./console-nav";
 import { ConsoleShell } from "./console-shell";
@@ -37,7 +38,7 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
     // yet", which decides whether there is anywhere to navigate to - see
     // the nav below. Selected here rather than in a second query because
     // this one is already being made.
-    select: { name: true, accentColor: true },
+    select: { name: true, accentColor: true, accentColorDark: true },
   });
 
   /**
@@ -62,8 +63,19 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
   // root layout, which is above both.
   const theme = await getTheme();
 
+  /*
+   * The brand's own colour, for the one or two places the console uses it as
+   * decoration (the loop diagram on How it works). Validated here, as a six
+   * digit hex or nothing, because it lands in a style attribute; and the dark
+   * pair when the console is dark, which is the same choice the shopper's
+   * screens make. Null until the brand has chosen one, and the CSS falls back
+   * to ink.
+   */
+  const brandColour = safeColor(theme === "dark" ? (brand?.accentColorDark ?? brand?.accentColor) : brand?.accentColor);
+
   return (
     <ConsoleShell
+      brandColour={brandColour}
       side={
         <>
           <Link href="/" className="cn-mark" style={{ textDecoration: "none" }}>
