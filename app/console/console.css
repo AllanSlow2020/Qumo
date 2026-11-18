@@ -1181,6 +1181,13 @@ html[data-theme="dark"]:has(.cn) body {
    bottom-right, the way it is read - and stop short of anything that would
    still be moving by the time somebody reaches for it.
 
+   That last part is a budget, and it was overspent. Every panel replays its
+   entrance on every page change, so what looks considered once a session is
+   what you wait through forty times a day. Measured on a real navigation,
+   the page took 560 to 750ms to stop moving after the content had already
+   arrived. The whole arrival now fits in about 300ms: a short fade with a
+   5px rise, and the last panel starting 100ms after the first.
+
    Everything here is decoration over content that is already correct in the
    HTML. A browser that ignores all of it shows the finished page, which is
    the only acceptable failure mode for a dashboard.
@@ -1191,7 +1198,7 @@ html[data-theme="dark"]:has(.cn) body {
 @keyframes cn-rise {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(5px);
   }
   to {
     opacity: 1;
@@ -1217,29 +1224,29 @@ html[data-theme="dark"]:has(.cn) body {
    * `backwards` hands the element back to the normal cascade the moment it
    * finishes, and since the `to` keyframe is the element's resting state
    * anyway, nothing moves when it does. */
-  animation: cn-rise 420ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+  animation: cn-rise 220ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
 }
 
 /* Staggered by position, not by JavaScript. Eight is where it stops: a
    ninth card arriving two thirds of a second after the first is no longer
    an entrance, it is a wait. */
 .cn-metric:nth-child(2),
-.cn-main > .cn-panel:nth-child(2) { animation-delay: 40ms; }
+.cn-main > .cn-panel:nth-child(2) { animation-delay: 20ms; }
 .cn-metric:nth-child(3),
-.cn-main > .cn-panel:nth-child(3) { animation-delay: 80ms; }
+.cn-main > .cn-panel:nth-child(3) { animation-delay: 40ms; }
 .cn-metric:nth-child(4),
-.cn-main > .cn-panel:nth-child(4) { animation-delay: 120ms; }
+.cn-main > .cn-panel:nth-child(4) { animation-delay: 60ms; }
 .cn-metric:nth-child(5),
-.cn-main > .cn-panel:nth-child(5) { animation-delay: 160ms; }
+.cn-main > .cn-panel:nth-child(5) { animation-delay: 80ms; }
 .cn-metric:nth-child(n + 6),
-.cn-main > .cn-panel:nth-child(n + 6) { animation-delay: 200ms; }
+.cn-main > .cn-panel:nth-child(n + 6) { animation-delay: 100ms; }
 
 .cn-split-main > .cn-panel:nth-child(2),
-.cn-promo-grid > .cn-panel:nth-child(2) { animation-delay: 60ms; }
+.cn-promo-grid > .cn-panel:nth-child(2) { animation-delay: 30ms; }
 .cn-split-main > .cn-panel:nth-child(3),
-.cn-promo-grid > .cn-panel:nth-child(3) { animation-delay: 120ms; }
+.cn-promo-grid > .cn-panel:nth-child(3) { animation-delay: 60ms; }
 .cn-split-main > .cn-panel:nth-child(n + 4),
-.cn-promo-grid > .cn-panel:nth-child(n + 4) { animation-delay: 180ms; }
+.cn-promo-grid > .cn-panel:nth-child(n + 4) { animation-delay: 90ms; }
 
 /* The rail is the one panel that also arrives mid-session: clicking Edit
    swaps what is in it, the new panel is a new element, and the same rule
@@ -1247,18 +1254,18 @@ html[data-theme="dark"]:has(.cn) body {
    that reads as considered on page load reads as lag when it is the
    response to a click. */
 .cn-split-side > .cn-panel {
-  animation-duration: 240ms;
+  animation-duration: 180ms;
   animation-delay: 0ms;
 }
 
 /* A step in the getting-started list, in reading order and faster than the
    panels, because six of them at panel speed is a queue. */
-.cn-step { animation: cn-rise 300ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
-.cn-step:nth-child(2) { animation-delay: 45ms; }
-.cn-step:nth-child(3) { animation-delay: 90ms; }
-.cn-step:nth-child(4) { animation-delay: 135ms; }
-.cn-step:nth-child(5) { animation-delay: 180ms; }
-.cn-step:nth-child(n + 6) { animation-delay: 225ms; }
+.cn-step { animation: cn-rise 220ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+.cn-step:nth-child(2) { animation-delay: 25ms; }
+.cn-step:nth-child(3) { animation-delay: 50ms; }
+.cn-step:nth-child(4) { animation-delay: 75ms; }
+.cn-step:nth-child(5) { animation-delay: 100ms; }
+.cn-step:nth-child(n + 6) { animation-delay: 125ms; }
 
 /* The mark filling when a step is already done. Scale only - a step that
    was done before the page loaded should settle, not announce itself. */
@@ -1274,7 +1281,7 @@ html[data-theme="dark"]:has(.cn) body {
 .cn-spark i,
 .cn-chart i {
   transform-origin: bottom;
-  animation: cn-grow 420ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+  animation: cn-grow 260ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
 }
 
 @keyframes cn-grow {
@@ -1282,12 +1289,12 @@ html[data-theme="dark"]:has(.cn) body {
   to { transform: none; }
 }
 
-.cn-spark i:nth-child(2), .cn-chart i:nth-child(2) { animation-delay: 30ms; }
-.cn-spark i:nth-child(3), .cn-chart i:nth-child(3) { animation-delay: 60ms; }
-.cn-spark i:nth-child(4), .cn-chart i:nth-child(4) { animation-delay: 90ms; }
-.cn-spark i:nth-child(5), .cn-chart i:nth-child(5) { animation-delay: 120ms; }
-.cn-spark i:nth-child(6), .cn-chart i:nth-child(6) { animation-delay: 150ms; }
-.cn-spark i:nth-child(n + 7), .cn-chart i:nth-child(n + 7) { animation-delay: 180ms; }
+.cn-spark i:nth-child(2), .cn-chart i:nth-child(2) { animation-delay: 15ms; }
+.cn-spark i:nth-child(3), .cn-chart i:nth-child(3) { animation-delay: 30ms; }
+.cn-spark i:nth-child(4), .cn-chart i:nth-child(4) { animation-delay: 45ms; }
+.cn-spark i:nth-child(5), .cn-chart i:nth-child(5) { animation-delay: 60ms; }
+.cn-spark i:nth-child(6), .cn-chart i:nth-child(6) { animation-delay: 75ms; }
+.cn-spark i:nth-child(n + 7), .cn-chart i:nth-child(n + 7) { animation-delay: 90ms; }
 
 /* ---------- hover ----------
    Only where there is a pointer that can hover. On a touch screen :hover
@@ -3511,4 +3518,52 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   .cn-stamp { transition: none; }
   .cn-stampcard-badge,
   .cn-stamp[data-on="true"] { animation: none; }
+}
+
+/* ---------- going somewhere ----------
+   What the console shows between a click and the next page: a bar across the
+   top, once the wait is long enough to be a wait. A navigation that answers in
+   under a quarter of a second should look like nothing happened except that
+   the page changed, and an indicator that flashes for 80ms is the flicker
+   people mean by clunky.
+
+   There is no loading skeleton, and that is a decision, not an omission. One
+   was built (a loading.tsx under the gated routes, faded in after 180ms) and
+   measured: every page change got slower by about 250ms, fast ones included.
+   React holds the real content back for roughly 300ms after a Suspense
+   fallback has been shown, so a page that answered in 50ms was delayed to
+   320ms to be kind to the skeleton. The highlight that moves on the click and
+   this bar give the same assurance without costing the fast case anything. */
+
+@keyframes cn-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cn-progress {
+  from { transform: scaleX(0.04); }
+  to { transform: scaleX(0.92); }
+}
+
+/* Ink, not the accent: the accent is the one filled control on a screen, and
+   this is a status. It rushes out and then crawls, so it never reaches the end
+   before the page does, and it is simply removed when the page lands. */
+.cn-progress {
+  position: fixed;
+  z-index: 60;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--cn-ink);
+  transform-origin: left;
+  pointer-events: none;
+  animation:
+    cn-progress 10s cubic-bezier(0.05, 0.6, 0.2, 1) forwards,
+    cn-fade-in 140ms ease-out 150ms backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Still shown, still late: it is information. It just does not sweep. */
+  .cn-progress { animation: cn-fade-in 140ms ease-out 150ms backwards; transform: scaleX(0.6); }
 }

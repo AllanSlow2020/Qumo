@@ -5,10 +5,11 @@ import { prisma } from "@/lib/db/client";
 import { getStaffSession } from "@/lib/staff/session";
 import { secondFactorOutstanding } from "@/lib/staff/current";
 import { getTheme } from "@/lib/theme";
-import { toggleTheme } from "@/app/theme-actions";
 import { signOut } from "./actions";
 import { ConsoleNav } from "./console-nav";
 import { ConsoleShell } from "./console-shell";
+import { SignOutButton } from "./sign-out-button";
+import { ThemeToggle } from "./theme-toggle";
 import { QumoMark } from "../qumo-mark";
 
 /**
@@ -85,18 +86,9 @@ export default async function AuthedConsoleLayout({ children }: { children: Reac
       }
       controls={
         <>
-          <form action={toggleTheme}>
-            <button type="submit" className="cn-theme">
-              {/* Unset means light, so an unset preference is offered dark.
-                  Reading the other way round labelled a light console
-                  "Light", which is the state it is already in. */}
-              {theme === "dark" ? "Light" : "Dark"}
-            </button>
-          </form>
+          <ThemeToggle theme={theme} />
           <form action={signOut}>
-            <button type="submit" className="cn-btn cn-btn-quiet">
-              Sign out
-            </button>
+            <SignOutButton />
           </form>
         </>
       }

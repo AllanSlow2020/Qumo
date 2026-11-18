@@ -175,11 +175,24 @@ export async function getPerformance(
    */
   const window = { gte: from, lt: now };
 
-  // The window immediately before this one, measured the same way. Run
-  // first so the two are computed against the same clock: taking `now`
+  // The window immediately before this one, measured the same way.
+  //
+  // The two are computed against the same clock because the previous window
+  // is handed `from` as its `now`, not because it runs first: taking `now`
   // twice a few hundred milliseconds apart is how a comparison quietly
-  // develops a gap or an overlap.
-  const previous = withComparison ? await getPerformance(brandId, days, from, false) : undefined;
+  // develops a gap or an overlap, and passing it in is what rules that out.
+  //
+  // It used to be awaited here, ahead of the main queries, which ran the two
+  // windows back to back for no reason the clock needed. That is a second
+  // full set of round trips in series, and on a database a few milliseconds
+  // away it was invisible while on a remote one it roughly doubled how long
+  // this page took. Started now and awaited after the main queries, the two
+  // run together.
+  const previousPending = withComparison ? getPerformance(brandId, days, from, false) : undefined;
+  // Awaited at the end, where its failure still surfaces. This only marks it
+  // handled meanwhile: if the main queries throw first, nothing is left
+  // listening and a rejection would be reported as unhandled.
+  previousPending?.catch(() => undefined);
 
   const [
     issuedRows,
@@ -377,7 +390,7 @@ export async function getPerformance(
       .sort((a, b) => a.day.getTime() - b.day.getTime()),
     byStore,
     byCampaign,
-    previous,
+    previous: await previousPending,
   };
 }
 
