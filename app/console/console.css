@@ -1515,42 +1515,6 @@ html[data-theme="dark"]:has(.cn) body {
   max-width: 62ch;
 }
 
-/* ---- the journey ---- */
-
-.cn-fig-steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
-  counter-reset: none;
-}
-
-.cn-fig-step {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  padding: 14px;
-  border: 1px solid var(--cn-line);
-  border-radius: var(--cn-radius-inner);
-  background: var(--cn-raised);
-}
-
-/* The number is the only thing here that says these are ordered, so it is
-   drawn rather than implied by position - the grid reflows to one column on
-   a phone and "left to right" stops meaning anything. */
-.cn-fig-num {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--cn-accent);
-  font-variant-numeric: tabular-nums;
-}
-
 /* ---- the loop ---- */
 
 /* Four stages that come back round. The return is drawn, because it is the
@@ -3566,4 +3530,232 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 @media (prefers-reduced-motion: reduce) {
   /* Still shown, still late: it is information. It just does not sweep. */
   .cn-progress { animation: cn-fade-in 140ms ease-out 150ms backwards; transform: scaleX(0.6); }
+}
+
+/* ---------- guide: the customer's phone ----------
+   A picture of the shopper surface, so it carries the shopper's own colours
+   (--ph-*) rather than borrowing the console's: it is always the light theme,
+   whatever the console is set to, because it is a different product's screen.
+   The accent arrives per brand and goes on the button and the stamps only.
+   Money is ink, which is the rule on the real surface and the point of
+   showing a brand a red one.
+
+   Every phone rule is written under `.ph`. The tour sits inside the guide's
+   prose, and `.cn-prose p` is more specific than a bare class, so without the
+   prefix the phone's labels and figures quietly took the page's paragraph
+   size and a 30px figure rendered at 14px. */
+
+.cn-tour { gap: 14px; container-type: inline-size; }
+
+.cn-tour-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "picker" "phone" "steps";
+  gap: 18px;
+}
+
+.cn-tour-picker { grid-area: picker; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.cn-tour-phone { grid-area: phone; display: flex; justify-content: center; }
+.cn-tour-steps { grid-area: steps; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+@container (min-width: 560px) {
+  .cn-tour-grid {
+    grid-template-columns: minmax(0, 1fr) 296px;
+    grid-template-areas: "picker phone" "steps phone";
+    align-items: start;
+    gap: 18px 24px;
+  }
+  .cn-tour-phone { position: sticky; top: 16px; }
+}
+
+.cn-swatch { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; flex: none; }
+
+.cn-tour-steplist { display: flex; flex-direction: column; border: 1px solid var(--cn-line); border-radius: var(--cn-radius-inner); overflow: hidden; }
+
+.cn-tour-step {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--cn-raised);
+  border-bottom: 1px solid var(--cn-line-soft);
+  cursor: pointer;
+  transition: background-color 160ms, box-shadow 160ms;
+}
+
+.cn-tour-step:last-child { border-bottom: 0; }
+.cn-tour-step:hover { background: var(--cn-quiet); }
+.cn-tour-step input { position: absolute; opacity: 0; pointer-events: none; }
+.cn-tour-step:has(input:focus-visible) { outline: 2px solid var(--cn-ink); outline-offset: -2px; }
+
+/* Ink, not the accent: this is a selection, and the accent is spoken for. */
+.cn-tour-step[data-on="true"] { background: var(--cn-surface); box-shadow: inset 3px 0 0 var(--cn-ink); }
+
+.cn-tour-n {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--cn-quiet);
+  color: var(--cn-ink-2);
+  transition: background-color 160ms, color 160ms;
+}
+
+.cn-tour-step[data-on="true"] .cn-tour-n { background: var(--cn-ink); color: var(--cn-surface); }
+
+.cn-tour-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cn-tour-title { font-size: 14px; font-weight: 600; color: var(--cn-ink); }
+.cn-tour-text { font-size: 13px; line-height: 1.45; color: var(--cn-ink-2); }
+
+.ph {
+  --ph-bg: #ffffff;
+  --ph-raised: #fafaf9;
+  --ph-ink: #0a0a0a;
+  --ph-ink-2: #52525b;
+  --ph-ink-3: #8a8a90;
+  --ph-line: #d9d9d4;
+  --ph-line-soft: #efefec;
+  --ph-stamp-off: #c9c9c4;
+  width: min(100%, 300px);
+  aspect-ratio: 300 / 632;
+  padding: 9px;
+  border-radius: 36px;
+  background: #0a0a0a;
+  box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* The phone's text takes the phone's colour. Without this a paragraph with no
+   colour of its own inherits the page's, and on a dark console the reward code
+   came out pale grey on a white screen. */
+.ph p,
+.ph h1,
+.ph h2 { margin: 0; color: var(--ph-ink); }
+
+.ph .ph-screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 28px;
+  overflow: hidden;
+  background: var(--ph-bg);
+  color: var(--ph-ink);
+  font-family: var(--qf-instrument-sans), system-ui, sans-serif;
+  word-spacing: 0.05em;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ph .ph-body-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px 18px 12px;
+  overflow: hidden;
+  animation: cn-rise 220ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+.ph .ph-mark { font-family: var(--ph-display); font-size: 21px; font-weight: 700; line-height: 1; letter-spacing: 0; word-spacing: 0.06em; }
+.ph .ph-mark-sub { font-size: 11.5px; color: var(--ph-ink-3); margin-top: 4px; }
+
+.ph .ph-h1 { margin: 0; font-family: var(--ph-display); font-size: 22px; font-weight: 700; line-height: 1.12; text-wrap: balance; }
+.ph .ph-h2 { margin: 0; font-family: var(--ph-display); font-size: 15px; font-weight: 600; line-height: 1.25; }
+.ph .ph-body { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--ph-ink-2); }
+.ph .ph-body strong { color: var(--ph-ink); font-weight: 600; }
+.ph .ph-label { margin: 0; font-size: 11px; font-weight: 500; line-height: 1.35; color: var(--ph-ink-3); }
+
+.ph .ph-figure {
+  margin: 0;
+  font-family: var(--qf-martian-mono), ui-monospace, monospace;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  line-height: 1.02;
+  font-variant-numeric: tabular-nums;
+  color: var(--ph-ink);
+}
+
+.ph .ph-unit { font-family: var(--ph-display); font-size: 0.42em; font-weight: 500; letter-spacing: 0; color: var(--ph-ink-2); }
+
+.ph .ph-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid var(--ph-line-soft);
+  border-radius: 2px;
+  background: var(--ph-raised);
+}
+
+.ph .ph-field { display: flex; flex-direction: column; gap: 5px; }
+
+.ph .ph-input {
+  display: block;
+  padding: 9px 10px;
+  border: 1px solid var(--ph-line);
+  border-radius: 2px;
+  font-size: 14px;
+  color: var(--ph-ink);
+}
+
+.ph .ph-input-mono { font-family: var(--qf-martian-mono), ui-monospace, monospace; letter-spacing: 0.22em; font-size: 13px; }
+
+.ph .ph-check { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 10.5px; line-height: 1.35; color: var(--ph-ink-3); }
+.ph .ph-box { flex: none; width: 13px; height: 13px; margin-top: 1px; border: 1.5px solid var(--ph-ink-3); border-radius: 2px; }
+
+.ph .ph-consent {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* The brand's colour, on the button and the stamps and nowhere else. It
+   eases when a different brand is picked rather than snapping. */
+.ph .ph-btn {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 2px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--ph-accent);
+  color: var(--ph-accent-ink);
+  transition: background-color 240ms, color 240ms;
+}
+
+.ph .ph-btn-quiet { background: transparent; color: var(--ph-ink-2); border: 1px solid var(--ph-line); font-weight: 500; }
+
+.ph .ph-ldr { display: flex; align-items: baseline; gap: 8px; margin: 2px 0; font-size: 11.5px; }
+.ph .ph-ldr > span:first-child { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--ph-ink-3); }
+.ph .ph-ldr > span:last-child { flex: none; font-family: var(--qf-martian-mono), ui-monospace, monospace; font-size: 11px; font-variant-numeric: tabular-nums; }
+
+.ph .ph-code { margin: 0; font-family: var(--qf-martian-mono), ui-monospace, monospace; font-size: 16px; font-weight: 600; letter-spacing: 0.02em; }
+
+.ph .ph-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.ph .ph-count { font-family: var(--qf-martian-mono), ui-monospace, monospace; font-size: 11.5px; color: var(--ph-ink-3); }
+
+.ph .ph-stamps { display: grid; gap: 7px; margin: 4px 0 2px; }
+.ph .ph-stamp { aspect-ratio: 1; border-radius: 999px; border: 1.5px dashed var(--ph-stamp-off); }
+.ph .ph-stamp-on { border: 1.5px solid var(--ph-accent); background: var(--ph-accent); transition: background-color 240ms, border-color 240ms; animation: cn-pop 320ms cubic-bezier(0.34, 1.4, 0.64, 1) backwards; }
+.ph .ph-stamp-on:nth-child(2) { animation-delay: 35ms; }
+.ph .ph-stamp-on:nth-child(3) { animation-delay: 70ms; }
+.ph .ph-stamp-on:nth-child(4) { animation-delay: 105ms; }
+.ph .ph-stamp-on:nth-child(n + 5) { animation-delay: 140ms; }
+
+.ph .ph-foot { flex: none; padding: 8px 16px 14px; border-top: 1px solid var(--ph-line-soft); font-size: 10px; line-height: 1.4; color: var(--ph-ink-3); text-align: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-tour-step,
+  .cn-tour-n,
+  .ph .ph-btn,
+  .ph .ph-stamp-on { transition: none; }
+  .ph .ph-body-wrap,
+  .ph .ph-stamp-on { animation: none; }
 }

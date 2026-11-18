@@ -3,9 +3,10 @@ import { BUDGET_NEAR } from "@/lib/console/observations";
 import { HONOUR_WINDOW_DAYS } from "@/lib/subscriptions/state";
 import { REDEMPTION_AVAILABLE } from "@/lib/wallet/availability";
 import { PRODUCT_NAME } from "@/lib/product";
-import { AwardShapes, HonourWindow, ScanJourney, TheLoop } from "./figures";
+import { AwardShapes, HonourWindow, TheLoop } from "./figures";
 import { CodeLadder } from "./code-ladder";
 import { CostCalculator } from "./cost-calculator";
+import { CustomerView } from "./customer-view";
 import { StampCardPlayground } from "./stamp-card";
 import { StartHere } from "./start-here";
 
@@ -232,7 +233,7 @@ export default function ConsoleGuidePage() {
           </Section>
 
           <Section id="shopper" title="What your customer sees">
-            <ScanJourney />
+            <CustomerView />
             <p>
               Your name at the top, your colour on the button. Not ours - {PRODUCT_NAME} appears
               once, in small type at the bottom, saying who runs the thing. Set yours under{" "}
