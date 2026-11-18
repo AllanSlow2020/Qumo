@@ -18,8 +18,12 @@ import type { CSSProperties } from "react";
  * ink. A brand with no colour set yet gets ink here, not a placeholder.
  *
  * It arrives with a short sequence, the line drawing across and each step
- * landing after the one before. That plays once, when the page does, and
- * reduced motion shows the finished diagram.
+ * landing after the one before, and the whole of it is over in about 700ms.
+ * That number is a budget. A first version took 1.2 seconds, which is a
+ * second of the page still moving every time the guide was opened, measured
+ * on a real navigation, and the rest of the console had just been brought down
+ * to about a third of a second for the same reason. It plays once, when the
+ * page does, and reduced motion shows the finished diagram.
  */
 
 const STAGES: { name: string; text: string; icon: React.ReactNode }[] = [
