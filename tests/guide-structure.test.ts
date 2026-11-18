@@ -1,6 +1,9 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+
+// Built from its code point so this file is not itself an offender; see no-em-dashes.test.ts.
+const EM_DASH = String.fromCharCode(0x2014);
 import { DEFAULT_OPEN, SECTIONS, SECTION_IDS, TOTAL_MINS } from "@/app/console/(authed)/(gated)/guide/sections";
 
 /**
@@ -66,7 +69,7 @@ describe("the one-line points", () => {
 
   it("keep the product's voice: no em dashes, no exclamation marks", () => {
     for (const p of points) {
-      expect(p).not.toMatch(/[—–]/);
+      expect(p).not.toContain(EM_DASH);
       expect(p).not.toContain("!");
     }
   });

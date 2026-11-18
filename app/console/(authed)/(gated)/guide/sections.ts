@@ -29,6 +29,7 @@ export const SECTIONS: readonly GuideSection[] = [
   { id: "cards", title: "Stamp cards", mins: 3 },
   { id: "cost", title: "What it can cost you", mins: 3 },
   { id: "shopper", title: "What your customer sees", mins: 2 },
+  { id: "examples", title: "Three worked examples", mins: 2 },
   { id: "ending", title: "Pausing and ending", mins: 1 },
 ];
 

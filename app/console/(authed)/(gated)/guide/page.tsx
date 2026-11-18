@@ -12,6 +12,7 @@ import { GuideProvider } from "./guide-state";
 import { LoopDiagram } from "./loop";
 import { ReadingRail } from "./reading-rail";
 import { StampCardPlayground } from "./stamp-card";
+import { WorkedExamples } from "./worked-examples";
 import { StartHere } from "./start-here";
 
 /**
@@ -227,6 +228,14 @@ export default function ConsoleGuidePage() {
                 </>
               )}
             </p>
+          </FoldSection>
+
+          <FoldSection id="examples" point="Pick the one nearest your business and see what you would set.">
+            <p>
+              Three small businesses, each running one promotion. The facts come in the same order every time, so you
+              can read across.
+            </p>
+            <WorkedExamples />
           </FoldSection>
 
           <FoldSection id="ending" point={`Ending a programme gives customers ${HONOUR_WINDOW_DAYS} days to use what they earned.`}>
