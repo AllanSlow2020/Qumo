@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { NavPendingContext } from "./nav-pending";
 
 /**
  * The console's frame, and the drawer the side column becomes on a phone.
@@ -23,10 +25,13 @@ import { useEffect, useRef, useState } from "react";
  * till, on whatever phone they have - has no drawer anywhere in it.
  */
 export function ConsoleShell({
+  brandColour,
   side,
   controls,
   children,
 }: {
+  /** A validated #rrggbb, or null. Set as --cn-brand for the few places that use it. */
+  brandColour?: string | null;
   side: React.ReactNode;
   controls: React.ReactNode;
   children: React.ReactNode;
@@ -34,6 +39,42 @@ export function ConsoleShell({
   const [open, setOpen] = useState(false);
   const panel = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+
+  /*
+   * Where the last click was headed, and where the console was when it was
+   * clicked. The second half is what clears it: once the pathname is no
+   * longer the one the click started from, the navigation has landed (or
+   * been redirected somewhere else) and there is nothing pending, with no
+   * effect needed to notice. See nav-pending.tsx for why this exists.
+   */
+  const pathname = usePathname();
+  const [target, setTarget] = useState<{ href: string; from: string } | null>(null);
+  const pending = target && target.from === pathname && target.href !== pathname ? target.href : null;
+
+  /*
+   * Caught on the container, once, rather than on each link. Every link in
+   * the console is covered this way - the sidebar, the buttons on the
+   * overview that lead somewhere, the links in a sentence - without a client
+   * wrapper around each of them, and the navigation is server-rendered and
+   * passed in, so there is nowhere else to hang a handler.
+   *
+   * Plain left clicks only. A modified click opens a tab and a download or
+   * `_blank` link leaves the page: none of them is this page going anywhere.
+   * Same-path links (an anchor, a changed filter) are left out because the
+   * pathname would never change to clear them.
+   */
+  function onClickCapture(e: React.MouseEvent) {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = (e.target as HTMLElement).closest("a");
+    if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
+    const url = new URL(a.href, window.location.href);
+    if (url.origin !== window.location.origin || url.pathname === pathname) return;
+    const next = { href: url.pathname, from: pathname };
+    setTarget(next);
+    // A navigation that never lands (offline, an error) must not leave the
+    // bar crawling for ever.
+    window.setTimeout(() => setTarget((t) => (t === next ? null : t)), 15_000);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -63,7 +104,18 @@ export function ConsoleShell({
   }, [open]);
 
   return (
-    <div className="cn-shell" data-open={open ? "" : undefined}>
+    <NavPendingContext.Provider value={pending}>
+    <div
+      className="cn-shell"
+      data-open={open ? "" : undefined}
+      onClickCapture={onClickCapture}
+      style={brandColour ? ({ "--cn-brand": brandColour } as React.CSSProperties) : undefined}
+    >
+      {/* Hidden from assistive tech on purpose: it repeats what the
+          navigation itself announces, and the page announces when it lands.
+          Keyed by destination so a second click restarts it. */}
+      {pending && <div key={pending} className="cn-progress" aria-hidden="true" />}
+
       {/* Rendered only when open, not hidden when closed.
           `hidden` is an attribute and `display` is a declaration, so the
           media query that gives this a display value beats it: with
@@ -115,8 +167,11 @@ export function ConsoleShell({
           </button>
           {controls}
         </header>
-        <main className="cn-main">{children}</main>
+        <main className="cn-main" aria-busy={pending ? true : undefined}>
+          {children}
+        </main>
       </div>
     </div>
+    </NavPendingContext.Provider>
   );
 }

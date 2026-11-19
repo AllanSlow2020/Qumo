@@ -3,10 +3,16 @@ import { BUDGET_NEAR } from "@/lib/console/observations";
 import { HONOUR_WINDOW_DAYS } from "@/lib/subscriptions/state";
 import { REDEMPTION_AVAILABLE } from "@/lib/wallet/availability";
 import { PRODUCT_NAME } from "@/lib/product";
-import { AwardShapes, HonourWindow, ScanJourney, TheLoop } from "./figures";
+import { AwardShapes, HonourWindow } from "./figures";
 import { CodeLadder } from "./code-ladder";
 import { CostCalculator } from "./cost-calculator";
+import { CustomerView } from "./customer-view";
+import { FoldSection } from "./fold-section";
+import { GuideProvider } from "./guide-state";
+import { LoopDiagram } from "./loop";
+import { ReadingRail } from "./reading-rail";
 import { StampCardPlayground } from "./stamp-card";
+import { WorkedExamples } from "./worked-examples";
 import { StartHere } from "./start-here";
 
 /**
@@ -32,42 +38,6 @@ import { StartHere } from "./start-here";
 
 export const metadata = { title: "How it works" };
 
-/**
- * The contents, and the order of the page.
- *
- * One list rather than two. A hand-maintained contents beside hand-written
- * sections is two things that drift, and the one that drifts is the one
- * nobody is looking at.
- */
-const CONTENTS = [
-  { id: "what", title: "What Qumo actually does" },
-  { id: "codes", title: "The three kinds of code" },
-  { id: "awards", title: "What a promotion can award" },
-  { id: "cards", title: "Stamp cards" },
-  { id: "cost", title: "What it can cost you" },
-  { id: "shopper", title: "What your customer sees" },
-  { id: "ending", title: "Pausing and ending" },
-] as const;
-
-function Section({
-  id,
-  title,
-  children,
-}: {
-  id: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="cn-panel" id={id}>
-      <div className="cn-panel-head">
-        <h2 className="cn-h2">{title}</h2>
-      </div>
-      <div className="cn-panel-body cn-prose">{children}</div>
-    </section>
-  );
-}
-
 export default function ConsoleGuidePage() {
   return (
     <>
@@ -77,17 +47,18 @@ export default function ConsoleGuidePage() {
         is the page to read before you decide.
       </p>
 
-      <StartHere />
 
       {/* The same grid the promotions page uses, so the rail is sticky and
           capped to the window without any layout written twice. Below the
           breakpoint it stacks, and the contents land under the reading
           rather than above it - on a phone a list of seven links before a
           word of the thing is a page you have to scroll past to start. */}
+      <GuideProvider>
+      <StartHere />
       <div className="cn-split">
         <div className="cn-split-main">
-          <Section id="what" title="What Qumo actually does">
-            <TheLoop />
+          <FoldSection id="what" point="A code that proves a purchase, scanned by the customer, earns something with you.">
+            <LoopDiagram />
             <p>
               You put a code somewhere a customer can only reach by buying something. They scan it
               with the camera they already have. They earn something with you, and both of you can
@@ -104,9 +75,9 @@ export default function ConsoleGuidePage() {
               poster rewards people for walking past. The rest of this page is mostly about that
               distinction.
             </p>
-          </Section>
+          </FoldSection>
 
-          <Section id="codes" title="The three kinds of code, and why only two of them pay">
+          <FoldSection id="codes" point="Only a pack code or a till slip code can award anything.">
             <p>
               This is the one idea worth getting right, because every other decision follows from
               it.
@@ -146,9 +117,9 @@ export default function ConsoleGuidePage() {
               holds. The signature is what stops a customer typing their own basket value into the
               link. A till that cannot sign is covered below.
             </p>
-          </Section>
+          </FoldSection>
 
-          <Section id="awards" title="What a promotion can award">
+          <FoldSection id="awards" point="Three shapes, and the one you can run depends on what your tills can print.">
             <p>
               Three shapes, set under <Link href="/promotions">Promotions</Link>.
             </p>
@@ -169,9 +140,9 @@ export default function ConsoleGuidePage() {
               <strong>A stamp toward a card.</strong> The same fixed award, with a finish line.
               Covered next.
             </p>
-          </Section>
+          </FoldSection>
 
-          <Section id="cards" title="Stamp cards">
+          <FoldSection id="cards" point="Choosing the number of stamps is the whole decision.">
             <p>
               Buy ten, get the tenth free. You set how many stamps complete a card and what
               completing one earns, and both live in the same form, because a card with no reward
@@ -201,9 +172,9 @@ export default function ConsoleGuidePage() {
               receipt worth two different things. The console refuses the second rather than
               picking one.
             </p>
-          </Section>
+          </FoldSection>
 
-          <Section id="cost" title="What it can cost you, and what bounds it">
+          <FoldSection id="cost" point="The total a promotion may ever issue is the number that matters.">
             <p>
               A promotion issues value. Nothing in the engine limits that except the ceilings you
               set, so those are not housekeeping - they are the answer when somebody asks what this
@@ -229,10 +200,10 @@ export default function ConsoleGuidePage() {
               can write more. The ceilings bound what that costs; they do not close it.{" "}
               <Link href="/stores">Stores</Link> shows which of yours can sign.
             </p>
-          </Section>
+          </FoldSection>
 
-          <Section id="shopper" title="What your customer sees">
-            <ScanJourney />
+          <FoldSection id="shopper" point="Your name at the top and your colour on the button.">
+            <CustomerView />
             <p>
               Your name at the top, your colour on the button. Not ours - {PRODUCT_NAME} appears
               once, in small type at the bottom, saying who runs the thing. Set yours under{" "}
@@ -257,9 +228,17 @@ export default function ConsoleGuidePage() {
                 </>
               )}
             </p>
-          </Section>
+          </FoldSection>
 
-          <Section id="ending" title="Pausing and ending">
+          <FoldSection id="examples" point="Pick the one nearest your business and see what you would set.">
+            <p>
+              Three small businesses, each running one promotion. The facts come in the same order every time, so you
+              can read across.
+            </p>
+            <WorkedExamples />
+          </FoldSection>
+
+          <FoldSection id="ending" point={`Ending a programme gives customers ${HONOUR_WINDOW_DAYS} days to use what they earned.`}>
             <p>
               Pausing a promotion stops it awarding immediately. Nothing already earned is touched,
               and switching it back on resumes where it left off.
@@ -277,29 +256,14 @@ export default function ConsoleGuidePage() {
               would take a customer&apos;s unredeemed reward with it and move your own record of
               what you issued.
             </p>
-          </Section>
+          </FoldSection>
         </div>
 
         <aside className="cn-split-side">
-          <nav className="cn-panel" aria-label="On this page">
-            <div className="cn-panel-head">
-              <h2 className="cn-h2">On this page</h2>
-            </div>
-            <ol className="cn-toc">
-              {CONTENTS.map((c, i) => (
-                <li key={c.id}>
-                  <a href={`#${c.id}`}>
-                    <span className="cn-toc-n" aria-hidden="true">
-                      {i + 1}
-                    </span>
-                    {c.title}
-                  </a>
-                </li>
-              ))}
-            </ol>
-          </nav>
+          <ReadingRail />
         </aside>
       </div>
+      </GuideProvider>
     </>
   );
 }

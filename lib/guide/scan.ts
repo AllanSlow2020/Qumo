@@ -53,7 +53,7 @@ export const ACTIONS: Record<ScanCode, { action: ScanAction; label: string }[]> 
   pack: [{ action: "scan", label: "Scan it" }],
   slip: [
     { action: "scan", label: "Scan it" },
-    { action: "edit", label: "Change the total, then scan" },
+    { action: "edit", label: "Edit the total" },
   ],
 };
 

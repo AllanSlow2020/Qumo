@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Choices, Slider } from "./controls";
+import { Choices, Slider, Steady, Swap } from "./controls";
 import {
   COST_CONTROLS,
   COST_DEFAULTS,
@@ -57,6 +57,26 @@ const BINDING_NAME = {
   none: "",
 } as const;
 
+/*
+ * Every sentence the verdict can be, kept together so the reserved space (see
+ * Steady) is made from the same strings that are shown.
+ */
+const V_NONE = "A scan pays nothing at this basket size, so nothing is earned and nothing is at risk.";
+const V_HIGH = "One person could take a large part of it in a month. Lower the daily limit or the scan limit.";
+const V_LOW = "One person cannot get near it. The total budget, not the daily limit, is the real ceiling.";
+const verdictAll = (days: string) =>
+  `One person could use all of it in ${days} days. Lower the daily limit, the scan limit or the budget.`;
+const VERDICT_GHOSTS = [V_NONE, V_HIGH, V_LOW, verdictAll("99,999")];
+
+/** The longest each other changing line can get, at the widest numbers the sliders reach. */
+const ROUNDING_GHOSTS = [
+  "5% of R400 comes to R20.005. The ledger never pays part of a cent, so it rounds down.",
+  "Exact, with nothing to round.",
+  "The same every time.",
+];
+const PERSON_LINE_GHOST = "R10,000,000 of R10,000,000 at their daily most of R10,000, stopped by Scans per person, per day.";
+const DAYS_GHOST = "To spend the whole budget takes one person 99,999 days, or 99,999 people in a single day.";
+
 /**
  * `budgetNear` is the share of its budget at which the Overview starts saying
  * so (BUDGET_NEAR, in lib/console/observations.ts). It arrives as a prop, from
@@ -75,13 +95,13 @@ export function CostCalculator({ budgetNear }: { budgetNear: number }) {
 
   let verdict: string;
   if (r.awardCents === 0) {
-    verdict = "A scan pays nothing at this basket size, so nothing is earned and nothing is at risk.";
+    verdict = V_NONE;
   } else if (r.exposure === "all") {
-    verdict = `One person could use all of it in ${formatCount(r.personDaysToBudget ?? 0)} days. Lower the daily limit, the scan limit or the budget.`;
+    verdict = verdictAll(formatCount(r.personDaysToBudget ?? 0));
   } else if (r.exposure === "high") {
-    verdict = "One person could take a large part of it in a month. Lower the daily limit or the scan limit.";
+    verdict = V_HIGH;
   } else {
-    verdict = "One person cannot get near it. The total budget, not the daily limit, is the real ceiling.";
+    verdict = V_LOW;
   }
 
   return (
@@ -92,38 +112,40 @@ export function CostCalculator({ budgetNear }: { budgetNear: number }) {
             <p className="cn-fig-name">How a scan pays</p>
             <Choices legend="Award" name="calc-shape" value={v.shape} options={SHAPES} onChange={(shape) => set({ shape })} />
 
-            {!percent ? (
-              <Choices
-                legend="Each scan pays"
-                name="calc-flat"
-                value={v.flatCents}
-                options={COST_CONTROLS.flatChoicesCents.map((c) => ({ value: c, label: formatRand(c) }))}
-                onChange={(flatCents) => set({ flatCents })}
-              />
-            ) : (
-              <>
+            <Swap active={percent ? 1 : 0}>
+              {[
                 <Choices
-                  legend="A share of the basket, in basis points"
-                  name="calc-bps"
-                  value={v.basisPoints}
-                  options={COST_CONTROLS.basisPointChoices.map((b) => ({
-                    value: b,
-                    label: `${formatPercent(b)} (${formatCount(b)} bps)`,
-                  }))}
-                  onChange={(basisPoints) => set({ basisPoints })}
-                />
-                <Slider
-                  id="calc-basket"
-                  label="A typical basket"
-                  min={COST_CONTROLS.basket.minCents}
-                  max={COST_CONTROLS.basket.maxCents}
-                  step={COST_CONTROLS.basket.stepCents}
-                  value={v.basketCents}
-                  shown={formatRand(v.basketCents)}
-                  onChange={(basketCents) => set({ basketCents })}
-                />
-              </>
-            )}
+                  key="flat"
+                  legend="Each scan pays"
+                  name="calc-flat"
+                  value={v.flatCents}
+                  options={COST_CONTROLS.flatChoicesCents.map((c) => ({ value: c, label: formatRand(c) }))}
+                  onChange={(flatCents) => set({ flatCents })}
+                />,
+                <div key="percent" className="cn-swap-group">
+                  <Choices
+                    legend="A share of the basket, in basis points"
+                    name="calc-bps"
+                    value={v.basisPoints}
+                    options={COST_CONTROLS.basisPointChoices.map((b) => ({
+                      value: b,
+                      label: `${formatPercent(b)} (${formatCount(b)} bps)`,
+                    }))}
+                    onChange={(basisPoints) => set({ basisPoints })}
+                  />
+                  <Slider
+                    id="calc-basket"
+                    label="A typical basket"
+                    min={COST_CONTROLS.basket.minCents}
+                    max={COST_CONTROLS.basket.maxCents}
+                    step={COST_CONTROLS.basket.stepCents}
+                    value={v.basketCents}
+                    shown={formatRand(v.basketCents)}
+                    onChange={(basketCents) => set({ basketCents })}
+                  />
+                </div>,
+              ]}
+            </Swap>
           </div>
 
           <div className="cn-calc-group">
@@ -175,13 +197,13 @@ export function CostCalculator({ budgetNear }: { budgetNear: number }) {
             <div className="cn-metric">
               <div className="cn-metric-k">One scan pays</div>
               <div className="cn-metric-v">{formatRand(r.awardCents)}</div>
-              <div className="cn-metric-note">
+              <Steady className="cn-metric-note" ghosts={ROUNDING_GHOSTS}>
                 {rounded && exact !== null
                   ? `${formatPercent(v.basisPoints)} of ${formatRand(v.basketCents)} comes to R${Number((exact / 100).toFixed(4))}. The ledger never pays part of a cent, so it rounds down.`
                   : percent
                     ? "Exact, with nothing to round."
                     : "The same every time."}
-              </div>
+              </Steady>
             </div>
 
             <div className="cn-metric">
@@ -197,22 +219,20 @@ export function CostCalculator({ budgetNear }: { budgetNear: number }) {
               <div className="cn-fig-ceiling-fill" style={{ width: `${Math.max(reach, r.personMonthCents > 0 ? 1.5 : 0)}%` }} />
               <div className="cn-fig-ceiling-cap" />
             </div>
-            <p className="cn-calc-person-line">
+            <Steady className="cn-calc-person-line" ghosts={[PERSON_LINE_GHOST]}>
               <strong>
                 {formatRand(r.personMonthCents)} of {formatRand(v.totalCents)}
               </strong>{" "}
               at their daily most of {formatRand(r.personDailyMaxCents)}
               {r.bindingLimit !== "none" && <>, stopped by {BINDING_NAME[r.bindingLimit]}</>}.
-            </p>
-            <p className="cn-calc-verdict" aria-live="polite">
+            </Steady>
+            <Steady className="cn-calc-verdict" ghosts={VERDICT_GHOSTS} live>
               {verdict}
-            </p>
-            {r.personDaysToBudget !== null && (
-              <p className="cn-calc-hint">
-                To spend the whole budget takes one person {formatCount(r.personDaysToBudget)} days, or{" "}
-                {formatCount(r.personDaysToBudget)} people in a single day.
-              </p>
-            )}
+            </Steady>
+            <Steady className="cn-calc-hint" ghosts={[DAYS_GHOST]}>
+              {r.personDaysToBudget !== null &&
+                `To spend the whole budget takes one person ${formatCount(r.personDaysToBudget)} days, or ${formatCount(r.personDaysToBudget)} people in a single day.`}
+            </Steady>
           </div>
         </div>
       </div>

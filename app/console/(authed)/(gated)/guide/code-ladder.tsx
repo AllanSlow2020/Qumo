@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Steady } from "./controls";
 import { ACTIONS, scanOutcome, type OutcomeTone, type ScanAction, type ScanOutcome } from "@/lib/guide/scan";
 import { AWARD_ROWS, CODES, START_HERE, type CodeId, type CodeKind } from "./codes";
 import { Pack, Poster, Slip } from "./figures";
@@ -55,8 +56,13 @@ const TONE: Record<OutcomeTone, { text: string; className: string }> = {
   refused: { text: "Refused", className: "cn-pill cn-pill-warn" },
 };
 
-/** Enough to show a pattern, few enough that the newest is still the thing you read. */
-const KEEP = 4;
+/**
+ * Enough to show a pattern, few enough that the newest is still the thing you
+ * read, and a fixed number so the log can have a fixed height: it is drawn as
+ * this many slots, filled from the top, so a scan changes what is in a slot and
+ * never how tall the figure is.
+ */
+const KEEP = 3;
 
 type Entry = ScanOutcome & { id: number };
 
@@ -171,7 +177,9 @@ export function CodeLadder() {
       <div className="cn-ladder-stage">
         <div className="cn-ladder-stage-head">
           <p className="cn-fig-name">Try it</p>
-          <p className="cn-fig-body">{code.scene}</p>
+          <Steady className="cn-fig-body" ghosts={CODES.map((c) => c.scene)}>
+            {code.scene}
+          </Steady>
         </div>
 
         <div className="cn-ladder-actions">
@@ -185,26 +193,33 @@ export function CodeLadder() {
               {a.label}
             </button>
           ))}
-          {log.length > 0 && (
-            <button type="button" className="cn-btn cn-btn-quiet" onClick={reset}>
-              Start again
-            </button>
-          )}
+          {/* Always there, and dimmed until there is something to start again
+              from: a button that appears on the first scan changes the width of
+              the row and, on a phone, wraps it. */}
+          <button type="button" className="cn-btn cn-btn-quiet" disabled={log.length === 0} onClick={reset}>
+            Start again
+          </button>
         </div>
 
         <ol className="cn-ladder-log" aria-live="polite" aria-label="What happened">
-          {log.length === 0 ? (
-            <li className="cn-ladder-empty">Nothing scanned yet.</li>
-          ) : (
-            log.map((entry) => (
+          {Array.from({ length: KEEP }, (_, i) => {
+            const entry = log[i];
+            if (!entry) {
+              return (
+                <li key={`slot-${i}`} className="cn-ladder-slot" aria-hidden={i > 0 || log.length > 0 ? "true" : undefined}>
+                  {i === 0 && log.length === 0 ? "Nothing scanned yet." : null}
+                </li>
+              );
+            }
+            return (
               <li key={entry.id} className="cn-ladder-entry" data-tone={entry.tone}>
                 <span className={TONE[entry.tone].className}>{TONE[entry.tone].text}</span>
                 <span className="cn-ladder-entry-text">
                   <strong>{entry.line}</strong> {entry.detail}
                 </span>
               </li>
-            ))
-          )}
+            );
+          })}
         </ol>
       </div>
 
