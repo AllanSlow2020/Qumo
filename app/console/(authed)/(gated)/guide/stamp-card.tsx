@@ -18,7 +18,7 @@ import {
   weeksToComplete,
   type VisitRate,
 } from "@/lib/guide/card";
-import { Choices } from "./controls";
+import { Choices, Steady } from "./controls";
 
 /**
  * "How long will a card take?", answered by changing the card.
@@ -49,6 +49,10 @@ import { Choices } from "./controls";
  * an attribute, so React only changes data and the browser animates the
  * change. Reduced-motion turns every one of them off in console.css.
  */
+
+/** Every verdict sentence, at the longest, for the reserved space under the time. */
+// 43 weeks is ten stamps for a monthly regular, the longest the sentence gets.
+const VERDICT_LINES = [1, 10, 43].map((w) => cardVerdict(w).line);
 
 const LENGTHS = CARD_LENGTHS.map((n) => ({ value: n as number, label: `${n} stamps` }));
 const VISIT_CHOICES = VISITS.map((v) => ({ value: v.id, label: v.label }));
@@ -96,6 +100,10 @@ export function StampCardPlayground() {
   const marker = markerPercent(weeks);
   const full = purchases >= cap;
 
+  // Every sentence the line under the cards can be for this card length, from
+  // the real function, so the space reserved for it is exactly the largest.
+  const lineGhosts = [0, 1, length - 1, length, length + 1, cap - 1, cap].map((p) => cardLine(p, length));
+
   return (
     <figure className="cn-fig cn-card">
       <div className="cn-card-grid">
@@ -128,9 +136,9 @@ export function StampCardPlayground() {
                 {verdict.label}
               </span>
             </div>
-            <p className="cn-card-verdict" aria-live="polite">
+            <Steady className="cn-card-verdict" ghosts={VERDICT_LINES} live>
               {verdict.line}
-            </p>
+            </Steady>
 
             <div className="cn-card-bar-wrap">
               <div className="cn-card-bar" aria-hidden="true">
@@ -165,11 +173,11 @@ export function StampCardPlayground() {
                 >
                   Add five
                 </button>
-                {purchases > 0 && (
-                  <button type="button" className="cn-btn cn-btn-quiet" onClick={() => setBought(0)}>
-                    Start again
-                  </button>
-                )}
+                {/* Always there, dimmed until there is something to undo, so the
+                    row does not change width on the first purchase. */}
+                <button type="button" className="cn-btn cn-btn-quiet" disabled={purchases === 0} onClick={() => setBought(0)}>
+                  Start again
+                </button>
               </div>
             </div>
 
@@ -178,9 +186,9 @@ export function StampCardPlayground() {
               <Card n={2} length={length} filled={two} />
             </div>
 
-            <p className="cn-card-line" aria-live="polite">
+            <Steady className="cn-card-line" ghosts={lineGhosts} live>
               {cardLine(purchases, length)}
-            </p>
+            </Steady>
           </div>
         </div>
       </div>

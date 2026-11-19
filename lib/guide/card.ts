@@ -142,7 +142,7 @@ export function cardLine(purchases: number, length: number): string {
     return `Card 1 is complete and a reward is issued. The ${length} stamps are taken off, and the next purchase starts card 2.`;
   }
   if (p < maxPurchases(length)) {
-    return `Card 1 is complete and its reward issued. ${plural(p - length, "stamp is", "stamps are")} on card 2, so a customer who keeps buying is never collecting into nothing.`;
+    return `Card 1 is complete and its reward issued. ${plural(p - length, "stamp is", "stamps are")} on card 2.`;
   }
   return "Both cards are complete, and each issued its own reward.";
 }

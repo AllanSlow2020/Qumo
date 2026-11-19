@@ -12,8 +12,10 @@ import { slipMoney, type Example } from "@/lib/guide/examples";
  * find-in-page, a screen reader's headings and a printed copy still reach
  * them, and switching is not a re-render of anything that has to be rebuilt.
  *
- * The panel plays its arrival animation when it stops being hidden, which is
- * the moment `display` changes, so no state is needed to trigger it.
+ * The panels are stacked in one place rather than swapped, so the block keeps
+ * the height of the tallest and the page below does not move when a tab is
+ * picked. The panel plays its arrival animation when it becomes the active one,
+ * which is the moment its data attribute changes, so no state triggers it.
  */
 
 /** A code, drawn as one: a fixed pattern, because it is an illustration. */
@@ -111,14 +113,20 @@ export function ExampleTabs({ examples }: { examples: Example[] }) {
         ))}
       </div>
 
+      {/* All three panels share one grid cell, so the block is always as tall
+          as the tallest and switching tabs moves nothing below it. The ones not
+          showing are invisible and inert, which takes them out of the tab order
+          and the accessibility tree the way `hidden` did. */}
+      <div className="cn-ex-panels">
       {examples.map((ex, i) => (
         <div
           key={ex.id}
           role="tabpanel"
           id={`ex-panel-${ex.id}`}
           aria-labelledby={`ex-tab-${ex.id}`}
-          hidden={i !== active}
-          tabIndex={0}
+          data-active={i === active}
+          inert={i !== active}
+          tabIndex={i === active ? 0 : -1}
           className="cn-ex-panel"
         >
           <div className="cn-ex-head">
@@ -148,6 +156,7 @@ export function ExampleTabs({ examples }: { examples: Example[] }) {
           </p>
         </div>
       ))}
+      </div>
 
       <figcaption className="cn-fig-cap">
         Illustration. Made-up brands and till slips. The figures are worked out by the same code the console uses.

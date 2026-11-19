@@ -47,7 +47,6 @@ export default function ConsoleGuidePage() {
         is the page to read before you decide.
       </p>
 
-      <StartHere />
 
       {/* The same grid the promotions page uses, so the rail is sticky and
           capped to the window without any layout written twice. Below the
@@ -55,6 +54,7 @@ export default function ConsoleGuidePage() {
           rather than above it - on a phone a list of seven links before a
           word of the thing is a page you have to scroll past to start. */}
       <GuideProvider>
+      <StartHere />
       <div className="cn-split">
         <div className="cn-split-main">
           <FoldSection id="what" point="A code that proves a purchase, scanned by the customer, earns something with you.">
