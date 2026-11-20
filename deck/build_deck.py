@@ -312,7 +312,7 @@ def p10():
 
 def p11():
     s = slide()
-    logo(s, M, Inches(2.2), Inches(0.62))
+    logo(s, M, Inches(2.2), Inches(0.62), variant="blue-white")
     text(s, "Give us one line and\none print run", M, Inches(3.15), Inches(10.4),
          Inches(1.5), size=46, bold=True, colour=INK, spacing=1.14)
     text(s, "We will have your first real numbers inside one print cycle, and you will not have "
