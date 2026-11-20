@@ -31,6 +31,16 @@
  * entry stays, and five releases later it is silently covering something
  * real. Non-fatal: a dependency upgrade should not fail CI for having
  * worked.
+ *
+ * ── A fix that is not an exception: the `effect` override ────────────────
+ *
+ * `effect` (a ReDoS in Schema.TemplateLiteral, GHSA-7589-6fvf-x4pw, patched in
+ * 3.22.1) reaches us only through `prisma > @prisma/config`, which pins it to
+ * exactly 3.20.0, and no 7.x release of Prisma had moved the pin when this
+ * appeared. It was not excepted, because a patched version exists and can be
+ * had: package.json carries `pnpm.overrides` for `effect@<3.22.1`, which
+ * resolves it to 3.22.5 and applies to nothing once Prisma pins a patched
+ * version itself. When that happens the override can simply be deleted.
  */
 
 import { execFileSync } from "node:child_process";

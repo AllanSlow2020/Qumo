@@ -2998,19 +2998,19 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 
 .cn-ladder-rungs {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  /* One column, or three: two across would leave the third on a row by itself. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   align-items: stretch;
 }
 
-/* The rungs rise left to right. Stretched in a grid, a card with a larger top
-   margin is shorter at the top and level at the bottom, so the tops step up
-   and the bottoms line up, which is a staircase without any positioning. Only
-   where the three sit in one row; stacked, there is nothing to climb. */
-@container (min-width: 640px) {
+/* Three across where there is room. The cards are the same height and their
+   rows line up: they used to step up from left to right, which made the three
+   look like three different sizes and pushed "what it proves" to a different
+   line in each. The rise is carried by the proof meter inside each card, which
+   fills as you go, so it is not lost. */
+@container (min-width: 560px) {
   .cn-ladder-rungs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .cn-rung[data-level="0"] { margin-top: 34px; }
-  .cn-rung[data-level="1"] { margin-top: 17px; }
 }
 
 .cn-rung {
@@ -3023,6 +3023,26 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   border-radius: var(--cn-radius-inner);
   background: var(--cn-raised);
   transition: border-color 160ms, box-shadow 160ms, background-color 160ms;
+}
+
+/* Each card takes four rows of the grid it sits in (its picture and name, who
+   can scan it, what it proves, what it can award) and uses them as its own, so
+   "what it proves" starts on the same line in all three whatever the text above
+   it did, and the cards are the same height by construction. Where subgrid is
+   not understood the card stays a column of its own, which is the layout it
+   always had. */
+@supports (grid-template-rows: subgrid) {
+  .cn-rung {
+    display: grid;
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+    /* Inherit the grid's gap, so the rows are 12px apart inside a card. */
+    row-gap: inherit;
+  }
+
+  /* Its three rows become rows of the card itself. */
+  /* Written with the parent, so it outranks .cn-rung-body further down. */
+  .cn-rung > .cn-rung-body { display: contents; }
 }
 
 /* The one that never pays, drawn as the one that never pays. */
