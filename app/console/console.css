@@ -388,7 +388,7 @@ html[data-theme="dark"]:has(.cn) body {
   border: 0;
 }
 
-.cn-side .cn-mark { padding: 0 8px; }
+.cn-side .cn-mark { padding: 0 8px; min-height: 44px; }
 
 /* Content takes everything left over and may shrink to nothing before the
    column does, so the two never fight over a narrow window. */
@@ -492,7 +492,11 @@ html[data-theme="dark"]:has(.cn) body {
   font-size: 13.5px;
   font-weight: 500;
   letter-spacing: -0.01em;
-  padding: 9px 10px;
+  /* 44px is the touch-target floor (the audit found these at 34px). The
+     height is set rather than grown from padding so it cannot drift back
+     when somebody changes the type size. */
+  min-height: 44px;
+  padding: 0 10px;
   border-radius: 10px;
 }
 
@@ -536,8 +540,9 @@ html[data-theme="dark"]:has(.cn) body {
 
 .cn-side-brand { font-size: 13px; font-weight: 600; color: var(--cn-ink); }
 .cn-side-who { font-size: 12px; color: var(--cn-ink-3); }
-.cn-side-links { font-size: 12px; color: var(--cn-ink-3); margin-top: 4px; }
-.cn-side-links a { color: var(--cn-ink-3); }
+.cn-side-links { font-size: 12px; color: var(--cn-ink-3); display: flex; flex-wrap: wrap; align-items: center; }
+.cn-side-links a { color: var(--cn-ink-3); display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; }
+.cn-side-links a:first-child { padding-left: 0; }
 .cn-side-links a:hover { color: var(--cn-ink); }
 
 /* The shell on a phone: the column becomes a drawer.
