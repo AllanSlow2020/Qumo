@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/db/client";
 import { requireStaff } from "@/lib/staff/current";
 import { PasswordForm } from "./password-form";
+import type { Metadata } from "next";
+import { PRODUCT_NAME } from "@/lib/product";
+
+export const metadata: Metadata = { title: `Change password · ${PRODUCT_NAME}` };
 
 export default async function ChangePasswordPage() {
   const staff = await requireStaff({ allowPendingSecondFactor: true });

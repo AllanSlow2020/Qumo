@@ -37,7 +37,7 @@ export function ConsoleShell({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const panel = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
 
   /*
@@ -116,6 +116,13 @@ export function ConsoleShell({
           Keyed by destination so a second click restarts it. */}
       {pending && <div key={pending} className="cn-progress" aria-hidden="true" />}
 
+      {/* The first thing a keyboard reaches, so the sidebar can be stepped
+          over. Without it every page costs sixteen Tab presses before the
+          page itself, every time. Visible only while it has focus. */}
+      <a href="#cn-main" className="cn-skip">
+        Skip to content
+      </a>
+
       {/* Rendered only when open, not hidden when closed.
           `hidden` is an attribute and `display` is a declaration, so the
           media query that gives this a display value beats it: with
@@ -139,16 +146,19 @@ export function ConsoleShell({
           it fires immediately instead of waiting for the next page - which
           is the difference between a drawer that feels answered and one
           that looks stuck while a route loads. */}
-      <div
+      {/* An aside, so the mark, the navigation and the signed-in footer are
+          inside a landmark rather than loose on the page. */}
+      <aside
         className="cn-side"
         id="cn-side"
+        aria-label="Console menu"
         ref={panel}
         onClick={(e) => {
           if ((e.target as HTMLElement).closest("a")) setOpen(false);
         }}
       >
         {side}
-      </div>
+      </aside>
 
       <div className="cn-col">
         <header className="cn-topbar">
@@ -167,7 +177,7 @@ export function ConsoleShell({
           </button>
           {controls}
         </header>
-        <main className="cn-main" aria-busy={pending ? true : undefined}>
+        <main className="cn-main" id="cn-main" tabIndex={-1} aria-busy={pending ? true : undefined}>
           {children}
         </main>
       </div>

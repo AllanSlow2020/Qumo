@@ -3,6 +3,10 @@ import { requireStaff } from "@/lib/staff/current";
 import { getSubscriptionView, MANAGE_SUBSCRIPTION_ROLES } from "@/lib/subscriptions/manage";
 import { HONOUR_WINDOW_DAYS, HONOUR_WINDOW_MS } from "@/lib/subscriptions/state";
 import { ProgrammeControls } from "./programme-controls";
+import type { Metadata } from "next";
+import { PRODUCT_NAME } from "@/lib/product";
+
+export const metadata: Metadata = { title: `Plan · ${PRODUCT_NAME}` };
 
 const LABELS: Record<string, string> = {
   UNMANAGED: "Not on a plan yet",

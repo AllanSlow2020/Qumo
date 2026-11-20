@@ -4,6 +4,10 @@ import { listCampaignsForConsole } from "@/lib/campaigns/manage";
 import { listPackBatches, MANAGE_PACK_BATCH_ROLES } from "@/lib/packs/batch";
 import { requireStaff } from "@/lib/staff/current";
 import { NewBatchForm } from "./new-batch-form";
+import type { Metadata } from "next";
+import { PRODUCT_NAME } from "@/lib/product";
+
+export const metadata: Metadata = { title: `Pack codes · ${PRODUCT_NAME}` };
 
 export default async function ConsoleCodesPage() {
   const session = await requireStaff();

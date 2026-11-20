@@ -2,6 +2,10 @@ import { requireStaff } from "@/lib/staff/current";
 import { getSecondFactorState } from "@/lib/staff/mfa";
 import { secondFactorRequired } from "@/lib/staff/mfa-policy";
 import { SecurityForm } from "./security-form";
+import type { Metadata } from "next";
+import { PRODUCT_NAME } from "@/lib/product";
+
+export const metadata: Metadata = { title: `Security · ${PRODUCT_NAME}` };
 
 /**
  * Your own account's second factor.

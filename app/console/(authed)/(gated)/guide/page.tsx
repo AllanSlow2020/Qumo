@@ -36,7 +36,7 @@ import { StartHere } from "./start-here";
  * this page moves with it.
  */
 
-export const metadata = { title: "How it works" };
+export const metadata = { title: `How it works · ${PRODUCT_NAME}` };
 
 export default function ConsoleGuidePage() {
   return (

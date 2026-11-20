@@ -9,6 +9,10 @@ import { consoleUiMode } from "@/lib/console/ui-mode";
 import { photoCaptureConfigured } from "@/lib/slips/read";
 import { requireStaff } from "@/lib/staff/current";
 import { PromotionsWorkspace } from "./promotions-workspace";
+import type { Metadata } from "next";
+import { PRODUCT_NAME } from "@/lib/product";
+
+export const metadata: Metadata = { title: `Promotions · ${PRODUCT_NAME}` };
 
 export default async function ConsolePromotionsPage({
   searchParams,

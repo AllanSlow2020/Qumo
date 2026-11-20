@@ -67,7 +67,11 @@
   --cn-raised: #fafafa;
   --cn-ink: #0a0a0a;
   --cn-ink-2: #525252;
-  --cn-ink-3: #737373;
+  /* Both text colours were measured at 4.35:1 and 3.0:1 on the page grey, below
+     the 4.5:1 that small text needs. This grey is 5.1:1 on #f5f5f5, and the
+     green below is 4.6:1 on it and 5.0:1 on white. tests/console-contrast.test.ts
+     holds them there. */
+  --cn-ink-3: #686868;
   --cn-line: #e5e5e5;
   --cn-line-soft: #ededed;
 
@@ -101,7 +105,7 @@
   /* The emphasised mark in a chart: today, or the segment being explained. */
   --cn-data: #0d9488;
 
-  --cn-pos: #16a34a;
+  --cn-pos: #15803d;
   --cn-warn: #a16207;
   --cn-warn-bg: #fefce8;
   /* Destructive only, never decoration. */
@@ -716,8 +720,13 @@ html[data-theme="dark"]:has(.cn) body {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
+  /* Wraps, so a long name and its status pill stack on a very narrow screen
+     instead of pushing the page wider than the window (WCAG 1.4.10). */
+  flex-wrap: wrap;
+  gap: 6px 12px;
 }
+
+.cn-panel-head > * { min-width: 0; overflow-wrap: anywhere; }
 
 /* Wide content scrolls inside its own box; the page itself never scrolls
    sideways. */
@@ -2471,7 +2480,9 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 .cn-promo-grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  /* min() so a column never asks for more room than the screen has: a fixed
+     340px minimum made this page scroll sideways on a 320px phone. */
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
 }
 
 .cn-flow-rail {
@@ -3631,7 +3642,11 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   --ph-raised: #fafaf9;
   --ph-ink: #0a0a0a;
   --ph-ink-2: #52525b;
-  --ph-ink-3: #8a8a90;
+  /* The shopper screens' own tertiary grey is #8a8a90, which is 3.4:1 on white
+     and fails for small text. The illustration is text on this page and has to
+     pass, so it uses the nearest grey that does (5.1:1). The shopper surface
+     itself still needs the same change; that is a separate audit item. */
+  --ph-ink-3: #6e6e75;
   --ph-line: #d9d9d4;
   --ph-line-soft: #efefec;
   --ph-stamp-off: #c9c9c4;
@@ -4058,6 +4073,7 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   .cn-loop-step,
   .cn-loop-dot,
   .cn-loop-step::after,
+  .cn-loop-step:not(:last-child)::after,
   .cn-loop-back { animation: none; }
 }
 
@@ -4211,3 +4227,26 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 .cn-swap > .cn-swap-item[data-active="false"] { visibility: hidden; }
 
 .cn-swap-group { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+/* ---------- skipping the sidebar ----------
+   Off screen until a keyboard reaches it, then the first thing on the page. */
+.cn-skip {
+  position: absolute;
+  left: 8px;
+  top: -64px;
+  z-index: 80;
+  padding: 10px 14px;
+  border-radius: var(--cn-radius);
+  background: var(--cn-surface);
+  color: var(--cn-ink);
+  border: 1px solid var(--cn-ink);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.cn-skip:focus { top: 8px; outline: 2px solid var(--cn-ink); outline-offset: 2px; }
+
+/* The skip link moves focus to the main area, which is not a control and needs
+   no ring of its own. */
+.cn-main:focus { outline: none; }

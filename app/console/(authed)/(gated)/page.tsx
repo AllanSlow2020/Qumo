@@ -6,6 +6,10 @@ import { getSetupFacts, setupSteps } from "@/lib/console/setup-state";
 import { getObservationFacts, observations } from "@/lib/console/observations";
 import { requireStaff } from "@/lib/staff/current";
 import { Ticker } from "@/app/console/ticker";
+import type { Metadata } from "next";
+import { PRODUCT_NAME } from "@/lib/product";
+
+export const metadata: Metadata = { title: `Overview · ${PRODUCT_NAME}` };
 
 function Metric({
   value,
