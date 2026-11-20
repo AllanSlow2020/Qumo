@@ -36,3 +36,8 @@ CLAUDE.md
 deck/*.pptx
 deck/*.pdf
 __pycache__/
+
+# The demo owner's authenticator secret, written by deck/capture.mjs
+deck/.capture-totp
+deck/tls-key.pem
+deck/tls-cert.pem

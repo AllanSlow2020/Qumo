@@ -182,49 +182,59 @@ FIGURES = [
      "where": "digit sign-in", "source": "qumo-code",
      "claim": "Length of the texted sign-in code",
      "evidence": "lib/consumer/otp.ts: const CODE_DIGITS = 6"},
-    {"id": "tests", "figure": "800+", "decks": ["qumo"], "kind": "product",
+    {"id": "tests", "figure": "1,000+", "decks": ["qumo"], "kind": "product",
      "where": "tests passing", "source": "qumo-code",
      "claim": "Automated tests passing",
-     "evidence": "pnpm test against a local Postgres on 2026-11-11: 863 tests in 76 files, "
-                 "all passing (811 in 71 on 2026-11-09). Re-run before quoting a more exact "
-                 "figure."},
-    {"id": "audit-accepted", "figure": "8", "decks": ["qumo"], "kind": "product",
-     "where": "8 are accepted", "source": "qumo-code",
+     "evidence": "pnpm test against a local Postgres on 2026-11-20, main at b4abccf: 1,009 tests "
+                 "in 86 files, all passing (863 in 76 on 2026-11-11, 811 in 71 on 2026-11-09). "
+                 "Re-run before quoting a more exact figure."},
+    {"id": "audit-accepted", "figure": "1", "decks": ["qumo"], "kind": "product",
+     "where": "1 is accepted", "source": "qumo-code",
      "claim": "High advisories accepted by the audit gate, each with a written reason",
-     "evidence": "pnpm audit:ci on 2026-11-11: 'Nothing blocking. 8 accepted, 0 stale.' The "
-                 "exceptions and their reasons are in scripts/audit.mjs, which CI runs as its "
-                 "own job (.github/workflows/ci.yml). pnpm audit --prod the same day: 22 "
-                 "advisories, 0 critical, 8 high.",
+     "evidence": "pnpm audit:ci on 2026-11-20: 'Nothing blocking. 1 accepted, 0 stale.' The "
+                 "one is source-map-js (GHSA-68fv-2mgg-jv7q), reached through next > postcss at "
+                 "build only. Exceptions and reasons are in scripts/audit.mjs, which CI runs as "
+                 "its own job (.github/workflows/ci.yml). pnpm audit --prod the same day: 1 "
+                 "advisory, high. On 2026-11-11 it was 8 accepted of 22.",
      "caution": "Changes as advisories are published and fixed. Re-run before quoting it."},
-    {"id": "screens", "figure": "17", "decks": ["qumo"], "kind": "product",
+    {"id": "screens", "figure": "18", "decks": ["qumo"], "kind": "product",
      "where": "screens, all real", "source": "qumo-code",
-     "claim": "Screens in the decks, each a capture of the running product",
-     "evidence": "deck/shots/ holds 17 captures, written by deck/capture.mjs; every one "
-                 "appears in the deck.",
-     "verify": lambda: len([f for f in os.listdir(os.path.join(HERE, "shots"))
-                            if f.endswith(".png")])},
-    {"id": "earn-ways", "figure": "2", "decks": ["qumo"], "kind": "product",
+     "claim": "Screens in the deck, each a capture of the running product",
+     "evidence": "The distinct screenshots build_deck.py places, every one in deck/shots/ and "
+                 "written by deck/capture.mjs; recaptured 2026-11-20 from main at b4abccf. "
+                 "Counted at build time, not trusted.",
+     "verify": lambda: _screens_used()},
+    {"id": "earn-ways", "figure": "3", "decks": ["qumo"], "kind": "product",
      "where": "ways to earn", "source": "qumo-code",
-     "claim": "Ways a purchase is proved: a code under the pack, or a till slip",
-     "evidence": "lib/packs/ (pack codes) and lib/stores/receipt.ts (till slips).",
-     "caution": "docs/brand-context.md section 8 says 'three ways to earn' for the site, "
-                "meaning the three promotion shapes. Different axis; do not mix them."},
+     "claim": "Ways a promotion can award: a stamp toward a card, a fixed amount per scan, or "
+              "a share of what they spend",
+     "evidence": "app/console/(authed)/(gated)/guide/codes.ts: AWARD_ROWS, 'The three shapes a "
+                 "promotion can award, in the console's own words'. The stamp card is the third, "
+                 "beside the two EarnRuleType values in prisma/schema.prisma.",
+     "caution": "Until 2026-11-20 this slide said 2, counting ways to prove a purchase (pack "
+                "code, till slip). Codes are a different axis: slip, pack code or sticker."},
     {"id": "imaginary", "figure": "0", "decks": ["qumo"], "kind": "product",
      "where": "lines of it imaginary", "source": "qumo-code",
      "claim": "Nothing in the deck is a mock-up",
      "evidence": "Every screen is a capture of a running build (deck/capture.mjs)."},
 
     # ── Demo data on console screens ──────────────────────────────────
-    {"id": "demo-repeat", "figure": "52%", "decks": ["qumo"], "kind": "demo",
-     "claim": "Repeat rate on the performance screen", "evidence": "scripts/demo.ts"},
-    {"id": "demo-cpr", "figure": "R12.97", "decks": ["qumo"], "kind": "demo",
-     "claim": "Cost per person reached on the performance screen", "evidence": "scripts/demo.ts"},
-    {"id": "demo-earned", "figure": "137", "decks": ["qumo"], "kind": "demo",
-     "claim": "People who earned, on the performance screen", "evidence": "scripts/demo.ts"},
-    {"id": "demo-owed", "figure": "R3,155", "decks": ["qumo"], "kind": "demo",
-     "claim": "Value still owed, on the overview screen", "evidence": "scripts/demo.ts"},
-
-    # ── Qumo's proposed prices ────────────────────────────────────────
+    {"id": "demo-repeat", "figure": "59%", "decks": ["qumo"], "kind": "demo",
+     "claim": "Repeat rate on the performance screen",
+     "evidence": "Read off deck/shots/console-performance.png, captured 2026-11-20 from the demo "
+                 "seed (scripts/demo.ts). The demo is random: re-read after every capture."},
+    {"id": "demo-cpr", "figure": "R13.92", "decks": ["qumo"], "kind": "demo",
+     "claim": "Cost per person reached on the performance screen",
+     "evidence": "Read off deck/shots/console-performance.png, captured 2026-11-20 from the demo "
+                 "seed (scripts/demo.ts). The demo is random: re-read after every capture."},
+    {"id": "demo-earned", "figure": "128", "decks": ["qumo"], "kind": "demo",
+     "claim": "People who earned, on the performance screen",
+     "evidence": "Read off deck/shots/console-performance.png, captured 2026-11-20 from the demo "
+                 "seed (scripts/demo.ts). The demo is random: re-read after every capture."},
+    {"id": "demo-owed", "figure": "R2,713.97", "decks": ["qumo"], "kind": "demo",
+     "claim": "Value still owed, on the performance screen",
+     "evidence": "Read off deck/shots/console-performance.png, captured 2026-11-20 from the demo "
+                 "seed (scripts/demo.ts). The demo is random: re-read after every capture."},
     {"id": "tier-launch", "figure": ["R7,500", "10,000"], "decks": ["qumo"],
      "kind": "indicative", "source": "qumo-pricing", "locator": "the tier table",
      "claim": "Launch tier: price a month, and scans a month"},
@@ -279,6 +289,34 @@ CLAIMS = [
      "claim": "Dependabot checks weekly.",
      "files": [".github/dependabot.yml"],
      "evidence": "package-ecosystem npm, interval weekly."},
+    {"id": "no-number", "slide": "nobody gets a list of your shoppers",
+     "claim": "Nobody sees a shopper's mobile number, the brand included, and no other brand sees "
+              "a brand's activity.",
+     "files": ["docs/brand-context.md", "lib/db"],
+     "evidence": "brand-context.md section 10, true of the running product: a brand never sees a "
+                 "shopper's mobile number and has no screen showing an individual shopper; every "
+                 "brand's data is separated structurally (the tenant guard in lib/db)."},
+    {"id": "caps-at-scan", "slide": "You set the most it can ever cost",
+     "claim": "Each promotion's per-person-per-day and total ceilings are enforced at the moment "
+              "of the scan.",
+     "files": ["lib/ledger/accrue.ts", "lib/packs/scan.ts", "lib/stores/receipt.ts"],
+     "evidence": "maxScansPerPersonPerDay and maxTotalAmount are checked in the earn paths, not "
+                 "in the interface."},
+    {"id": "no-ceiling-flag", "slide": "You set the most it can ever cost",
+     "claim": "A live promotion with no ceiling is flagged on the first screen.",
+     "files": ["app/console/(authed)/(gated)/page.tsx"],
+     "evidence": "The overview's 'A live promotion has no ceiling' notice."},
+    {"id": "redeem-once", "slide": "the reward is taken at the counter, once",
+     "claim": "A stamp card's reward code is taken at the counter once; a second attempt names "
+              "who took it first. A rand balance cannot be spent at a till.",
+     "files": ["lib/coupons/manage.ts", "lib/wallet/availability.ts"],
+     "evidence": "ALREADY_REDEEMED carries the staff member who took it; REDEMPTION_AVAILABLE "
+                 "for wallet spend is still false (docs/state-of-play.md, section 2)."},
+    {"id": "pack-code-no-store", "slide": "and no invoice",
+     "claim": "A pack code needs nothing from the brand's stores and nothing installed.",
+     "files": ["lib/packs/scan.ts"],
+     "evidence": "A pack code is scanned by the shopper's phone and awarded by the page; no till, "
+                 "POS or store system is involved (docs/competitive-position.md, section 1)."},
     {"id": "no-pentest", "slide": "Enforced in the code",
      "claim": "No penetration test has been done; what was done is a source-code review.",
      "files": [],
@@ -301,7 +339,19 @@ NOT_CLAIMED = [
 FORBIDDEN = [
     (r"\bsecure\b|\bhardened\b", "Not established: it has had a source-code review only."),
     (r"penetration[- ]tested|\bpen[- ]?tested\b", "No penetration test has been done."),
-    (r"disaster recovery|\bbackups?\b|backed up|\bdurab","Restore capacity does not support it."),
+    (r"disaster recovery|\bbackups?\b|backed up|\bdurab", "Restore capacity does not support it."),
+    # The claims rules in docs/brand-context.md section 10.
+    (r"redemption is (live|open)|spend (your|their) points|redeem(ed|ing)? at (a|the|any) till",
+     "Redemption of a rand balance is not built. A stamp card's reward at the counter is."),
+    (r"popia[- ]?complian", "No legal review has happened. Describe what the product does."),
+    (r"\bage[- ]verifi|\bverif(y|ies|ied|ying) (their |a shopper's |the )?age",
+     "Nothing checks a date of birth. The programme asks, records asking, and refuses on no."),
+    (r"accessib|\bwcag\b|\bcompliant\b",
+     "No accessibility or compliance claim. Contrast fixes are fixes, not a standard met."),
+    # House style.
+    (r"!", "No exclamation marks."),
+    (r"\b(color|colors|program|programs|center|favorite|organize|organization|customize|"
+     r"analyze|license|behavior|catalog|fulfill)\b", "South African English spelling."),
 ]
 
 # What a slide must say for a figure of this kind to appear on it.
@@ -347,6 +397,14 @@ def strength(entry, seen=()):
 
 
 BY_ID = {e["id"]: e for e in FIGURES}
+
+
+def _screens_used():
+    """How many distinct screenshots the deck places, failing if one is missing."""
+    used = set(re.findall(r'"((?:console|shopper)-[a-z-]+)"',
+                          open(os.path.join(HERE, "build_deck.py")).read()))
+    missing = [u for u in used if not os.path.exists(os.path.join(HERE, "shots", u + ".png"))]
+    return f"missing {missing}" if missing else len(used)
 
 
 def _well_formed():

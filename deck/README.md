@@ -5,8 +5,8 @@ One presentation, generated rather than drawn: `build_deck.py` writes
 
 | Slides | Part | What it is for |
 |---|---|---|
-| 1-12 | The pitch | Presented. Why a brand should care, and the ask, in fifteen minutes |
-| 13-34 | Appendix | Not presented. What the brand sees, what the customer sees, and the questions that come next: turned to when somebody asks, and left behind afterwards |
+| 1-13 | The pitch | Presented. One story, told by the headlines alone: the problem, the cost of staying put, the turn, one customer's journey, the objections, the proof, their own numbers, the ask |
+| 14-37 | Appendix | Not presented. What the brand sees, what the customer sees, and the questions that come next: turned to when somebody asks, and left behind afterwards |
 
 There used to be a separate product overview. It was folded in as the
 appendix because the two kept drifting apart: the same mechanic, pricing
@@ -78,15 +78,34 @@ DEMO_LOGIN_PHONES='+27821000037' DEMO_LOGIN_CODE='424242' \
 ```
 
 The shopper surface sets secure cookies, so the browser has to see https.
-Put any TLS terminator on 443 in front of 3000 and point the capture
-browser's host resolver at it. `capture.mjs` already maps `*.qumo-app.com`
+`tls-front.mjs` is a throwaway HTTPS front on 443 for exactly this; it
+needs a self-signed pair first (the command is at the top of the file, and
+both files are git-ignored). `capture.mjs` already maps `*.qumo-app.com`
 and the apex to 127.0.0.1.
+
+```bash
+openssl req -x509 -newkey rsa:2048 -nodes -keyout deck/tls-key.pem \
+  -out deck/tls-cert.pem -days 2 -subj "/CN=*.qumo-app.com"
+node deck/tls-front.mjs
+```
+
+**Two-factor sign-in.** The demo owner is an owner, and an owner may not
+use the console on a password alone. The first capture enrols the demo
+account through the real security screen and keeps its authenticator
+secret in `deck/.capture-totp` (git-ignored, readable only by you); later
+runs sign in with it. If the file is lost, re-seed and delete nothing else.
+
+**The figures on "what you would see" are read off the performance
+screen.** `pnpm demo` is random, so after every capture read the four
+numbers off `shots/console-performance.png` and update them, and their
+date, in `sources.py`.
 
 ```bash
 # 3. the screens, then the deck
 #    playwright is already a devDependency; the browsers ship with the image
 CHROMIUM_PATH=/path/to/chromium \
-  node deck/capture.mjs copper-kettle <batch-id> <provision-secret> <unscanned-code>
+  node deck/capture.mjs copper-kettle <batch-id> - <unscanned-code>
+# "-" reads the provision secret from PROVISION_SECRET instead of the command line
 
 python3 -m pip install -r deck/requirements.txt
 python3 deck/build_deck.py deck/Qumo.pptx

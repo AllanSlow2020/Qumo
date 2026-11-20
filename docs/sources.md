@@ -32,20 +32,20 @@ Generated from `deck/sources.py` by `python3 deck/sources.py`. Edit that file, n
 | 0 | Apps a shopper must install | The shopper surface is a web page under app/; there is no native app. |
 | 1 | Scans needed to earn | One scan of a code awards it; each code earns once (lib/packs/code.ts). |
 | 6 | Length of the texted sign-in code | lib/consumer/otp.ts: const CODE_DIGITS = 6 |
-| 800+ | Automated tests passing | pnpm test against a local Postgres on 2026-11-11: 863 tests in 76 files, all passing (811 in 71 on 2026-11-09). Re-run before quoting a more exact figure. |
-| 8 | High advisories accepted by the audit gate, each with a written reason | pnpm audit:ci on 2026-11-11: 'Nothing blocking. 8 accepted, 0 stale.' The exceptions and their reasons are in scripts/audit.mjs, which CI runs as its own job (.github/workflows/ci.yml). pnpm audit --prod the same day: 22 advisories, 0 critical, 8 high. *Caution: Changes as advisories are published and fixed. Re-run before quoting it.* |
-| 17 | Screens in the decks, each a capture of the running product | deck/shots/ holds 17 captures, written by deck/capture.mjs; every one appears in the deck. |
-| 2 | Ways a purchase is proved: a code under the pack, or a till slip | lib/packs/ (pack codes) and lib/stores/receipt.ts (till slips). *Caution: docs/brand-context.md section 8 says 'three ways to earn' for the site, meaning the three promotion shapes. Different axis; do not mix them.* |
+| 1,000+ | Automated tests passing | pnpm test against a local Postgres on 2026-11-20, main at b4abccf: 1,009 tests in 86 files, all passing (863 in 76 on 2026-11-11, 811 in 71 on 2026-11-09). Re-run before quoting a more exact figure. |
+| 1 | High advisories accepted by the audit gate, each with a written reason | pnpm audit:ci on 2026-11-20: 'Nothing blocking. 1 accepted, 0 stale.' The one is source-map-js (GHSA-68fv-2mgg-jv7q), reached through next > postcss at build only. Exceptions and reasons are in scripts/audit.mjs, which CI runs as its own job (.github/workflows/ci.yml). pnpm audit --prod the same day: 1 advisory, high. On 2026-11-11 it was 8 accepted of 22. *Caution: Changes as advisories are published and fixed. Re-run before quoting it.* |
+| 18 | Screens in the deck, each a capture of the running product | The distinct screenshots build_deck.py places, every one in deck/shots/ and written by deck/capture.mjs; recaptured 2026-11-20 from main at b4abccf. Counted at build time, not trusted. |
+| 3 | Ways a promotion can award: a stamp toward a card, a fixed amount per scan, or a share of what they spend | app/console/(authed)/(gated)/guide/codes.ts: AWARD_ROWS, 'The three shapes a promotion can award, in the console's own words'. The stamp card is the third, beside the two EarnRuleType values in prisma/schema.prisma. *Caution: Until 2026-11-20 this slide said 2, counting ways to prove a purchase (pack code, till slip). Codes are a different axis: slip, pack code or sticker.* |
 | 0 | Nothing in the deck is a mock-up | Every screen is a capture of a running build (deck/capture.mjs). |
 
 ## Demo data (slide must say illustrative)
 
 | Figure | Claim | Evidence |
 |---|---|---|
-| 52% | Repeat rate on the performance screen | scripts/demo.ts |
-| R12.97 | Cost per person reached on the performance screen | scripts/demo.ts |
-| 137 | People who earned, on the performance screen | scripts/demo.ts |
-| R3,155 | Value still owed, on the overview screen | scripts/demo.ts |
+| 59% | Repeat rate on the performance screen | Read off deck/shots/console-performance.png, captured 2026-11-20 from the demo seed (scripts/demo.ts). The demo is random: re-read after every capture. |
+| R13.92 | Cost per person reached on the performance screen | Read off deck/shots/console-performance.png, captured 2026-11-20 from the demo seed (scripts/demo.ts). The demo is random: re-read after every capture. |
+| 128 | People who earned, on the performance screen | Read off deck/shots/console-performance.png, captured 2026-11-20 from the demo seed (scripts/demo.ts). The demo is random: re-read after every capture. |
+| R2,713.97 | Value still owed, on the performance screen | Read off deck/shots/console-performance.png, captured 2026-11-20 from the demo seed (scripts/demo.ts). The demo is random: re-read after every capture. |
 
 ## Qumo's proposed prices (slide must say indicative)
 
@@ -81,6 +81,11 @@ Claims on slides that carry no number, so the figure check cannot see them. The 
 | Inbound text messages are checked against Twilio's request signature, which covers the sender, so a forged number is refused. | `lib/sms/twilio-signature.ts`, `app/api/sms/inbound/route.ts` | twilioSignatureValid() is called by the inbound route; the signed payload includes From. |
 | A known high or critical advisory in a production dependency fails the build. | `scripts/audit.mjs`, `.github/workflows/ci.yml`, `package.json` | pnpm audit:ci runs scripts/audit.mjs as its own CI job, with documented exceptions and a stale-exception warning. |
 | Dependabot checks weekly. | `.github/dependabot.yml` | package-ecosystem npm, interval weekly. |
+| Nobody sees a shopper's mobile number, the brand included, and no other brand sees a brand's activity. | `docs/brand-context.md`, `lib/db` | brand-context.md section 10, true of the running product: a brand never sees a shopper's mobile number and has no screen showing an individual shopper; every brand's data is separated structurally (the tenant guard in lib/db). |
+| Each promotion's per-person-per-day and total ceilings are enforced at the moment of the scan. | `lib/ledger/accrue.ts`, `lib/packs/scan.ts`, `lib/stores/receipt.ts` | maxScansPerPersonPerDay and maxTotalAmount are checked in the earn paths, not in the interface. |
+| A live promotion with no ceiling is flagged on the first screen. | `app/console/(authed)/(gated)/page.tsx` | The overview's 'A live promotion has no ceiling' notice. |
+| A stamp card's reward code is taken at the counter once; a second attempt names who took it first. A rand balance cannot be spent at a till. | `lib/coupons/manage.ts`, `lib/wallet/availability.ts` | ALREADY_REDEEMED carries the staff member who took it; REDEMPTION_AVAILABLE for wallet spend is still false (docs/state-of-play.md, section 2). |
+| A pack code needs nothing from the brand's stores and nothing installed. | `lib/packs/scan.ts` | A pack code is scanned by the shopper's phone and awarded by the page; no till, POS or store system is involved (docs/competitive-position.md, section 1). |
 | No penetration test has been done; what was done is a source-code review. | - | Stated by the owner on 2026-11-11. The security work in PRs 37 to 41 was a review of the source, not an exercise against a running system. |
 
 ## Not to be claimed

@@ -12,9 +12,22 @@
  *   node deck/capture.mjs <brand-slug> <batch-id> <provision-secret> [unscanned-code]
  *
  * Pass an unscanned pack code and the award screen is captured too, which
- * is the one screen that shows the moment the mechanic pays.
+ * is the one screen that shows the moment the mechanic pays. The provision
+ * secret may come from PROVISION_SECRET instead, so it need not be typed
+ * on a command line.
+ *
+ * ── Two-factor sign-in ───────────────────────────────────────────────────
+ *
+ * An owner may not use the console on a password alone (lib/staff/mfa-policy.ts),
+ * and the demo owner is an owner. So the first run enrols the demo account
+ * through the real security screen, exactly as a person would, and keeps the
+ * authenticator secret in deck/.capture-totp (git-ignored) so later runs can
+ * sign in. Delete that file and re-seed if the two ever disagree. This is the
+ * demo account on a local database: nothing here weakens the rule, it
+ * satisfies it.
  */
 import { chromium } from "playwright";
+import { createHmac } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -24,7 +37,9 @@ const ART = path.join(ROOT, "art");
 fs.mkdirSync(SHOTS, { recursive: true });
 fs.mkdirSync(ART, { recursive: true });
 
-const [SLUG = "copper-kettle", BATCH, SECRET, CODE] = process.argv.slice(2);
+const [SLUG = "copper-kettle", BATCH, SECRET_ARG, CODE] = process.argv.slice(2);
+const SECRET = SECRET_ARG && SECRET_ARG !== "-" ? SECRET_ARG : process.env.PROVISION_SECRET;
+const TOTP_FILE = path.join(ROOT, ".capture-totp");
 const CONSOLE = "https://app.qumo-app.com";
 const SHOP = `https://${SLUG}.qumo-app.com`;
 const STAFF = { email: `owner@${SLUG}.example`, password: "qumo-dev-password" };
@@ -59,15 +74,78 @@ async function renderMark() {
   }
 }
 
-async function signedIn(opts) {
-  const ctx = await browser.newContext(opts);
+/** RFC 6238, the same arithmetic as lib/staff/totp.ts: SHA-1, six digits, 30 seconds. */
+function totp(secretBase32, at = Date.now()) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let bits = "";
+  for (const ch of secretBase32.replace(/[\s=]/g, "").toUpperCase()) {
+    bits += alphabet.indexOf(ch).toString(2).padStart(5, "0");
+  }
+  const key = Buffer.from(bits.match(/.{8}/g).map((b) => parseInt(b, 2)));
+  const counter = Buffer.alloc(8);
+  counter.writeBigUInt64BE(BigInt(Math.floor(at / 30000)));
+  const mac = createHmac("sha1", key).update(counter).digest();
+  const o = mac[mac.length - 1] & 0xf;
+  const n = ((mac[o] & 0x7f) << 24) | (mac[o + 1] << 16) | (mac[o + 2] << 8) | mac[o + 3];
+  return String(n % 1_000_000).padStart(6, "0");
+}
+
+/** A code from a window not yet used, since a code works once (lib/staff/mfa.ts). */
+let lastStep = -1;
+async function freshCode(secret) {
+  while (Math.floor(Date.now() / 30000) <= lastStep) await new Promise((r) => setTimeout(r, 1000));
+  lastStep = Math.floor(Date.now() / 30000);
+  return totp(secret);
+}
+
+/** Signs the demo owner in once, enrolling the second factor on the first run. */
+async function signIn() {
+  const ctx = await browser.newContext(DESK);
   const p = await ctx.newPage();
   await p.goto(`${CONSOLE}/login`);
   await p.fill('input[name="email"]', STAFF.email);
   await p.fill('input[name="password"]', STAFF.password);
-  await p.click('button[type="submit"]');
-  await p.waitForURL((u) => !u.pathname.startsWith("/login"), { timeout: 20000 });
-  return { ctx, p };
+  await p.locator('form:has(input[name="password"]) button[type="submit"]').click();
+  const code = p.locator('input[name="code"]');
+  await Promise.race([
+    code.waitFor({ timeout: 20000 }),
+    p.waitForURL((u) => !u.pathname.startsWith("/login"), { timeout: 20000 }),
+  ]);
+  if (await code.isVisible().catch(() => false)) {
+    if (!fs.existsSync(TOTP_FILE)) {
+      throw new Error(`The demo owner already has a second factor and ${TOTP_FILE} is gone. Re-seed, or restore it.`);
+    }
+    await code.fill(await freshCode(fs.readFileSync(TOTP_FILE, "utf8").trim()));
+    await p.locator('form:has(input[name="code"]) button[type="submit"]').click();
+    await p.waitForURL((u) => !u.pathname.startsWith("/login"), { timeout: 20000 });
+  }
+  // The gate redirects on the next page load, not on the login response itself.
+  await p.goto(`${CONSOLE}/`);
+  await p.waitForLoadState("networkidle");
+  if (new URL(p.url()).pathname.startsWith("/security")) {
+    await p.getByRole("button", { name: /turn on two-factor/i }).click();
+    const secretText = (await p.locator(".cn-secret-value").first().textContent()).trim();
+    fs.writeFileSync(TOTP_FILE, secretText.replace(/\s/g, "") + "\n", { mode: 0o600 });
+    await p.fill('input[name="code"]', await freshCode(secretText));
+    await p.getByRole("button", { name: /confirm and finish/i }).click();
+    await p.waitForTimeout(1500);
+    console.log("enrolled the demo owner's second factor; secret kept in", TOTP_FILE);
+    await p.goto(`${CONSOLE}/`);
+    await p.waitForLoadState("networkidle");
+  }
+  if (new URL(p.url()).pathname.startsWith("/security")) {
+    throw new Error("Still at the two-factor screen after enrolling. Nothing captured from the console.");
+  }
+  const state = await ctx.storageState();
+  await ctx.close();
+  return state;
+}
+
+/** A console context from a saved sign-in, in the theme asked for. */
+async function console_(state, theme) {
+  const ctx = await browser.newContext({ ...DESK, storageState: state });
+  await ctx.addCookies([{ name: "cios_theme", value: theme, domain: "app.qumo-app.com", path: "/" }]);
+  return { ctx, p: await ctx.newPage() };
 }
 
 const shot = async (page, name) => {
@@ -90,15 +168,20 @@ await renderMark();
   await ctx.close();
 }
 
+const STATE = await signIn();
+
 // The console, light.
 {
-  const { ctx, p } = await signedIn(DESK);
+  const { ctx, p } = await console_(STATE, "light");
   for (const [route, name] of [
     ["/", "console-overview"],
     ["/performance?days=30", "console-performance"],
     ["/promotions", "console-promotions"],
     ["/codes", "console-codes"],
     ["/stores", "console-stores"],
+    ["/redeem", "console-redeem"],
+    ["/billing", "console-plan"],
+    ["/guide", "console-guide"],
   ]) {
     await p.goto(`${CONSOLE}${route}`);
     await shot(p, name);
@@ -113,16 +196,21 @@ await renderMark();
   await p.locator("text=How it looks").scrollIntoViewIfNeeded().catch(() => {});
   await p.waitForTimeout(400);
   await shot(p, "console-settings");
+  // The guide's two interactive pieces, each scrolled into view.
+  for (const [anchor, name] of [["cards", "console-guide-stamps"], ["cost", "console-guide-cost"]]) {
+    await p.goto(`${CONSOLE}/guide#${anchor}`);
+    await p.waitForLoadState("networkidle");
+    await p.locator(`#${anchor}`).scrollIntoViewIfNeeded().catch(() => {});
+    await p.waitForTimeout(600);
+    await shot(p, name);
+  }
   await ctx.close();
 }
 
 // The console, dark. Both themes are first class and the deck says so.
 {
-  const { ctx, p } = await signedIn(DESK);
+  const { ctx, p } = await console_(STATE, "dark");
   await p.goto(`${CONSOLE}/`);
-  await p.waitForLoadState("networkidle");
-  await p.getByRole("button", { name: /^Dark$/ }).click().catch(() => {});
-  await p.waitForTimeout(1200);
   await shot(p, "console-overview-dark");
   await p.goto(`${CONSOLE}/performance?days=30`);
   await shot(p, "console-performance-dark");
@@ -156,8 +244,8 @@ await renderMark();
 
   await p.goto(`${SHOP}/wallet`);
   await shot(p, "shopper-wallet");
-  await p.getByRole("button", { name: /theme/i }).first().click().catch(() => {});
-  await p.waitForTimeout(1200);
+  await ctx.addCookies([{ name: "cios_theme", value: "dark", domain: `${SLUG}.qumo-app.com`, path: "/" }]);
+  await p.goto(`${SHOP}/wallet`);
   await shot(p, "shopper-wallet-dark");
   await ctx.close();
 }
