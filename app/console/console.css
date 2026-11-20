@@ -2436,13 +2436,13 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 
 .cn-prev-foot {
   font-size: 10.5px;
-  color: #8a8a90;
+  color: #6e6e75;
   margin: 6px 0 0;
   padding-top: 9px;
   border-top: 1px solid #e4e4e0;
 }
 
-.cn-prev-dark .cn-prev-foot { color: #71717a; border-color: #232326; }
+.cn-prev-dark .cn-prev-foot { color: #8b8b94; border-color: #232326; }
 
 @media (max-width: 860px) {
   .cn-setup-cols { grid-template-columns: 1fr; gap: 28px; }
@@ -3642,10 +3642,8 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   --ph-raised: #fafaf9;
   --ph-ink: #0a0a0a;
   --ph-ink-2: #52525b;
-  /* The shopper screens' own tertiary grey is #8a8a90, which is 3.4:1 on white
-     and fails for small text. The illustration is text on this page and has to
-     pass, so it uses the nearest grey that does (5.1:1). The shopper surface
-     itself still needs the same change; that is a separate audit item. */
+  /* The same grey as the shopper screens' --sc-ink-3, which tests/shopper-contrast
+     holds at 4.5:1 or better. Keep the two together. */
   --ph-ink-3: #6e6e75;
   --ph-line: #d9d9d4;
   --ph-line-soft: #efefec;
