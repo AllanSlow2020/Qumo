@@ -10,6 +10,7 @@
  * See README.md in this directory for the exact sequence.
  *
  *   node deck/capture.mjs <brand-slug> <batch-id> <provision-secret> [unscanned-code]
+ *   node deck/capture.mjs --art-only     # just the marks in deck/art, no app needed
  *
  * Pass an unscanned pack code and the award screen is captured too, which
  * is the one screen that shows the moment the mechanic pays. The provision
@@ -37,7 +38,7 @@ const ART = path.join(ROOT, "art");
 fs.mkdirSync(SHOTS, { recursive: true });
 fs.mkdirSync(ART, { recursive: true });
 
-const [SLUG = "copper-kettle", BATCH, SECRET_ARG, CODE] = process.argv.slice(2);
+const [SLUG = "copper-kettle", BATCH, SECRET_ARG, CODE] = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const SECRET = SECRET_ARG && SECRET_ARG !== "-" ? SECRET_ARG : process.env.PROVISION_SECRET;
 const TOTP_FILE = path.join(ROOT, ".capture-totp");
 const CONSOLE = "https://app.qumo-app.com";
@@ -57,10 +58,27 @@ const browser = await chromium.launch({
 const DESK = { viewport: { width: 1360, height: 850 }, deviceScaleFactor: 2, ignoreHTTPSErrors: true };
 const PHONE = { viewport: { width: 390, height: 780 }, deviceScaleFactor: 3, ignoreHTTPSErrors: true };
 
+/**
+ * The Q's own paths: the two whose outlines begin left of x=300 in the SVG's
+ * 696-wide viewBox. Everything else is "umo". brand-context.md, section 7:
+ * the mark is a blue Q.
+ */
+const isQ = (d) => parseFloat(d.slice(1)) < 300;
+
+/** The two-colour mark for a dark ground: a blue Q, and "umo" in white. */
+function twoColour(svg, q, rest) {
+  return svg.replace(/<path d="([^"]+)"/g, (_, d) => `<path fill="${isQ(d) ? q : rest}" d="${d}"`);
+}
+
 /** The Qumo mark, rendered from the SVG the app itself serves. */
 async function renderMark() {
-  const svg = fs.readFileSync(path.join(ROOT, "..", "public", "qumo.svg"), "utf8");
-  for (const [name, colour] of [["qumo-white", "#FFFFFF"], ["qumo-ink", "#0A0A0B"], ["qumo-blue", "#2563EB"]]) {
+  const plain = fs.readFileSync(path.join(ROOT, "..", "public", "qumo.svg"), "utf8");
+  for (const [name, colour, svg] of [
+    ["qumo-white", "#FFFFFF", plain],
+    ["qumo-ink", "#0A0A0B", plain],
+    ["qumo-blue", "#2563EB", plain],
+    ["qumo-blue-white", "#FFFFFF", twoColour(plain, "#2563EB", "#FFFFFF")],
+  ]) {
     const page = await browser.newPage({ viewport: { width: 1400, height: 460 }, deviceScaleFactor: 3 });
     await page.setContent(
       `<body style="margin:0;background:transparent;color:${colour};display:flex;align-items:center;` +
@@ -155,6 +173,10 @@ const shot = async (page, name) => {
 };
 
 await renderMark();
+if (process.argv.includes("--art-only")) {
+  await browser.close();
+  process.exit(0);
+}
 
 // Signed-out console: the two screens that show a brand is invited, not self-signed.
 {

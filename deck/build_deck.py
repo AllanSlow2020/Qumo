@@ -58,7 +58,7 @@ OUT = ARGS[0] if ARGS else os.path.join(style.HERE, "Qumo.pptx")
 
 def p01():
     s = slide()
-    logo(s, M, Inches(2.05), Inches(0.62))
+    logo(s, M, Inches(2.05), Inches(0.62), variant="blue-white")
     text(s, "You have never met\nthe people who buy you", M, Inches(3.05), Inches(10.5),
          Inches(1.7), size=50, bold=True, colour=INK, spacing=1.12)
     text(s, "Qumo turns the code under your pack into a reason to come back to your own page,\n"
