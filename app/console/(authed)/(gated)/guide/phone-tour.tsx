@@ -96,7 +96,7 @@ function Screen({ step, brand, consent }: { step: number; brand: TourBrand; cons
             from the {brand.campaignName} code you scanned. Sign in below and it lands in your balance.
           </p>
         </section>
-        <h1 className="ph-h1">{brand.name} rewards</h1>
+        <p className="ph-h1">{brand.name} rewards</p>
         <p className="ph-body">Enter your mobile number and we&apos;ll text you a code. No password to remember.</p>
         <div className="ph-field">
           <span className="ph-label">Mobile number</span>
@@ -115,7 +115,7 @@ function Screen({ step, brand, consent }: { step: number; brand: TourBrand; cons
     return (
       <>
         <Head brand={brand} />
-        <h1 className="ph-h1">{brand.name} rewards</h1>
+        <p className="ph-h1">{brand.name} rewards</p>
         <p className="ph-body">
           We sent a 6-digit code to <strong>082 123 4567</strong>. It expires in 10 minutes.
         </p>
@@ -161,7 +161,7 @@ function Screen({ step, brand, consent }: { step: number; brand: TourBrand; cons
       {brand.card ? (
         <section className="ph-tile">
           <div className="ph-card-head">
-            <h2 className="ph-h2">{brand.campaignName}</h2>
+            <p className="ph-h2">{brand.campaignName}</p>
             <span className="ph-count">
               {brand.card.filled}/{brand.card.total}
             </span>
@@ -184,7 +184,7 @@ function Screen({ step, brand, consent }: { step: number; brand: TourBrand; cons
           <p className="ph-label">Wallet</p>
         </section>
       )}
-      <h2 className="ph-h2">Rewards</h2>
+      <p className="ph-h2">Rewards</p>
       {brand.reward ? (
         <section className="ph-tile ph-tile-pos">
           <p className="ph-label">Yours to use</p>

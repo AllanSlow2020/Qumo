@@ -4,6 +4,10 @@ import { getBrandIdentity, MANAGE_IDENTITY_ROLES } from "@/lib/brand/manage";
 import { requireStaff } from "@/lib/staff/current";
 import { IdentityForm } from "./identity-form";
 import { AgeForm } from "./age-form";
+import type { Metadata } from "next";
+import { PRODUCT_NAME } from "@/lib/product";
+
+export const metadata: Metadata = { title: `Programme · ${PRODUCT_NAME}` };
 
 export default async function ConsoleSettingsPage() {
   const session = await requireStaff();

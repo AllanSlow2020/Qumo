@@ -52,6 +52,7 @@ function MemberControls({ member, isSelf }: { member: TeamMember; isSelf: boolea
           <input type="hidden" name="userId" value={member.id} />
           <select
             name="role"
+            aria-label={`Role for ${member.name}`}
             className="cn-input"
             defaultValue={member.role}
             style={{ fontSize: 13, padding: "6px 30px 6px 10px", width: "auto" }}

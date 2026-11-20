@@ -3,6 +3,10 @@ import type { Role } from "@prisma/client";
 import { listRecentRedemptions, REDEEM_COUPON_ROLES } from "@/lib/coupons/manage";
 import { requireStaff } from "@/lib/staff/current";
 import { RedeemForm } from "./redeem-form";
+import type { Metadata } from "next";
+import { PRODUCT_NAME } from "@/lib/product";
+
+export const metadata: Metadata = { title: `Redeem · ${PRODUCT_NAME}` };
 
 /**
  * Where a reward actually changes hands.

@@ -16,6 +16,10 @@ import {
   type StoreRow,
   type UnitAmount,
 } from "@/lib/console/performance";
+import type { Metadata } from "next";
+import { PRODUCT_NAME } from "@/lib/product";
+
+export const metadata: Metadata = { title: `Performance · ${PRODUCT_NAME}` };
 
 /**
  * "Is this working?"
