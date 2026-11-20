@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn, type LoginState } from "./actions";
 
@@ -21,16 +21,25 @@ export function StaffLoginForm() {
 
   const awaitingCode = state.secondFactorRequired === true;
 
+  // Where focus goes when an attempt fails. The submit button disables itself
+  // while it checks, and a focused element that becomes disabled drops focus
+  // to the page body, so a keyboard or screen reader user was left with
+  // nothing selected and had to start tabbing again. The message is announced
+  // already (it is an alert); this puts them back where they can retry.
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const codeRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     // The action sets the cookie; navigating is this component's job. refresh
     // first so the destination renders against the new session rather than a
     // cached signed-out view - the same reason the shopper login does it.
     if (state === INITIAL) return;
+    if (state.error) (awaitingCode ? codeRef : passwordRef).current?.focus();
     if (state.ok) {
       router.replace("/");
       router.refresh();
     }
-  }, [state, router]);
+  }, [state, router, awaitingCode]);
 
   return (
     <form action={action} className="cn-form">
@@ -59,6 +68,7 @@ export function StaffLoginForm() {
           type="password"
           autoComplete="current-password"
           required
+          ref={passwordRef}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           readOnly={awaitingCode}
@@ -77,6 +87,7 @@ export function StaffLoginForm() {
             autoComplete="one-time-code"
             placeholder="000000"
             required
+            ref={codeRef}
             autoFocus
           />
           <p className="cn-label" style={{ marginTop: 6 }}>

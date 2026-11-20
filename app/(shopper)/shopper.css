@@ -36,7 +36,7 @@
   --sc-raised: #fafaf9;
   --sc-ink: #0a0a0a;
   --sc-ink-2: #52525b;
-  --sc-ink-3: #8a8a90;
+  --sc-ink-3: #6e6e75;
   --sc-line: #e4e4e0;
   --sc-line-soft: #efefec;
   /* The ring on an uncollected stamp. Deliberately not --sc-line: a hairline
@@ -67,7 +67,7 @@
     --sc-raised: #131315;
     --sc-ink: #f7f7f5;
     --sc-ink-2: #a1a1a8;
-    --sc-ink-3: #71717a;
+    --sc-ink-3: #8b8b94;
     --sc-line: #232326;
     --sc-line-soft: #1a1a1d;
     --sc-stamp-off: #46464e;
@@ -90,7 +90,7 @@
   --sc-raised: #131315;
   --sc-ink: #f7f7f5;
   --sc-ink-2: #a1a1a8;
-  --sc-ink-3: #71717a;
+  --sc-ink-3: #8b8b94;
   --sc-line: #232326;
   --sc-line-soft: #1a1a1d;
   --sc-stamp-off: #46464e;

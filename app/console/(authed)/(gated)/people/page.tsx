@@ -3,6 +3,10 @@ import { requireStaff } from "@/lib/staff/current";
 import { listTeam, MANAGE_USER_ROLES } from "@/lib/staff/users";
 import { InviteForm } from "./invite-form";
 import { TeamTable } from "./team-table";
+import type { Metadata } from "next";
+import { PRODUCT_NAME } from "@/lib/product";
+
+export const metadata: Metadata = { title: `Team · ${PRODUCT_NAME}` };
 
 export default async function ConsolePeoplePage() {
   const session = await requireStaff();

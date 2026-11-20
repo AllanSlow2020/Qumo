@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useNavPending } from "./nav-pending";
 
 /**
  * The console's navigation, and the only reason it is a client component.
@@ -197,7 +198,11 @@ function isCurrent(pathname: string, href: string): boolean {
 }
 
 export function ConsoleNav() {
-  const pathname = usePathname();
+  // Where the console is going, if a click has set it off, otherwise where it
+  // is. The highlight moves on the click and not when the server answers.
+  const pending = useNavPending();
+  const here = usePathname();
+  const pathname = pending ?? here;
 
   return (
     <nav className="cn-nav" aria-label="Console sections">

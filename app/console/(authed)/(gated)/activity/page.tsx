@@ -1,5 +1,9 @@
 import { requireStaff } from "@/lib/staff/current";
 import { describeAction, isNotable, listAuditEvents, PAGE_SIZE } from "@/lib/audit/read";
+import type { Metadata } from "next";
+import { PRODUCT_NAME } from "@/lib/product";
+
+export const metadata: Metadata = { title: `Activity · ${PRODUCT_NAME}` };
 
 /**
  * The log, read by the people it watches.

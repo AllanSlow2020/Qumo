@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatSecretForDisplay } from "@/lib/staff/totp";
 import { confirmCode, newRecoveryCodes, startEnrolment, turnOff } from "./actions";
 import { IDLE, type SecurityState } from "./state";
@@ -21,6 +22,31 @@ export function SecurityForm({
 }) {
   const [state, setState] = useState<SecurityState>(IDLE);
   const [starting, setStarting] = useState(false);
+  const router = useRouter();
+
+  /*
+   * Tell the server components above this one that the answer changed.
+   *
+   * The nav in (authed)/layout.tsx is hidden while a second factor is
+   * outstanding, and that layout is a server component rendered once. This
+   * form enrolling - or, for a role that may, turning the factor off -
+   * changes what it would decide, but nothing re-asks it, so the console
+   * stays stripped of its navigation until a full page load.
+   *
+   * Found by somebody enrolling for the first time on production and
+   * landing on an Overview with no way to leave it. The reproduction is
+   * scripts/repro-nav.ts: three links before, three immediately after, and
+   * fourteen only once the page is reloaded.
+   *
+   * Keyed on `step` rather than on the state object, which is replaced on
+   * every keystroke-driven action result and would refresh far more often
+   * than anything changed.
+   */
+  useEffect(() => {
+    if (state.step === "codes" || state.step === "done") {
+      router.refresh();
+    }
+  }, [state.step, router]);
 
   if (state.step === "codes") {
     return <RecoveryCodes codes={state.codes} />;

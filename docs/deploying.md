@@ -261,10 +261,13 @@ Standard key `qumo-live`, and `scripts/preflight.mjs` no longer prints its
 auth-token warning: that warning's absence from a build log is how you
 tell, without opening Vercel, which credential a deployment is using.
 
-`TWILIO_AUTH_TOKEN` is still set in Vercel and is now dormant, because
-`resolveTwilioCredentials` prefers the key pair when both halves are
-present. Delete it anyway. There is no reason for the master credential for
-the whole account to sit in an environment that does not read it.
+`TWILIO_AUTH_TOKEN` is set in Vercel and **must stay there**. For *sending* it
+is dormant, because `resolveTwilioCredentials` prefers the key pair when both
+halves are present, and an earlier version of this page said to delete it
+for that reason. That advice is reversed: the token is now the only thing
+that authenticates *inbound* messages, as the next sections explain. Unset
+it and the webhook refuses every shopper's text. Sending still runs on the
+key pair; the token is read only to check a signature.
 
 ### What a passcode has to get past
 
@@ -307,33 +310,103 @@ If it appears again, look it up rather than trusting this paragraph.
 written with `logger.error`, so a configured webhook would have put the
 code in front of somebody within seconds instead of after an afternoon.
 
-Receiving works, and it needs two things done in Twilio that nothing here
-can do for you.
+### Receiving messages, and how the webhook proves it is Twilio
 
-The route answers in TwiML now (`lib/sms/twiml.ts`), which is what Twilio
+Receiving works. It needs `TWILIO_AUTH_TOKEN` in Vercel and one setting in
+Twilio, and nothing here can do the second for you.
+
+The route answers in TwiML (`lib/sms/twiml.ts`), which is what Twilio
 parses; it used to answer in plain text, which Twilio reads as an
 application error, logs as a 12200 schema warning, and replies to with
 nothing. The channel looked fine from our side and was silence from the
 shopper's.
 
-To switch it on: set `SMS_WEBHOOK_SECRET` to a long random string in
-Vercel, then in the Twilio console open the number, find "A message comes
-in", and set it to `https://app.qumo-app.com/api/sms/inbound?token=<that
-same string>`, method POST. The token goes in the URL because the Twilio
-console offers a URL field and no way to set a header.
+**How it knows a message is Twilio's.** Twilio signs every webhook with an
+`X-Twilio-Signature` header: an HMAC over the exact URL it called and every
+POST parameter, keyed with the account's Auth Token. `/api/sms/inbound`
+recomputes it and answers 401 unless it matches. The sender, the body and
+the URL are all inside what is signed, so a forged `From` is refused. A
+shared secret could never do that, because anyone holding it can claim to be
+any number. Why that matters, and the trade it makes, is in
+`lib/sms/twilio-signature.ts`.
 
-Then text the number `HELP` from a phone. A reply means every part of it
-is working. No reply, with a 200 in Twilio's debugger, means the token did
-not match: the route answers 401 to an unknown token and 401 to no token
-at all, and it answers 401 to everything while `SMS_WEBHOOK_SECRET` is
-unset, which is the state every deployment starts in.
+**To switch it on:**
 
-Not adopted, on purpose: Twilio can sign each webhook with
-`X-Twilio-Signature`, which is stronger than a secret in the URL. It signs
-with the account auth token, the credential production has just been moved
-off, and making it load-bearing again to protect an endpoint already behind
-a constant-time comparison is the wrong trade. Revisit if Twilio ever signs
-with a scoped key.
+1. In Vercel, set `TWILIO_AUTH_TOKEN` for Production to the account's Auth
+   Token, from the Twilio console. It is read for a local HMAC and never sent
+   anywhere. Sending keeps using the API key.
+2. In the Twilio console open the number, find "A message comes in", and set
+   it to exactly `https://app.qumo-app.com/api/sms/inbound`, method POST.
+   **No `?token=` on the end.** An earlier version of this page put one
+   there; see below.
+
+**The three states the route can be in:**
+
+| Set in Vercel | What the route accepts |
+|---|---|
+| `TWILIO_AUTH_TOKEN` | A valid `X-Twilio-Signature`, and nothing else. `SMS_WEBHOOK_SECRET`, if it is also set, is not consulted at all, so the weaker of the two never decides. A JSON body is refused too, because a signature only covers form parameters. |
+| Only `SMS_WEBHOOK_SECRET` | `Authorization: Bearer <secret>`, header only, for a provider that cannot sign. **It cannot work with Twilio**, whose webhook settings have nowhere to put a header, and the preflight warns about that exact combination. |
+| Neither | Every request answers 401. This is the state every new deployment starts in, and it is the safe direction. |
+
+**The URL has to match to the character.** Twilio signed the string it was
+given in its console. The route rebuilds the public URL from
+`x-forwarded-proto` and `x-forwarded-host`, which is correct on Vercel, and
+keeps any query string. A different host, `http` where Twilio used `https`,
+or a stray trailing slash makes every signature fail, and that looks exactly
+like a wrong Auth Token. If you suspect it, set `TWILIO_WEBHOOK_URL` in
+Vercel to the exact string from the Twilio console: it overrides the
+inference.
+
+**Test it by texting `BALANCE`, not `HELP`.** A reply to `BALANCE` means
+every part of the chain works, the signature included: that is how it was
+proved in production, and again after the shared secret was removed. `HELP`
+tells you nothing, because Twilio reserves it and answers itself before our
+webhook is ever called (`docs/open-items.md` has the detail).
+
+Then check the gate is shut. A POST with no signature must be refused:
+
+```
+curl -i -X POST https://app.qumo-app.com/api/sms/inbound -d 'From=%2B27000000000&Body=BALANCE'
+```
+
+The answer must be `401 Unauthorized`, and nothing is acted on: the route
+does nothing with the body until the signature has passed. Run it against
+production: a Preview deployment may sit behind Vercel's own deployment
+protection and answer for a different reason, which would tell you nothing
+about the route. From production, any answer other than 401 means the
+endpoint is open, which is not a state to leave.
+
+**If messages are not arriving,** the failure is quiet. The route answers 401
+without writing a log line, so nothing appears in Vercel's runtime logs. The
+only place it shows is Twilio's own debugger, as a failed delivery. In order
+of likelihood: `TWILIO_AUTH_TOKEN` is missing or wrong in *that*
+environment; the URL does not match, above; or the number's webhook still
+carries the old `?token=`. That last one still verifies, because the query
+string is part of the signed URL, but it leaves a secret in the URL, so take
+it off.
+
+**Preview** has no `TWILIO_AUTH_TOKEN` by design, so a Preview build prints a
+preflight warning that nothing authenticates the inbound webhook. That is
+cosmetic: warnings never fail a build, only the refusals do.
+
+**To rotate the token,** Twilio issues a secondary Auth Token, which is what
+lets this be done without everything breaking at once. The reasoning is in
+`lib/sms/twilio-signature.ts`.
+
+**Why a signature, when this page used to say otherwise.** The webhook used
+to be protected by a shared secret in the URL, `?token=<secret>`, because
+the Twilio console offers a URL field and no way to set a header. This page
+said the signature was "not adopted, on purpose", on the grounds that it
+needs the Auth Token, which sending had just moved off. It was adopted in
+the security work that followed the review of 10 November, for two reasons.
+A secret in a URL is recorded by Twilio's own request inspector and by the
+platform's logs, so it leaks by design. And a secret proves who called, not
+what they said: whoever holds it can post any sender, including a `YES` that
+writes a consent record for a number that never consented, which would
+corrupt the evidence the whole lawful basis rests on. The cost is that the
+Auth Token is back in the environment. It is accepted because the token is
+used only for a local HMAC, because anyone who could read it could already
+read `DATABASE_URL` and `ENCRYPTION_KEY`, and because it can be rotated.
 
 The build runs `scripts/preflight.mjs` first and refuses to deploy if any of
 the four secrets is missing, if `ENCRYPTION_KEY` is the wrong length, or if

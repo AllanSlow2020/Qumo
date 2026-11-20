@@ -84,29 +84,34 @@ export function provisionSecretMatches(supplied: string): boolean {
 }
 
 /**
- * Which field's unique constraint a P2002 actually violated.
+ * Which unique value a P2002 actually collided on: "slug", "email", or null
+ * when neither row exists (a concurrent attempt that rolled back, say).
  *
- * Not as simple as it should be, and worth writing down because the obvious
- * two attempts are both wrong. Matching on the error message text is
- * brittle. Reading `meta.target`, which is what Prisma's own documentation
- * describes and what most examples use, returns nothing here: under the pg
- * driver adapter the violated constraint arrives nested at
- * meta.driverAdapterError.cause.constraint.fields instead.
+ * This asks the database rather than reading the error, and that is the
+ * point. Where Prisma puts the violated constraint has moved between patch
+ * releases of the pg adapter, and it moved in a way that fails quietly:
  *
- * So both are read, adapter shape first. lib/staff/users.ts does not need
- * this because only one unique column is reachable from there and any P2002
- * means the email; here two are, and they need different answers.
+ *   - `meta.target`, which Prisma's documentation describes, is absent under
+ *     the driver adapter.
+ *   - 7.9.x nested the column names at
+ *     meta.driverAdapterError.cause.constraint.fields.
+ *   - 7.10.x dropped `fields` and sends only the constraint's name,
+ *     meta.driverAdapterError.cause.constraint.index ("Brand_slug_key").
+ *
+ * Each shape returned an empty answer to code written for the one before, and
+ * the visible symptom was a generic "Something went wrong" instead of "that
+ * address is taken". Parsing the constraint name would hold until the next
+ * change of convention. A lookup holds whatever the error looks like, so the
+ * code no longer depends on a shape the vendor does not promise.
+ *
+ * Slug is checked first, as it always was: when both are taken, the address
+ * is the thing to change. lib/staff/users.ts does not need this because only
+ * one unique column is reachable from there.
  */
-function violatedFields(err: Prisma.PrismaClientKnownRequestError): string[] {
-  const meta = err.meta as
-    | { target?: unknown; driverAdapterError?: { cause?: { constraint?: { fields?: unknown } } } }
-    | undefined;
-
-  const fromAdapter = meta?.driverAdapterError?.cause?.constraint?.fields;
-  if (Array.isArray(fromAdapter)) return fromAdapter.map(String);
-  if (Array.isArray(meta?.target)) return meta.target.map(String);
-  if (typeof meta?.target === "string") return [meta.target];
-  return [];
+async function whatIsTaken(slug: string, ownerEmail: string): Promise<"slug" | "email" | null> {
+  if (await prisma.brand.findUnique({ where: { slug }, select: { id: true } })) return "slug";
+  if (await prisma.user.findUnique({ where: { email: ownerEmail }, select: { id: true } })) return "email";
+  return null;
 }
 
 /**
@@ -169,14 +174,14 @@ export async function provisionBrand(input: unknown): Promise<ProvisionedBrand> 
   } catch (err) {
     // Both unique constraints are reachable from here and they need
     // different answers: pick another address, or that person already has an
-    // account. See violatedFields() for why telling them apart is fiddlier
-    // than it looks.
+    // account. See whatIsTaken() for why that is looked up, not read off the
+    // error.
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
-      const fields = violatedFields(err);
-      if (fields.includes("slug")) {
+      const taken = await whatIsTaken(slug, ownerEmail);
+      if (taken === "slug") {
         throw new ProvisionError("That address is already taken.");
       }
-      if (fields.includes("email")) {
+      if (taken === "email") {
         // Vague about *where* it exists, like the invite path: an address
         // may belong to another brand, and confirming that maps out who
         // works where.

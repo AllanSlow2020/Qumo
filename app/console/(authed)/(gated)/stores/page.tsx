@@ -4,6 +4,10 @@ import { listStores, MANAGE_STORE_ROLES } from "@/lib/stores/manage";
 import { requireStaff } from "@/lib/staff/current";
 import { AddStoreForm } from "./add-store-form";
 import { StoreActions } from "./store-actions";
+import type { Metadata } from "next";
+import { PRODUCT_NAME } from "@/lib/product";
+
+export const metadata: Metadata = { title: `Stores · ${PRODUCT_NAME}` };
 
 export default async function ConsoleStoresPage() {
   const session = await requireStaff();

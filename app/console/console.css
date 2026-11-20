@@ -67,7 +67,11 @@
   --cn-raised: #fafafa;
   --cn-ink: #0a0a0a;
   --cn-ink-2: #525252;
-  --cn-ink-3: #737373;
+  /* Both text colours were measured at 4.35:1 and 3.0:1 on the page grey, below
+     the 4.5:1 that small text needs. This grey is 5.1:1 on #f5f5f5, and the
+     green below is 4.6:1 on it and 5.0:1 on white. tests/console-contrast.test.ts
+     holds them there. */
+  --cn-ink-3: #686868;
   --cn-line: #e5e5e5;
   --cn-line-soft: #ededed;
 
@@ -101,7 +105,7 @@
   /* The emphasised mark in a chart: today, or the segment being explained. */
   --cn-data: #0d9488;
 
-  --cn-pos: #16a34a;
+  --cn-pos: #15803d;
   --cn-warn: #a16207;
   --cn-warn-bg: #fefce8;
   /* Destructive only, never decoration. */
@@ -384,7 +388,7 @@ html[data-theme="dark"]:has(.cn) body {
   border: 0;
 }
 
-.cn-side .cn-mark { padding: 0 8px; }
+.cn-side .cn-mark { padding: 0 8px; min-height: 44px; }
 
 /* Content takes everything left over and may shrink to nothing before the
    column does, so the two never fight over a narrow window. */
@@ -488,7 +492,11 @@ html[data-theme="dark"]:has(.cn) body {
   font-size: 13.5px;
   font-weight: 500;
   letter-spacing: -0.01em;
-  padding: 9px 10px;
+  /* 44px is the touch-target floor (the audit found these at 34px). The
+     height is set rather than grown from padding so it cannot drift back
+     when somebody changes the type size. */
+  min-height: 44px;
+  padding: 0 10px;
   border-radius: 10px;
 }
 
@@ -532,8 +540,9 @@ html[data-theme="dark"]:has(.cn) body {
 
 .cn-side-brand { font-size: 13px; font-weight: 600; color: var(--cn-ink); }
 .cn-side-who { font-size: 12px; color: var(--cn-ink-3); }
-.cn-side-links { font-size: 12px; color: var(--cn-ink-3); margin-top: 4px; }
-.cn-side-links a { color: var(--cn-ink-3); }
+.cn-side-links { font-size: 12px; color: var(--cn-ink-3); display: flex; flex-wrap: wrap; align-items: center; }
+.cn-side-links a { color: var(--cn-ink-3); display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; }
+.cn-side-links a:first-child { padding-left: 0; }
 .cn-side-links a:hover { color: var(--cn-ink); }
 
 /* The shell on a phone: the column becomes a drawer.
@@ -716,8 +725,13 @@ html[data-theme="dark"]:has(.cn) body {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
+  /* Wraps, so a long name and its status pill stack on a very narrow screen
+     instead of pushing the page wider than the window (WCAG 1.4.10). */
+  flex-wrap: wrap;
+  gap: 6px 12px;
 }
+
+.cn-panel-head > * { min-width: 0; overflow-wrap: anywhere; }
 
 /* Wide content scrolls inside its own box; the page itself never scrolls
    sideways. */
@@ -1181,6 +1195,13 @@ html[data-theme="dark"]:has(.cn) body {
    bottom-right, the way it is read - and stop short of anything that would
    still be moving by the time somebody reaches for it.
 
+   That last part is a budget, and it was overspent. Every panel replays its
+   entrance on every page change, so what looks considered once a session is
+   what you wait through forty times a day. Measured on a real navigation,
+   the page took 560 to 750ms to stop moving after the content had already
+   arrived. The whole arrival now fits in about 300ms: a short fade with a
+   5px rise, and the last panel starting 100ms after the first.
+
    Everything here is decoration over content that is already correct in the
    HTML. A browser that ignores all of it shows the finished page, which is
    the only acceptable failure mode for a dashboard.
@@ -1191,7 +1212,7 @@ html[data-theme="dark"]:has(.cn) body {
 @keyframes cn-rise {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(5px);
   }
   to {
     opacity: 1;
@@ -1217,29 +1238,29 @@ html[data-theme="dark"]:has(.cn) body {
    * `backwards` hands the element back to the normal cascade the moment it
    * finishes, and since the `to` keyframe is the element's resting state
    * anyway, nothing moves when it does. */
-  animation: cn-rise 420ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+  animation: cn-rise 220ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
 }
 
 /* Staggered by position, not by JavaScript. Eight is where it stops: a
    ninth card arriving two thirds of a second after the first is no longer
    an entrance, it is a wait. */
 .cn-metric:nth-child(2),
-.cn-main > .cn-panel:nth-child(2) { animation-delay: 40ms; }
+.cn-main > .cn-panel:nth-child(2) { animation-delay: 20ms; }
 .cn-metric:nth-child(3),
-.cn-main > .cn-panel:nth-child(3) { animation-delay: 80ms; }
+.cn-main > .cn-panel:nth-child(3) { animation-delay: 40ms; }
 .cn-metric:nth-child(4),
-.cn-main > .cn-panel:nth-child(4) { animation-delay: 120ms; }
+.cn-main > .cn-panel:nth-child(4) { animation-delay: 60ms; }
 .cn-metric:nth-child(5),
-.cn-main > .cn-panel:nth-child(5) { animation-delay: 160ms; }
+.cn-main > .cn-panel:nth-child(5) { animation-delay: 80ms; }
 .cn-metric:nth-child(n + 6),
-.cn-main > .cn-panel:nth-child(n + 6) { animation-delay: 200ms; }
+.cn-main > .cn-panel:nth-child(n + 6) { animation-delay: 100ms; }
 
 .cn-split-main > .cn-panel:nth-child(2),
-.cn-promo-grid > .cn-panel:nth-child(2) { animation-delay: 60ms; }
+.cn-promo-grid > .cn-panel:nth-child(2) { animation-delay: 30ms; }
 .cn-split-main > .cn-panel:nth-child(3),
-.cn-promo-grid > .cn-panel:nth-child(3) { animation-delay: 120ms; }
+.cn-promo-grid > .cn-panel:nth-child(3) { animation-delay: 60ms; }
 .cn-split-main > .cn-panel:nth-child(n + 4),
-.cn-promo-grid > .cn-panel:nth-child(n + 4) { animation-delay: 180ms; }
+.cn-promo-grid > .cn-panel:nth-child(n + 4) { animation-delay: 90ms; }
 
 /* The rail is the one panel that also arrives mid-session: clicking Edit
    swaps what is in it, the new panel is a new element, and the same rule
@@ -1247,18 +1268,18 @@ html[data-theme="dark"]:has(.cn) body {
    that reads as considered on page load reads as lag when it is the
    response to a click. */
 .cn-split-side > .cn-panel {
-  animation-duration: 240ms;
+  animation-duration: 180ms;
   animation-delay: 0ms;
 }
 
 /* A step in the getting-started list, in reading order and faster than the
    panels, because six of them at panel speed is a queue. */
-.cn-step { animation: cn-rise 300ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
-.cn-step:nth-child(2) { animation-delay: 45ms; }
-.cn-step:nth-child(3) { animation-delay: 90ms; }
-.cn-step:nth-child(4) { animation-delay: 135ms; }
-.cn-step:nth-child(5) { animation-delay: 180ms; }
-.cn-step:nth-child(n + 6) { animation-delay: 225ms; }
+.cn-step { animation: cn-rise 220ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+.cn-step:nth-child(2) { animation-delay: 25ms; }
+.cn-step:nth-child(3) { animation-delay: 50ms; }
+.cn-step:nth-child(4) { animation-delay: 75ms; }
+.cn-step:nth-child(5) { animation-delay: 100ms; }
+.cn-step:nth-child(n + 6) { animation-delay: 125ms; }
 
 /* The mark filling when a step is already done. Scale only - a step that
    was done before the page loaded should settle, not announce itself. */
@@ -1274,7 +1295,7 @@ html[data-theme="dark"]:has(.cn) body {
 .cn-spark i,
 .cn-chart i {
   transform-origin: bottom;
-  animation: cn-grow 420ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+  animation: cn-grow 260ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
 }
 
 @keyframes cn-grow {
@@ -1282,12 +1303,12 @@ html[data-theme="dark"]:has(.cn) body {
   to { transform: none; }
 }
 
-.cn-spark i:nth-child(2), .cn-chart i:nth-child(2) { animation-delay: 30ms; }
-.cn-spark i:nth-child(3), .cn-chart i:nth-child(3) { animation-delay: 60ms; }
-.cn-spark i:nth-child(4), .cn-chart i:nth-child(4) { animation-delay: 90ms; }
-.cn-spark i:nth-child(5), .cn-chart i:nth-child(5) { animation-delay: 120ms; }
-.cn-spark i:nth-child(6), .cn-chart i:nth-child(6) { animation-delay: 150ms; }
-.cn-spark i:nth-child(n + 7), .cn-chart i:nth-child(n + 7) { animation-delay: 180ms; }
+.cn-spark i:nth-child(2), .cn-chart i:nth-child(2) { animation-delay: 15ms; }
+.cn-spark i:nth-child(3), .cn-chart i:nth-child(3) { animation-delay: 30ms; }
+.cn-spark i:nth-child(4), .cn-chart i:nth-child(4) { animation-delay: 45ms; }
+.cn-spark i:nth-child(5), .cn-chart i:nth-child(5) { animation-delay: 60ms; }
+.cn-spark i:nth-child(6), .cn-chart i:nth-child(6) { animation-delay: 75ms; }
+.cn-spark i:nth-child(n + 7), .cn-chart i:nth-child(n + 7) { animation-delay: 90ms; }
 
 /* ---------- hover ----------
    Only where there is a pointer that can hover. On a touch screen :hover
@@ -1508,191 +1529,6 @@ html[data-theme="dark"]:has(.cn) body {
   max-width: 62ch;
 }
 
-/* ---- the three kinds of code ---- */
-
-/* Eight rows, shared by every column.
- *
- * The comparison is the content here - a reader is meant to run their eye
- * along "What it proves" and see that one of them says Nothing. Three
- * independent columns put that row at three different heights, because the
- * line above it wraps to one line in one column and three in another, and
- * the eye has to hunt for each label instead of scanning across. Subgrid
- * makes the columns share the parent's rows, so every label sits on the
- * same line as its siblings whatever the text above it did.
- *
- * Where subgrid is not understood the declaration is dropped and the cards
- * lay out exactly as they did before: readable, just not aligned. */
-.cn-fig-kinds {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  grid-template-rows: auto auto repeat(6, auto);
-  gap: 10px;
-}
-
-.cn-fig-kind {
-  display: grid;
-  grid-row: span 8;
-  grid-template-rows: subgrid;
-  gap: 8px;
-  padding: 14px;
-  border: 1px solid var(--cn-line);
-  border-radius: var(--cn-radius-inner);
-  background: var(--cn-raised);
-}
-
-/* The one that never pays, drawn as the one that never pays. A reader
-   running their eye along the row should be able to see which column is
-   different before reading a word of it. */
-.cn-fig-kind-off {
-  background: transparent;
-  border-style: dashed;
-}
-
-.cn-fig-kind-off .cn-fig-art,
-.cn-fig-kind-off .cn-fig-name { color: var(--cn-ink-3); }
-
-/* The six label-and-value rows, handed straight back to the parent grid so
-   they line up across the columns rather than within one. */
-.cn-fig-dl {
-  margin: 0;
-  display: grid;
-  grid-row: span 6;
-  grid-template-rows: subgrid;
-  gap: 0;
-}
-
-.cn-fig-dl dt {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--cn-ink-3);
-}
-
-.cn-fig-dl dd {
-  margin: 0 0 6px;
-  font-size: 12.5px;
-  line-height: 1.45;
-  color: var(--cn-ink-2);
-}
-
-.cn-fig-dl dd:last-of-type { margin-bottom: 0; }
-
-/* ---- the journey ---- */
-
-.cn-fig-steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
-  counter-reset: none;
-}
-
-.cn-fig-step {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  padding: 14px;
-  border: 1px solid var(--cn-line);
-  border-radius: var(--cn-radius-inner);
-  background: var(--cn-raised);
-}
-
-/* The number is the only thing here that says these are ordered, so it is
-   drawn rather than implied by position - the grid reflows to one column on
-   a phone and "left to right" stops meaning anything. */
-.cn-fig-num {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--cn-accent);
-  font-variant-numeric: tabular-nums;
-}
-
-/* ---- the stamp carry-over ---- */
-
-.cn-fig-carry {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  border: 1px solid var(--cn-line);
-  border-radius: var(--cn-radius-inner);
-  background: var(--cn-raised);
-}
-
-.cn-fig-carry-row { display: flex; flex-direction: column; gap: 7px; }
-
-.cn-fig-carry-label { font-size: 12px; color: var(--cn-ink-2); }
-
-.cn-fig-marks { display: flex; gap: 6px; flex-wrap: wrap; }
-
-.cn-fig-mark {
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  border: 1.5px dashed var(--cn-line-strong);
-}
-
-.cn-fig-mark-on { border: 1.5px solid var(--cn-accent); background: var(--cn-accent); }
-
-/* Spent, not empty. These ten were collected and then deducted, and drawing
-   them as gaps would say the customer lost them. */
-.cn-fig-mark-spent {
-  border: 1.5px solid var(--cn-line-strong);
-  background: var(--cn-line);
-}
-
-/* ---- the loop ---- */
-
-/* Four stages that come back round. The return is drawn, because it is the
-   claim: a line of boxes would end at "they earned something" and stop
-   making the argument the section is there to make. */
-.cn-fig-loop {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
-}
-
-.cn-fig-loop-step {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 14px 14px 14px 16px;
-  border: 1px solid var(--cn-line);
-  border-radius: var(--cn-radius-inner);
-  background: var(--cn-raised);
-}
-
-.cn-fig-loop-dot {
-  position: absolute;
-  left: 0;
-  top: 14px;
-  bottom: 14px;
-  width: 2px;
-  border-radius: 2px;
-  background: var(--cn-accent);
-}
-
-.cn-fig-loop-back {
-  position: absolute;
-  right: 12px;
-  bottom: 10px;
-  width: 24px;
-  color: var(--cn-accent);
-}
-
-.cn-fig-loop-back svg { width: 100%; height: auto; display: block; }
-
 /* ---- the award shapes ---- */
 
 .cn-fig-shapes {
@@ -1729,17 +1565,7 @@ html[data-theme="dark"]:has(.cn) body {
   color: var(--cn-ink-3);
 }
 
-/* ---- the ceiling ---- */
-
-.cn-fig-ceiling {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid var(--cn-line);
-  border-radius: var(--cn-radius-inner);
-  background: var(--cn-raised);
-}
+/* ---- the ceiling bar (used by the cost calculator) ---- */
 
 .cn-fig-ceiling-bar {
   position: relative;
@@ -1767,20 +1593,6 @@ html[data-theme="dark"]:has(.cn) body {
   border-radius: 2px;
   background: var(--cn-warn);
 }
-
-.cn-fig-ceiling-keys { display: flex; flex-direction: column; gap: 6px; }
-
-.cn-fig-key {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-  margin-right: 6px;
-  vertical-align: baseline;
-}
-
-.cn-fig-key-fill { background: var(--cn-accent); }
-.cn-fig-key-cap { background: var(--cn-warn); }
 
 /* ---- the honour window ---- */
 
@@ -2629,13 +2441,13 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 
 .cn-prev-foot {
   font-size: 10.5px;
-  color: #8a8a90;
+  color: #6e6e75;
   margin: 6px 0 0;
   padding-top: 9px;
   border-top: 1px solid #e4e4e0;
 }
 
-.cn-prev-dark .cn-prev-foot { color: #71717a; border-color: #232326; }
+.cn-prev-dark .cn-prev-foot { color: #8b8b94; border-color: #232326; }
 
 @media (max-width: 860px) {
   .cn-setup-cols { grid-template-columns: 1fr; gap: 28px; }
@@ -2673,7 +2485,9 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 .cn-promo-grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  /* min() so a column never asks for more room than the screen has: a fixed
+     340px minimum made this page scroll sideways on a 320px phone. */
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
 }
 
 .cn-flow-rail {
@@ -3074,3 +2888,1368 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   text-transform: uppercase;
   max-width: 340px;
 }
+
+/* ---------- guide: where to start, the ladder of proof, the cost calculator ----------
+   Three things on the How it works page that a brand can use rather than only
+   read. They share the page's rule about colour: the accent is the one filled
+   control on a screen, so everything here that can be chosen is neutral and a
+   selected choice is an ink ring, never a blue one. The accent shows up
+   twice: the "Start here" badge, because it is the one recommendation, and
+   the primary "Scan it" button. */
+
+/* ---- where to start ---- */
+
+.cn-start-lead { max-width: 62ch; }
+
+.cn-start-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.cn-start-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+  transition:
+    transform 240ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 240ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    border-color 160ms;
+}
+
+/* The same lift as every other card that responds: one physical system.
+   Only where there is a pointer to hover with. On a touch screen :hover sticks
+   to whatever was last tapped, and a card left floating after the tap that
+   scrolled to the ladder reads as a bug. */
+@media (hover: hover) {
+  .cn-start-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--cn-line-strong);
+    box-shadow: var(--cn-shadow-hover);
+  }
+}
+
+/* The recommended one is picked out by weight, not by colour. */
+.cn-start-card-first {
+  border-color: var(--cn-ink);
+  box-shadow: 0 0 0 1px var(--cn-ink);
+  background: var(--cn-surface);
+}
+
+@media (hover: hover) {
+  .cn-start-card-first:hover { border-color: var(--cn-ink); }
+}
+
+.cn-start-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.cn-start-badge {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 10px;
+  border-radius: var(--cn-radius-badge);
+  background: var(--cn-accent);
+  color: var(--cn-accent-ink);
+  white-space: nowrap;
+}
+
+.cn-start-name { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.cn-start-body { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--cn-ink-2); }
+
+.cn-start-effort {
+  margin: auto 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--cn-line);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cn-start-effort dt { font-size: 12px; color: var(--cn-ink-3); }
+.cn-start-effort dd { margin: 0; font-size: 14px; font-weight: 500; color: var(--cn-ink); }
+
+/* The hit area is the whole card; the focus ring is drawn on the card too. */
+.cn-start-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cn-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--cn-line-strong);
+  text-underline-offset: 3px;
+}
+
+.cn-start-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.cn-start-link:focus-visible { outline: none; }
+.cn-start-link:focus-visible::after { outline: 2px solid var(--cn-ink); outline-offset: 2px; }
+
+/* ---- the ladder of proof ---- */
+
+/* The three interactive figures answer to their own width, not the window's.
+   They sit beside a sidebar and, on a wide screen, a contents rail, so a
+   window that is 1024px across leaves one of them roughly 450px. A viewport
+   breakpoint would call that desktop and lay three columns into it. */
+.cn-ladder,
+.cn-calc,
+.cn-card { container-type: inline-size; }
+
+.cn-ladder { gap: 14px; }
+
+.cn-ladder-rungs {
+  display: grid;
+  /* One column, or three: two across would leave the third on a row by itself. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* Three across where there is room. The cards are the same height and their
+   rows line up: they used to step up from left to right, which made the three
+   look like three different sizes and pushed "what it proves" to a different
+   line in each. The rise is carried by the proof meter inside each card, which
+   fills as you go, so it is not lost. */
+@container (min-width: 560px) {
+  .cn-ladder-rungs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.cn-rung {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+  transition: border-color 160ms, box-shadow 160ms, background-color 160ms;
+}
+
+/* Each card takes four rows of the grid it sits in (its picture and name, who
+   can scan it, what it proves, what it can award) and uses them as its own, so
+   "what it proves" starts on the same line in all three whatever the text above
+   it did, and the cards are the same height by construction. Where subgrid is
+   not understood the card stays a column of its own, which is the layout it
+   always had. */
+@supports (grid-template-rows: subgrid) {
+  .cn-rung {
+    display: grid;
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+    /* Inherit the grid's gap, so the rows are 12px apart inside a card. */
+    row-gap: inherit;
+  }
+
+  /* Its three rows become rows of the card itself. */
+  /* Written with the parent, so it outranks .cn-rung-body further down. */
+  .cn-rung > .cn-rung-body { display: contents; }
+}
+
+/* The one that never pays, drawn as the one that never pays. */
+.cn-rung[data-level="0"] { border-style: dashed; background: transparent; }
+
+.cn-rung:hover { border-color: var(--cn-line-strong); }
+
+.cn-rung[data-selected="true"] {
+  border-color: var(--cn-ink);
+  box-shadow: 0 0 0 1px var(--cn-ink);
+  background: var(--cn-surface);
+}
+
+.cn-rung-input { position: absolute; opacity: 0; pointer-events: none; }
+
+.cn-rung-top { display: flex; flex-direction: column; gap: 8px; }
+
+.cn-rung-name { font-size: 14px; font-weight: 600; color: var(--cn-ink); cursor: pointer; }
+
+/* The label's hit area is the whole rung. */
+.cn-rung-name::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.cn-rung-input:focus-visible + .cn-rung-top .cn-rung-name::after {
+  outline: 2px solid var(--cn-ink);
+  outline-offset: 2px;
+}
+
+.cn-rung-body { display: flex; flex-direction: column; gap: 12px; }
+.cn-rung-row { display: flex; flex-direction: column; gap: 4px; }
+
+.cn-rung-k {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--cn-ink-3);
+}
+
+.cn-rung-v {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--cn-ink);
+}
+
+.cn-meter { display: inline-flex; gap: 3px; flex: none; }
+.cn-meter > span { width: 18px; height: 6px; border-radius: 3px; background: var(--cn-line-strong); transition: background-color 240ms; }
+.cn-meter > .cn-meter-on { background: var(--cn-ink); }
+
+.cn-rung-awards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cn-rung-awards li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--cn-ink);
+}
+
+.cn-rung-awards li[data-yes="false"] { color: var(--cn-ink-3); }
+.cn-rung-tick,
+.cn-rung-dash { flex: none; margin-top: 2px; }
+.cn-rung-tick { color: var(--cn-pos); }
+.cn-rung-dash { color: var(--cn-ink-3); }
+
+.cn-ladder-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+}
+
+.cn-ladder-stage-head { display: flex; flex-direction: column; gap: 2px; }
+/* Three buttons wrap to two rows on a phone for the codes that offer two ways
+   to scan, and to one for the one that offers a single way. Both are given two
+   rows' room, so picking a different code does not move what is under them. */
+.cn-ladder-actions { display: flex; gap: 8px; flex-wrap: wrap; align-content: flex-start; }
+
+@container (max-width: 559px) {
+  .cn-ladder-actions { min-height: calc(2 * 36px + 8px); }
+}
+
+.cn-ladder-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Three slots, always, so a scan changes what is in a slot and never how tall
+   the figure is. The height is for the longest outcome at this width: the
+   rounding explanation on a till slip, which runs to five lines on a phone. */
+.cn-ladder-log { --slot: 142px; }
+
+@container (min-width: 560px) {
+  .cn-ladder-log { --slot: 88px; }
+}
+
+.cn-ladder-slot {
+  display: flex;
+  align-items: center;
+  min-height: var(--slot);
+  padding: 0 12px;
+  border: 1px dashed var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  font-size: 13px;
+  color: var(--cn-ink-3);
+}
+
+.cn-ladder-entry {
+  display: flex;
+  align-items: flex-start;
+  min-height: var(--slot);
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-surface);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--cn-ink-2);
+}
+
+/* Only the newest is new: entries are keyed, so the ones already on screen
+   keep their element and stay still while the next one slides in above them. */
+.cn-ladder-entry { animation: cn-rise 260ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+
+.cn-ladder-entry strong { color: var(--cn-ink); font-weight: 600; }
+.cn-ladder-entry .cn-pill { flex: none; margin-top: 1px; }
+.cn-ladder-entry-text { min-width: 0; }
+
+/* ---- the cost calculator ---- */
+
+.cn-calc { gap: 14px; }
+
+.cn-calc-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+@container (min-width: 700px) {
+  .cn-calc-grid { grid-template-columns: minmax(250px, 330px) minmax(0, 1fr); }
+}
+
+.cn-calc-controls,
+.cn-calc-results { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+.cn-calc-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+}
+
+.cn-calc-field {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cn-calc-legend { font-size: 12px; font-weight: 500; color: var(--cn-ink-2); padding: 0; }
+.cn-calc-choices { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* A native radio under a pill. The input is the element a keyboard and a
+   screen reader get; the span is only what it looks like. */
+.cn-choice { position: relative; display: inline-flex; }
+
+.cn-choice input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.cn-choice span {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: var(--cn-radius);
+  border: 1px solid var(--cn-line);
+  background: var(--cn-surface);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cn-ink);
+  transition: border-color 160ms, background-color 160ms;
+}
+
+.cn-choice:hover span { border-color: var(--cn-line-strong); background: var(--cn-quiet); }
+.cn-choice input:checked + span { border-color: var(--cn-ink); box-shadow: 0 0 0 1px var(--cn-ink); }
+.cn-choice input:focus-visible + span { outline: 2px solid var(--cn-ink); outline-offset: 2px; }
+
+/* A finger needs a bigger target than a pointer does. */
+@media (pointer: coarse) {
+  .cn-choice span { padding: 11px 16px; min-height: 44px; }
+}
+
+.cn-calc-slider-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+
+.cn-calc-out {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--cn-ink);
+}
+
+/* Ink, not accent: a slider is a control, and the accent is spoken for. */
+.cn-range { width: 100%; margin: 0; height: 24px; accent-color: var(--cn-ink); cursor: pointer; }
+.cn-range:focus-visible { outline: 2px solid var(--cn-ink); outline-offset: 3px; border-radius: 4px; }
+
+.cn-calc-hint { margin: 0; font-size: 12px; line-height: 1.45; color: var(--cn-ink-3); }
+
+/* One column in a narrow results column, two when there is room. Sized by the
+   column it sits in, not the window: auto-fit left two cards at their minimum
+   width with a gap beside them whenever the hero spanned a wider grid. */
+.cn-calc-results { container-type: inline-size; }
+.cn-calc-metrics { grid-template-columns: minmax(0, 1fr); }
+
+@container (min-width: 380px) {
+  .cn-calc-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* .cn-metric-hero steps down to one column from 900px, which suits the
+   overview and not a results panel that is already the narrower half. */
+.cn-calc-metrics .cn-metric-hero { grid-column: 1 / -1; }
+.cn-calc-metrics .cn-metric-hero .cn-metric-v { font-size: 38px; }
+
+.cn-calc-person {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+}
+
+.cn-calc-person .cn-fig-ceiling-fill { transition: width 260ms cubic-bezier(0.2, 0.7, 0.2, 1), background-color 200ms; }
+
+/* The fill turns to the warning colour as one person's month approaches the
+   budget. Always with the sentence under it, never colour alone. */
+.cn-calc-person[data-exposure="high"] .cn-fig-ceiling-fill,
+.cn-calc-person[data-exposure="all"] .cn-fig-ceiling-fill { background: var(--cn-warn); }
+
+.cn-calc-person-line { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--cn-ink-2); }
+.cn-calc-person-line strong { color: var(--cn-ink); font-weight: 600; }
+.cn-calc-verdict { margin: 0; font-size: 14px; line-height: 1.45; font-weight: 500; color: var(--cn-ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-start-card,
+  .cn-rung,
+  .cn-meter > span,
+  .cn-choice span,
+  .cn-calc-person .cn-fig-ceiling-fill { transition: none; }
+  .cn-start-card:hover { transform: none; }
+  .cn-ladder-entry { animation: none; }
+}
+
+/* ---- the stamp card playground ---- */
+
+.cn-card { gap: 14px; }
+
+.cn-card-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+@container (min-width: 700px) {
+  .cn-card-grid { grid-template-columns: minmax(230px, 290px) minmax(0, 1fr); }
+}
+
+.cn-card-result,
+.cn-card-try {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+  min-width: 0;
+}
+
+/* Stacked on a narrow screen, always. Side by side, "about 2 weeks" and its
+   verdict fit on one row and "about 10 months" does not, so the card changed
+   height depending on which was showing. */
+.cn-card-result-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+@container (min-width: 480px) {
+  .cn-card-result-head {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+  }
+}
+
+.cn-card-time { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cn-card-time-k { font-size: 12px; color: var(--cn-ink-3); }
+
+.cn-card-time-v {
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--cn-ink);
+}
+
+@container (min-width: 480px) {
+  .cn-card-time-v { font-size: 34px; }
+}
+
+.cn-card-verdict-pill { gap: 7px; transition: color 200ms, border-color 200ms, background-color 200ms; }
+.cn-card-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.cn-card-pill-ok { color: var(--cn-pos); border-color: color-mix(in srgb, var(--cn-pos) 40%, transparent); }
+.cn-card-pill-warn { color: var(--cn-warn); border-color: color-mix(in srgb, var(--cn-warn) 45%, transparent); background: var(--cn-warn-bg); }
+.cn-card-pill-bad { color: var(--cn-neg); border-color: color-mix(in srgb, var(--cn-neg) 45%, transparent); }
+
+.cn-card-verdict { margin: 0; font-size: 14px; line-height: 1.5; color: var(--cn-ink-2); }
+
+.cn-card-bar-wrap { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
+
+.cn-card-bar { position: relative; display: flex; height: 10px; }
+
+.cn-card-seg { display: block; height: 100%; }
+.cn-card-seg-ok { background: var(--cn-pos); border-radius: 5px 0 0 5px; }
+.cn-card-seg-warn { background: var(--cn-warn); }
+.cn-card-seg-bad { flex: 1; background: var(--cn-neg); border-radius: 0 5px 5px 0; }
+
+/* A tick that overshoots the bar by a few pixels either side, so it reads as
+   a pointer into it and not as one more segment. It slides, because moving
+   from one length to another is the thing being shown. */
+.cn-card-marker {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--cn-ink);
+  box-shadow: 0 0 0 2px var(--cn-raised);
+  transition: left 320ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.cn-card-bar-keys { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--cn-ink-3); }
+
+.cn-card-try-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+
+.cn-stampcards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.cn-stampcard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-surface);
+  min-width: 0;
+  transition: border-color 200ms, box-shadow 200ms;
+}
+
+.cn-stampcard[data-complete="true"] { border-color: var(--cn-ink); box-shadow: 0 0 0 1px var(--cn-ink); }
+
+/* The badge arrives into a row that is already tall enough for it, so a card
+   finishing does not push the card or anything under it down. */
+.cn-stampcard-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 26px; }
+.cn-stampcard-n { font-size: 12px; font-weight: 500; color: var(--cn-ink-3); }
+.cn-stampcard-badge { animation: cn-pop 320ms cubic-bezier(0.34, 1.4, 0.64, 1) backwards; }
+
+.cn-stampcard-grid { display: grid; gap: 8px; justify-items: start; }
+
+.cn-stamp {
+  display: block;
+  width: 100%;
+  max-width: 34px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1.5px solid var(--cn-line-strong);
+  background: transparent;
+  transition: background-color 160ms, border-color 160ms;
+}
+
+/* The pop starts when the attribute starts matching, so only a stamp that
+   has just landed does it. One that was already there, on first paint or
+   after the card length changed, is simply drawn. */
+.cn-stamp[data-on="true"] {
+  border-color: var(--cn-ink);
+  background: var(--cn-ink);
+  animation: cn-pop 320ms cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.cn-card-line { margin: 0; font-size: 14px; line-height: 1.5; color: var(--cn-ink-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-card-verdict-pill,
+  .cn-card-marker,
+  .cn-stampcard,
+  .cn-stamp { transition: none; }
+  .cn-stampcard-badge,
+  .cn-stamp[data-on="true"] { animation: none; }
+}
+
+/* ---------- going somewhere ----------
+   What the console shows between a click and the next page: a bar across the
+   top, once the wait is long enough to be a wait. A navigation that answers in
+   under a quarter of a second should look like nothing happened except that
+   the page changed, and an indicator that flashes for 80ms is the flicker
+   people mean by clunky.
+
+   There is no loading skeleton, and that is a decision, not an omission. One
+   was built (a loading.tsx under the gated routes, faded in after 180ms) and
+   measured: every page change got slower by about 250ms, fast ones included.
+   React holds the real content back for roughly 300ms after a Suspense
+   fallback has been shown, so a page that answered in 50ms was delayed to
+   320ms to be kind to the skeleton. The highlight that moves on the click and
+   this bar give the same assurance without costing the fast case anything. */
+
+@keyframes cn-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cn-progress {
+  from { transform: scaleX(0.04); }
+  to { transform: scaleX(0.92); }
+}
+
+/* Ink, not the accent: the accent is the one filled control on a screen, and
+   this is a status. It rushes out and then crawls, so it never reaches the end
+   before the page does, and it is simply removed when the page lands. */
+.cn-progress {
+  position: fixed;
+  z-index: 60;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--cn-ink);
+  transform-origin: left;
+  pointer-events: none;
+  animation:
+    cn-progress 10s cubic-bezier(0.05, 0.6, 0.2, 1) forwards,
+    cn-fade-in 140ms ease-out 150ms backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Still shown, still late: it is information. It just does not sweep. */
+  .cn-progress { animation: cn-fade-in 140ms ease-out 150ms backwards; transform: scaleX(0.6); }
+}
+
+/* ---------- guide: the customer's phone ----------
+   A picture of the shopper surface, so it carries the shopper's own colours
+   (--ph-*) rather than borrowing the console's: it is always the light theme,
+   whatever the console is set to, because it is a different product's screen.
+   The accent arrives per brand and goes on the button and the stamps only.
+   Money is ink, which is the rule on the real surface and the point of
+   showing a brand a red one.
+
+   Every phone rule is written under `.ph`. The tour sits inside the guide's
+   prose, and `.cn-prose p` is more specific than a bare class, so without the
+   prefix the phone's labels and figures quietly took the page's paragraph
+   size and a 30px figure rendered at 14px. */
+
+.cn-tour { gap: 14px; container-type: inline-size; }
+
+.cn-tour-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "picker" "phone" "steps";
+  gap: 18px;
+}
+
+.cn-tour-picker { grid-area: picker; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.cn-tour-phone { grid-area: phone; display: flex; justify-content: center; }
+.cn-tour-steps { grid-area: steps; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+@container (min-width: 560px) {
+  .cn-tour-grid {
+    grid-template-columns: minmax(0, 1fr) 296px;
+    grid-template-areas: "picker phone" "steps phone";
+    align-items: start;
+    gap: 18px 24px;
+  }
+  .cn-tour-phone { position: sticky; top: 16px; }
+}
+
+.cn-swatch { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; flex: none; }
+
+.cn-tour-steplist { display: flex; flex-direction: column; border: 1px solid var(--cn-line); border-radius: var(--cn-radius-inner); overflow: hidden; }
+
+.cn-tour-step {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--cn-raised);
+  border-bottom: 1px solid var(--cn-line-soft);
+  cursor: pointer;
+  transition: background-color 160ms, box-shadow 160ms;
+}
+
+.cn-tour-step:last-child { border-bottom: 0; }
+.cn-tour-step:hover { background: var(--cn-quiet); }
+.cn-tour-step input { position: absolute; opacity: 0; pointer-events: none; }
+.cn-tour-step:has(input:focus-visible) { outline: 2px solid var(--cn-ink); outline-offset: -2px; }
+
+/* Ink, not the accent: this is a selection, and the accent is spoken for. */
+.cn-tour-step[data-on="true"] { background: var(--cn-surface); box-shadow: inset 3px 0 0 var(--cn-ink); }
+
+.cn-tour-n {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--cn-quiet);
+  color: var(--cn-ink-2);
+  transition: background-color 160ms, color 160ms;
+}
+
+.cn-tour-step[data-on="true"] .cn-tour-n { background: var(--cn-ink); color: var(--cn-surface); }
+
+.cn-tour-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cn-tour-title { font-size: 14px; font-weight: 600; color: var(--cn-ink); }
+.cn-tour-text { font-size: 13px; line-height: 1.45; color: var(--cn-ink-2); }
+
+.ph {
+  --ph-bg: #ffffff;
+  --ph-raised: #fafaf9;
+  --ph-ink: #0a0a0a;
+  --ph-ink-2: #52525b;
+  /* The same grey as the shopper screens' --sc-ink-3, which tests/shopper-contrast
+     holds at 4.5:1 or better. Keep the two together. */
+  --ph-ink-3: #6e6e75;
+  --ph-line: #d9d9d4;
+  --ph-line-soft: #efefec;
+  --ph-stamp-off: #c9c9c4;
+  width: min(100%, 300px);
+  aspect-ratio: 300 / 632;
+  padding: 9px;
+  border-radius: 36px;
+  background: #0a0a0a;
+  box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* The phone's text takes the phone's colour. Without this a paragraph with no
+   colour of its own inherits the page's, and on a dark console the reward code
+   came out pale grey on a white screen. */
+.ph p,
+.ph h1,
+.ph h2 { margin: 0; color: var(--ph-ink); }
+
+.ph .ph-screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 28px;
+  overflow: hidden;
+  background: var(--ph-bg);
+  color: var(--ph-ink);
+  font-family: var(--qf-instrument-sans), system-ui, sans-serif;
+  word-spacing: 0.05em;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ph .ph-body-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px 18px 12px;
+  overflow: hidden;
+  animation: cn-rise 220ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+.ph .ph-mark { font-family: var(--ph-display); font-size: 21px; font-weight: 700; line-height: 1; letter-spacing: 0; word-spacing: 0.06em; }
+.ph .ph-mark-sub { font-size: 11.5px; color: var(--ph-ink-3); margin-top: 4px; }
+
+.ph .ph-h1 { margin: 0; font-family: var(--ph-display); font-size: 22px; font-weight: 700; line-height: 1.12; text-wrap: balance; }
+.ph .ph-h2 { margin: 0; font-family: var(--ph-display); font-size: 15px; font-weight: 600; line-height: 1.25; }
+.ph .ph-body { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--ph-ink-2); }
+.ph .ph-body strong { color: var(--ph-ink); font-weight: 600; }
+.ph .ph-label { margin: 0; font-size: 11px; font-weight: 500; line-height: 1.35; color: var(--ph-ink-3); }
+
+.ph .ph-figure {
+  margin: 0;
+  font-family: var(--qf-martian-mono), ui-monospace, monospace;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  line-height: 1.02;
+  font-variant-numeric: tabular-nums;
+  color: var(--ph-ink);
+}
+
+.ph .ph-unit { font-family: var(--ph-display); font-size: 0.42em; font-weight: 500; letter-spacing: 0; color: var(--ph-ink-2); }
+
+.ph .ph-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid var(--ph-line-soft);
+  border-radius: 2px;
+  background: var(--ph-raised);
+}
+
+.ph .ph-field { display: flex; flex-direction: column; gap: 5px; }
+
+.ph .ph-input {
+  display: block;
+  padding: 9px 10px;
+  border: 1px solid var(--ph-line);
+  border-radius: 2px;
+  font-size: 14px;
+  color: var(--ph-ink);
+}
+
+.ph .ph-input-mono { font-family: var(--qf-martian-mono), ui-monospace, monospace; letter-spacing: 0.22em; font-size: 13px; }
+
+.ph .ph-check { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 10.5px; line-height: 1.35; color: var(--ph-ink-3); }
+.ph .ph-box { flex: none; width: 13px; height: 13px; margin-top: 1px; border: 1.5px solid var(--ph-ink-3); border-radius: 2px; }
+
+.ph .ph-consent {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* The brand's colour, on the button and the stamps and nowhere else. It
+   eases when a different brand is picked rather than snapping. */
+.ph .ph-btn {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 2px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--ph-accent);
+  color: var(--ph-accent-ink);
+  transition: background-color 240ms, color 240ms;
+}
+
+.ph .ph-btn-quiet { background: transparent; color: var(--ph-ink-2); border: 1px solid var(--ph-line); font-weight: 500; }
+
+.ph .ph-ldr { display: flex; align-items: baseline; gap: 8px; margin: 2px 0; font-size: 11.5px; }
+.ph .ph-ldr > span:first-child { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--ph-ink-3); }
+.ph .ph-ldr > span:last-child { flex: none; font-family: var(--qf-martian-mono), ui-monospace, monospace; font-size: 11px; font-variant-numeric: tabular-nums; }
+
+.ph .ph-code { margin: 0; font-family: var(--qf-martian-mono), ui-monospace, monospace; font-size: 16px; font-weight: 600; letter-spacing: 0.02em; }
+
+.ph .ph-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.ph .ph-count { font-family: var(--qf-martian-mono), ui-monospace, monospace; font-size: 11.5px; color: var(--ph-ink-3); }
+
+.ph .ph-stamps { display: grid; gap: 7px; margin: 4px 0 2px; }
+.ph .ph-stamp { aspect-ratio: 1; border-radius: 999px; border: 1.5px dashed var(--ph-stamp-off); }
+.ph .ph-stamp-on { border: 1.5px solid var(--ph-accent); background: var(--ph-accent); transition: background-color 240ms, border-color 240ms; animation: cn-pop 320ms cubic-bezier(0.34, 1.4, 0.64, 1) backwards; }
+.ph .ph-stamp-on:nth-child(2) { animation-delay: 35ms; }
+.ph .ph-stamp-on:nth-child(3) { animation-delay: 70ms; }
+.ph .ph-stamp-on:nth-child(4) { animation-delay: 105ms; }
+.ph .ph-stamp-on:nth-child(n + 5) { animation-delay: 140ms; }
+
+.ph .ph-foot { flex: none; padding: 8px 16px 14px; border-top: 1px solid var(--ph-line-soft); font-size: 10px; line-height: 1.4; color: var(--ph-ink-3); text-align: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-tour-step,
+  .cn-tour-n,
+  .ph .ph-btn,
+  .ph .ph-stamp-on { transition: none; }
+  .ph .ph-body-wrap,
+  .ph .ph-stamp-on { animation: none; }
+}
+
+/* ---------- guide: sections that fold ----------
+   Every section leads with its point and folds its detail. The header is the
+   whole button, because a small chevron at the far end of a wide row is a
+   target nobody finds. */
+
+.cn-fold { padding: 0; overflow: visible; }
+.cn-fold details { display: block; }
+
+.cn-fold-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  cursor: pointer;
+  list-style: none;
+  border-radius: var(--cn-radius);
+  transition: background-color 160ms;
+}
+
+.cn-fold-head::-webkit-details-marker { display: none; }
+.cn-fold-head::marker { content: ""; }
+.cn-fold-head:hover { background: var(--cn-quiet); }
+.cn-fold-head:focus-visible { outline: 2px solid var(--cn-ink); outline-offset: -2px; }
+
+.cn-fold-n {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--cn-quiet);
+  color: var(--cn-ink-2);
+  font-variant-numeric: tabular-nums;
+  transition: background-color 160ms, color 160ms;
+}
+
+/* The section being read takes the ink, the same way the tour's steps do. */
+.cn-fold[data-current="true"] .cn-fold-n { background: var(--cn-ink); color: var(--cn-surface); }
+
+.cn-fold-titles { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.cn-fold-k { margin: 0; font-size: 12px; font-weight: 500; color: var(--cn-ink-3); }
+
+.cn-fold-point {
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--cn-ink);
+  text-wrap: balance;
+}
+
+.cn-fold-act {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--cn-ink-3);
+  white-space: nowrap;
+}
+
+.cn-fold-label { color: var(--cn-ink-2); font-weight: 500; }
+.cn-fold-chev { color: var(--cn-ink-2); transition: transform 240ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.cn-fold details[open] .cn-fold-chev { transform: rotate(180deg); }
+
+/* On a phone the time and the verb are the first things to go: the chevron
+   alone says what the row does, and the point gets the width. */
+@media (max-width: 560px) {
+  .cn-fold-mins,
+  .cn-fold-label { display: none; }
+  .cn-fold-head { padding: 14px; gap: 12px; }
+}
+
+.cn-fold-body { border-top: 1px solid var(--cn-line-soft); }
+
+/* Opening and closing, where the browser can animate the height of a details
+   body (Chrome and Edge today). Anywhere else these rules are dropped whole and
+   it simply opens, which is the right fallback. The padding the body keeps is
+   what stops the clip trimming a card's shadow at the edge. */
+.cn-fold details { interpolate-size: allow-keywords; }
+
+.cn-fold details::details-content {
+  block-size: 0;
+  overflow-y: clip;
+  transition:
+    block-size 300ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    content-visibility 300ms allow-discrete;
+}
+
+.cn-fold details[open]::details-content { block-size: auto; }
+
+/* A jump from the rail or a link opens its section at once; see go() in
+   guide-state.tsx for why the page cannot wait for the animation. */
+.cn-fold[data-jumping] details::details-content { transition: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-fold-head,
+  .cn-fold-n,
+  .cn-fold-chev { transition: none; }
+  .cn-fold details::details-content { transition: none; }
+}
+
+/* ---------- guide: the reading rail ---------- */
+
+.cn-rail-total { font-size: 12px; color: var(--cn-ink-3); }
+
+.cn-rail a { align-items: center; }
+.cn-rail a[aria-current="location"] { background: var(--cn-quiet); color: var(--cn-ink); font-weight: 500; }
+.cn-rail a[aria-current="location"] .cn-toc-n { color: var(--cn-ink); }
+
+.cn-rail-t { flex: 1; min-width: 0; }
+.cn-rail-m { flex: none; font-size: 11px; color: var(--cn-ink-3); font-variant-numeric: tabular-nums; }
+
+.cn-rail-foot { padding: 12px 16px 14px; border-top: 1px solid var(--cn-line-soft); display: flex; flex-direction: column; gap: 8px; }
+
+.cn-rail-bar { height: 4px; border-radius: 2px; background: var(--cn-quiet); overflow: hidden; }
+.cn-rail-bar > span { display: block; height: 100%; background: var(--cn-ink); border-radius: 2px; transition: width 300ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+
+.cn-rail-foot-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--cn-ink-3); }
+
+.cn-rail-all {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  padding: 2px 6px;
+  margin: -2px -6px;
+  border-radius: var(--cn-radius-inner);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cn-ink-2);
+  text-decoration: underline;
+  text-decoration-color: var(--cn-line-strong);
+  text-underline-offset: 3px;
+}
+
+.cn-rail-all:hover { color: var(--cn-ink); }
+.cn-rail-all:focus-visible { outline: 2px solid var(--cn-ink); outline-offset: 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-rail-bar > span { transition: none; }
+}
+
+/* ---------- guide: the loop ----------
+   Drawn in the brand's colour (--cn-brand, set by the layout) and ink where
+   there is none. The colour is the circles and the line and nothing else; every
+   word is ink, so a pale or a clashing brand colour cannot make the text hard
+   to read. */
+
+.cn-loop { container-type: inline-size; gap: 12px; --loop: var(--cn-brand, var(--cn-ink)); }
+
+.cn-loop-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  position: relative;
+}
+
+.cn-loop-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  grid-template-areas: "dot k" "dot n" "dot t";
+  column-gap: 14px;
+  row-gap: 2px;
+  align-items: start;
+  animation: cn-rise 240ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+  animation-delay: calc(var(--i) * 70ms + 60ms);
+}
+
+.cn-loop-dot {
+  grid-area: dot;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 2px solid var(--loop);
+  color: var(--loop);
+  background: color-mix(in srgb, var(--loop) 12%, var(--cn-surface));
+  position: relative;
+  z-index: 1;
+  animation: cn-pop 280ms cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+  animation-delay: calc(var(--i) * 70ms + 60ms);
+}
+
+.cn-loop-k {
+  grid-area: k;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cn-ink-3);
+  padding-top: 6px;
+}
+
+.cn-loop-step .cn-fig-name { grid-area: n; }
+.cn-loop-step .cn-fig-body { grid-area: t; }
+
+/* Stacked: a line down the left behind the circles, joining each to the next. */
+.cn-loop-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 31px;
+  top: 64px;
+  bottom: -18px;
+  width: 2px;
+  background: color-mix(in srgb, var(--loop) 45%, transparent);
+  transform-origin: top;
+  animation: cn-line-down 220ms ease-out backwards;
+  animation-delay: calc(var(--i) * 70ms + 140ms);
+}
+
+@keyframes cn-line-down { from { transform: scaleY(0); } to { transform: none; } }
+@keyframes cn-line-across { from { transform: scaleX(0); } to { transform: none; } }
+
+.cn-loop-back { display: none; }
+
+/* Wide: four across, a line through the circles, and the way back underneath. */
+@container (min-width: 520px) {
+  .cn-loop-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; }
+
+  .cn-loop-step {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "dot" "k" "n" "t";
+    justify-items: center;
+    text-align: center;
+    row-gap: 6px;
+    padding: 0 10px;
+  }
+
+  .cn-loop-k { padding-top: 8px; }
+
+  /* Circle centre to circle centre: each step draws the line to the next one. */
+  .cn-loop-step:not(:last-child)::after {
+    left: 50%;
+    right: -50%;
+    top: 31px;
+    bottom: auto;
+    width: auto;
+    height: 2px;
+    transform-origin: left;
+    animation-name: cn-line-across;
+  }
+
+  .cn-loop-back {
+    display: block;
+    position: relative;
+    height: 34px;
+    margin: -4px 0 0;
+    color: color-mix(in srgb, var(--loop) 60%, transparent);
+    animation: cn-fade-in 260ms ease-out 420ms backwards;
+  }
+
+  /* From under the fourth circle back to under the first: the middle half of
+     the width, between the centres of the outer two columns. */
+  .cn-loop-back svg { position: absolute; left: 12.5%; width: 75%; height: 100%; overflow: visible; }
+
+  .cn-loop-back-t {
+    position: absolute;
+    left: 50%;
+    top: 14px;
+    transform: translateX(-50%);
+    padding: 0 10px;
+    background: var(--cn-surface);
+    font-size: 12px;
+    color: var(--cn-ink-3);
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-loop-step,
+  .cn-loop-dot,
+  .cn-loop-step::after,
+  .cn-loop-step:not(:last-child)::after,
+  .cn-loop-back { animation: none; }
+}
+
+/* ---------- guide: worked examples ----------
+   Tabs, one panel showing. The three panels share one grid cell (.cn-ex-panels)
+   so the block is always as tall as the tallest and picking a tab moves nothing
+   below it; the ones not showing are invisible and, in the markup, inert. */
+
+.cn-ex { container-type: inline-size; gap: 14px; }
+
+.cn-ex-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.cn-ex-tab {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  padding: 7px 14px;
+  border-radius: var(--cn-radius);
+  border: 1px solid var(--cn-line);
+  background: var(--cn-surface);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cn-ink);
+  transition: border-color 160ms, background-color 160ms;
+}
+
+.cn-ex-tab:hover { border-color: var(--cn-line-strong); background: var(--cn-quiet); }
+.cn-ex-tab[aria-selected="true"] { border-color: var(--cn-ink); box-shadow: 0 0 0 1px var(--cn-ink); }
+.cn-ex-tab:focus-visible { outline: 2px solid var(--cn-ink); outline-offset: 2px; }
+
+@media (pointer: coarse) {
+  .cn-ex-tab { padding: 11px 16px; min-height: 44px; display: inline-flex; align-items: center; }
+}
+
+.cn-ex-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-inner);
+  background: var(--cn-raised);
+}
+
+/* The arrival plays when a panel becomes the active one, which is when its
+   data attribute starts matching. */
+.cn-ex-panel[data-active="true"] { animation: cn-rise 220ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+
+.cn-ex-panels { display: grid; }
+.cn-ex-panels > .cn-ex-panel { grid-area: 1 / 1; min-width: 0; }
+.cn-ex-panel[data-active="false"] { visibility: hidden; animation: none; }
+.cn-ex-panel:focus-visible { outline: 2px solid var(--cn-ink); outline-offset: 2px; }
+
+.cn-ex-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; }
+.cn-ex .cn-ex-brand { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; color: var(--cn-ink); }
+
+.cn-ex-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+
+@container (min-width: 560px) {
+  .cn-ex-grid { grid-template-columns: 200px minmax(0, 1fr); gap: 22px; }
+}
+
+.cn-ex-art { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+
+/* The paragraphs inside the guide's prose take its colour and margins
+   (.cn-prose p is more specific than a bare class), so the rules for them are
+   written under .cn-ex. On a dark console the brand name on the slip came out
+   pale grey on cream before this. */
+
+/* Paper is paper whatever theme the console is in, so it carries its own
+   colours rather than the console's. */
+.cn-ex-paper {
+  --paper: #fbf9f4;
+  --paper-ink: #1c1b19;
+  --paper-ink-2: #6a6862;
+  width: min(100%, 200px);
+  box-sizing: border-box;
+  padding: 14px 14px 18px;
+  background: var(--paper);
+  color: var(--paper-ink);
+  font-family: var(--qf-martian-mono), ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), 0 8px 18px -10px rgba(0, 0, 0, 0.3);
+}
+
+/* Torn along the bottom, as a till slip is. */
+.cn-ex-slip {
+  --tear: conic-gradient(from -45deg at bottom, transparent, #000 1deg 89deg, transparent 90deg) bottom / 10px 100% repeat-x;
+  -webkit-mask: var(--tear);
+  mask: var(--tear);
+  padding-bottom: 22px;
+}
+
+.cn-ex .cn-ex-slip-brand { margin: 0 0 8px; font-weight: 600; text-align: center; letter-spacing: 0.02em; color: var(--paper-ink); }
+.cn-ex-slip-rows { display: flex; flex-direction: column; gap: 3px; padding-bottom: 8px; border-bottom: 1px dashed var(--paper-ink-2); }
+.cn-ex-slip-row { display: flex; justify-content: space-between; gap: 8px; }
+.cn-ex-slip-total { padding-top: 8px; font-weight: 600; }
+
+.cn-ex-slip-code { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 12px; color: var(--paper-ink); }
+.cn-ex-slip-code span { letter-spacing: 0.08em; color: var(--paper-ink-2); }
+
+.cn-ex-pack { text-align: center; border-radius: 3px; padding-bottom: 14px; }
+.cn-ex .cn-ex-pack-product { margin: 2px 0 0; font-size: 14px; font-weight: 600; color: var(--paper-ink); }
+.cn-ex .cn-ex-pack-detail { margin: 0 0 4px; color: var(--paper-ink-2); }
+
+.cn-ex-facts { margin: 0; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.cn-ex-fact { display: flex; flex-direction: column; gap: 2px; }
+
+.cn-ex-fact dt {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--cn-ink-3);
+}
+
+.cn-ex-fact dd { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--cn-ink); }
+
+.cn-ex .cn-ex-stands {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--cn-line-soft);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--cn-ink-2);
+}
+
+.cn-ex .cn-ex-stands strong { color: var(--cn-ink); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-ex-tab { transition: none; }
+  .cn-ex-panel[data-active="true"] { animation: none; }
+}
+
+/* ---------- holding still ----------
+   The guide's figures change a sentence or a control when you click, and the
+   page under them must not move. These are the two ways that is arranged; see
+   Steady and Stack in guide/controls.tsx for the reasoning. */
+
+.cn-steady { display: grid; min-width: 0; }
+.cn-steady > * { grid-area: 1 / 1; min-width: 0; }
+
+/* Every sentence the line can be, stacked, invisible, so the cell is as tall as
+   the tallest. */
+.cn-steady-ghost { display: grid; visibility: hidden; pointer-events: none; user-select: none; }
+.cn-steady-ghost > * { grid-area: 1 / 1; }
+
+.cn-swap { display: grid; min-width: 0; }
+.cn-swap > .cn-swap-item { grid-area: 1 / 1; min-width: 0; }
+.cn-swap > .cn-swap-item[data-active="false"] { visibility: hidden; }
+
+.cn-swap-group { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+/* ---------- skipping the sidebar ----------
+   Off screen until a keyboard reaches it, then the first thing on the page. */
+.cn-skip {
+  position: absolute;
+  left: 8px;
+  top: -64px;
+  z-index: 80;
+  padding: 10px 14px;
+  border-radius: var(--cn-radius);
+  background: var(--cn-surface);
+  color: var(--cn-ink);
+  border: 1px solid var(--cn-ink);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.cn-skip:focus { top: 8px; outline: 2px solid var(--cn-ink); outline-offset: 2px; }
+
+/* The skip link moves focus to the main area, which is not a control and needs
+   no ring of its own. */
+.cn-main:focus { outline: none; }
