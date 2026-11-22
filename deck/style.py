@@ -1,10 +1,16 @@
 """
 The Qumo house style, shared by every deck in this directory.
 
-Palette, geometry and the drawing primitives. Sampled from the original
-deck rather than chosen, which is why the values look arbitrary: background
-#0D0E11, cards #16181C on #282B31 borders, one blue, and a monospace for
-anything that labels rather than reads.
+Palette, geometry and the drawing primitives. The palette and type are the
+marketing site's dark theme, taken from its stylesheet rather than chosen:
+background #0C0D10, cards #121418 and #1A1D22 on #22262D hairlines, three
+greys of text, one blue (lifted to #5B9BFF where it is text), Instrument
+Sans to read and Martian Mono for anything that labels or counts. Headings
+end with a full stop, as the site's do.
+
+The fonts are in fonts/ (SIL Open Font License). PowerPoint cannot embed
+them, so present from the PDF, which carries them; or install the files in
+fonts/ on the machine that opens the .pptx.
 
 A deck imports this, calls `start(title, total)`, defines its slides, and
 calls `save(path)`. Nothing in here knows what any particular deck says.
@@ -19,18 +25,36 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 SHOTS, ART = os.path.join(HERE, "shots"), os.path.join(HERE, "art")
 
-BG     = RGBColor(0x0D, 0x0E, 0x11)
-CARD   = RGBColor(0x16, 0x18, 0x1C)
-LINE   = RGBColor(0x28, 0x2B, 0x31)
-ACCENT = RGBColor(0x25, 0x63, 0xEB)
-INK    = RGBColor(0xFF, 0xFF, 0xFF)
-BODY   = RGBColor(0xC4, 0xCA, 0xD3)
-MUTED  = RGBColor(0x8A, 0x90, 0x9B)
-FOOT   = RGBColor(0x6A, 0x70, 0x80)
-WARN   = RGBColor(0xFF, 0x6B, 0x7F)
+FONTS = os.path.join(HERE, "fonts")
+
+BG     = RGBColor(0x0C, 0x0D, 0x10)   # --bg
+CARD   = RGBColor(0x12, 0x14, 0x18)   # --surface
+RAISED = RGBColor(0x1A, 0x1D, 0x22)   # --raised
+LINE   = RGBColor(0x22, 0x26, 0x2D)   # --hair
+STRONG = RGBColor(0x2D, 0x32, 0x3A)   # --hair-strong
+ACCENT = RGBColor(0x25, 0x63, 0xEB)   # --accent, for fills and rules
+ACCENT_TEXT = RGBColor(0x5B, 0x9B, 0xFF)  # --accent-text, for accent as text
+INK    = RGBColor(0xF7, 0xF8, 0xF8)   # --text-1
+BODY   = RGBColor(0xC4, 0xCA, 0xD3)   # --text-2
+MUTED  = RGBColor(0x9A, 0xA1, 0xAB)   # --text-3
+FOOT   = RGBColor(0x7C, 0x82, 0x8C)
+WARN   = RGBColor(0xFB, 0x71, 0x85)   # --negative
 PANEL  = RGBColor(0xF2, 0xF2, 0xF4)
 
-SANS, MONO = "Arial", "Consolas"
+SANS = "Instrument Sans"
+HEAD = "Instrument Sans SemiBold"   # the site's display weight is 560
+MONO = "Martian Mono SemiExpanded"
+
+# For measuring text with the real glyphs, so a heading's height is known
+# rather than guessed. Keyed by (font, bold).
+_TTF = {
+    (SANS, False): "instrument-sans-latin-400-normal.ttf",
+    (SANS, True): "instrument-sans-latin-700-normal.ttf",
+    (HEAD, False): "instrument-sans-latin-600-normal.ttf",
+    (HEAD, True): "instrument-sans-latin-700-normal.ttf",
+    (MONO, False): "martian-mono-latin-400-normal.ttf",
+    (MONO, True): "martian-mono-latin-700-normal.ttf",
+}
 W, H = Inches(13.333), Inches(7.5)
 M = Inches(0.85)
 RIGHT = Inches(12.49)
@@ -75,6 +99,52 @@ def slide():
     bg.fill.solid(); bg.fill.fore_color.rgb = BG
     bg.line.fill.background(); bg.shadow.inherit = False
     return s
+
+
+def _ground_png():
+    """
+    The site's hero ground, drawn once: the 64px grid guides at 4% white,
+    fading out down the slide, under two soft blue glows placed where the
+    site places them (78%/30% and 12%/12%). An image rather than shapes,
+    because PowerPoint cannot fade a line or blur a fill.
+    """
+    from PIL import ImageDraw, ImageFilter
+    path = os.path.join(ART, "ground.png")
+    if os.path.exists(path):
+        return path
+    pw, ph = 2400, 1350
+    img = Image.new("RGBA", (pw, ph), (12, 13, 16, 255))
+    glow = Image.new("RGBA", (pw, ph), (0, 0, 0, 0))
+    gd = ImageDraw.Draw(glow)
+    for cx, cy, rx, ry, a in [(0.78, 0.30, 0.52, 0.46, 0.22), (0.12, 0.12, 0.44, 0.40, 0.11)]:
+        gd.ellipse([(cx - rx * 0.7) * pw, (cy - ry * 0.7) * ph,
+                    (cx + rx * 0.7) * pw, (cy + ry * 0.7) * ph], fill=(91, 155, 255, int(255 * a)))
+    glow = glow.filter(ImageFilter.GaussianBlur(220))
+    img.alpha_composite(glow)
+    grid = Image.new("RGBA", (pw, ph), (0, 0, 0, 0))
+    d = ImageDraw.Draw(grid)
+    step = int(pw * 0.6 / 13.333)
+    for x in range(0, pw, step):
+        d.line([(x, 0), (x, ph)], fill=(247, 248, 248, 12), width=2)
+    for y in range(0, ph, step):
+        d.line([(0, y), (pw, y)], fill=(247, 248, 248, 12), width=2)
+    fade = Image.linear_gradient("L").resize((pw, ph)).point(lambda v: 255 - v)
+    grid.putalpha(Image.composite(grid.getchannel("A"), Image.new("L", (pw, ph), 0), fade))
+    img.alpha_composite(grid)
+    img.convert("RGB").save(path, optimize=True)
+    return path
+
+
+def ground(s, marks=(Inches(0.62), Inches(1.15), RIGHT - Inches(0.25), Inches(6.25))):
+    """The hero treatment: grid, glow, and registration crosshairs at the corners."""
+    s.shapes.add_picture(_ground_png(), 0, 0, width=W, height=H)
+    x0, y0, x1, y1 = marks
+    arm = Inches(0.075)
+    for cx, cy in [(x0, y0), (x1, y0), (x0, y1), (x1, y1)]:
+        hline(s, cx - arm, cy, arm * 2, STRONG)
+        sh = s.shapes.add_shape(1, cx, cy - arm, Emu(9525), arm * 2)
+        sh.fill.solid(); sh.fill.fore_color.rgb = STRONG
+        sh.line.fill.background(); sh.shadow.inherit = False
 
 
 def text(s, txt, x, y, w, h, size=13, bold=False, colour=BODY, font=SANS,
@@ -123,7 +193,7 @@ def logo(s, x, y, h, variant="white"):
 
 
 def masthead(s):
-    logo(s, M, Inches(0.40), Inches(0.21))
+    logo(s, M, Inches(0.40), Inches(0.21), variant="blue-white")
     text(s, DECK, M + Inches(0.68), Inches(0.41), Inches(4), Inches(0.24),
          size=10.5, colour=MUTED, spacing=1.0)
 
@@ -138,56 +208,74 @@ def footer(s):
          align=PP_ALIGN.RIGHT, spacing=1.0)
 
 
-def cite(s, txt, y, w=Inches(11.4)):
-    """The source line under a slide's evidence: small, quiet, always present."""
-    text(s, txt, M, y, w, Inches(0.26), size=8.5, colour=FOOT, font=MONO, spacing=1.1)
+def cite(s, txt, y, w=None):
+    """The source line under a slide's evidence: small, quiet, always present, one line."""
+    w = w or CONTENT
+    size = 7
+    if text_width(txt, size, MONO) > w / Inches(1):
+        raise ValueError(f"cite: too long for one line, shorten it: {txt[:60]}")
+    text(s, txt, M, y, w, Inches(0.22), size=size, colour=FOOT, font=MONO, spacing=1.0)
 
 
-def kicker(s, label, colour=ACCENT, y=Inches(1.00)):
-    hline(s, M, y + Inches(0.055), Inches(0.30), colour, Emu(19050))
-    text(s, label.upper(), M + Inches(0.41), y - Inches(0.055), Inches(9), Inches(0.26),
-         size=9, colour=colour, font=MONO, spacing=1.0, spc=1.6)
+def kicker(s, label, colour=MUTED, y=Inches(1.00)):
+    """The site's eyebrow: mono, upper case, tracked, in the quiet grey, after a short blue rule."""
+    hline(s, M, y + Inches(0.06), Inches(0.30), ACCENT, Emu(19050))
+    text(s, label.upper(), M + Inches(0.41), y - Inches(0.03), Inches(10), Inches(0.24),
+         size=8, colour=colour, font=MONO, spacing=1.0, spc=0.5)
 
 
-def est_lines(txt, size_pt, width_in):
+def _font(font, bold, size):
+    from PIL import ImageFont
+    return ImageFont.truetype(os.path.join(FONTS, _TTF[(font, bold)]), int(size * 10))
+
+
+def text_width(txt, size, font=SANS, bold=False):
+    """Width of one line in inches, from the real font's advance widths."""
+    return _font(font, bold, size).getlength(txt) / 10 / 72
+
+
+def est_lines(txt, size_pt, width_in, font=HEAD, bold=False):
     """
-    How many lines a string will wrap to, near enough.
+    How many lines a string will wrap to, measured with the real font.
 
     Here because a heading placed at a fixed height is correct for one line
     and wrong for two: an early draft shipped nine slides with the second
-    line of the heading printed through the paragraph under it. Arial Bold
-    advances about 0.52 of the point size per character.
+    line of the heading printed through the paragraph under it.
 
     A newline in the string is a line the author asked for, and each side
-    of it wraps on its own. Counting the whole string as one stream missed
-    that, which is how a three-line heading was placed as a two-line one.
+    of it wraps on its own.
     """
-    per_char = 0.52 * size_pt / 72
-    per_line = max(1, int(width_in / per_char))
+    f = _font(font, bold, size_pt)
+    limit = width_in * 72 * 10 * 0.97   # a little slack for the renderer's own rounding
     lines = 0
     for segment in txt.split("\n"):
         lines += 1
-        cur = 0
+        cur = ""
         for word in segment.split():
-            add = len(word) + (1 if cur else 0)
-            if cur + add > per_line:
-                lines += 1; cur = len(word)
+            trial = f"{cur} {word}" if cur else word
+            if cur and f.getlength(trial) > limit:
+                lines += 1; cur = word
             else:
-                cur += add
+                cur = trial
     return lines
 
 
-# Arial's line box is about 1.15 times the point size before any line
-# spacing multiple is applied, so a heading set at 1.2 spacing occupies
-# nearer 1.38 of its size per line. Reserving only 1.2 left the paragraph
-# under a wrapped heading sitting on its last line.
-LINE_BOX = 1.15
+# Instrument Sans's line box is about 1.21 times the point size before any
+# line spacing multiple is applied (ascent 0.97, descent 0.24).
+LINE_BOX = 1.21
 
 
-def h1(s, txt, y=Inches(1.46), size=29, w=None, colour=INK):
+def sentence(txt):
+    """Headings are sentences of the story, so they end like one."""
+    return txt if txt.rstrip()[-1:] in ".?:" else txt.rstrip() + "."
+
+
+def h1(s, txt, y=Inches(1.46), size=29, w=None, colour=INK, lead=1.08):
+    txt = sentence(txt)
     lines = est_lines(txt, size, (w or CONTENT) / Inches(1))
-    h = Inches(lines * size * 1.2 * LINE_BOX / 72)
-    text(s, txt, M, y, w or CONTENT, h, size=size, bold=True, colour=colour, spacing=1.2)
+    h = Inches(lines * size * lead * LINE_BOX / 72)
+    text(s, txt, M, y, w or CONTENT, h, size=size, colour=colour, font=HEAD, spacing=lead,
+         spc=-0.012 * size)
     return y + h
 
 
@@ -214,6 +302,7 @@ def shot(s, name, x, y, max_w, max_h, panel=True, fallback=None):
 
 
 def stats(s, items, y, x=None, total_w=None, gap=Inches(0.16), hgt=Inches(0.95)):
+    """Figures in tabular mono, as the site sets anything it counts."""
     x = x if x is not None else M
     total_w = total_w if total_w is not None else CONTENT
     n = len(items)
@@ -221,10 +310,59 @@ def stats(s, items, y, x=None, total_w=None, gap=Inches(0.16), hgt=Inches(0.95))
     for i, (value, label) in enumerate(items):
         cx = x + Emu(int((w + gap) * i))
         box(s, cx, y, w, hgt)
-        text(s, value, cx + Inches(0.22), y + Inches(0.15), w - Inches(0.44), Inches(0.42),
-             size=22, bold=True, colour=ACCENT if i == 0 else INK, spacing=1.0)
-        text(s, label.upper(), cx + Inches(0.22), y + Inches(0.62), w - Inches(0.44), Inches(0.24),
-             size=8, colour=MUTED, font=MONO, spacing=1.0, spc=1.2)
+        is_figure = any(ch.isdigit() for ch in value)
+        text(s, value, cx + Inches(0.22), y + Inches(0.17), w - Inches(0.44), Inches(0.42),
+             size=19 if is_figure else 20, font=MONO if is_figure else HEAD,
+             bold=is_figure, colour=ACCENT_TEXT if i == 0 else INK, spacing=1.0,
+             spc=-0.02 * 19 if is_figure else None)
+        text(s, label.upper(), cx + Inches(0.22), y + Inches(0.63), w - Inches(0.44), Inches(0.24),
+             size=6.5, colour=MUTED, font=MONO, spacing=1.0, spc=0.4)
+
+
+def pill(s, label, x, y, on=False):
+    """The site's plan pill: mono, upper case, a hairline ring, fully rounded."""
+    label = label.upper()
+    size = 6.5
+    w = Inches(text_width(label, size, MONO) + 0.04 * len(label) * size / 72 + 0.24)
+    h = Inches(0.24)
+    sh = box(s, x, y, w, h, fill=CARD, border=ACCENT if on else STRONG, radius=0.5)
+    sh.line.width = Pt(0.75)
+    text(s, label, x, y + Inches(0.05), w, h, size=size, colour=INK if on else BODY, font=MONO,
+         align=PP_ALIGN.CENTER, spacing=1.0, spc=0.4)
+    return w
+
+
+def band(s, x, y, w, h):
+    """A callout as the site's pricing band: a card with one accent rule down its left edge."""
+    box(s, x, y, w, h)
+    sh = s.shapes.add_shape(5, x, y + Inches(0.16), Pt(3), h - Inches(0.32))
+    sh.fill.solid(); sh.fill.fore_color.rgb = ACCENT
+    sh.line.fill.background(); sh.shadow.inherit = False
+    sh.adjustments[0] = 0.5
+
+
+def steps(s, items, y, x=None, total_w=None, hgt=Inches(1.05), size=12.5):
+    """
+    The site's row of rules: numbered columns, each opened by a hairline on
+    its left, the number in mono above the words.
+    """
+    x = x if x is not None else M
+    total_w = total_w if total_w is not None else CONTENT
+    n = len(items)
+    w = Emu(int(total_w / n))
+    hline(s, x, y, total_w)
+    hline(s, x, y + hgt, total_w)
+    for i, item in enumerate(items):
+        cx = x + Emu(int(w * i))
+        if i:
+            sh = s.shapes.add_shape(1, cx, y, Emu(9525), hgt)
+            sh.fill.solid(); sh.fill.fore_color.rgb = LINE
+            sh.line.fill.background(); sh.shadow.inherit = False
+        pad = Inches(0.2) if i else 0
+        text(s, f"{i + 1:02d}", cx + pad, y + Inches(0.16), w - pad, Inches(0.2), size=7,
+             colour=MUTED, font=MONO, spacing=1.0)
+        text(s, item, cx + pad, y + Inches(0.42), w - pad - Inches(0.2), hgt - Inches(0.5),
+             size=size, colour=BODY, spacing=1.35)
 
 
 def dotted(s, items, x, y, w, size=11.5, gap=Inches(0.255), colour=BODY):
@@ -241,7 +379,7 @@ def rows(s, pairs, y, label_w=Inches(3.3), gap=Inches(0.84), size=12):
         top = y + Emu(int(gap * i))
         hline(s, M, top, CONTENT)
         text(s, label, M, top + Inches(0.14), label_w, Inches(0.3), size=size,
-             bold=True, colour=INK, spacing=1.35)
+             font=HEAD, colour=INK, spacing=1.35)
         text(s, value, M + label_w + Inches(0.1), top + Inches(0.14),
              CONTENT - label_w - Inches(0.1), gap - Inches(0.2), size=size,
              colour=BODY, spacing=1.45)
@@ -255,11 +393,11 @@ def tri_cards(s, cards, y, hgt=Inches(3.45), highlight=0):
         on = i == highlight
         box(s, x, y, w, hgt, border=ACCENT if on else LINE)
         px, pw = x + Inches(0.26), w - Inches(0.52)
-        text(s, c["tag"].upper(), px, y + Inches(0.24), pw, Inches(0.24), size=8,
-             colour=ACCENT if on else MUTED, font=MONO, spacing=1.0, spc=1.2)
-        text(s, c["title"], px, y + Inches(0.54), pw, Inches(0.42), size=19, bold=True,
-             colour=INK, spacing=1.1)
-        text(s, c["sub"], px, y + Inches(1.02), pw, Inches(0.28), size=11, colour=BODY, spacing=1.2)
+        pill(s, c["tag"], px, y + Inches(0.24), on)
+        title = c["title"].capitalize() if c["title"].isupper() else c["title"]
+        text(s, title, px, y + Inches(0.62), pw, Inches(0.42), size=18, font=HEAD,
+             colour=INK, spacing=1.1, spc=-0.01 * 18)
+        text(s, c["sub"], px, y + Inches(1.02), pw, Inches(0.28), size=11, colour=MUTED, spacing=1.2)
         points_y, points_gap = y + Inches(1.32), Inches(0.225)
         divider = y + hgt - Inches(0.92)
         bottom = points_y + Emu(int(points_gap * len(c["points"])))
@@ -275,10 +413,12 @@ def tri_cards(s, cards, y, hgt=Inches(3.45), highlight=0):
             )
         dotted(s, c["points"], px, points_y, pw, size=10, gap=points_gap)
         hline(s, px, divider, pw)
-        text(s, c["foot_label"].upper(), px, y + hgt - Inches(0.80), pw, Inches(0.24),
-             size=8, colour=ACCENT if on else MUTED, font=MONO, spacing=1.0, spc=1.2)
-        text(s, c["foot"], px, y + hgt - Inches(0.54), pw, Inches(0.3), size=14, bold=True,
-             colour=ACCENT if on and c.get("foot_accent") else INK, spacing=1.15)
+        text(s, c["foot_label"].upper(), px, y + hgt - Inches(0.78), pw, Inches(0.24),
+             size=6.5, colour=MUTED, font=MONO, spacing=1.0, spc=0.4)
+        foot_is_figure = any(ch.isdigit() for ch in c["foot"])
+        text(s, c["foot"], px, y + hgt - Inches(0.54), pw, Inches(0.3), size=14,
+             font=MONO if foot_is_figure else HEAD, bold=foot_is_figure,
+             colour=ACCENT_TEXT if on and c.get("foot_accent") else INK, spacing=1.15)
         if c.get("foot_note"):
             text(s, c["foot_note"], px, y + hgt - Inches(0.26), pw, Inches(0.24), size=9,
                  colour=MUTED, spacing=1.1)
@@ -290,7 +430,7 @@ def two_col(s, kick, title, paras, shot_name, shot_y=Inches(1.75), shot_h=Inches
     ty = y + Inches(0.22)
     for i, p in enumerate(paras):
         size = 13 if i == 0 else 12
-        hh = Inches(est_lines(p, size, 4.6) * size * 1.55 / 72)
+        hh = Inches(est_lines(p, size, 4.75, font=SANS) * size * 1.55 * LINE_BOX / 72)
         text(s, p, M, ty, Inches(4.75), hh, size=size,
              colour=BODY if i == 0 else MUTED, spacing=1.55)
         ty += hh + Inches(0.26)
@@ -304,14 +444,14 @@ def phones(s, items, y=Inches(1.70), h=Inches(3.85), x0=Inches(6.06), total=Inch
     for i, (name, cap, sub) in enumerate(items):
         x = x0 + Emu(int((w + gap) * i))
         used = shot(s, name, x, y, w, h, fallback="shopper-wallet")
-        text(s, cap, x, y + used + Inches(0.16), w, Inches(0.26), size=12, bold=True,
+        text(s, cap, x, y + used + Inches(0.16), w, Inches(0.26), size=12, font=HEAD,
              colour=INK, spacing=1.2)
         text(s, sub, x, y + used + Inches(0.44), w, Inches(0.26), size=10.5,
              colour=MUTED, spacing=1.2)
 
 
 def part(kick, title, body):
-    s = slide(); masthead(s)
+    s = slide(); ground(s); masthead(s)
     kicker(s, kick, y=Inches(2.56))
     h1(s, title, y=Inches(3.02), size=44)
     text(s, body, M, Inches(4.62), Inches(9.6), Inches(0.9), size=13, colour=BODY, spacing=1.55)

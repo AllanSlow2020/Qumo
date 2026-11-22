@@ -35,9 +35,23 @@ product.
 | `capture.mjs` | photographs the running product into `shots/` |
 | `art/` | the Qumo mark, rendered from `public/qumo.svg` in three colours |
 | `shots/` | the screenshots, committed so the deck builds from a clone |
+| `fonts/` | Instrument Sans and Martian Mono, with their licences |
 | `requirements.txt` | the two Python packages the build needs |
 
 The built `.pptx` files and any rendered PDF are build output and are not tracked.
+
+## Fonts, and why to present from the PDF
+
+The deck is set in the marketing site's two faces: Instrument Sans to read,
+Martian Mono for labels and figures. Both are in `fonts/` under the SIL
+Open Font License. PowerPoint and Keynote cannot embed them in a .pptx, so a
+machine without them silently substitutes. Either present from the PDF,
+which carries them, or install the files in `fonts/` before opening the
+.pptx.
+
+The cover, the closing slide and the section dividers carry the site's
+hero ground (grid guides, blue glow, registration crosshairs). It is drawn
+once into `art/ground.png` by `style.py`; delete that file to redraw it.
 
 ## Every figure has a source
 

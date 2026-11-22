@@ -290,8 +290,8 @@ CLAIMS = [
      "files": [".github/dependabot.yml"],
      "evidence": "package-ecosystem npm, interval weekly."},
     {"id": "no-number", "slide": "nobody gets a list of your shoppers",
-     "claim": "Nobody sees a shopper's mobile number, the brand included, and no other brand sees "
-              "a brand's activity.",
+     "claim": "Nobody sees a shopper's mobile number, the brand included, and there is no list of "
+              "shoppers for anybody to buy.",
      "files": ["docs/brand-context.md", "lib/db"],
      "evidence": "brand-context.md section 10, true of the running product: a brand never sees a "
                  "shopper's mobile number and has no screen showing an individual shopper; every "
@@ -380,7 +380,10 @@ def figures_in(text):
 def _slides(prs):
     for n, sl in enumerate(prs.slides, 1):
         chunks = [sh.text_frame.text for sh in sl.shapes if sh.has_text_frame]
-        chunks = [_FURNITURE[1].sub(" ", c) for c in chunks if not _FURNITURE[0].match(c)]
+        # A lone zero-padded number ("01") is a step marker in a row of rules, not a
+        # claim. A stat's figure is never zero-padded, so it is still checked.
+        chunks = [_FURNITURE[1].sub(" ", c) for c in chunks
+                  if not _FURNITURE[0].match(c) and not re.fullmatch(r"\s*0\d\s*", c)]
         yield n, chunks
 
 

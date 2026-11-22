@@ -57,27 +57,30 @@ OUT = ARGS[0] if ARGS else os.path.join(style.HERE, "Qumo.pptx")
 
 
 def p01():
-    s = slide()
+    s = slide(); ground(s)
     logo(s, M, Inches(2.05), Inches(0.62), variant="blue-white")
-    text(s, "You have never met\nthe people who buy you", M, Inches(3.05), Inches(10.5),
-         Inches(1.7), size=50, bold=True, colour=INK, spacing=1.12)
+    text(s, "You have never met\nthe people who buy you.", M, Inches(3.05), Inches(10.5),
+         Inches(1.7), size=50, font=HEAD, colour=INK, spacing=1.12)
     text(s, "Qumo turns the code under your pack into a reason to come back to your own page,\n"
             "under your own name, without an app and without a loyalty card.",
          M, Inches(5.12), Inches(9.8), Inches(0.9), size=13, colour=BODY, spacing=1.55)
     text(s, "PURCHASE LOYALTY        FOR BRANDS SOLD THROUGH SOMEBODY ELSE'S SHELF",
          M, Inches(6.12), Inches(10), Inches(0.3), size=9, colour=MUTED, font=MONO,
-         spacing=1.0, spc=1.2)
+         spacing=1.0, spc=0.5)
     footer(s)
 
 
 def p02():
     s = slide(); masthead(s); kicker(s, "The problem")
     h1(s, "A stranger buys your product in a shop you do not own")
-    text(s, "They pick it off a shelf and pay at a till you cannot see. Whether they ever buy it "
-            "again, you find out months later, if at all. The retailer's card knows. You do not.",
-         M, Inches(2.55), Inches(10.2), Inches(1.0), size=13, colour=BODY, spacing=1.55)
-    text(s, "78% say their loyalty programme significantly influences where they buy groceries.",
-         M, Inches(3.42), Inches(11.0), Inches(0.4), size=13, bold=True, colour=INK, spacing=1.3)
+    text(s, "They pick it off a shelf and pay at a till you cannot see. The retailer's card knows if "
+            "they come back. You do not.",
+         M, Inches(2.40), Inches(10.6), Inches(0.5), size=14, colour=BODY, spacing=1.5)
+    text(s, "78%", M, Inches(3.12), Inches(1.6), Inches(0.6), size=30, font=MONO, bold=True,
+         colour=ACCENT_TEXT, spacing=1.0, spc=-0.6)
+    text(s, "say the loyalty programme they belong to significantly influences where they buy "
+            "groceries. It is the retailer's programme, not yours.",
+         M + Inches(1.45), Inches(3.14), Inches(7.6), Inches(0.6), size=13, colour=INK, spacing=1.4)
     cards = [
         ("The retailer keeps them", "Clicks, Pick n Pay and Checkers run the loyalty card. What "
          "it learns about your buyer stays with them."),
@@ -86,15 +89,15 @@ def p02():
         ("An app is a second ask", "Nobody downloads one to claim five rand, and the data costs "
          "money before the reward arrives."),
     ]
-    gap = Inches(0.24)
+    gap = Inches(0.22)
     w = Emu(int((CONTENT - gap * 2) / 3))
     for i, (t, b) in enumerate(cards):
         x = M + Emu(int((w + gap) * i))
-        box(s, x, Inches(4.05), w, Inches(2.1))
-        text(s, t, x + Inches(0.3), Inches(4.32), w - Inches(0.6), Inches(0.34), size=14,
-             bold=True, colour=INK, spacing=1.15)
-        text(s, b, x + Inches(0.3), Inches(4.80), w - Inches(0.6), Inches(1.1), size=11.5,
-             colour=MUTED, spacing=1.35)
+        box(s, x, Inches(4.30), w, Inches(1.80))
+        text(s, t, x + Inches(0.28), Inches(4.54), w - Inches(0.56), Inches(0.34), size=15,
+             font=HEAD, colour=INK, spacing=1.15)
+        text(s, b, x + Inches(0.28), Inches(5.00), w - Inches(0.56), Inches(1.0), size=12,
+             colour=MUTED, spacing=1.4)
     cite(s, "Truth and BrandMapp Loyalty Whitepaper 2025/6, p. 24. Economically active: household "
             "income of R10,000 a month or more.", Inches(6.40))
     footer(s)
@@ -103,35 +106,34 @@ def p02():
 def p03():
     s = slide(); masthead(s); kicker(s, "The cost of staying as you are")
     h1(s, "The promotion you already pay for ends in a spreadsheet")
-    text(s, "A managed on-pack promotion in this market starts around R40,000. Codes under caps, a "
-            "short code to text, a draw at the end of the quarter. Run two a year and that is "
-            "R80,000 of print and prize money spent on finding out nothing.",
-         M, Inches(2.55), Inches(10.6), Inches(1.0), size=13, colour=BODY, spacing=1.55)
-    box(s, M, Inches(3.95), CONTENT, Inches(1.5), border=ACCENT)
-    text(s, "And then the campaign ends and you have a spreadsheet of entrants you will never "
-            "speak to again.",
-         M + Inches(0.42), Inches(4.30), CONTENT - Inches(0.84), Inches(0.8), size=20, bold=True,
+    text(s, "A managed on-pack promotion in this market starts around R40,000: codes under caps, a "
+            "short code to text, a draw at the end of the quarter. Two a year is R80,000 spent on "
+            "finding out nothing.",
+         M, Inches(2.40), Inches(9.6), Inches(1.0), size=14, colour=BODY, spacing=1.5)
+    band(s, M, Inches(3.55), CONTENT, Inches(1.4))
+    text(s, "Then the campaign ends, and you are left with a spreadsheet of entrants you will "
+            "never speak to again.",
+         M + Inches(0.42), Inches(3.88), CONTENT - Inches(0.84), Inches(0.8), size=20, font=HEAD,
          colour=INK, spacing=1.25)
-    text(s, "And next quarter you pay to learn nothing again. Keep your agency for the draw if you "
-            "like: what follows sits under the same print run, beside them, not instead of them.",
-         M, Inches(5.75), Inches(11.2), Inches(0.8), size=12.5, colour=MUTED, spacing=1.5)
+    text(s, "Next quarter, you pay to learn nothing again. Keep your agency for the draw if you "
+            "like: what follows sits under the same print run, beside them.",
+         M, Inches(5.30), Inches(9.6), Inches(0.8), size=13, colour=MUTED, spacing=1.5)
     footer(s)
 
 
 def p04():
     s = slide(); masthead(s); kicker(s, "The turn")
     h1(s, "So keep the code, and let it open your own page")
-    text(s, "No app to install. No card to carry. No password to forget. A phone camera and a "
-            "mobile number, which is what every customer already has in their hand while they are "
-            "still holding the pack.",
-         M, Inches(2.55), Inches(9.6), Inches(1.0), size=13, colour=BODY, spacing=1.55)
-    dotted(s, ["They buy the pack in whatever shop they already buy it in",
-               "They scan the code printed under the cap, the label or the lid",
-               "It opens your page, at your address, with your name at the top",
-               "The value lands on a balance with your brand, from the first scan"],
-           M, Inches(3.35), Inches(10.4), size=12.5, gap=Inches(0.34))
+    text(s, "No app, no card, no password. Just the phone and the mobile number already in their "
+            "hand while they are still holding the pack.",
+         M, Inches(2.40), Inches(9.4), Inches(0.8), size=14, colour=BODY, spacing=1.5)
+    steps(s, ["They buy the pack in whatever shop they already use",
+              "They scan the code under the cap, the label or the lid",
+              "It opens your page, at your address, with your name on it",
+              "The value lands on a balance with your brand"],
+          Inches(3.45), hgt=Inches(1.25))
     stats(s, [("0", "apps to download"), ("1", "scan to earn"), ("6", "digit sign-in"),
-              ("You set it", "per pack, capped")], Inches(5.35))
+              ("You set it", "per pack, capped")], Inches(5.20))
     footer(s)
 
 
@@ -155,22 +157,21 @@ def p05():
     # Every figure on this slide is read from the whitepaper itself, not from coverage of it:
     # 85% on p. 9, 10.4 and 4.6 on pp. 12-13. Sources and exact sentences are in
     # docs/competitive-position.md, section 8. Do not add a figure here that is not in it.
-    text(s, "Loyalty is not a new idea to a South African shopper. Signing people up stopped being "
-            "the hard part some time ago, and what they ask for is a reward that arrives at once.",
-         M, Inches(2.42), Inches(11.4), Inches(1.0), size=13, colour=BODY, spacing=1.55)
+    text(s, "Signing people up stopped being the hard part long ago. What they ask for is a reward "
+            "that arrives at once.",
+         M, Inches(2.40), Inches(9.4), Inches(0.8), size=14, colour=BODY, spacing=1.5)
     stats(s, [
         ("85%", "already in a programme"),
         ("10.4", "programmes per person"),
         ("4.6", "the same figure in 2015"),
         ("40%", "want rewarding instantly"),
     ], Inches(3.58))
-    box(s, M, Inches(4.78), CONTENT, Inches(1.02), border=ACCENT)
-    text(s, "Not an eleventh card: one Qumo account across every brand on it, paying from the "
-            "first scan.",
-         M + Inches(0.42), Inches(5.00), CONTENT - Inches(0.84), Inches(0.6), size=16, bold=True,
+    band(s, M, Inches(4.78), CONTENT, Inches(1.02))
+    text(s, "Not an eleventh card: one Qumo account across every brand, paying from the first scan.",
+         M + Inches(0.42), Inches(5.00), CONTENT - Inches(0.84), Inches(0.6), size=16, font=HEAD,
          colour=INK, spacing=1.3)
-    text(s, "The contest is not whether somebody joins. It is whether they are still using it "
-            "three months later, which is the number the console leads with.",
+    text(s, "The contest is whether they still use it three months later, which is the number the "
+            "console leads with.",
          M, Inches(5.98), Inches(11.4), Inches(0.6), size=12, colour=MUTED, spacing=1.45)
     cite(s, "Truth and BrandMapp Loyalty Whitepaper 2025/6, pp. 9, 12-13 and 22. Economically "
             "active: household income of R10,000 a month or more.", Inches(6.56))
@@ -189,9 +190,9 @@ def p05b():
         ("40%", "want rewarding instantly"),
         ("37%", "want points usable as cash"),
     ], Inches(3.58))
-    box(s, M, Inches(4.78), CONTENT, Inches(1.02), border=ACCENT)
+    band(s, M, Inches(4.78), CONTENT, Inches(1.02))
     text(s, "A Qumo reward is credited the moment the code is scanned, from the first pack.",
-         M + Inches(0.42), Inches(5.00), CONTENT - Inches(0.84), Inches(0.6), size=16, bold=True,
+         M + Inches(0.42), Inches(5.00), CONTENT - Inches(0.84), Inches(0.6), size=16, font=HEAD,
          colour=INK, spacing=1.3)
     text(s, "Built: a full stamp card's reward, taken at your counter once. Not built yet: spending "
             "a rand balance at a till. A pilot is where a brand decides that.",
@@ -205,11 +206,11 @@ def p06():
     s = slide(); masthead(s); kicker(s, "Whose programme it is")
     y = h1(s, "Your name is on the page, and nobody gets a list of your shoppers", w=Inches(4.9))
     text(s, "Your name at the top, your colour on the button, your address in the bar. Qumo is one "
-            "line in the footer, which is there so a customer knows who is holding their number.",
+            "line in the footer, so a shopper knows who holds their number.",
          M, y + Inches(0.3), Inches(4.75), Inches(1.4), size=13, colour=BODY, spacing=1.55)
-    text(s, "You see your own numbers. Nobody sees a shopper's mobile number, you included, no "
-            "other brand sees your activity, and there is no list for anybody to buy. How POPIA "
-            "responsibility splits between you and us is in the agreement.",
+    text(s, "You see your own numbers. Nobody sees a shopper's mobile number, you included, and "
+            "there is no list for anybody to buy. The agreement sets out how POPIA responsibility "
+            "splits between us.",
          M, y + Inches(1.9), Inches(4.75), Inches(1.3), size=12, colour=MUTED, spacing=1.55)
     phones(s, [("shopper-join", "Your poster", "Explains, signs up, awards nothing."),
                ("shopper-wallet-dark", "Your balance", "Your colour, your name.")],
@@ -220,11 +221,10 @@ def p06():
 def p06b():
     two_col(slide(), "What it could cost you",
             "You set the most it can ever cost, before a code is printed",
-            ["Every promotion carries a ceiling: per person per day, and in total. The engine "
-             "enforces it at the moment of the scan, not in a report afterwards.",
-             "The first figure on the first screen is what the programme owes your customers, so "
-             "your finance director has an answer before they ask. A live promotion with no "
-             "ceiling is flagged on that screen before it costs anything."],
+            ["Every promotion carries a ceiling, per person per day and in total, enforced at the "
+             "moment of the scan rather than in a report afterwards.",
+             "The first figure on the first screen is what you owe your customers. A live "
+             "promotion with no ceiling is flagged there before it costs anything."],
             "console-promotions")
 
 
@@ -235,39 +235,41 @@ def p07():
               ("R2,713.97", "still owed")], Inches(2.35))
     text(s, "FIGURES ILLUSTRATIVE  ·  THE SCREEN BELOW IS A PHOTOGRAPH OF THE CONSOLE",
          M, Inches(3.42), Inches(9), Inches(0.22), size=8, colour=FOOT, font=MONO,
-         spacing=1.0, spc=1.2)
+         spacing=1.0, spc=0.5)
     shot(s, "console-performance", M, Inches(3.70), Inches(6.5), Inches(2.95))
-    text(s, "Not impressions and not entries. The repeat rate splits once from four-or-more, "
-            "because the average of one scan and five says nothing about either group.",
+    text(s, "Not impressions or entries. The repeat rate splits once from four-or-more, because "
+            "an average of one scan and five says nothing about either.",
          Inches(7.55), Inches(3.80), Inches(4.94), Inches(1.1), size=12, colour=BODY, spacing=1.55)
-    text(s, "Every figure is worked out from the ledger, so it cannot drift from the scans behind "
-            "it, and this screen exports to a spreadsheet.",
+    text(s, "Every figure comes from the ledger, so it cannot drift from the scans behind it, and "
+            "this screen exports to a spreadsheet.",
          Inches(7.55), Inches(5.20), Inches(4.94), Inches(1.3), size=12, colour=MUTED, spacing=1.55)
     footer(s)
 
 
 def p08():
     s = slide(); masthead(s); kicker(s, "Why this is not a slide deck")
-    h1(s, "It is built, and you can scan one in this room")
-    text(s, "Most things pitched at this stage are a concept with a timeline attached. This is a "
-            "working product. Every screen in this deck is a photograph of it running, not a "
-            "drawing of what it might look like.",
-         M, Inches(2.5), Inches(10.6), Inches(1.0), size=13, colour=BODY, spacing=1.55)
-    stats(s, [("1,000+", "tests passing"), ("18", "screens, all real"), ("3", "ways to earn"),
-              ("0", "lines of it imaginary")], Inches(3.85))
-    text(s, "Ask for a code before you leave. It will be printed, it will work once, and the "
-            "balance it creates will be sitting in the console when you check.",
-         M, Inches(5.30), Inches(10.6), Inches(0.8), size=12.5, colour=MUTED, spacing=1.5)
+    y = h1(s, "It is built, and you can scan one in this room", w=Inches(5.5))
+    text(s, "Not a concept with a timeline. Every screen in this deck is a photograph of the "
+            "product running.",
+         M, y + Inches(0.25), Inches(5.4), Inches(0.8), size=14, colour=BODY, spacing=1.5)
+    stats(s, [("1,000+", "tests passing"), ("18", "screens, all real")], Inches(3.95),
+          total_w=Inches(5.5))
+    stats(s, [("3", "ways to earn"), ("0", "lines of it imaginary")], Inches(5.06),
+          total_w=Inches(5.5))
+    used = shot(s, "console-labels", Inches(6.90), Inches(1.46), Inches(5.59), Inches(4.25))
+    text(s, "Ask for a code before you leave. It is printed, it works once, and the balance it "
+            "creates will be in the console when you check.",
+         Inches(6.90), Inches(1.46) + used + Inches(0.22), Inches(5.59), Inches(0.7), size=12,
+         colour=MUTED, spacing=1.45)
     footer(s)
 
 
 def p09():
     s = slide(); masthead(s); kicker(s, "The ask")
     h1(s, "So start with one line, one print run, and no invoice")
-    text(s, "The fastest way to find out whether this works for you is to run it, so the first one "
-            "is free. We are not asking for budget in this meeting. A pack code needs nothing from "
-            "your stores and nothing installed anywhere.",
-         M, Inches(2.42), Inches(11.0), Inches(0.8), size=12.5, colour=BODY, spacing=1.55)
+    text(s, "The quickest way to know whether this works for you is to run it, so the first one is "
+            "free. No budget in this meeting, nothing to install, and nothing asked of your stores.",
+         M, Inches(2.40), Inches(10.4), Inches(0.8), size=14, colour=BODY, spacing=1.5)
     tri_cards(s, [
         {"tag": "We cover", "title": "THE PLATFORM", "sub": "Everything but the paper",
          "points": ["The codes, generated and single-use", "Your branded pages and console",
@@ -288,10 +290,10 @@ def p09():
 def p10():
     s = slide(); masthead(s); kicker(s, "Indicative · for discussion")
     h1(s, "If you keep it, you pay for a programme, not a project")
-    text(s, "Two managed promotions a year costs about R80,000 and ends twice. Launch is R90,000 a "
-            "year and does not end. Directional figures, to show the shape: a subscription rather "
-            "than a project, because a programme has no closing date.",
-         M, Inches(2.42), Inches(11.0), Inches(0.8), size=12.5, colour=BODY, spacing=1.55)
+    text(s, "Two managed promotions a year cost about R80,000 and end twice. Launch is R90,000 a year "
+            "and does not end. Directional figures, to show the shape: a subscription, because a "
+            "programme has no closing date.",
+         M, Inches(2.40), Inches(10.4), Inches(0.8), size=14, colour=BODY, spacing=1.5)
     tri_cards(s, [
         {"tag": "Tier 01", "title": "LAUNCH", "sub": "One campaign, one door",
          "points": ["Scan door", "Up to 10,000 scans a month",
@@ -311,15 +313,14 @@ def p10():
 
 
 def p11():
-    s = slide()
+    s = slide(); ground(s)
     logo(s, M, Inches(2.2), Inches(0.62), variant="blue-white")
-    text(s, "Give us one line and\none print run", M, Inches(3.15), Inches(10.4),
-         Inches(1.5), size=46, bold=True, colour=INK, spacing=1.14)
-    text(s, "We will have your first real numbers inside one print cycle, and you will not have "
-            "spent anything to find out.",
+    text(s, "Give us one line and\none print run.", M, Inches(3.15), Inches(10.4),
+         Inches(1.5), size=46, font=HEAD, colour=INK, spacing=1.14)
+    text(s, "Your first real numbers inside one print cycle, at no cost to you.",
          M, Inches(5.08), Inches(9.4), Inches(0.9), size=14.5, colour=BODY, spacing=1.45)
-    text(s, "qumo.co.za", M, Inches(6.02), Inches(6), Inches(0.36), size=15, bold=True,
-         colour=ACCENT, font=MONO, spacing=1.0)
+    text(s, "qumo.co.za", M, Inches(6.02), Inches(6), Inches(0.36), size=14,
+         colour=ACCENT_TEXT, font=MONO, spacing=1.0)
     footer(s)
 
 
@@ -407,12 +408,12 @@ def a03():
         x = M + Emu(int((w + gap) * i))
         box(s, x, Inches(2.42), w, Inches(3.0), border=ACCENT if i else LINE)
         text(s, tag.upper(), x + Inches(0.4), Inches(2.70), w - Inches(0.8), Inches(0.24),
-             size=8, colour=MUTED, font=MONO, spacing=1.0, spc=1.2)
+             size=8, colour=MUTED, font=MONO, spacing=1.0, spc=0.5)
         text(s, title, x + Inches(0.4), Inches(3.02), w - Inches(0.8), Inches(0.36),
-             size=18, bold=True, colour=INK, spacing=1.1)
+             size=18, font=HEAD, colour=INK, spacing=1.1)
         dotted(s, points, x + Inches(0.4), Inches(3.62), w - Inches(0.8), size=11.5, gap=Inches(0.32))
         text(s, verdict, x + Inches(0.4), Inches(4.86), w - Inches(0.8), Inches(0.3),
-             size=13, bold=True, colour=colour, spacing=1.2)
+             size=13, font=HEAD, colour=colour, spacing=1.2)
     text(s, "A poster that awards value awards it to everybody who walks past it. Keeping the two "
             "jobs apart is what lets a brand print the poster anywhere.",
          M, Inches(5.68), Inches(11.2), Inches(0.6), size=12, colour=MUTED, spacing=1.5)
@@ -672,7 +673,7 @@ def a22():
          "points": ["How many scanned, and how many came back",
                     "What it cost per person reached",
                     "What the same thing costs across the range",
-                    "The data stays yours either way"],
+                    "Your numbers stay yours either way"],
          "foot_label": "Time to a number", "foot": "One print cycle"},
     ], Inches(3.30))
     footer(s)
