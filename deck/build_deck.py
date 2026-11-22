@@ -679,13 +679,33 @@ def a22():
     footer(s)
 
 
+def p_end():
+    """The last page of the deck, after the appendix: the cover's ground, the ask once more,
+    and where to reach us. No email address yet: the site's Request access button mails
+    access@qumo.co.za, and nothing on record confirms that mailbox delivers (only help@,
+    which is for shoppers, is confirmed). Add it here once it is."""
+    s = slide(); ground(s)
+    logo(s, M, Inches(2.2), Inches(0.62), variant="blue-white")
+    text(s, "Thank you.", M, Inches(3.15), Inches(10.4), Inches(1.0), size=46, font=HEAD,
+         colour=INK, spacing=1.14, spc=-0.012 * 46)
+    text(s, "One product line, one print run, and your own numbers at the end of it.",
+         M, Inches(4.30), Inches(10), Inches(0.5), size=14.5, colour=BODY, spacing=1.45)
+    text(s, "qumo.co.za", M, Inches(5.20), Inches(4), Inches(0.36), size=14,
+         colour=ACCENT_TEXT, font=MONO, spacing=1.0)
+    text(s, "Request access on the site, and we will set up your first one with you.",
+         M, Inches(5.62), Inches(9), Inches(0.36), size=12, colour=MUTED, spacing=1.3)
+    footer(s)
+
+
 PITCH = [p01, p02, p03, p04, p04b, p05, p06, p06b, p08, p07, p09, p10, p11]
 APPENDIX = [a_brand, a05, a06, a07, a08, a09, a10, a12, a12b, a13,
             a_customer, a15, a16, a17, a18,
             a_questions, a03, p05b, a19, a_security, a21, p13, p12, a22]
 
-style.start("For brands", len(PITCH) + len(APPENDIX))
-for fn in PITCH + APPENDIX:
+CLOSE = [p_end]
+
+style.start("For brands", len(PITCH) + len(APPENDIX) + len(CLOSE))
+for fn in PITCH + APPENDIX + CLOSE:
     fn()
 
 print(f"{style.save(OUT, 'qumo')} slides -> {OUT}")

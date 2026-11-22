@@ -7,6 +7,7 @@ One presentation, generated rather than drawn: `build_deck.py` writes
 |---|---|---|
 | 1-13 | The pitch | Presented. One story, told by the headlines alone: the problem, the cost of staying put, the turn, one customer's journey, the objections, the proof, their own numbers, the ask |
 | 14-37 | Appendix | Not presented. What the brand sees, what the customer sees, and the questions that come next: turned to when somebody asks, and left behind afterwards |
+| 38 | Thank you | The last page: the ask once more, and where to find us |
 
 There used to be a separate product overview. It was folded in as the
 appendix because the two kept drifting apart: the same mechanic, pricing
