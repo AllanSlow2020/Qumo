@@ -4382,3 +4382,66 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 @media (prefers-reduced-motion: reduce) {
   .cn-how-chev { transition: none; }
 }
+
+/* ---------- motion: opening, arriving, answering ----------
+   The console already arrives (panels, steps, bars) and answers a click (the
+   sidebar, the progress bar, the button press). What was still instant were
+   the things that open, the rows that list, and the controls that respond to a
+   pointer, so those move now, inside the same budget the arrival block above
+   records: short, eased out, nothing that is still moving by the time somebody
+   reaches for it.
+
+   All of it is decoration over a page that is already correct. A browser that
+   does not understand ::details-content (or interpolate-size) opens a fold
+   instantly, as it always did, and every rule that moves something is behind
+   no-preference, so reduced motion gets the finished page. */
+
+/* Pointer responses are colour changes, not movement, so they stay on. */
+.cn-nav a { transition: background-color 150ms ease, color 150ms ease; }
+.cn-nav a svg { transition: opacity 150ms ease, color 150ms ease; }
+.cn-input { transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease; }
+.cn-how-head { transition: background-color 150ms ease; }
+.cn-table tbody tr { transition: background-color 120ms ease; }
+.cn-table tbody tr:hover { background: var(--cn-quiet); }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* A fold opens and closes by height. The steps share a name, so opening one
+     closes the other at the same moment and the two slide past each other. */
+  :root { interpolate-size: allow-keywords; }
+
+  .cn-how-item::details-content,
+  .cn-how-more::details-content,
+  .cn-setup-more::details-content {
+    block-size: 0;
+    overflow-y: clip;
+    transition:
+      block-size 280ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      content-visibility 280ms allow-discrete;
+  }
+
+  .cn-how-item[open]::details-content,
+  .cn-how-more[open]::details-content,
+  .cn-setup-more[open]::details-content { block-size: auto; }
+
+  /* What is inside a step arrives a beat after the step opens, top to bottom,
+     the way the panels do on a page. Six places, then they arrive together. */
+  .cn-how-item[open] > .cn-how-body > * { animation: cn-rise 240ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+  .cn-how-item[open] > .cn-how-body > :nth-child(2) { animation-delay: 40ms; }
+  .cn-how-item[open] > .cn-how-body > :nth-child(3) { animation-delay: 80ms; }
+  .cn-how-item[open] > .cn-how-body > :nth-child(4) { animation-delay: 120ms; }
+  .cn-how-item[open] > .cn-how-body > :nth-child(5) { animation-delay: 160ms; }
+  .cn-how-item[open] > .cn-how-body > :nth-child(n + 6) { animation-delay: 200ms; }
+
+  /* Rows of a table arrive in order, quicker than the panel round them. Ten is
+     where it stops, as with the cards. */
+  .cn-table tbody tr { animation: cn-rise 200ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+  .cn-table tbody tr:nth-child(2) { animation-delay: 15ms; }
+  .cn-table tbody tr:nth-child(3) { animation-delay: 30ms; }
+  .cn-table tbody tr:nth-child(4) { animation-delay: 45ms; }
+  .cn-table tbody tr:nth-child(5) { animation-delay: 60ms; }
+  .cn-table tbody tr:nth-child(6) { animation-delay: 75ms; }
+  .cn-table tbody tr:nth-child(7) { animation-delay: 90ms; }
+  .cn-table tbody tr:nth-child(8) { animation-delay: 105ms; }
+  .cn-table tbody tr:nth-child(9) { animation-delay: 120ms; }
+  .cn-table tbody tr:nth-child(n + 10) { animation-delay: 135ms; }
+}
