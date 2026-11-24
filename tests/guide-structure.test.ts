@@ -1,23 +1,25 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { setupSteps } from "@/lib/console/setup-state";
+import { ANCHORS, STEPS } from "@/app/console/(authed)/(gated)/guide/steps";
 
 // Built from its code point so this file is not itself an offender; see no-em-dashes.test.ts.
 const EM_DASH = String.fromCharCode(0x2014);
-import { DEFAULT_OPEN, SECTIONS, SECTION_IDS, TOTAL_MINS } from "@/app/console/(authed)/(gated)/guide/sections";
 
 /**
- * The shape of the How it works page.
+ * The shape of the How to use the console page.
  *
- * Seven sections, each with a one-line point, a read time and an address that
- * other pages link into. These hold the three together: the rail is built
- * from the same list as the sections, so what is checked here is that the page
- * really uses every entry once, that nothing elsewhere in the console links to
- * a section that does not exist, and that the points follow the voice the rest
- * of the product keeps.
+ * Six steps in an order, one open at a time, the first open on arrival, and a
+ * set of addresses that other screens link into. These hold the three
+ * together: the steps are the Overview's checklist, the page puts every
+ * address on an element exactly once, and nothing elsewhere in the console
+ * links to an address the page does not have.
  */
 
-const PAGE = readFileSync("app/console/(authed)/(gated)/guide/page.tsx", "utf8");
+const GUIDE = "app/console/(authed)/(gated)/guide";
+const PAGE = readFileSync(`${GUIDE}/page.tsx`, "utf8");
+const LIST = readFileSync(`${GUIDE}/how-steps.tsx`, "utf8");
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
@@ -30,57 +32,62 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-describe("the sections", () => {
-  it("have unique addresses and read times worth showing", () => {
-    expect(new Set(SECTION_IDS).size).toBe(SECTIONS.length);
-    for (const s of SECTIONS) {
-      expect(s.mins).toBeGreaterThanOrEqual(1);
-      expect(Number.isInteger(s.mins)).toBe(true);
-      expect(s.title.length).toBeGreaterThan(0);
-    }
-    expect(TOTAL_MINS).toBe(SECTIONS.reduce((n, s) => n + s.mins, 0));
+describe("the steps", () => {
+  it("are the Overview checklist, in its order and in its words", () => {
+    const checklist = setupSteps({
+      campaigns: 0,
+      campaignsWithRule: 0,
+      campaignsWithBudget: 0,
+      activeCampaigns: 0,
+      packBatches: 0,
+      signingStores: 0,
+      everAwarded: false,
+    });
+    expect(STEPS.map((s) => s.title)).toEqual(checklist.map((s) => s.title));
+    expect(STEPS.map((s) => s.text)).toEqual(checklist.map((s) => s.detail));
+    expect(STEPS.map((s) => s.n)).toEqual([1, 2, 3, 4, 5, 6]);
   });
 
-  it("are each on the page exactly once, in the order the rail lists them", () => {
-    const used = [...PAGE.matchAll(/<FoldSection id="([a-z]+)"/g)].map((m) => m[1]);
-    expect(used).toEqual(SECTION_IDS);
-  });
-
-  it("open by default only on sections that exist", () => {
-    for (const id of DEFAULT_OPEN) expect(SECTION_IDS).toContain(id);
-  });
-});
-
-describe("the one-line points", () => {
-  const points = [...PAGE.matchAll(/<FoldSection id="[a-z]+" point=(?:"([^"]+)"|\{`([^`]+)`\})/g)].map((m) => m[1] ?? m[2]!);
-
-  it("there is one for every section", () => {
-    expect(points).toHaveLength(SECTIONS.length);
-  });
-
-  it("are one sentence each, and short enough to skim", () => {
-    for (const p of points) {
-      expect(p.length).toBeLessThanOrEqual(100);
-      expect(p.endsWith(".")).toBe(true);
-      // One sentence: nothing but the closing full stop.
-      expect(p.slice(0, -1)).not.toMatch(/[.!?]\s/);
+  it("each have a short line, at least one screen and at least one way in", () => {
+    for (const s of STEPS) {
+      expect(s.sub.length).toBeGreaterThan(0);
+      expect(s.sub.length).toBeLessThanOrEqual(60);
+      expect(s.screens.length).toBeGreaterThan(0);
+      expect(s.actions.length).toBeGreaterThan(0);
+      for (const a of s.actions) expect(a.href.startsWith("/")).toBe(true);
     }
   });
 
   it("keep the product's voice: no em dashes, no exclamation marks", () => {
-    for (const p of points) {
-      expect(p).not.toContain(EM_DASH);
-      expect(p).not.toContain("!");
+    for (const s of STEPS) {
+      for (const text of [s.title, s.sub, s.text]) {
+        expect(text).not.toContain(EM_DASH);
+        expect(text).not.toContain("!");
+      }
+    }
+  });
+
+  it("share one name, so opening one closes the others, and only the first starts open", () => {
+    expect(LIST).toMatch(/name="how-steps"/);
+    expect(LIST).toMatch(/open=\{step\.n === 1\}/);
+  });
+});
+
+describe("the addresses", () => {
+  it("are each on the page exactly once", () => {
+    for (const id of ANCHORS) {
+      const found = PAGE.match(new RegExp(`id="${id}"`, "g")) ?? [];
+      expect(found, `id="${id}"`).toHaveLength(1);
     }
   });
 
   it("take the honour window from the code that enforces it", () => {
-    expect(PAGE).toMatch(/\$\{HONOUR_WINDOW_DAYS\}/);
+    expect(PAGE).toMatch(/days=\{HONOUR_WINDOW_DAYS\}/);
   });
 });
 
 describe("links into the guide from the rest of the console", () => {
-  it("all point at a section that exists", () => {
+  it("all point at an address the page has", () => {
     const files = walk("app").filter((f) => !f.includes("/guide/"));
     const found: { file: string; id: string }[] = [];
     for (const file of files) {
@@ -89,7 +96,7 @@ describe("links into the guide from the rest of the console", () => {
     // There are some today; the point is that none of them has gone stale.
     expect(found.length).toBeGreaterThan(0);
     for (const { file, id } of found) {
-      expect(SECTION_IDS, `${file} links to /guide#${id}`).toContain(id);
+      expect(ANCHORS as readonly string[], `${file} links to /guide#${id}`).toContain(id);
     }
   });
 });
