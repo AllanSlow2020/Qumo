@@ -1439,53 +1439,6 @@ html[data-theme="dark"]:has(.cn) body {
 
 .cn-explain a { color: var(--cn-ink-2); text-underline-offset: 2px; }
 
-/* ---------- contents ----------
-   Seven sections is past the point where a reader can hold the shape of a
-   page in their head, and the only thing worse than a long page is a long
-   page that gives no sign of how long. This says how many there are and
-   lets somebody start in the middle.
-
-   Plain anchors, no scroll-spy. Marking the current section as you scroll
-   needs an observer, a client boundary and a decision about what "current"
-   means when two headings are on screen - and none of that helps the thing
-   people actually do here, which is read a list and click one. */
-.cn-toc {
-  list-style: none;
-  margin: 0;
-  padding: 8px 8px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.cn-toc a {
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-  padding: 7px 10px;
-  border-radius: var(--cn-radius-inner);
-  font-size: 13px;
-  line-height: 1.35;
-  color: var(--cn-ink-2);
-  text-decoration: none;
-}
-
-.cn-toc a:hover { background: var(--cn-quiet); color: var(--cn-ink); }
-
-.cn-toc a:focus-visible {
-  outline: 2px solid var(--cn-accent);
-  outline-offset: -2px;
-}
-
-.cn-toc-n {
-  flex: none;
-  width: 14px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--cn-ink-3);
-  font-variant-numeric: tabular-nums;
-}
-
 /* An anchored jump puts the heading hard against the top of the window,
    where it reads as cut off rather than as the start of something. */
 .cn-panel[id] { scroll-margin-top: 20px; }
@@ -3033,116 +2986,13 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   max-width: 340px;
 }
 
-/* ---------- guide: where to start, the ladder of proof, the cost calculator ----------
-   Three things on the How it works page that a brand can use rather than only
+/* ---------- guide: the ladder of proof, the cost calculator ----------
+   Things on the How it works page that a brand can use rather than only
    read. They share the page's rule about colour: the accent is the one filled
    control on a screen, so everything here that can be chosen is neutral and a
    selected choice is an ink ring, never a blue one. The accent shows up
    twice: the "Start here" badge, because it is the one recommendation, and
    the primary "Scan it" button. */
-
-/* ---- where to start ---- */
-
-.cn-start-lead { max-width: 62ch; }
-
-.cn-start-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 12px;
-}
-
-.cn-start-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 16px;
-  border: 1px solid var(--cn-line);
-  border-radius: var(--cn-radius-inner);
-  background: var(--cn-raised);
-  transition:
-    transform 240ms cubic-bezier(0.2, 0.7, 0.2, 1),
-    box-shadow 240ms cubic-bezier(0.2, 0.7, 0.2, 1),
-    border-color 160ms;
-}
-
-/* The same lift as every other card that responds: one physical system.
-   Only where there is a pointer to hover with. On a touch screen :hover sticks
-   to whatever was last tapped, and a card left floating after the tap that
-   scrolled to the ladder reads as a bug. */
-@media (hover: hover) {
-  .cn-start-card:hover {
-    transform: translateY(-3px);
-    border-color: var(--cn-line-strong);
-    box-shadow: var(--cn-shadow-hover);
-  }
-}
-
-/* The recommended one is picked out by weight, not by colour. */
-.cn-start-card-first {
-  border-color: var(--cn-ink);
-  box-shadow: 0 0 0 1px var(--cn-ink);
-  background: var(--cn-surface);
-}
-
-@media (hover: hover) {
-  .cn-start-card-first:hover { border-color: var(--cn-ink); }
-}
-
-.cn-start-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  width: 100%;
-}
-
-.cn-start-badge {
-  font-size: 12px;
-  font-weight: 500;
-  padding: 2px 10px;
-  border-radius: var(--cn-radius-badge);
-  background: var(--cn-accent);
-  color: var(--cn-accent-ink);
-  white-space: nowrap;
-}
-
-.cn-start-name { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
-.cn-start-body { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--cn-ink-2); }
-
-.cn-start-effort {
-  margin: auto 0 0;
-  padding-top: 10px;
-  border-top: 1px solid var(--cn-line);
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.cn-start-effort dt { font-size: 12px; color: var(--cn-ink-3); }
-.cn-start-effort dd { margin: 0; font-size: 14px; font-weight: 500; color: var(--cn-ink); }
-
-/* The hit area is the whole card; the focus ring is drawn on the card too. */
-.cn-start-link {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--cn-ink);
-  text-decoration: underline;
-  text-decoration-color: var(--cn-line-strong);
-  text-underline-offset: 3px;
-}
-
-.cn-start-link::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-}
-
-.cn-start-link:focus-visible { outline: none; }
-.cn-start-link:focus-visible::after { outline: 2px solid var(--cn-ink); outline-offset: 2px; }
 
 /* ---- the ladder of proof ---- */
 
@@ -3484,12 +3334,10 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 .cn-calc-verdict { margin: 0; font-size: 14px; line-height: 1.45; font-weight: 500; color: var(--cn-ink); }
 
 @media (prefers-reduced-motion: reduce) {
-  .cn-start-card,
   .cn-rung,
   .cn-meter > span,
   .cn-choice span,
   .cn-calc-person .cn-fig-ceiling-fill { transition: none; }
-  .cn-start-card:hover { transform: none; }
   .cn-ladder-entry { animation: none; }
 }
 
@@ -3935,154 +3783,6 @@ a.cn-btn { text-decoration: none; display: inline-block; }
   .ph .ph-stamp-on { animation: none; }
 }
 
-/* ---------- guide: sections that fold ----------
-   Every section leads with its point and folds its detail. The header is the
-   whole button, because a small chevron at the far end of a wide row is a
-   target nobody finds. */
-
-.cn-fold { padding: 0; overflow: visible; }
-.cn-fold details { display: block; }
-
-.cn-fold-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 16px 18px;
-  cursor: pointer;
-  list-style: none;
-  border-radius: var(--cn-radius);
-  transition: background-color 160ms;
-}
-
-.cn-fold-head::-webkit-details-marker { display: none; }
-.cn-fold-head::marker { content: ""; }
-.cn-fold-head:hover { background: var(--cn-quiet); }
-.cn-fold-head:focus-visible { outline: 2px solid var(--cn-ink); outline-offset: -2px; }
-
-.cn-fold-n {
-  flex: none;
-  width: 24px;
-  height: 24px;
-  margin-top: 2px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 500;
-  background: var(--cn-quiet);
-  color: var(--cn-ink-2);
-  font-variant-numeric: tabular-nums;
-  transition: background-color 160ms, color 160ms;
-}
-
-/* The section being read takes the ink, the same way the tour's steps do. */
-.cn-fold[data-current="true"] .cn-fold-n { background: var(--cn-ink); color: var(--cn-surface); }
-
-.cn-fold-titles { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.cn-fold-k { margin: 0; font-size: 12px; font-weight: 500; color: var(--cn-ink-3); }
-
-.cn-fold-point {
-  font-size: 16px;
-  line-height: 1.4;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--cn-ink);
-  text-wrap: balance;
-}
-
-.cn-fold-act {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 3px;
-  font-size: 12px;
-  color: var(--cn-ink-3);
-  white-space: nowrap;
-}
-
-.cn-fold-label { color: var(--cn-ink-2); font-weight: 500; }
-.cn-fold-chev { color: var(--cn-ink-2); transition: transform 240ms cubic-bezier(0.2, 0.7, 0.2, 1); }
-.cn-fold details[open] .cn-fold-chev { transform: rotate(180deg); }
-
-/* On a phone the time and the verb are the first things to go: the chevron
-   alone says what the row does, and the point gets the width. */
-@media (max-width: 560px) {
-  .cn-fold-mins,
-  .cn-fold-label { display: none; }
-  .cn-fold-head { padding: 14px; gap: 12px; }
-}
-
-.cn-fold-body { border-top: 1px solid var(--cn-line-soft); }
-
-/* Opening and closing, where the browser can animate the height of a details
-   body (Chrome and Edge today). Anywhere else these rules are dropped whole and
-   it simply opens, which is the right fallback. The padding the body keeps is
-   what stops the clip trimming a card's shadow at the edge. */
-.cn-fold details { interpolate-size: allow-keywords; }
-
-.cn-fold details::details-content {
-  block-size: 0;
-  overflow-y: clip;
-  transition:
-    block-size 300ms cubic-bezier(0.2, 0.7, 0.2, 1),
-    content-visibility 300ms allow-discrete;
-}
-
-.cn-fold details[open]::details-content { block-size: auto; }
-
-/* A jump from the rail or a link opens its section at once; see go() in
-   guide-state.tsx for why the page cannot wait for the animation. */
-.cn-fold[data-jumping] details::details-content { transition: none; }
-
-@media (prefers-reduced-motion: reduce) {
-  .cn-fold-head,
-  .cn-fold-n,
-  .cn-fold-chev { transition: none; }
-  .cn-fold details::details-content { transition: none; }
-}
-
-/* ---------- guide: the reading rail ---------- */
-
-.cn-rail-total { font-size: 12px; color: var(--cn-ink-3); }
-
-.cn-rail a { align-items: center; }
-.cn-rail a[aria-current="location"] { background: var(--cn-quiet); color: var(--cn-ink); font-weight: 500; }
-.cn-rail a[aria-current="location"] .cn-toc-n { color: var(--cn-ink); }
-
-.cn-rail-t { flex: 1; min-width: 0; }
-.cn-rail-m { flex: none; font-size: 11px; color: var(--cn-ink-3); font-variant-numeric: tabular-nums; }
-
-.cn-rail-foot { padding: 12px 16px 14px; border-top: 1px solid var(--cn-line-soft); display: flex; flex-direction: column; gap: 8px; }
-
-.cn-rail-bar { height: 4px; border-radius: 2px; background: var(--cn-quiet); overflow: hidden; }
-.cn-rail-bar > span { display: block; height: 100%; background: var(--cn-ink); border-radius: 2px; transition: width 300ms cubic-bezier(0.2, 0.7, 0.2, 1); }
-
-.cn-rail-foot-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--cn-ink-3); }
-
-.cn-rail-all {
-  all: unset;
-  box-sizing: border-box;
-  cursor: pointer;
-  padding: 2px 6px;
-  margin: -2px -6px;
-  border-radius: var(--cn-radius-inner);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--cn-ink-2);
-  text-decoration: underline;
-  text-decoration-color: var(--cn-line-strong);
-  text-underline-offset: 3px;
-}
-
-.cn-rail-all:hover { color: var(--cn-ink); }
-.cn-rail-all:focus-visible { outline: 2px solid var(--cn-ink); outline-offset: 1px; }
-
-@media (prefers-reduced-motion: reduce) {
-  .cn-rail-bar > span { transition: none; }
-}
-
 /* ---------- guide: the loop ----------
    Drawn in the brand's colour (--cn-brand, set by the layout) and ink where
    there is none. The colour is the circles and the line and nothing else; every
@@ -4397,3 +4097,288 @@ a.cn-btn { text-decoration: none; display: inline-block; }
 /* The skip link moves focus to the main area, which is not a control and needs
    no ring of its own. */
 .cn-main:focus { outline: none; }
+
+/* ---------- how to use the console ----------
+   Six steps in a list, one open at a time, the first open on arrival. Each
+   step is a <details> (see how-steps.tsx), so the head is the whole button
+   and the browser keeps the others shut.
+
+   What a step opens onto is the guide's own figures, so most of this block is
+   about how those sit inside a step and not about the steps: white cards on
+   the step's raised ground, a hairline instead of a box, more room between
+   one chooser and the next. Scoped to .cn-how so that nothing here reaches a
+   figure anywhere else.
+
+   Colour keeps the rule the figures were written under: the accent is the
+   one filled control, so a chosen option is an ink ring and not a blue one. */
+
+.cn-how-intro { display: flex; flex-direction: column; gap: 8px; max-width: 920px; }
+
+.cn-how {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 920px;
+  display: flex;
+  flex-direction: column;
+  background: var(--cn-surface);
+  border: 1px solid var(--cn-line);
+  border-radius: var(--cn-radius-card);
+  box-shadow: var(--cn-shadow-card);
+  overflow: hidden;
+}
+
+.cn-how > li + li { border-top: 1px solid var(--cn-line); }
+
+.cn-how-item { scroll-margin-top: 20px; }
+.cn-how-item[open] { background: var(--cn-raised); box-shadow: inset 2px 0 0 var(--cn-ink); }
+
+.cn-how-head {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 44px;
+  padding: 16px 20px;
+  cursor: pointer;
+}
+
+.cn-how-head::-webkit-details-marker { display: none; }
+.cn-how-item:not([open]) > .cn-how-head:hover { background: var(--cn-quiet); }
+.cn-how-head:focus-visible { outline: 2px solid var(--cn-ink); outline-offset: -2px; }
+
+.cn-how-n {
+  align-self: start;
+  padding-top: 3px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--cn-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.cn-how-item[open] .cn-how-n { color: var(--cn-ink); }
+
+.cn-how-titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cn-how-t { font-size: 16px; font-weight: 550; letter-spacing: -0.015em; color: var(--cn-ink); }
+.cn-how-sub { font-size: 13px; color: var(--cn-ink-2); }
+
+.cn-how-end { display: flex; align-items: center; gap: 10px; }
+
+.cn-how-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--cn-radius-badge);
+  background: var(--cn-accent);
+  color: var(--cn-accent-ink);
+  white-space: nowrap;
+}
+
+.cn-how-chev { flex: none; color: var(--cn-ink-3); transition: rotate 200ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.cn-how-item[open] > .cn-how-head .cn-how-chev,
+.cn-how-more[open] > .cn-how-more-head .cn-how-chev { rotate: 180deg; }
+
+.cn-how-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 0 20px 24px 74px;
+}
+
+.cn-how-text { margin: 0; max-width: 62ch; font-size: 14px; line-height: 1.5; color: var(--cn-ink-2); }
+
+.cn-how-act { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+.cn-how-act .cn-actions { gap: 12px; }
+.cn-how-where { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; font-size: 12px; color: var(--cn-ink-3); }
+.cn-how-where > span:first-child { margin-right: 4px; }
+.cn-how-chip {
+  padding: 2px 10px;
+  border: 1px solid var(--cn-line-strong);
+  border-radius: var(--cn-radius-badge);
+  background: var(--cn-raised);
+  color: var(--cn-ink-2);
+  white-space: nowrap;
+}
+
+/* A figure takes the step's whole width, so it starts under the number and not
+   under the title. */
+.cn-how-bleed { margin-left: -54px; min-width: 0; scroll-margin-top: 20px; }
+
+/* The reasons: a fold inside the step, closed until asked for. */
+.cn-how-more { border-top: 1px solid var(--cn-line); scroll-margin-top: 20px; }
+.cn-how-more-head {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--cn-ink);
+  cursor: pointer;
+}
+.cn-how-more-head::-webkit-details-marker { display: none; }
+.cn-how-more-head:focus-visible { outline: 2px solid var(--cn-ink); outline-offset: 2px; }
+.cn-how-more-body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 8px; }
+
+/* Once it is running, and the fold for pausing and ending. */
+.cn-how-after { display: flex; flex-direction: column; gap: 10px; max-width: 920px; }
+.cn-how-after-k { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cn-ink-3); }
+.cn-how-after-links { display: flex; flex-wrap: wrap; gap: 0 20px; margin: 0; }
+.cn-how-after-links a { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; font-weight: 500; color: var(--cn-ink); text-decoration: underline; text-decoration-color: var(--cn-line-strong); text-underline-offset: 3px; }
+.cn-how-after .cn-how-more { border: 1px solid var(--cn-line); border-radius: var(--cn-radius-card); background: var(--cn-surface); padding: 0 16px; }
+
+/* ---- the figures inside a step ---- */
+
+.cn-how .cn-fig { margin: 0; gap: 14px; }
+.cn-how .cn-fig-name { font-size: 14px; font-weight: 550; }
+.cn-how .cn-fig-cap { color: var(--cn-ink-3); margin-top: 2px; }
+
+.cn-how .cn-calc-group,
+.cn-how .cn-card-result,
+.cn-how .cn-card-try,
+.cn-how .cn-fig-shape,
+.cn-how .cn-calc-person {
+  background: var(--cn-surface);
+  border: 0;
+  border-radius: var(--cn-radius-card);
+  box-shadow: var(--cn-shadow-card);
+}
+.cn-how .cn-calc-group,
+.cn-how .cn-card-result,
+.cn-how .cn-card-try,
+.cn-how .cn-calc-person { padding: 20px; }
+.cn-how .cn-fig-shape { padding: 18px 18px 20px; gap: 6px; }
+
+.cn-how .cn-card-grid,
+.cn-how .cn-calc-grid { gap: 16px; align-items: stretch; }
+.cn-how .cn-calc-controls,
+.cn-how .cn-calc-results,
+.cn-how .cn-calc-metrics { gap: 16px; }
+.cn-how .cn-calc-group { gap: 28px; }
+.cn-how .cn-calc-controls > .cn-calc-group:last-child,
+.cn-how .cn-calc-results > .cn-calc-person,
+.cn-how .cn-card-try { flex: 1; }
+.cn-how .cn-card-result,
+.cn-how .cn-card-try { gap: 16px; }
+.cn-how .cn-metric { padding: 18px 20px; }
+.cn-how .cn-calc-person { gap: 12px; }
+
+/* One segmented control per chooser: a soft tray, the chosen option lifted out of it. */
+.cn-how .cn-calc-field { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.cn-how .cn-calc-legend {
+  display: block;
+  float: none;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cn-ink-3);
+}
+.cn-how .cn-calc-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  gap: 6px;
+  padding: 6px;
+  background: var(--cn-raised);
+  border-radius: var(--cn-radius-card);
+  box-shadow: inset 0 0 0 1px var(--cn-line);
+}
+.cn-how .cn-card-try .cn-calc-choices,
+.cn-how .cn-calc-group .cn-calc-choices { background: var(--cn-raised); }
+.cn-how fieldset:has(input[name="calc-shape"]) .cn-calc-choices { grid-template-columns: minmax(0, 1fr); }
+.cn-how fieldset:has(input[name="calc-flat"]) .cn-calc-choices { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cn-how .cn-choice { display: block; }
+.cn-how .cn-choice span {
+  width: 100%;
+  box-sizing: border-box;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--cn-radius-inner);
+  background: transparent;
+  font-size: 14px;
+  color: var(--cn-ink-3);
+  white-space: nowrap;
+}
+.cn-how .cn-choice:hover span { background: transparent; color: var(--cn-ink); border: 0; }
+.cn-how .cn-choice input:checked + span {
+  color: var(--cn-ink);
+  border: 0;
+  background: var(--cn-surface);
+  box-shadow: 0 0 0 1px var(--cn-ink), 0 1px 3px rgba(10, 10, 10, 0.14);
+}
+.cn-how .cn-choice input:checked + span::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--cn-ink);
+}
+.cn-how .cn-choice input:focus-visible + span { outline: 2px solid var(--cn-ink); outline-offset: 2px; }
+@media (pointer: coarse) {
+  .cn-how .cn-choice span { min-height: 44px; }
+}
+
+.cn-how .cn-card-time-v { font-size: 32px; }
+.cn-how .cn-card-bar { height: 6px; gap: 2px; }
+.cn-how .cn-card-seg-ok,
+.cn-how .cn-card-seg-warn,
+.cn-how .cn-card-seg-bad { border-radius: 999px; }
+.cn-how .cn-card-marker { top: -4px; bottom: -4px; width: 2px; margin-left: -1px; box-shadow: 0 0 0 2px var(--cn-surface); }
+
+/* The try-it panel: the heading above the buttons, room between them. */
+.cn-how .cn-card-try { padding: 24px; gap: 20px; }
+.cn-how .cn-card-try-head { flex-direction: column; align-items: flex-start; gap: 14px; }
+.cn-how .cn-ladder-actions { gap: 12px; }
+.cn-how .cn-card-try .cn-btn { min-height: 44px; padding: 0 22px; }
+.cn-how .cn-card-try .cn-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.cn-how .cn-stampcards { gap: 16px; }
+.cn-how .cn-stampcard { background: var(--cn-raised); border: 0; box-shadow: inset 0 0 0 1px var(--cn-line); padding: 20px; gap: 18px; border-radius: var(--cn-radius-card); }
+.cn-how .cn-stampcard[data-complete="true"] { box-shadow: inset 0 0 0 1px var(--cn-ink), 0 0 0 1px var(--cn-ink); }
+.cn-how .cn-stampcard-n { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.cn-how .cn-stampcard-grid { gap: 14px; }
+.cn-how .cn-stamp { max-width: 34px; border-width: 1px; }
+.cn-how .cn-card-line { padding-top: 2px; }
+
+/* The loop: numbers and rules, no circles, no arrows. */
+.cn-how .cn-loop { display: flex; flex-direction: column; gap: 14px; }
+.cn-how .cn-loop-dot,
+.cn-how .cn-loop-k,
+.cn-how .cn-loop-back,
+.cn-how .cn-loop-step::after { display: none; }
+.cn-how .cn-loop-steps { gap: 0; }
+.cn-how .cn-loop-step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 6px;
+  padding: 14px 16px 4px 0;
+  border: 0;
+  border-top: 1px solid var(--cn-line);
+  border-radius: 0;
+  background: none;
+}
+.cn-how .cn-loop-step .cn-fig-name { font-size: 15px; }
+.cn-how .cn-loop-step .cn-fig-body { font-size: 13.5px; line-height: 1.5; color: var(--cn-ink-2); }
+@container (min-width: 520px) {
+  .cn-how .cn-loop-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 20px; }
+  .cn-how .cn-loop-step { padding: 14px 0 4px; }
+}
+
+@media (max-width: 560px) {
+  .cn-how-head { grid-template-columns: 34px minmax(0, 1fr) auto; gap: 10px; padding: 14px 16px; }
+  .cn-how-body { padding: 0 16px 20px; }
+  .cn-how-bleed { margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-how-chev { transition: none; }
+}
